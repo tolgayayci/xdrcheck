@@ -1,0 +1,171 @@
+# xdrcheck-judge
+
+For indexer operators who export rows from their pipeline and want them checked against the ledger itself, and for
+anyone reading a `judge-*` row in a replay run. After this page you can write rows the judge reads, declare a scope
+file, and read its verdicts.
+
+The judge reads one `LedgerCloseMeta` (v0, v1, v2; transaction meta v0–v4) with rs-stellar-xdr
+and computes, from the ledger's own entry changes, what every transaction did (`facts`). It does not use
+the Go SDK or any indexer's code. The second mode (`verdict`) compares an indexer's exported rows with those
+facts.
+
+```
+xdrcheck-judge facts [FILES…] [--root LAKE_DIR --list SEQS] [-o facts.jsonl] [--conserve DIR] [-j N]
+xdrcheck-judge verdict --facts facts.jsonl --rows rows.jsonl -o verdicts.jsonl [--scope TARGET.toml] [--balance-scope net|nofee] [--kinds …] [--roles …]
+```
+
+Inputs are zstd `LedgerCloseMetaBatch` objects as the data lake serves them (or raw XDR).
+`--root` is a lake-layout directory with an `index.tsv` (`seq`, `path`, `size`). Ledgers are
+processed in the order given, in chunks over `-j` threads, and written in that order; memory is
+bounded by one chunk. Output is deterministic (same input, same bytes, any `-j`).
+
+## Facts (`facts`, JSONL, one object per line, field `kind`)
+
+| kind | one per | fields |
+|---|---|---|
+| `ledger` | ledger | `ledger`, `hash`, `protocol`, `close_time`, `lcm_version`, `tx_count`, `failed_count`, `upgrade_changes`, `evicted` |
+| `sac` | verified SAC seen in the ledger | `contract`, `asset` |
+| `tx` | transaction | `tx_index` (apply order, 0-based), `tx_hash`, `inner_hash`, `success`, `result_code`, `op_codes`, `op_types`, `fee_charged`, `meta_version` |
+| `balance_change` | (tx, holder, asset) with a non-zero net | `holder`, `asset` (`native` or `CODE:ISSUER`), `contract` (the asset's SAC id), `amount` (decimal i128), `parts`, `via`, `complete` |
+| `nonsac_balance` | (tx, contract, holder) | a `[Balance, address]` entry of a contract that is not a verified SAC; never a balance |
+| `participant` | (tx, base address) | `address`, `muxed_ids`, `roles` (`fee_payer`, `source`, `op_source`, `counterparty`, `claimant`, `entry`, `holder`, `event`) |
+| `entry_change` | created / updated / removed / restored / evicted entry | `op_index`, `phase` (`fee`, `before`, `op`, `after`, `refund`, `upgrade`, `eviction`), `change`, `entry_type`, `key` (base64 `LedgerKey`), `subject`, `asset_contract` (trustlines) |
+| `entry_field` | attribute of an account, trustline or data entry changed in one op or phase | `op_index`, `phase`, `entry_type`, `subject`, `field`, `old`, `new` |
+| `token_event` | transfer / mint / burn / clawback / approve / fee event with an i128 amount | `op_index`, `phase`, `event_index`, `contract`, `sac`, `asset`, `event`, `from`, `to` (spender for approve), `to_muxed_id`, `amount`, `topics`, `data` (ScVal kinds), `reconciliation` |
+| `event_without_amount` | an event with a token name whose data holds no i128 amount | as `token_event`; not a token movement |
+| `unknown` | gap the meta does not close | `class`, `detail` |
+
+`subject` names an entry: `account:G…`, `trustline:G…:CODE:ISSUER` (`:pool:<hex>` for pool shares),
+`data:G…:<name hex>`, `offer:G…:<id>`, `claimable_balance:B…`, `liquidity_pool:L…`, else
+`<type>:<key base64>`. `entry_field` fields: `signer:<hex>` (weight; hex = the strkey version byte and the
+key's payload, the full XDR body for a CAP-40 signed payload, so every signer type compares byte for
+byte; the master key is the account's own ed25519 signer), `threshold:low|med|high`, `flags`,
+`home_domain` (hex), `sponsor` for accounts; `limit`, `flags`, `sponsor` for trustlines; `value` (hex),
+`sponsor` for data entries. A created entry lists its non-default values (so a new account shows its
+master signer), a removed entry none. Claimants of CreateClaimableBalance have the role `claimant`.
+
+Balances come from accounts (native), trustlines (pool-share lines excluded), claimable balances
+(holder `B…`), liquidity-pool reserves (holder `L…`) and SAC `[Balance, address]` entries. Offers'
+liabilities are not balances. `parts` splits the net: `fee` (fee processing), `before`, `op:<i>`,
+`after`, `refund` (post-apply fee processing), `reconcile:<i>`, `upgrade`.
+
+Rules:
+- **SAC verification.** A contract counts as a SAC only if its id equals the hash of an asset
+  under the network passphrase. Candidates come from every classic asset in the ledger's entries,
+  every string topic of every event, and `--sac-registry`. A contract that calls itself "USDC" is
+  not one; its balance-shaped entries become `nonsac_balance` and its events have `sac: false`.
+- **Prior state.** An update or removal is paired with its `STATE` in the same list, else with
+  the latest value seen earlier in the ledger (fees are charged for the whole set first). With
+  neither, the judge emits `unknown` and marks the balance `complete: false`; it never assumes zero.
+- **Restores** are not balance changes. Protocol 23 only: a hot-archive restore of a corrupted
+  SAC balance comes with reconciliation mint/burn events placed before the op's own events. The
+  judge takes the longest prefix of leading SAC mint/burn events on restored balances for which
+  the op's entry deltas plus the reconciliation equal the events' net supply change, books them as
+  `reconcile:<i>` and flags them `reconciliation: true`.
+- Evictions are entry facts at ledger level, not debits. All arithmetic is i128 (overflow is an
+  `unknown`, never a wrap).
+
+`--conserve DIR` also writes `residuals.jsonl` and `summary.json`: per transaction, the native
+non-operation parts sum to `-fee_charged` (and equal the fee events when present), and per asset
+the operation parts sum to zero unless explained by verified SAC events (mint, burn, clawback,
+transfers from or to the issuer), inflation, a pre-protocol-8 repeated merge, or (meta below v4)
+the issuer taking part. Anything else is a residual with a class.
+
+## Rows (the indexer side, JSONL, sorted by `ledger` ascending)
+
+Exporters write one object per row; unknown fields are ignored.
+
+| field | used by | meaning |
+|---|---|---|
+| `kind` | all | `balance_change`, `participant`, `entry_change`, `token_event`, `ledger` |
+| `ledger` | all | ledger sequence |
+| `tx_hash` or `tx_index` | all but `ledger` | outer (fee-bump) or inner hash, hex; or the 0-based apply index |
+| `op_index` | optional | operation index |
+| `holder` | `balance_change`, `participant` | address (`G`, `M`, `C`, `B`, `L`); `M…` is reduced to its `G…` base |
+| `asset` | `balance_change` | `native`, `CODE:ISSUER`, or a contract id (a SAC id is mapped to its asset) |
+| `amount` | `balance_change`, `token_event` | decimal string, signed (credit positive) |
+| `muxed_id` | `participant` | optional; checked against the transaction's muxed ids |
+| `entry_key`, `change` | `entry_change` | base64 `LedgerKey`; `created`, `updated`, `removed`, `restored`, `evicted` (no tx for ledger-level) |
+| `subject`, or `entry_type` + `account` (+ `token` / `asset` / `pool`, `data_name`) | `entry_change` | the entry instead of `entry_key`; a trustline's asset may be its SAC id |
+| `field`, `old`, `new` | `entry_change` | an attribute row (see `entry_field`); `flags:set` / `flags:clear` carry the bits in `new` |
+| `contract`, `event`, `from`, `to`, `to_muxed_id` | `token_event` | as in the facts |
+| `tx_count`, `protocol`, `close_time` | `ledger` | optional checks |
+
+Balance rows are summed per (transaction, holder, asset) and compared with the net
+(`--balance-scope nofee` compares only `op:*` and `reconcile:*` parts, for indexers that export no
+fee rows). Participants and token events are compared as multisets; a token event's `to_muxed_id`,
+`asset` and `op_index`, where the row states them, must agree with the matched event. Entry rows are
+matched per transaction in passes: lifecycle rows by (op, subject, change), an `updated` row standing
+for any change of the entry in its op; attribute rows by (op, subject, field) and their stated values.
+A signer row that matches only another key of the same entry is `wrong_value:…:signer_key`; a row in
+the wrong op is `wrong_value:op_index`; a row that states no change (`old` = `new`, or no flag bits) is
+`extra:noop` (`extra:noop_on_create` on an entry created in that op, `extra:noop_empty` for a flags
+row with no bits; flag bits that leave the flags as they were, and an attribute the op did not change
+on an entry it changed, also count as no change). A value stated gone from an entry removed in that op
+is no verdict. A flags row that holds the change's bits plus bits already in that
+state is `wrong_value:restated_bits`. A claimed attribute of an entry created in that op with no row is
+`missing_on_create`.
+
+## Scope (`--scope`)
+
+A TOML file declared once per target (`scopes/` holds them) says which row kinds the target exports
+and how each is compared, and which verdicts its own design produces:
+
+```toml
+target = "name"
+at = "commit or version the citations are read at"
+[kinds.<row kind>]
+compare = "balance_change"   # fact family (default: the kind itself)
+mode = "full"                # or "extra_only": a subset exporter, only what it wrote is checked
+fee = "nofee"                # balance families
+lifecycle = ["account:created", ...]   # entry family: lifecycle changes claimed
+fields = ["account:signer", ...]       # entry family: attribute families claimed
+[[rule]]
+id = "…"; reason = "…"; cite = "file:line at `at`, or UNCONFIRMED"
+kinds = [...]; verdicts = [...]; class_prefix = [...]; holder_prefix = ["B", "L"]
+issuer_self = true; failed_tx = true; roles_within = [...]; event = [...]; entry_type = [...]
+```
+
+A verdict a rule matches is written as `out_of_scope` with its class and `scope_rule`, and counted in
+the summary's `out_of_scope`; a transaction whose only verdicts are out of scope is also `ok`. Truth
+items no row could be compared with (an extra-only kind, an entry change the target does not claim)
+are counted in `not_compared`. Without a scope file every kind is compared in full and nothing is out
+of scope.
+
+Pass `--kinds` with the kinds the exporter claims to produce. Without it the judge compares the
+kinds present in the rows, and an empty rows file is compared against every kind (so it is a
+`halt`, not a clean run). A row whose `tx_hash` or `tx_index` names no transaction of its ledger
+is `extra:unknown_tx`; a transaction-level row with neither is `extra:no_tx_ref`.
+
+## Verdicts (`verdict`, JSONL)
+
+`{ledger, tx_index, tx_hash, verdict, kind, class, scope_rule, evidence}`. `verdict` is one of:
+
+| `verdict` | Level | Meaning |
+|---|---|---|
+| `ok` | transaction | one line per transaction with no in-scope verdict |
+| `missing`, `extra`, `wrong_value`, `duplicate` | transaction | a row is absent, unexplained, different, or repeated |
+| `unknown` | transaction | the truth for that holder and asset is incomplete; never `ok` |
+| `out_of_scope` | transaction | a verdict a scope rule matched (see Scope) |
+| `skip` | ledger | the truth has items for the ledger, the indexer exported none, later ledgers exist |
+| `halt` | ledger | the same, and nothing later was exported |
+
+`class` is a stable string for clustering: kind, verdict and reason, never an address or amount,
+e.g. `balance_change:wrong_value:int64_wrap`, `balance_change:extra:non_sac_contract`,
+`balance_change:extra:failed_tx`, `participant:missing:counterparty+entry`, `ledger:skip`.
+
+## Validation
+
+- `cargo test -p xdrcheck-judge`: entry attributes (signers of every type, thresholds, flags, home
+  domain, trustline authorization and limit, data values) with a planted bug per attribute, claimants
+  and scope rules, amount-less events, `to_muxed_id`, extra-only kinds; hand-built ledgers (fees and refunds, fake "USDC" contract,
+  missing prior state, P23 reconciliation with a genuine mint after it and alone, muxed ids, wide
+  amounts, failed transactions, determinism, LCM v0 with meta v1, LCM v1 with meta v3).
+- `tools/mutation_test.py --judge BIN --facts FACTS --work DIR`: a toy indexer derives rows from
+  the facts and plants one bug per run (dropped row, amount off by one, int64 wrap, duplicate row,
+  dropped muxed counterparty, credit on a failed transaction, credit from a non-SAC transfer event,
+  skipped ledger, halt, dropped entry change, duplicate event, empty export, a whole kind dropped,
+  a row with an unknown transaction index, a signer key cut short, an attribute restated unchanged)
+  and one negative control (a classic asset keyed by its
+  SAC contract id must stay `ok`). Every plant must be flagged with its class at its place and the
+  unmutated run must be all `ok`.

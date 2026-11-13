@@ -1,0 +1,87 @@
+# What wallet-backend exports and what its own design puts outside the judge's truth. Paths and lines are at
+# wallet-backend f0c00cf5. Every rule moves matching verdicts to `out_of_scope`; nothing is dropped.
+target = "wallet-backend"
+at = "f0c00cf5"
+
+[kinds.balance_change]
+fee = "net"
+reason = "BALANCE state changes include the fee debit and refund of every transaction (operation_id 0)"
+cite = "internal/indexer/processors/token_transfer.go:192-199"
+
+[kinds.participant]
+reason = "transactions_accounts: transaction-level participants plus every operation's and state change's account"
+cite = "internal/indexer/indexer_buffer.go:420-433,364-371"
+
+[kinds.entry_change]
+lifecycle = ["account:created", "account:removed", "trustline:created", "trustline:removed", "data:created", "data:removed"]
+fields = ["account:signer", "account:threshold", "account:flags", "account:home_domain", "trustline:limit", "trustline:flags", "data:value"]
+reason = "state_changes categories ACCOUNT, TRUSTLINE, BALANCE_AUTHORIZATION, SIGNER, SIGNATURE_THRESHOLD, FLAGS, HOME_DOMAIN, DATA_ENTRY; no sponsorship, offer, claimable-balance or pool category"
+cite = "internal/indexer/types/types.go:714-724; internal/indexer/processors/effects.go:131-226"
+
+[[rule]]
+id = "wb-balance-holders-accounts-and-contracts"
+reason = "claimable balances and liquidity pools are not balance holders: transfers to or from them record only the account side, mints to them no credit"
+cite = "internal/indexer/processors/token_transfer.go:265-287,336-337"
+kinds = ["balance_change"]
+holder_prefix = ["B", "L"]
+
+[[rule]]
+id = "wb-issuer-mint-burn-rows"
+reason = "an issued asset's mint and burn are written as MINT / BURN rows on the issuer account, which holds no balance of its own asset"
+cite = "internal/indexer/processors/token_transfer.go:330-333,383-386"
+kinds = ["balance_change"]
+verdicts = ["extra"]
+issuer_self = true
+
+[[rule]]
+id = "wb-sep41-balances"
+reason = "balances of SEP-41 tokens that are not Stellar Asset Contracts, folded from their contract events; the judge's truth covers verified SACs and classic assets only"
+cite = "internal/services/sep41/processor.go:47,101-102"
+kinds = ["balance_change"]
+class_prefix = ["balance_change:extra:non_sac_contract"]
+
+[[rule]]
+id = "wb-participants-are-accounts"
+reason = "participants come from account entries, operation bodies (G accounts), Soroban authorisers and state-change accounts; claimable balances, pools and contracts that only own a changed entry or emit an event are not participants"
+cite = "internal/indexer/processors/participants.go:49-63; internal/indexer/processors/contract_operations.go:59-62"
+kinds = ["participant"]
+verdicts = ["missing"]
+holder_prefix = ["B", "L", "C"]
+
+[[rule]]
+id = "wb-failed-tx-source-and-fee-account-only"
+reason = "a failed transaction records only its source and fee-bump account; meta participants only for successful transactions"
+cite = "internal/indexer/processors/participants.go:101,167-177"
+kinds = ["participant"]
+verdicts = ["missing"]
+failed_tx = true
+roles_within = ["counterparty", "op_source", "claimant", "entry", "holder", "event"]
+
+[[rule]]
+id = "wb-claimants-are-participants"
+reason = "CreateClaimableBalance claimants are operation participants"
+cite = "internal/indexer/processors/transaction_operation_wrapper.go:214-217"
+kinds = ["participant"]
+class_prefix = ["participant:extra:claimant"]
+
+[[rule]]
+id = "wb-issuer-participant"
+reason = "the issuer's MINT / BURN rows make it a participant of the transaction"
+cite = "internal/indexer/indexer_buffer.go:364-366; internal/indexer/processors/token_transfer.go:330-333,383-386"
+kinds = ["participant"]
+verdicts = ["extra"]
+issuer_self = true
+
+[[rule]]
+id = "wb-authorization-on-new-trustline"
+reason = "a new trustline always gets a BALANCE_AUTHORIZATION SET row with its initial flags, also when it has none"
+cite = "internal/indexer/processors/effects.go:215-222,353-360"
+kinds = ["entry_change"]
+class_prefix = ["entry_change:extra:noop_on_create:trustline:flags"]
+
+[[rule]]
+id = "wb-deauthorize-clears-both"
+reason = "an AllowTrust deauthorization is stated as clearing both authorized and authorized-to-maintain-liabilities ('show both as cleared')"
+cite = "internal/indexer/processors/effects_horizon.go:335-338"
+kinds = ["entry_change"]
+class_prefix = ["entry_change:wrong_value:restated_bits:trustline:flags"]

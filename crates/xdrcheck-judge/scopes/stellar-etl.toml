@@ -1,0 +1,72 @@
+# What stellar-etl exports and what its own design puts outside the judge's truth. Paths and lines are at
+# stellar-etl 7e3fc9af (v2.8.35). Every rule moves matching verdicts to `out_of_scope`; nothing is dropped.
+target = "stellar-etl"
+at = "7e3fc9af"
+
+[kinds.ledger]
+reason = "export_ledgers"
+cite = "internal/transform/ledger.go"
+
+[kinds.balance_change]
+fee = "net"
+reason = "balance changes implied by export_token_transfer, fee events included"
+cite = "internal/transform/token_transfer.go:53-76"
+
+[kinds.token_event]
+reason = "export_token_transfer: transfer, mint, burn, clawback, fee"
+cite = "internal/transform/token_transfer.go:53-76"
+
+[kinds.effect_balance_change]
+compare = "balance_change"
+fee = "nofee"
+reason = "amount-bearing effects; effects carry no fees"
+cite = "internal/transform/effects.go"
+
+[kinds.entry_change]
+lifecycle = ["account:created", "account:removed", "trustline:created", "trustline:removed", "data:created", "data:removed"]
+fields = ["account:signer", "account:threshold", "account:flags", "account:home_domain", "account:sponsor", "trustline:limit", "trustline:flags", "trustline:sponsor", "data:value", "data:sponsor"]
+reason = "entries and attribute values stated by export_effects"
+cite = "internal/transform/effects.go"
+
+[kinds.op_token_event]
+compare = "token_event"
+mode = "extra_only"
+reason = "asset_balance_changes are written for invoke_host_function operations only, from their SAC events: a subset"
+cite = "internal/transform/operation.go:1069,1099-1103"
+
+[[rule]]
+id = "etl-approve-not-exported"
+reason = "token transfers carry transfer, mint, burn, clawback and fee events; approve is not one of them"
+cite = "internal/transform/token_transfer.go:53-76"
+kinds = ["token_event"]
+verdicts = ["missing"]
+event = ["approve"]
+
+[[rule]]
+id = "etl-effects-restate-operation-input"
+reason = "set_options, change_trust and allow_trust effects state the operation's requested values (account flags, thresholds, home domain, limit, authorization), changed or not; manage_data states the value of any updated data entry"
+cite = "internal/transform/effects.go:530-566,647-689,716-731,790-804"
+kinds = ["entry_change"]
+class_prefix = ["entry_change:extra:noop:account:", "entry_change:extra:noop:trustline:limit", "entry_change:extra:noop:trustline:flags", "entry_change:extra:noop:data:value"]
+
+[[rule]]
+id = "etl-deauthorize-clears-both"
+reason = "an AllowTrust deauthorization is stated as clearing both authorized and authorized-to-maintain-liabilities ('show both as cleared')"
+cite = "internal/transform/effects.go:732-735"
+kinds = ["entry_change"]
+class_prefix = ["entry_change:wrong_value:restated_bits:trustline:flags"]
+
+[[rule]]
+id = "etl-new-trustline-flags-not-stated"
+reason = "a new trustline's effect states its limit only, not its initial authorization flags"
+cite = "internal/transform/effects.go:647-689"
+kinds = ["entry_change"]
+class_prefix = ["entry_change:missing_on_create:trustline:flags"]
+
+[[rule]]
+id = "etl-issuer-effects"
+reason = "payment effects credit and debit the issuer of the asset it sends or receives, which holds no balance of its own asset"
+cite = "internal/transform/effects.go:439-454"
+kinds = ["effect_balance_change"]
+verdicts = ["extra"]
+issuer_self = true

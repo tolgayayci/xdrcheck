@@ -1,0 +1,57 @@
+# What Horizon exports and what its own design puts outside the judge's truth. Paths and lines are at
+# stellar-horizon v30.0.1. Every rule moves matching verdicts to `out_of_scope`; nothing is dropped.
+target = "horizon"
+at = "v30.0.1"
+
+[kinds.ledger]
+reason = "history_ledgers"
+cite = "internal/ingest/processors/ledgers_processor.go"
+
+[kinds.balance_change]
+fee = "nofee"
+reason = "amount-bearing history_effects; Horizon has no fee effect"
+cite = "internal/ingest/processors/effects_processor.go:539-620"
+
+[kinds.participant]
+reason = "history_transaction_participants"
+cite = "internal/ingest/processors/participants_processor.go:176-217"
+
+[kinds.token_event]
+mode = "extra_only"
+reason = "asset_balance_changes of invoke_host_function operations only: a subset of the token events"
+cite = "internal/ingest/processors/operations_processor.go:675"
+
+[kinds.entry_change]
+mode = "extra_only"
+reason = "lifecycle stated by effects: a subset of the entry changes"
+cite = "internal/ingest/processors/effects_processor.go"
+
+[[rule]]
+id = "hz-participants-are-accounts"
+reason = "participants are account ids: account entries of the meta and the accounts operations name; claimable balances, pools and contracts are not participants"
+cite = "internal/ingest/processors/participants_processor.go:69-83; internal/ingest/processors/operations_processor.go:983"
+kinds = ["participant"]
+verdicts = ["missing"]
+holder_prefix = ["B", "L", "C"]
+
+[[rule]]
+id = "hz-claimants-are-participants"
+reason = "CreateClaimableBalance claimants are operation participants"
+cite = "internal/ingest/processors/operations_processor.go:1017-1020"
+kinds = ["participant"]
+class_prefix = ["participant:extra:claimant"]
+
+[[rule]]
+id = "hz-failed-tx-operation-participants"
+reason = "a transaction's participants include its operations' participants whether or not it succeeded"
+cite = "internal/ingest/processors/participants_processor.go:199-214"
+kinds = ["participant"]
+class_prefix = ["participant:extra:failed_tx"]
+
+[[rule]]
+id = "hz-issuer-effects"
+reason = "payment effects credit and debit the issuer of the asset it sends or receives, which holds no balance of its own asset"
+cite = "internal/ingest/processors/effects_processor.go:539-559"
+kinds = ["balance_change"]
+verdicts = ["extra"]
+issuer_self = true
