@@ -1,0 +1,144 @@
+# The probe transactions, one per step: muxed payment, signed-payload signers (1 and
+# 64 bytes), a payment authorised only by a signed-payload signature, an extraSigners
+# precondition, fee bumps (muxed fee source; failed inner), and hash-x / pre-auth signatures.
+scenario: probe-transactions
+caps: [27, 40, 15]
+protocols: [28, 30]
+profile: lake
+actors: [A, B, C, D]
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000", D: "10000"}
+
+# Later steps reuse the first transaction and the first set_options body through YAML merge keys
+# (`<<: *common`), overriding what differs.
+steps:
+  - id: muxed-payment
+    entry: probe/muxed-payment
+    tx: &common
+      fee: 1000
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      ext: v0
+      source_account: "${muxed(A, 18446744073709551615)}"
+      seq_num: "${seq.A}"
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${muxed(B, 9007199254740993)}", asset: native, amount: "12345678"}}
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect:
+      participants:
+        must_include: [{address: "${acct.A}", roles: [source]}, {address: "${acct.B}", roles: [destination]}]
+      values:
+        - {path: "/source", equals: "${muxed(A, 18446744073709551615)}"}
+        - {path: "/seq", equals: "${seq.A}"}
+        - {path: "/fee", equals: "${derived.fee_charged}"}
+
+  - id: add-signer-1-byte
+    entry: probe/signed-payload-signers
+    tx:
+      <<: *common
+      source_account: "${acct.A}"
+      seq_num: "${seq.A}"
+      operations:
+        - source_account: null
+          body:
+            set_options: &set-options
+              inflation_dest: null
+              clear_flags: null
+              set_flags: null
+              master_weight: null
+              low_threshold: null
+              med_threshold: null
+              high_threshold: null
+              home_domain: null
+              signer: {key: "${signer.payload(D, 2a)}", weight: 1}
+    sign: [{key: A}]
+    expect_result: tx_success
+
+  - id: add-signer-64-bytes
+    entry: probe/signed-payload-signers
+    same_ledger_as: add-signer-1-byte
+    tx:
+      <<: *common
+      fee: 1001
+      source_account: "${acct.A}"
+      seq_num: "${seq.A}"
+      operations:
+        - source_account: null
+          body:
+            set_options:
+              <<: *set-options
+              signer: {key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", weight: 1}
+    sign: [{key: A}]
+    expect_result: tx_success
+
+  - id: authorised-by-signed-payload-only
+    entry: probe/tx-authorised-by-signed-payload
+    tx:
+      <<: *common
+      source_account: "${acct.A}"
+      seq_num: "${seq.A}"
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "10000000"}}
+    sign: [{signed_payload: {key: D, payload_hex: "2a"}}]
+    expect_result: tx_success
+
+  - id: extra-signer-in-preconditions
+    entry: probe/extra-signer
+    tx:
+      <<: *common
+      source_account: "${acct.B}"
+      seq_num: "${seq.B}"
+      cond:
+        v2:
+          time_bounds: {min_time: "0", max_time: "0"}
+          ledger_bounds: null
+          min_seq_num: null
+          min_seq_age: "0"
+          min_seq_ledger_gap: 0
+          extra_signers: ["${signer.payload(D, 5ca1ab1e00000000000000000000000000000000000000000000000000000001)}"]
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "10000000"}}
+    sign: [{key: B}, {signed_payload: {key: D, payload_hex: "5ca1ab1e00000000000000000000000000000000000000000000000000000001"}}]
+    expect_result: tx_success
+
+  - id: fee-bump-muxed-fee-source
+    entry: probe/fee-bump
+    tx:
+      <<: *common
+      source_account: "${acct.A}"
+      seq_num: "${seq.A}"
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.D}", asset: native, amount: "1"}}
+    sign: [{key: A}]
+    fee_bump: {fee_source: "${muxed(C, 7)}", fee: "4000"}
+    expect_result: tx_fee_bump_inner_success
+
+  - id: fee-bump-failed-inner
+    entry: probe/fee-bump-failed-inner
+    tx:
+      <<: *common
+      source_account: "${acct.B}"
+      seq_num: "${seq.B}"
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.D}", asset: native, amount: "900000000000000"}}
+    sign: [{key: B}]
+    fee_bump: {fee_source: D, fee: "5000", sign: [{key: D}]}
+    expect_result: tx_fee_bump_inner_failed
+
+  - id: hash-x-and-pre-auth
+    tx:
+      <<: *common
+      source_account: "${acct.C}"
+      seq_num: "${seq.C}"
+      memo: {text: "close ${close_time}"}
+      operations:
+        - source_account: null
+          body: {bump_sequence: {bump_to: "0"}}
+    sign: [{key: C}, {hash_x: ""}, {hash_x: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"}, {pre_auth: true}]
+    expect_submit_reject: tx_bad_auth_extra

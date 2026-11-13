@@ -1,0 +1,34 @@
+[package]
+name = "xdrcheck-gen"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+zstd.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+hex.workspace = true
+stellar-xdr.workspace = true
+xdrcheck-xdr.workspace = true
+xdrcheck-meta.workspace = true
+stellar-strkey.workspace = true
+toml.workspace = true
+# Not yet workspace dependencies (no pin in pins.toml): ed25519 signing of the node's own transactions, and
+# prctl/kill for stellar-core child processes. Exact versions.
+ed25519-dalek = "=2.2.0"
+libc = "=0.2.191"
+# Scenario interpreter: schema validation and YAML scenario files (pins.toml [rust]).
+jsonschema = { version = "=0.61.2", default-features = false }
+serde_yaml = "=0.9.34"
+# Offline simulation of custom-contract calls: the pinned host (pins.toml soroban_env_host)
+# and its simulation crate, same release.
+soroban-env-host = { version = "=30.0.0", features = ["recording_mode"] }
+soroban-simulation = "=30.0.0"
+# Protocol 29 ledgers need the Protocol 29 host (host 30 refuses older ledgers outside test builds); core
+# v30.0.0 runs soroban-env-host 29.0.0 for them, which crates.io has yanked (pins.toml soroban_env_host_p29).
+soroban-env-host-p29 = { package = "soroban-env-host", version = "=29.0.2", features = ["recording_mode"] }
+soroban-simulation-p29 = { package = "soroban-simulation", version = "=29.0.2" }

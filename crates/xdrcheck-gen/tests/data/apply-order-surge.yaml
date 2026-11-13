@@ -1,0 +1,54 @@
+# Controlled apply order under surge pricing: the ledger admits three operations and four
+# transactions bid 400, 300, 200 and 100. The set's component carries the discounted base fee 200,
+# not the ledger's 100, so the model's default shape is wrong and the generator learns the shape
+# core built from a first attempt. The lowest bid is left out.
+scenario: apply-order-surge
+caps: []
+protocols: [30]
+profile: lake
+actors: [A, B, C, D, E]
+setup:
+  - fund: {A: "100", B: "100", C: "100", D: "100", E: "100"}
+steps:
+  - id: three-operations-per-ledger
+    entry: probe/max-tx-set-size
+    upgrade: {maxtxsetsize: 3}
+  - id: bid-400
+    entry: probe/apply-order-surge
+    order: [bid-200, bid-400, bid-300]
+    tx: &pay
+      source_account: "${acct.A}"
+      fee: 400
+      seq_num: "${seq.A}"
+      cond: none
+      memo: {id: "${order_nonce}"}
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.E}", asset: native, amount: "1"}}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+  - id: bid-300
+    entry: probe/apply-order-surge
+    same_ledger_as: bid-400
+    tx: {<<: *pay, source_account: "${acct.B}", fee: 300, seq_num: "${seq.B}", memo: none}
+    sign: [{key: B}]
+    expect_result: tx_success
+  - id: bid-200
+    entry: probe/apply-order-surge
+    same_ledger_as: bid-400
+    tx: {<<: *pay, source_account: "${acct.C}", fee: 200, seq_num: "${seq.C}", memo: none}
+    sign: [{key: C}]
+    expect_result: tx_success
+  - id: bid-100
+    entry: probe/apply-order-surge
+    same_ledger_as: bid-400
+    tx:
+      <<: *pay
+      source_account: "${acct.D}"
+      fee: 100
+      seq_num: "${seq.D}"
+      cond: {time: {min_time: "0", max_time: "${close_time}"}}
+      memo: none
+    sign: [{key: D}]
+    expect_excluded: true

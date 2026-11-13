@@ -1,0 +1,90 @@
+# Worked example: CAP-0073 Stellar Asset Contract `trust`. The transaction expectation states
+# `successful` (the manifest-entry schema requires it), and the event path is a real pointer.
+scenario: cap-0073-sac-trust
+caps: [73]
+protocols: [28, 30]            # CAP-0073 needs Protocol >= 26; 28 serves the wallet-backend pins
+profile: lake
+actors: [B, I1]
+assets:
+  USDC: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.I1}"}}
+setup:
+  - fund: {B: "10000", I1: "10000"}
+  - deploy_sac: USDC           # InvokeHostFunction create_contract from the asset, one ledger
+
+steps:
+  - id: sac-trust
+    entry: cap-0073/sac-trust-creates-trustline
+    precondition: "B has no USDC trustline"
+    tx:
+      source_account: "${acct.B}"
+      fee: 50001016
+      seq_num: "${seq.B}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: trust
+                  args: [{address: "${acct.B}"}]
+              auth:
+                - credentials: source_account
+                  root_invocation:
+                    function:
+                      contract_fn:
+                        contract_address: "${contract.sac(USDC)}"
+                        function_name: trust
+                        args: [{address: "${acct.B}"}]
+                    sub_invocations: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+                - account: {account_id: "${acct.I1}"}
+              read_write:
+                - trustline: {account_id: "${acct.B}", asset: "${asset.USDC}"}
+                - account: {account_id: "${acct.B}"}
+            instructions: 50000000
+            disk_read_bytes: 20000
+            write_bytes: 20000
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect:
+      state_changes:
+        - kind: trustline_created
+          account: {address: "${acct.B}"}
+          asset: "USDC:${acct.I1}"
+          cause: contract-call
+          detail: {balance: "0", limit: "9223372036854775807", flags: 1, authorized: true, num_sub_entries_after: 1}
+        - kind: trustline_flags_changed        # only for readers that record the initial authorisation
+          only_if: initial_authorization_separate   # as its own change
+          account: {address: "${acct.B}"}
+          asset: "USDC:${acct.I1}"
+          detail: {flags: 1, authorized: true, initial: true}
+      state_changes_exact: true              # fee and sequence changes are ambient and outside this
+      transactions:
+        - {index: 0, successful: true, fee_charged: "${derived.fee_charged}"}   # per protocol: settings differ
+      participants:
+        must_include: [{address: "${acct.B}", roles: [source, fee_payer, trustline_owner]}]
+      values:
+        - {path: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events", equals: []}
+    fields: {partially_validated: [VF-46], validated: [VF-43, VF-47]}
+    mirrors:                                                       # the stellar-core test this step mirrors (manifest `mirrors`)
+      core_golden:
+        core_tag: v30.0.0
+        file: test-lcm-current/InvokeHostFunctionTests/4c437318f87437c5.xdr
+        file_sha256: 20624d6db29bb4546312a1aafcc72c978c1781b40b90a4828ab0dc7166fefeda
+        test_name: "Trustline stellar asset contract|protocol version 30"
+        frame_index: 42
+        tx_index: 0
+      flags: [ENABLE_SOROBAN_DIAGNOSTIC_EVENTS, EMIT_CLASSIC_EVENTS, BACKFILL_STELLAR_ASSET_EVENTS, BACKFILL_RESTORE_META]
+      flags_source: "src/transactions/test/InvokeHostFunctionTests.cpp:219-225"   # the test's own meta flags
+      state: planned

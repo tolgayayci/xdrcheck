@@ -1,0 +1,68 @@
+# Controlled apply order: two ledgers of two dependent payments each. B can pay C 14000 XLM only
+# after A's 5000 reached it, so the first ledger (A first) succeeds twice. In the second ledger B
+# (about 1000 XLM left) pays C 1500 before A's 1000 arrives, and fails at apply time.
+# `${order_nonce}` is the memo id the generator searches.
+scenario: apply-order
+caps: []
+protocols: [30]
+profile: lake
+actors: [A, B, C]
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000"}
+steps:
+  - id: a-pays-b
+    entry: probe/apply-order
+    order: [a-pays-b, b-pays-c]
+    tx: &pay
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: {id: "${order_nonce}"}
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.B}", asset: native, amount: "50000000000"}}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+  - id: b-pays-c
+    entry: probe/apply-order
+    same_ledger_as: a-pays-b
+    tx:
+      <<: *pay
+      source_account: "${acct.B}"
+      fee: 1001
+      seq_num: "${seq.B}"
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "140000000000"}}
+    sign: [{key: B}]
+    expect_result: tx_success
+
+  - id: b-pays-c-first
+    entry: probe/apply-order-reversed
+    order: [b-pays-c-first, a-pays-b-second]
+    tx:
+      <<: *pay
+      source_account: "${acct.B}"
+      seq_num: "${seq.B}"
+      memo: {id: "${order_nonce}"}
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "15000000000"}}
+    sign: [{key: B}]
+    expect_result: tx_failed
+    expect_op_results: [payment.underfunded]
+  - id: a-pays-b-second
+    entry: probe/apply-order-reversed
+    same_ledger_as: b-pays-c-first
+    tx:
+      <<: *pay
+      fee: 1001
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.B}", asset: native, amount: "10000000000"}}
+    sign: [{key: A}]
+    expect_result: tx_success

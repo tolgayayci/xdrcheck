@@ -1,0 +1,113 @@
+# Worked example: CAP-0040 signed-payload signers, complete:
+# the 64-byte step is written out and the 32-byte payload is a real value.
+scenario: cap-0040-signed-payload
+caps: [40]
+protocols: [28, 30]            # 28 for pipeline pins that cannot decode Protocol 30
+profile: lake
+actors: [A, B, C, D]           # label-derived keys, funded from root in setup
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000", D: "10000"}   # XLM, one root transaction
+
+steps:
+  - id: add-signer-1-byte
+    entry: cap-0040/signed-payload-signers-1-byte-and-64-byte   # one entry: both signers are added in the same ledger
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options:
+              inflation_dest: null
+              clear_flags: null
+              set_flags: null
+              master_weight: null
+              low_threshold: null
+              med_threshold: null
+              high_threshold: null
+              home_domain: null
+              signer: {key: "${signer.payload(D, 2a)}", weight: 1}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect:
+      state_changes:
+        - kind: signer_added
+          account: {address: "${acct.A}"}
+          signer: {type: ed25519_signed_payload, key: "${signer.payload(D, 2a)}", payload_hex: "2a", weight: 1}
+      state_changes_exact: true
+      participants:
+        must_include: [{address: "${acct.A}", roles: [source, fee_payer, signer_owner]}]
+        must_not_include:
+          - {address: "${acct.D}", because: "D's key is inside the signer key; no ledger entry of D changed"}
+      addresses:
+        - {strkey: "${signer.payload(D, 2a)}", type: signed_payload}
+    fields: {validated: [VF-29]}
+
+  - id: add-signer-64-bytes
+    entry: cap-0040/signed-payload-signers-1-byte-and-64-byte
+    same_ledger_as: add-signer-1-byte      # second transaction of that ledger (distinct fee, so the order is stable)
+    tx:
+      source_account: "${acct.A}"
+      fee: 1001
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options:
+              inflation_dest: null
+              clear_flags: null
+              set_flags: null
+              master_weight: null
+              low_threshold: null
+              med_threshold: null
+              high_threshold: null
+              home_domain: null
+              signer: {key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", weight: 1}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+
+  - id: authorised-by-signed-payload-only
+    entry: cap-0040/tx-authorised-by-signed-payload-signature
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{signed_payload: {key: D, payload_hex: "2a"}}]     # A's own key does not sign
+    expect_result: tx_success
+    fields: {validated: [VF-06, VF-08], passed_through: [VF-07]}
+
+  - id: extra-signer-in-preconditions
+    entry: cap-0040/extra-signer-signed-payload-local
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond:
+        v2:
+          time_bounds: {min_time: "0", max_time: "0"}
+          ledger_bounds: null
+          min_seq_num: null
+          min_seq_age: "0"
+          min_seq_ledger_gap: 0
+          extra_signers: ["${signer.payload(D, 5ca1ab1e00000000000000000000000000000000000000000000000000000001)}"]
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: B}, {signed_payload: {key: D, payload_hex: "5ca1ab1e00000000000000000000000000000000000000000000000000000001"}}]
+    expect_result: tx_success
+    fields: {validated: [VF-13, VF-18]}

@@ -1,0 +1,75 @@
+# Controlled apply order in the parallel Soroban phase: three independent native Stellar Asset
+# Contract transfers in one ledger, applied C, A, B. `${order_nonce}` is the leader's time-bound
+# minimum (any small value is in the past; Soroban transactions may not carry a memo).
+scenario: apply-order-soroban
+caps: []
+protocols: [30]
+profile: lake
+actors: [A, B, C, X, Y, Z]
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000", X: "10000", Y: "10000", Z: "10000"}
+  - deploy_sac: native
+steps:
+  - id: a-pays-x
+    entry: probe/apply-order-soroban
+    order: [c-pays-z, a-pays-x, b-pays-y]
+    tx: &transfer
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(native)}"
+                  function_name: transfer
+                  args: [{address: "${acct.A}"}, {address: "${acct.X}"}, {i128: "10000000"}]
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+  - id: b-pays-y
+    entry: probe/apply-order-soroban
+    same_ledger_as: a-pays-x
+    tx:
+      <<: *transfer
+      source_account: "${acct.B}"
+      fee: 1001
+      seq_num: "${seq.B}"
+      cond: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(native)}"
+                  function_name: transfer
+                  args: [{address: "${acct.B}"}, {address: "${acct.Y}"}, {i128: "10000000"}]
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+  - id: c-pays-z
+    entry: probe/apply-order-soroban
+    same_ledger_as: a-pays-x
+    tx:
+      <<: *transfer
+      source_account: "${acct.C}"
+      fee: 1002
+      seq_num: "${seq.C}"
+      cond: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(native)}"
+                  function_name: transfer
+                  args: [{address: "${acct.C}"}, {address: "${acct.Z}"}, {i128: "10000000"}]
+    simulate: true
+    sign: [{key: C}]
+    expect_result: tx_success
