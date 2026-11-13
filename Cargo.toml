@@ -1,0 +1,56 @@
+[workspace]
+resolver = "2"
+members = ["crates/xdrcheck-xdr", "crates/xdrcheck-meta", "crates/xdrcheck-gen", "crates/xdrcheck-corpus", "crates/xdrcheck-mutate", "crates/xdrcheck-judge", "crates/xdrcheck-tagger"]
+# Drivers pin their own crate versions and the test contracts build for wasm: separate workspaces.
+exclude = ["drivers", "contracts"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+rust-version = "1.98"
+
+[workspace.dependencies]
+# The oracle. Exact pin (pins.toml [rust] stellar_xdr). Features: SEP-51 JSON, typed decode by name.
+stellar-xdr = { version = "=30.0.0", default-features = false, features = ["std", "serde", "serde_json", "base64", "type_enum"] }
+stellar-strkey = "=1.0.0"
+anyhow = "1"
+thiserror = "2"
+clap = { version = "4.6", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "unbounded_depth"] }
+sha2 = "0.10"
+hex = "0.4"
+zstd = "0.13"
+toml = "0.9"
+xdrcheck-xdr = { path = "crates/xdrcheck-xdr" }
+xdrcheck-meta = { path = "crates/xdrcheck-meta" }
+xdrcheck-gen = { path = "crates/xdrcheck-gen" }
+
+[profile.release]
+debug = 1
+
+# The tests run the debug xdrcheck-corpus binary over the whole vendored corpus many times, and unoptimised code
+# dominates their run time. The dev and test builds therefore optimise every dependency (stellar-xdr, sha2, zstd,
+# serde_json, jsonschema, ...) and the libraries the corpus tool calls into; xdrcheck-corpus itself and its many
+# test crates stay at opt-level 0 so a change to them rebuilds quickly. Debug assertions and overflow checks stay
+# on everywhere, so the tests check exactly what they checked before.
+#
+# Debug information: line tables for the workspace's crates (a failing test's backtrace still names file and line),
+# none for the dependencies. With full debug information a cold test build is 13 GB, more than a CI runner has
+# free; with these settings it is about 3 GB and builds about a third faster.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+[profile.dev.package.xdrcheck-xdr]
+opt-level = 1
+
+[profile.dev.package.xdrcheck-meta]
+opt-level = 1
+
+[profile.dev.package.xdrcheck-gen]
+opt-level = 1
