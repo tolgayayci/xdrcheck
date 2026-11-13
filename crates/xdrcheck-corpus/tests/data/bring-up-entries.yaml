@@ -1,0 +1,50 @@
+# Entries on bring-up and setup ledgers, and the root account in a step: the protocol upgrade
+# from genesis (LedgerCloseMeta v0), the ledger that applies the network settings, a `fund`
+# setup item, and a create_account sourced and signed by root.
+scenario: bring-up-entries
+caps: []
+protocols: [30]
+profile: lake
+actors: [A, D]
+bring_up:
+  - ledger: upgrade
+    entry: ledger/standalone-upgrade-0-to-30-lcm-v0
+    expect:
+      ledger: {transactions: 0}
+      values:
+        - {path: /v0/ledger_header/header/ledger_version, equals: 30}
+  - ledger: settings-applied
+    entry: ledger/config-upgrade-set-applied
+    expect:
+      ledger: {transactions: 0}
+setup:
+  - fund: {A: "10000"}
+    entry: probe/setup-entry
+    expect:
+      transactions: [{index: 0, successful: true}]
+steps:
+  - id: root-creates-d
+    entry: classic/create-account-funded-from-root
+    tx:
+      source_account: "${acct.root}"
+      fee: 100
+      seq_num: "${seq.root}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {create_account: {destination: "${acct.D}", starting_balance: "1000000000"}}
+      ext: v0
+    sign: [{key: root}]
+    expect_result: tx_success
+    expect:
+      transactions: [{index: 0, successful: true}]
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/source_account
+          equals: "${acct.root}"
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {account: {account_id: "${acct.D}"}}
+            change: created
+          path: /created/data/account/balance
+          equals: "1000000000"

@@ -1,0 +1,87 @@
+# Token grammar `xcc.shape/v1` of `xcc-corpus scan`: the data the token emitter reads.
+#
+# Every stored token is `<kind>|<class>|<body>`, so a level, an ablation or a coarsening is a filter
+# on stored tokens (offline), and a change here needs no code change. The sha256 of this file is
+# recorded in each run's `run.json`.
+grammar = "xcc.shape/v1"
+
+# Operation-versus-effect relations to emit (names of the built-in rules).
+relations = ["change_trust", "manage_data", "set_options", "allow_trust", "set_trust_line_flags"]
+
+# Token kinds and classes not emitted at all (coarsening before a scan). Empty in v1.
+drop_kinds = []
+drop_classes = []
+
+# Protocol numbers the network skipped (for the protocol a ledger's transactions were applied at,
+# on a ledger that carries a version upgrade).
+skipped_protocols = [14]
+
+# Token kinds kept at each level (projections of the stored G3 tokens).
+[levels]
+G0 = ["T"]
+G1 = ["T", "A", "O", "E"]
+G2 = ["T", "A", "O", "E", "L", "V", "S", "K", "X"]
+G3 = ["T", "A", "O", "E", "L", "V", "S", "K", "X", "D", "R"]
+
+[classes]
+# Upper bounds of the length classes: 0 | 1 | 2 | 3-4 | 5-16 | 17-100 | >100, plus `=max` when a
+# declared maximum is reached.
+len = [0, 1, 2, 4, 16, 100]
+# Site depth classes; the edges are reader limits.
+depth = [1, 2, 3, 8, 32, 99, 124, 199, 255, 374, 499]
+# Site node-count classes.
+nodes = [1, 2, 4, 16, 100, 1000]
+# How often one change token occurs in one change list: 1 | 2 | 3+.
+count = [1, 2]
+# Operations per transaction.
+ops = [1, 2, 4, 16, 100]
+# Multiplicity of one operation component inside a transaction.
+op_mult = [1, 2, 4]
+
+[walk]
+# Recursive types: one summary token each (arm set, depth class, node class), never a path.
+sites = ["SCVal", "SorobanAuthorizedInvocation", "ClaimPredicate", "SCSpecTypeDef", "SCPQuorumSet", "SorobanDelegateSignature"]
+# Described by their own tokens (events: `X`); the generic walk keeps only type-level `T` tokens.
+summarised = ["ContractEvent", "DiagnosticEvent"]
+
+# Value classes at a place. `type` matches a definition, `field` a `Struct.field`, `leaf` a primitive.
+[[values]]
+type = "Price"
+class = "price"
+
+[[values]]
+field = "MuxedAccountMed25519.id"
+class = "u64band"
+
+[[values]]
+field = "PreconditionsV2.minSeqNum"
+class = "zero"
+
+[[values]]
+leaf = "string"
+class = "utf8"
+
+[events]
+# Closed vocabulary of first-topic symbols; any other symbol is `sym:other`. Rule: a name is listed
+# only when a reader under test branches on it (token events; lending-pool events).
+symbols = [
+    "transfer", "mint", "burn", "clawback", "approve", "set_authorized", "fee",
+    "supply", "supply_collateral", "withdraw_collateral", "borrow", "repay", "flash_loan", "bad_debt",
+    "defaulted_debt", "fill_auction", "withdraw", "claim", "deposit", "queue_withdrawal", "dequeue_withdrawal",
+]
+# Closed vocabulary of data-map keys; any other key is `key:other`.
+map_keys = ["amount", "to_muxed_id", "live_until_ledger", "lot", "bid"]
+# Map keys whose u64 value gets the u64 band.
+u64band_keys = ["to_muxed_id"]
+# A vocabulary event with more topics than this is summarised by count.
+max_topics = 4
+# A data map with more keys than this is summarised by count.
+max_keys = 4
+
+[changes]
+# Leaves never compared between a STATE and the UPDATED that follows it.
+ignore = ["lastModifiedLedgerSeq"]
+# Opaque leaves compared byte by byte (index named).
+per_byte = ["thresholds"]
+# Integer leaves reported as `old>new`.
+old_new = ["flags"]

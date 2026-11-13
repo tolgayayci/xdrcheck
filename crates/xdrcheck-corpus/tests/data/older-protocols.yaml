@@ -1,0 +1,50 @@
+# Bring-up below Protocol 26: classic payments at 13 and 19 (no Soroban settings), 22 and 23 (the
+# vendored quickstart sets), applied in a chosen order (the legacy transaction set before 20); at 23
+# a further step upgrades the chain to 24.
+scenario: older-protocols
+caps: []
+protocols: [13, 19, 22, 23]
+profile: lake
+actors: [A, B]
+setup:
+  - fund: {A: "10000", B: "10000"}
+steps:
+  - id: a-pays-b
+    entry: probe/older-protocol-payments
+    order: [b-pays-a, a-pays-b]
+    tx: &pay
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: {id: "${order_nonce}"}
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.B}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect:
+      transactions:
+        - {index: 0, successful: true}
+        - {index: 1, successful: true}
+  - id: b-pays-a
+    entry: probe/older-protocol-payments
+    same_ledger_as: a-pays-b
+    tx:
+      <<: *pay
+      source_account: "${acct.B}"
+      fee: 1001
+      seq_num: "${seq.B}"
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.A}", asset: native, amount: "20000000"}}
+    sign: [{key: B}]
+    expect_result: tx_success
+  - id: upgrade-to-24
+    entry: probe/upgrade-23-to-24
+    protocols: [23]
+    upgrade: {protocolversion: 24}
+    expect:
+      ledger: {transactions: 0}

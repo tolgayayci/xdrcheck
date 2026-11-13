@@ -1,0 +1,35 @@
+# Custom Soroban settings through the fixed-salt upgrade path: shorter entry lifetimes and an
+# earlier eviction scan (merged into the settings the node holds), then a frozen account key
+# written as SEP-51 JSON of its LedgerKey.
+scenario: config-upgrade
+caps: []
+protocols: [30]
+profile: lake
+actors: [F]
+setup:
+  - fund: {F: "100"}
+  - config_upgrade:
+      state_archival: {min_persistent_ttl: 10, min_temporary_ttl: 16, starting_eviction_scan_level: 1}
+    entry: probe/archival-settings-applied
+    expect:
+      ledger: {transactions: 0}
+      values:
+        - select:
+            in: /v2/upgrades_processing/0/changes
+            key: {config_setting: {config_setting_id: state_archival}}
+            change: updated
+          path: /updated/data/config_setting/state_archival/min_persistent_ttl
+          equals: 10
+  - config_upgrade:
+      frozen_ledger_keys_delta:
+        keys_to_freeze: [{account: {account_id: "${acct.F}"}}]
+        keys_to_unfreeze: []
+    entry: probe/frozen-key-applied
+    expect:
+      ledger: {transactions: 0}
+steps:
+  - id: one-more-ledger
+    entry: probe/after-config-upgrades
+    close: {}
+    expect:
+      ledger: {transactions: 0}

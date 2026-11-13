@@ -1,0 +1,70 @@
+# Surge pricing on a local chain: the ledger admits two operations, three single-payment
+# transactions bid 300, 200 and 100 per operation. The lowest bid is left out (accepted into the
+# queue, not in the set); the set's component carries the discounted base fee 200, which both
+# included transactions are charged. The left-out transaction's time bounds end with that ledger,
+# so no later ledger picks it up.
+scenario: surge-pricing
+caps: []
+protocols: [30]
+profile: lake
+actors: [A, B, C, D]
+setup:
+  - fund: {A: "100", B: "100", C: "100", D: "100"}
+steps:
+  - id: two-operations-per-ledger
+    entry: probe/max-tx-set-size-two
+    upgrade: {maxtxsetsize: 2}
+    expect:
+      ledger: {transactions: 0}
+
+  - id: bid-300
+    entry: probe/surge-priced-set
+    order: [bid-300, bid-200]
+    tx: &pay
+      source_account: "${acct.A}"
+      fee: 300
+      seq_num: "${seq.A}"
+      cond: none
+      memo: {id: "${order_nonce}"}
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.D}", asset: native, amount: "1"}}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect:
+      transactions:
+        - {index: 0, successful: true, fee_charged: "200"}
+        - {index: 1, successful: true, fee_charged: "200"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/base_fee
+          equals: "200"
+  - id: bid-200
+    entry: probe/surge-priced-set
+    same_ledger_as: bid-300
+    tx:
+      <<: *pay
+      source_account: "${acct.B}"
+      fee: 200
+      seq_num: "${seq.B}"
+      memo: none
+    sign: [{key: B}]
+    expect_result: tx_success
+  - id: bid-100
+    entry: probe/surge-priced-set
+    same_ledger_as: bid-300
+    tx:
+      <<: *pay
+      source_account: "${acct.C}"
+      fee: 100
+      seq_num: "${seq.C}"
+      cond: {time: {min_time: "0", max_time: "${close_time}"}}
+      memo: none
+    sign: [{key: C}]
+    expect_excluded: true
+
+  - id: next-ledger
+    entry: probe/after-surge
+    close: {}
+    expect:
+      ledger: {transactions: 0}

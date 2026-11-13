@@ -1,0 +1,34 @@
+[package]
+name = "xdrcheck-corpus"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "xdrcheck-corpus"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+hex.workspace = true
+stellar-xdr.workspace = true
+xdrcheck-xdr.workspace = true
+xdrcheck-meta.workspace = true
+xdrcheck-gen.workspace = true
+zstd.workspace = true
+# JSON Schema 2020-12 validator for the frozen corpus schemas; exact pin, no network resolvers.
+jsonschema = { version = "=0.61.2", default-features = false }
+# coverage: corpus/caps.toml.
+toml.workspace = true
+# guide-table and guide-claims: fields.yaml, claims.yaml and the guide page. The exact versions
+# xdrcheck-gen and Cargo.lock already carry.
+serde_yaml = "=0.9.34"
+regex = "=1.13.1"
+# scan: columnar output, pooled HTTPS reads of the public lake, the ETag check.
+parquet = { version = "=59.3.0", default-features = false, features = ["zstd"] }
+ureq = { version = "=3.4.3", default-features = false, features = ["rustls"] }
+md-5 = "=0.10.6"
