@@ -1,0 +1,1482 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:observation:v1",
+  "title": "Observation set",
+  "description": "What an indexer holds for a ledger range after ingesting it, in a neutral vocabulary. Returned by an adapter's `observe` call. Field names mirror the `expect` block of the corpus manifest so the harness can compare them fact for fact. An adapter reports what the indexer stored; it never repairs, normalises or derives values the indexer does not hold.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "range",
+    "kinds",
+    "ledgers"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.observation/v1"
+    },
+    "range": {
+      "$ref": "#/$defs/range"
+    },
+    "kinds": {
+      "description": "For each observation kind: whether this response provides it. A kind that is not_applicable is never scored as dropped.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipts",
+        "transactions",
+        "participants",
+        "state_changes",
+        "movements",
+        "addresses"
+      ],
+      "properties": {
+        "receipts": {
+          "$ref": "#/$defs/kindStatus"
+        },
+        "transactions": {
+          "$ref": "#/$defs/kindStatus"
+        },
+        "participants": {
+          "$ref": "#/$defs/kindStatus"
+        },
+        "state_changes": {
+          "$ref": "#/$defs/kindStatus"
+        },
+        "movements": {
+          "$ref": "#/$defs/kindStatus"
+        },
+        "addresses": {
+          "$ref": "#/$defs/kindStatus"
+        }
+      }
+    },
+    "ledgers": {
+      "description": "One element per ledger the indexer holds any record of, ascending by ledger_seq. A ledger in the requested range that is missing here was not seen by the indexer.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ledger"
+      }
+    },
+    "errors": {
+      "description": "Errors the indexer itself recorded for this range (dead-letter rows, skipped-item logs). Not adapter failures.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ledger_seq",
+          "message"
+        ],
+        "properties": {
+          "ledger_seq": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tx_hash": {
+            "$ref": "#/$defs/hash"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "decimal": {
+      "description": "An integer of any width as a decimal string. JSON numbers are not accepted anywhere an amount or 64-bit ID appears.",
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]*)$"
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "kindStatus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "provided",
+            "not_applicable"
+          ]
+        },
+        "reason": {
+          "description": "Required when not_applicable: why the indexer does not model this kind.",
+          "type": "string"
+        },
+        "subkinds": {
+          "description": "When provided: the subset of sub-kinds the indexer models (state-change kinds, movement kinds, receipt counters). Absent means all.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "not_applicable"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reason"
+            ]
+          }
+        }
+      ]
+    },
+    "stored": {
+      "description": "A value exactly as the indexer stores or returns it, before any interpretation. The harness decodes it with its own strict decoder.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "value"
+      ],
+      "properties": {
+        "encoding": {
+          "description": "strkey_text: the stored text. version_byte_payload_hex: hex of a strkey version byte followed by the raw payload (no checksum). xdr_hex: hex of the XDR value. raw_key_hex: hex of a bare 32-byte key with no type information.",
+          "enum": [
+            "strkey_text",
+            "version_byte_payload_hex",
+            "xdr_hex",
+            "raw_key_hex"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "account": {
+      "description": "Mirrors the manifest's account object. `address` is filled only if the indexer itself holds the base form; an adapter must not compute a base address from a muxed one on the indexer's behalf.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "address": {
+          "description": "Base address as held by the indexer: G\u2026 account, C\u2026 contract, B\u2026 claimable balance, L\u2026 liquidity pool.",
+          "type": "string"
+        },
+        "muxed_id": {
+          "$ref": "#/$defs/decimal"
+        },
+        "on_chain_form": {
+          "description": "The M\u2026 or W\u2026 form, if the indexer holds it.",
+          "type": "string"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "as_stored": {
+          "$ref": "#/$defs/stored"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "address"
+          ]
+        },
+        {
+          "required": [
+            "on_chain_form"
+          ]
+        },
+        {
+          "required": [
+            "as_stored"
+          ]
+        }
+      ]
+    },
+    "locator": {
+      "type": "object",
+      "properties": {
+        "tx_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "tx_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "op_index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ledger_seq"
+      ],
+      "properties": {
+        "ledger_seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ledger_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "receipt": {
+          "description": "How many of each thing the indexer accounted for in this ledger. Compared exactly with the manifest's expect.ledger.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "transactions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "operations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "events": {
+              "description": "Consensus events only; diagnostic events are not counted.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "entry_changes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "hash"
+            ],
+            "properties": {
+              "hash": {
+                "$ref": "#/$defs/hash"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "successful": {
+                "type": "boolean"
+              },
+              "result_code": {
+                "type": "string",
+                "description": "Transaction result as XDR-JSON names it (tx_success, tx_failed, tx_fee_bump_inner_failed, \u2026), the same naming as expect.transactions[].result_code. The adapter maps the indexer's own label through a fixed table and may keep the original in native_label."
+              },
+              "operation_result_codes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fee_charged": {
+                "$ref": "#/$defs/decimal"
+              },
+              "inner_hash": {
+                "description": "For a fee-bump: hash of the inner transaction, if the indexer records it.",
+                "$ref": "#/$defs/hash"
+              },
+              "inner_successful": {
+                "type": "boolean"
+              },
+              "inner_result_code": {
+                "type": "string"
+              },
+              "native_label": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "account"
+            ],
+            "properties": {
+              "tx_hash": {
+                "$ref": "#/$defs/hash"
+              },
+              "tx_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "op_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "account": {
+                "$ref": "#/$defs/account"
+              }
+            }
+          }
+        },
+        "state_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "tx_hash": {
+                "$ref": "#/$defs/hash"
+              },
+              "tx_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "op_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "enum": [
+                  "account_created",
+                  "account_removed",
+                  "balance_changed",
+                  "trustline_created",
+                  "trustline_removed",
+                  "trustline_flags_changed",
+                  "trustline_limit_changed",
+                  "signer_added",
+                  "signer_removed",
+                  "signer_changed",
+                  "sponsorship_changed",
+                  "offer_changed",
+                  "liquidity_pool_created",
+                  "liquidity_pool_removed",
+                  "liquidity_pool_changed",
+                  "claimable_balance_created",
+                  "claimable_balance_claimed",
+                  "contract_data_changed",
+                  "contract_deployed",
+                  "entry_restored",
+                  "entry_evicted",
+                  "data_entry_changed",
+                  "thresholds_changed",
+                  "sequence_bumped",
+                  "account_flags_changed",
+                  "home_domain_changed",
+                  "inflation_destination_changed",
+                  "ttl_extended",
+                  "contract_code_created"
+                ],
+                "description": "Must stay identical to expect.state_changes[].kind in manifest-entry.schema.json."
+              },
+              "account": {
+                "$ref": "#/$defs/account"
+              },
+              "asset": {
+                "type": "string"
+              },
+              "signer": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "ed25519",
+                      "pre_auth_tx",
+                      "hash_x",
+                      "ed25519_signed_payload"
+                    ]
+                  },
+                  "key": {
+                    "description": "Canonical strkey, only if the indexer holds it in that form.",
+                    "type": "string"
+                  },
+                  "payload_hex": {
+                    "type": "string",
+                    "pattern": "^([0-9a-f]{2})*$"
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  },
+                  "as_stored": {
+                    "$ref": "#/$defs/stored"
+                  }
+                }
+              },
+              "detail": {
+                "type": "object",
+                "description": "Keys are fixed per kind, identical to the manifest's. Where the indexer holds a value in another representation (a decimal with a fraction, a label) the adapter passes the literal token under <key>_as_stored and leaves <key> out; it never converts."
+              },
+              "cause": {
+                "type": "string"
+              },
+              "native_label": {
+                "description": "The indexer's own name for this record (for example TRUSTLINE/ADD), for the report only.",
+                "type": "string"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "account_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "starting_balance",
+                          "sponsor",
+                          "starting_balance_as_stored",
+                          "sponsor_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "account_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "merged_into",
+                          "balance_transferred",
+                          "merged_into_as_stored",
+                          "balance_transferred_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "balance_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "delta",
+                          "balance_after",
+                          "reason",
+                          "delta_as_stored",
+                          "balance_after_as_stored",
+                          "reason_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance",
+                          "limit",
+                          "flags",
+                          "authorized",
+                          "authorized_to_maintain_liabilities",
+                          "clawback_enabled",
+                          "sponsor",
+                          "num_sub_entries_after",
+                          "pool_strkey",
+                          "balance_as_stored",
+                          "limit_as_stored",
+                          "flags_as_stored",
+                          "authorized_as_stored",
+                          "authorized_to_maintain_liabilities_as_stored",
+                          "clawback_enabled_as_stored",
+                          "sponsor_as_stored",
+                          "num_sub_entries_after_as_stored",
+                          "pool_strkey_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance",
+                          "pool_strkey",
+                          "balance_as_stored",
+                          "pool_strkey_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_flags_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "flags",
+                          "authorized",
+                          "authorized_to_maintain_liabilities",
+                          "clawback_enabled",
+                          "initial",
+                          "flags_as_stored",
+                          "authorized_as_stored",
+                          "authorized_to_maintain_liabilities_as_stored",
+                          "clawback_enabled_as_stored",
+                          "initial_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_limit_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "limit",
+                          "limit_before",
+                          "limit_as_stored",
+                          "limit_before_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "signer_added"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "signer_key_xdr_hex",
+                          "signer_ed25519_key",
+                          "payload_bytes",
+                          "weight_before",
+                          "sponsor",
+                          "signer_key_xdr_hex_as_stored",
+                          "signer_ed25519_key_as_stored",
+                          "payload_bytes_as_stored",
+                          "weight_before_as_stored",
+                          "sponsor_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "signer_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "signer_key_xdr_hex",
+                          "signer_ed25519_key",
+                          "payload_bytes",
+                          "weight_before",
+                          "sponsor",
+                          "signer_key_xdr_hex_as_stored",
+                          "signer_ed25519_key_as_stored",
+                          "payload_bytes_as_stored",
+                          "weight_before_as_stored",
+                          "sponsor_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "signer_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "signer_key_xdr_hex",
+                          "signer_ed25519_key",
+                          "payload_bytes",
+                          "weight_before",
+                          "sponsor",
+                          "signer_key_xdr_hex_as_stored",
+                          "signer_ed25519_key_as_stored",
+                          "payload_bytes_as_stored",
+                          "weight_before_as_stored",
+                          "sponsor_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "sponsorship_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "sponsor_before",
+                          "sponsor_after",
+                          "entry_type_as_stored",
+                          "sponsor_before_as_stored",
+                          "sponsor_after_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "offer_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "offer_id",
+                          "change",
+                          "selling",
+                          "buying",
+                          "amount",
+                          "price_n",
+                          "price_d",
+                          "offer_id_as_stored",
+                          "change_as_stored",
+                          "selling_as_stored",
+                          "buying_as_stored",
+                          "amount_as_stored",
+                          "price_n_as_stored",
+                          "price_d_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "liquidity_pool_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "pool_id",
+                          "pool_strkey",
+                          "asset_a",
+                          "asset_b",
+                          "fee_bp",
+                          "reserve_a",
+                          "reserve_b",
+                          "total_shares",
+                          "pool_shares_trust_line_count",
+                          "pool_id_as_stored",
+                          "pool_strkey_as_stored",
+                          "asset_a_as_stored",
+                          "asset_b_as_stored",
+                          "fee_bp_as_stored",
+                          "reserve_a_as_stored",
+                          "reserve_b_as_stored",
+                          "total_shares_as_stored",
+                          "pool_shares_trust_line_count_as_stored",
+                          "asset_a_issuer_key_hex",
+                          "asset_a_issuer_key_hex_as_stored",
+                          "asset_b_issuer_key_hex",
+                          "asset_b_issuer_key_hex_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "liquidity_pool_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "pool_id",
+                          "pool_strkey",
+                          "pool_id_as_stored",
+                          "pool_strkey_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "liquidity_pool_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "pool_id",
+                          "pool_strkey",
+                          "asset_a",
+                          "asset_b",
+                          "fee_bp",
+                          "reserve_a",
+                          "reserve_b",
+                          "total_shares",
+                          "pool_shares_trust_line_count",
+                          "pool_id_as_stored",
+                          "pool_strkey_as_stored",
+                          "asset_a_as_stored",
+                          "asset_b_as_stored",
+                          "fee_bp_as_stored",
+                          "reserve_a_as_stored",
+                          "reserve_b_as_stored",
+                          "total_shares_as_stored",
+                          "pool_shares_trust_line_count_as_stored",
+                          "asset_a_issuer_key_hex",
+                          "asset_a_issuer_key_hex_as_stored",
+                          "asset_b_issuer_key_hex",
+                          "asset_b_issuer_key_hex_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "claimable_balance_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance_id",
+                          "amount",
+                          "claimants",
+                          "sponsor",
+                          "balance_id_as_stored",
+                          "amount_as_stored",
+                          "claimants_as_stored",
+                          "sponsor_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "claimable_balance_claimed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance_id",
+                          "amount",
+                          "balance_id_as_stored",
+                          "amount_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_data_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "contract",
+                          "key_xdr_hex",
+                          "durability",
+                          "change",
+                          "contract_as_stored",
+                          "key_xdr_hex_as_stored",
+                          "durability_as_stored",
+                          "change_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_deployed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "contract",
+                          "executable",
+                          "wasm_hash",
+                          "asset",
+                          "contract_as_stored",
+                          "executable_as_stored",
+                          "wasm_hash_as_stored",
+                          "asset_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "entry_restored"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "key_xdr_hex",
+                          "entry_type_as_stored",
+                          "key_xdr_hex_as_stored",
+                          "wasm_hash",
+                          "wasm_hash_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "entry_evicted"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "key_xdr_hex",
+                          "entry_type_as_stored",
+                          "key_xdr_hex_as_stored",
+                          "wasm_hash",
+                          "wasm_hash_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "data_entry_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "name",
+                          "value_hex",
+                          "change",
+                          "name_as_stored",
+                          "value_hex_as_stored",
+                          "change_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "thresholds_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "master_weight",
+                          "low",
+                          "medium",
+                          "high",
+                          "master_weight_as_stored",
+                          "low_as_stored",
+                          "medium_as_stored",
+                          "high_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "sequence_bumped"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "sequence_after",
+                          "sequence_after_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "account_flags_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "flags",
+                          "flags_before",
+                          "auth_required",
+                          "auth_revocable",
+                          "auth_immutable",
+                          "auth_clawback_enabled",
+                          "flags_as_stored",
+                          "flags_before_as_stored",
+                          "auth_required_as_stored",
+                          "auth_revocable_as_stored",
+                          "auth_immutable_as_stored",
+                          "auth_clawback_enabled_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "home_domain_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "home_domain",
+                          "home_domain_hex",
+                          "home_domain_before",
+                          "home_domain_as_stored",
+                          "home_domain_hex_as_stored",
+                          "home_domain_before_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "inflation_destination_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "inflation_destination",
+                          "inflation_destination_before",
+                          "cleared",
+                          "inflation_destination_as_stored",
+                          "inflation_destination_before_as_stored",
+                          "cleared_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "ttl_extended"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "key_xdr_hex",
+                          "key_hash",
+                          "contract",
+                          "wasm_hash",
+                          "live_until_ledger",
+                          "live_until_ledger_before",
+                          "entry_type_as_stored",
+                          "key_xdr_hex_as_stored",
+                          "key_hash_as_stored",
+                          "contract_as_stored",
+                          "wasm_hash_as_stored",
+                          "live_until_ledger_as_stored",
+                          "live_until_ledger_before_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_code_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "wasm_hash",
+                          "code_bytes",
+                          "wasm_hash_as_stored",
+                          "code_bytes_as_stored"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "movements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "asset"
+            ],
+            "properties": {
+              "tx_hash": {
+                "$ref": "#/$defs/hash"
+              },
+              "tx_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "op_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "enum": [
+                  "transfer",
+                  "mint",
+                  "burn",
+                  "clawback",
+                  "fee",
+                  "fee_refund"
+                ]
+              },
+              "asset": {
+                "type": "string"
+              },
+              "amount": {
+                "$ref": "#/$defs/decimal",
+                "description": "The amount as an exact integer in the asset's smallest unit. Present only if the indexer holds an exact integer."
+              },
+              "amount_as_stored": {
+                "description": "The amount token exactly as the indexer emitted it, when it is not an exact integer string (for example a JSON float or a decimal with a fraction). Given instead of, or as well as, `amount`.",
+                "type": "string"
+              },
+              "from": {
+                "$ref": "#/$defs/account"
+              },
+              "to": {
+                "$ref": "#/$defs/account"
+              },
+              "routing": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "absent",
+                      "void",
+                      "u64",
+                      "text",
+                      "bytes"
+                    ]
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              },
+              "native_label": {
+                "type": "string"
+              }
+            },
+            "anyOf": [
+              {
+                "required": [
+                  "amount"
+                ]
+              },
+              {
+                "required": [
+                  "amount_as_stored"
+                ]
+              }
+            ]
+          }
+        },
+        "addresses": {
+          "description": "Every address-bearing value the indexer stored for this ledger, exactly as stored.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "field",
+              "as_stored"
+            ],
+            "properties": {
+              "tx_hash": {
+                "$ref": "#/$defs/hash"
+              },
+              "tx_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "op_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "field": {
+                "description": "Where the indexer keeps it, in the indexer's own terms (table.column or JSON path).",
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "account",
+                  "muxed_account",
+                  "contract",
+                  "muxed_contract",
+                  "claimable_balance",
+                  "liquidity_pool",
+                  "signed_payload",
+                  "pre_auth_tx",
+                  "hash_x"
+                ]
+              },
+              "as_stored": {
+                "$ref": "#/$defs/stored"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
