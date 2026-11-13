@@ -1,0 +1,37 @@
+XDRCheck
+Copyright 2026 The XDRCheck authors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It includes or redistributes the following third-party material, each under its own terms:
+
+- stellar-core (https://github.com/stellar/stellar-core), Copyright Stellar Development Foundation and
+  contributors, Apache License 2.0: golden LedgerCloseMeta files and test-derived ledger data, imported with
+  their original bytes. Provenance (tag, commit, path, frame, sha256) is recorded per entry in corpus/manifest/.
+
+- Public Stellar network history from the public Stellar data lake
+  (s3://aws-public-blockchain/v1.1/stellar/ledgers/). Captured objects are stored unmodified under
+  corpus/objects/<network>/<ledger>/ with their lake key and sha256 in capture.json next to each object;
+  entries built from them record the same provenance in corpus/manifest/.
+
+- Stellar Ecosystem Proposal SEP-0023 test vectors (https://github.com/stellar/stellar-protocol), reproduced
+  verbatim as corpus entries.
+
+- Soroban network settings derived from stellar/quickstart (https://github.com/stellar/quickstart, Apache
+  License 2.0) and stellar/stellar-rpc (https://github.com/stellar/stellar-rpc, Apache License 2.0), used to
+  configure local stellar-core runs (corpus/settings/, evidence/).
+
+- evidence/ holds reproduction scripts and their transcripts. They install and run third-party software
+  (the Stellar SDKs for JavaScript, Go, Rust, Python and Java; stellar/wallet-backend; stellar-core) from
+  public registries at the versions they name, and include log output of those programs. The software itself is
+  not redistributed here and remains under its owners' licences.
+
+- corpus/settings/write-upgrade-bytes.wasm is a test contract from stellar/rs-soroban-env
+  (https://github.com/stellar/rs-soroban-env, Apache License 2.0), embedded unchanged by stellar-core and used
+  here to install Soroban settings upgrades on local networks.
+
+- lint/testdata/regress/ holds source files from stellar/wallet-backend (https://github.com/stellar/wallet-backend)
+  and stellar/stellar-etl (https://github.com/stellar/stellar-etl), both Apache License 2.0, Copyright Stellar
+  Development Foundation and contributors, at the commits their directory names give. They are regression
+  fixtures for the linter, kept line-for-line; the changes (import paths pointed at local stand-ins, and the
+  marked minimal fix where upstream has none) are noted in each package's doc comment.
