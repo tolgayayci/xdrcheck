@@ -1,0 +1,37 @@
+{
+  "rules": [
+    {
+      "reader": "rust@*",
+      "mutator": "bool-2",
+      "finding": "F-0037",
+      "note": "stellar-xdr reads a bool of 2 as false, stellar-core as true"
+    },
+    {
+      "reader": "python@*",
+      "mutator": "bool-2",
+      "finding": "F-0041",
+      "note": "py-stellar-base reads a bool of 2 as true, the network's reading"
+    },
+    {
+      "reader": "js@16.*",
+      "verdict": "refuses-valid",
+      "mutator": "deepen",
+      "finding": "F-0022",
+      "note": "js-xdr 4.x decodes at most 200 levels"
+    },
+    {
+      "reader": "rust@*:limits-none",
+      "verdict": "halt",
+      "mutator": "len-over-remaining",
+      "finding": "F-0043",
+      "note": "Limits::none() allocates what a length prefix claims before reading the body"
+    },
+    {
+      "reader": "go@v0.7.1",
+      "verdict": "halt",
+      "mutator": "len-over-remaining",
+      "finding": "F-0026",
+      "note": "go-xdr allocates what a length prefix claims before reading the body"
+    }
+  ]
+}
