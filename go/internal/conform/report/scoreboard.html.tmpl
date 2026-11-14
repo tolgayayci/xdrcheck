@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XDRCheck scoreboard</title>
+<style>
+:root {
+  --bg: #fbfbfa; --fg: #1d1f21; --muted: #5f6368; --line: #e3e3e0; --card: #ffffff;
+  --pass: #2e7d4f; --known: #b7791f; --unexpected: #c0392b; --review: #6b5bd2; --na: #9aa0a6;
+  --link: #1a5fb4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171a; --fg: #e6e6e3; --muted: #a0a4a8; --line: #2c2f33; --card: #1c1f23;
+    --pass: #4caf7a; --known: #d9a441; --unexpected: #e5675a; --review: #9b8cf0; --na: #6b7075;
+    --link: #8ab4f8;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+h2 { font-size: 1.15rem; margin: 36px 0 8px; }
+p.sub, p.note { color: var(--muted); margin: 0 0 12px; }
+.wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { font-weight: 600; color: var(--muted); font-size: 0.85rem; }
+th:first-child, td:first-child, td.l, th.l { text-align: left; }
+tr:last-child td { border-bottom: 0; }
+code { font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+.bar { display: flex; width: 160px; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); }
+.bar span { display: block; height: 100%; }
+.s-pass { background: var(--pass); } .s-known { background: var(--known); }
+.s-unexpected { background: var(--unexpected); } .s-review { background: var(--review); }
+.n-unexpected { color: var(--unexpected); font-weight: 600; } .n-known { color: var(--known); }
+.n-review { color: var(--review); } .zero { color: var(--na); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; color: var(--muted); font-size: 0.85rem; margin: 6px 0 12px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.tag { font-size: 0.75rem; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; margin-left: 6px; }
+a { color: var(--link); }
+ul.bugs { list-style: none; padding: 0; margin: 0; }
+ul.bugs li { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+ul.bugs li:last-child { border-bottom: 0; }
+.sev { display: inline-block; min-width: 62px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+footer { margin-top: 40px; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>XDRCheck scoreboard</h1>
+<p class="sub">Corpus {{if .Corpus}}{{.Corpus}}{{else}}(no conformance matrix){{end}}. Every implementation is judged against what the corpus expects from the bytes, never against another implementation.</p>
+
+<h2>Implementations</h2>
+<div class="legend">
+  <span><i class="s-pass"></i>pass</span>
+  <span><i class="s-known"></i>known: a declared, already reported divergence</span>
+  <span><i class="s-unexpected"></i>unexpected: a failure nothing declares</span>
+  <span><i class="s-review"></i>under review</span>
+</div>
+{{if .Implementations}}
+<div class="wrap"><table>
+<thead><tr><th class="l">Implementation</th><th class="l">Kind</th><th>Pass</th><th>Known</th><th>Unexpected</th><th>Under review</th><th>Not applicable</th><th class="l">Share of judged cells</th></tr></thead>
+<tbody>
+{{range .Implementations}}<tr>
+<td><code>{{.Name}}</code>{{if eq .Source "replay"}}<span class="tag">replay</span>{{end}}</td>
+<td class="l">{{.Kind}}</td>
+<td>{{.Pass}}</td>
+<td class="{{if .Known}}n-known{{else}}zero{{end}}">{{.Known}}</td>
+<td class="{{if .Unexpected}}n-unexpected{{else}}zero{{end}}">{{.Unexpected}}</td>
+<td class="{{if .Review}}n-review{{else}}zero{{end}}">{{.Review}}</td>
+<td class="zero">{{.NA}}</td>
+<td class="l"><div class="bar" role="img" aria-label="{{.Pass}} pass, {{.Known}} known, {{.Unexpected}} unexpected, {{.Review}} under review"><span class="s-pass" style="width:{{pct . .Pass}}%"></span><span class="s-known" style="width:{{pct . .Known}}%"></span><span class="s-unexpected" style="width:{{pct . .Unexpected}}%"></span><span class="s-review" style="width:{{pct . .Review}}%"></span></div></td>
+</tr>
+{{end}}</tbody>
+</table></div>
+{{else}}<p class="note">No implementation in the inputs.</p>{{end}}
+
+<h2>Failures by bug class</h2>
+<p class="note">Failing cells (known, unexpected and under review), by the bug classes the corpus entry carries; an entry with several flags counts under each.</p>
+{{if .Classes}}
+<div class="wrap"><table>
+<thead><tr><th class="l">Bug class</th><th>All</th>{{range .Families}}<th>{{.}}</th>{{end}}</tr></thead>
+<tbody>
+{{$fams := .Families}}{{range .Classes}}{{$c := .}}<tr><td><code>{{.Flag}}</code></td><td>{{.Total}}</td>{{range $fams}}{{$n := at $c.ByFamily .}}<td class="{{if not $n}}zero{{end}}">{{$n}}</td>{{end}}</tr>
+{{end}}</tbody>
+</table></div>
+{{else}}<p class="note">No failing cell.</p>{{end}}
+
+<h2>Bugs found</h2>
+<p class="note">Defects filed upstream, most severe first; each links to its public report.</p>
+{{if .Bugs}}
+<div class="wrap"><ul class="bugs">
+{{range .Bugs}}<li><span class="sev">{{.Severity}}</span> <a href="{{.URL}}">{{.Title}}</a> <span class="tag">{{.Project}}</span> <span class="tag">{{.Class}}</span></li>
+{{end}}</ul></div>
+{{else}}<p class="note">None listed.</p>{{end}}
+
+<footer>Generated by <code>xdrcheck conform scoreboard</code>.</footer>
+</main>
+</body>
+</html>
