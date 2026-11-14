@@ -1,0 +1,160 @@
+{
+  "schema": "xcc.seeded-bugs/v1",
+  "about": "What each seeded-bug indexer must produce under `xdrcheck replay`. One row per bug, in the order of the specification's table, plus `none` (the unmodified baseline). `entries` selects what is replayed (default: the entries named under `expect`; [\"*\"] is the whole corpus); `args` are extra `xdrcheck replay` arguments. Every report row must match an `expect` item by entry, variant, result (class·qualifier) and, when given, a substring of its notes; each item must be matched at least `min` (default 1) and at most `max` (default unlimited) times. An entry named under `expect` that the corpus does not hold yet is listed as pending, never silently passed. `hole` marks an item the harness is known not to meet yet: a mismatch there is reported as a known hole, and fails the run only under XDRCHECK_SELFTEST_STRICT=1.",
+  "target_version": "0.1.0",
+  "bugs": [
+    {
+      "bug": "truncate-address-56",
+      "expect": [
+        {"entry": "cap-0040/signed-payload-signer-added", "result": "mishandled·wrong_value", "why": "the P… signer (69 characters) loses its payload"},
+        {"entry": "cap-0067/sac-transfer-to-muxed-account", "result": "mishandled·wrong_value", "why": "the M… destination (69 characters) is cut"},
+        {"entry": "cap-0027/muxed-source-id-above-2-pow-63", "result": "mishandled·wrong_value", "why": "the M… source is cut"}
+      ]
+    },
+    {
+      "bug": "payload-dropped",
+      "expect": [
+        {"entry": "cap-0040/signed-payload-signer-added", "result": "mishandled·wrong_value", "why": "a prefix of the right value does not pass"}
+      ]
+    },
+    {
+      "bug": "drop-ledger-silently",
+      "expect": [
+        {"entry": "cap-0038/pool-issuers-order-by-bytes-not-strkey", "result": "dropped·silent", "why": "Protocol 29 is odd"},
+        {"entry": "cap-0062/eviction-golden.ee12e6272d0a8f2c", "result": "dropped·silent", "why": "empty transaction set"}
+      ]
+    },
+    {
+      "bug": "drop-contract-trustline",
+      "expect": [
+        {"entry": "cap-0073/sac-trust-creates-trustline", "result": "dropped·partial", "min": 1, "why": "every variant: the trustline a contract call created has no history row"}
+      ]
+    },
+    {
+      "bug": "extra-fee-rows",
+      "expect": [
+        {"entry": "cap-0073/sac-trust-creates-trustline", "result": "pass", "why": "the fee row is ambient and the authorisation row matches the only_if item"},
+        {"entry": "cap-0040/signed-payload-signer-added", "result": "pass", "why": "the fee row is ambient under state_changes_exact"}
+      ]
+    },
+    {
+      "bug": "panic-on-signed-payload",
+      "expect": [
+        {"entry": "cap-0040/signed-payload-signer-added", "result": "mishandled·crash"}
+      ]
+    },
+    {
+      "bug": "loop-forever",
+      "args": ["--deadline", "10s"],
+      "expect": [
+        {"entry": "cap-0027/muxed-source-id-above-2-pow-63", "result": "mishandled·hang", "why": "the ledger holds fee-bumps whose inner transaction failed"}
+      ]
+    },
+    {
+      "bug": "exit-permanent-error",
+      "expect": [
+        {"entry": "cap-0040/signed-payload-signer-added", "result": "mishandled·halt"}
+      ]
+    },
+    {
+      "bug": "halt-after-partial-write",
+      "expect": [
+        {"entry": "cap-0040/signed-payload-signer-added", "result": "mishandled·halt", "note": "partial_write", "why": "12 transactions: 6 written, then a stop"}
+      ]
+    },
+    {
+      "bug": "refuse-protocol-gate",
+      "expect": [
+        {"entry": "cap-0088/first-ledger-with-signed-ms", "result": "dropped·refused", "why": "the first millisecond-close-time ledger is at Protocol 30"}
+      ]
+    },
+    {
+      "bug": "fake-refusal",
+      "expect": [
+        {"entry": "cap-0040/signed-payload-signer-added", "result": "mishandled·halt", "note": "inside gate max_protocol", "why": "a Protocol 28 ledger is inside the declared envelope"}
+      ]
+    },
+    {
+      "bug": "dirty-refusal",
+      "expect": [
+        {"entry": "cap-0088/first-ledger-with-signed-ms", "result": "mishandled·halt", "note": "rows_for_failing_ledger is not 0", "why": "records exist for the refused ledger"}
+      ]
+    },
+    {
+      "bug": "fabricate-m-from-memo",
+      "expect": [
+        {"entry": "cap-0067/to-muxed-id-text-from-memo.pubnet-64558277", "result": "mishandled·wrong_value", "why": "the text memo becomes a muxed ID"},
+        {"entry": "cap-0067/to-muxed-id-bytes-from-memo-hash", "result": "mishandled·wrong_value", "why": "must-not fact: the memo hash read as an account"}
+      ]
+    },
+    {
+      "bug": "participants-from-auth",
+      "expect": [
+        {"entry": "cap-0046/auth-void-signature-custom-account-golden.44917775c201b758", "result": "mishandled·wrong_value", "why": "must-not fact: the custom account named only in an authorisation entry"},
+        {"entry": "cap-0046/auth-void-signature-custom-account-golden.a98349de3f77b108", "result": "mishandled·wrong_value", "why": "must-not fact, as above"}
+      ]
+    },
+    {
+      "bug": "participants-from-envelope",
+      "expect": [
+        {"entry": "cap-0033/bad-sponsorship-tx-result", "result": "mishandled·wrong_value", "why": "must-not fact: the sponsored ID of a failed transaction"}
+      ]
+    },
+    {
+      "bug": "muxed-only-identity",
+      "expect": [
+        {"entry": "cap-0027/muxed-source-id-zero", "result": "mishandled·wrong_value", "why": "identity stored only in muxed form"},
+        {"entry": "cap-0067/sac-transfer-to-muxed-account", "result": "mishandled·wrong_value", "why": "identity stored only in muxed form"}
+      ]
+    },
+    {
+      "bug": "credit-from-forged-event",
+      "expect": [
+        {"entry": "cap-0067/forged-token-event-from-unrelated-contract", "result": "mishandled·wrong_value", "why": "movement with count 0 present; must-not participant present"}
+      ]
+    },
+    {
+      "bug": "double-count-transfer",
+      "expect": [
+        {"entry": "cap-0067/to-muxed-id-void-custom-token", "result": "mishandled·wrong_value", "why": "count 2, expected 1"}
+      ]
+    },
+    {
+      "bug": "float-amounts",
+      "expect": [
+        {"entry": "classic/amount-above-2-pow-53-stroops", "result": "mishandled·wrong_value", "why": "a movement above 2^53 stroops"},
+        {"entry": "cap-0073/sac-trust-creates-trustline", "result": "mishandled·wrong_value", "min": 1, "why": "the trustline limit 9223372036854775807 comes back as 9223372036854775808"}
+      ]
+    },
+    {
+      "bug": "void-means-zero",
+      "expect": [
+        {"entry": "cap-0067/to-muxed-id-void-custom-token", "result": "mishandled·wrong_value", "why": "routing u64 0 where the ledger has Void"}
+      ]
+    },
+    {
+      "bug": "memory-hog",
+      "entries": ["*"],
+      "args": ["--network", "testnet", "--unit", "stream", "--repeat", "30", "--memory-max", "128M"],
+      "expect": [
+        {"entry": "*", "result": "pass", "why": "ledgers before the cap is crossed are scored normally"},
+        {"entry": "*", "result": "mishandled·crash", "note": "memory", "max": 1, "why": "the entry at which the cap is crossed: the indexer is killed for the adapter group's memory cap, the adapter reports the crash and the harness notes the kill"},
+        {"entry": "*", "result": "not_reached", "why": "entries after the stop"}
+      ]
+    },
+    {
+      "bug": "header-protocol-parser",
+      "expect": [
+        {"entry": "cap-0088/upgrade-ledger-header-30-whole-second-value", "result": "mishandled·halt", "why": "the Protocol 30 parser finds no closeTimeMs on the upgrade ledger"}
+      ]
+    },
+    {
+      "bug": "none",
+      "entries": ["*"],
+      "expect": [
+        {"entry": "*", "result": "pass", "why": "the unmodified baseline passes every replayable entry"},
+        {"entry": "*", "result": "dropped·refused", "min": 0, "why": "an entry beyond the baseline's declared gates is a verified refusal"}
+      ]
+    }
+  ]
+}
