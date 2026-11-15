@@ -1,0 +1,27 @@
+[package]
+name = "xdrcheck-driver-rust"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../src/build.rs"
+
+[[bin]]
+name = "xdrcheck-driver"
+path = "../src/main.rs"
+
+[[bin]]
+name = "xdrcheck-driver-selftest"
+path = "../src/selftest.rs"
+
+[dependencies]
+stellar-xdr = { version = "=28.0.0", default-features = false, features = ["std", "serde", "serde_json", "type_enum"] }
+stellar-strkey = "=0.0.13"
+serde_json = "=1.0.154"
+sha2 = "=0.10.9"
+hex = "=0.4.3"
+
+[features]
+default = []
+strkey-1 = []
+
+[workspace]

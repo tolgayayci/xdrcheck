@@ -1,0 +1,21 @@
+[package]
+name = "xdrcheck-driver-rs-xdr-json"
+version = "0.1.0"
+edition = "2021"
+publish = false
+build = "../src/build.rs"
+
+[[bin]]
+name = "xdrcheck-driver"
+path = "../src/main.rs"
+
+[dependencies]
+# rs-stellar-xdr main at the commit pins.toml names (conformance.columns rs-xdr-json-main).
+stellar-xdr = { git = "https://github.com/stellar/rs-stellar-xdr", rev = "ebec5fb1c76e2bcd17ec2fe9aae4203a6251f660", default-features = false, features = ["std", "serde", "serde_json", "schemars", "type_enum"] }
+serde = "=1.0.229"
+serde_json = { version = "=1.0.154", features = ["unbounded_depth"] }
+jsonschema = { version = "=0.61.2", default-features = false }
+sha2 = "=0.10.9"
+hex = "=0.4.3"
+
+[workspace]
