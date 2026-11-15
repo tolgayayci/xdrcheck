@@ -1,0 +1,36 @@
+{
+  "schema": "xcc.mainnet.tier/v1",
+  "line_schema": "xcc.mainnet.tx/v1",
+  "network": "pubnet",
+  "passphrase": "Public Global Stellar Network ; September 2015",
+  "lake": {
+    "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+    "layout": "SEP-54, one ledger per object"
+  },
+  "scan": {
+    "first_ledger": 2,
+    "last_ledger": 65505999,
+    "grammar": "xcc.shape/v1",
+    "tokens": "transaction-level: tokens of the components A, E, F, M, O and R (evidence/mainnet-scan/README.md)"
+  },
+  "cover": {
+    "order": "rarest first: the occurrence of the transaction's rarest token, then ledger, transaction shape id at level G3, first apply index of that shape in the ledger",
+    "rarity": "occurrences of the transaction's rarest token in the scan's token table: the sum over the distinct components carrying it of the transactions holding each, so an upper bound on the transactions that carry it"
+  },
+  "counts": {
+    "transactions": 4,
+    "ledgers": 4,
+    "parts": 22,
+    "part_bytes": 16972,
+    "object_bytes": 114056,
+    "per_protocol": {
+      "1": 2,
+      "22": 1,
+      "25": 1
+    }
+  },
+  "lines": {
+    "file": "tier.jsonl",
+    "sha256": "1ffc9a43c28c87bf93091ccf82c28c805720f450549fa07df29c9328fc0b08d1"
+  }
+}

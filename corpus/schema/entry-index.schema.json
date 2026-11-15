@@ -1,0 +1,219 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:entry-index:v1",
+  "title": "Entry index (index.json)",
+  "description": "Flat list of every manifest entry, one row per entry, written by xdrcheck-corpus index from the manifest and corpus/caps.toml. Paths are relative to the corpus root. The manifest entry stays the authority; this file only repeats what a consumer needs to find an entry and its bytes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "entries"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.index/v1"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/entry"
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "validity": {
+      "$ref": "urn:xcc:schema:manifest-entry:v1#/$defs/validity"
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "kind",
+        "caps",
+        "rows",
+        "protocol",
+        "synthetic",
+        "validity",
+        "flags",
+        "sources",
+        "tier",
+        "manifest",
+        "variants"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "ledger",
+            "xdr",
+            "api",
+            "strkey",
+            "spec"
+          ]
+        },
+        "caps": {
+          "description": "The entry's caps: CAP numbers, possibly empty.",
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "rows": {
+          "description": "Coverage rows (groups of COVERAGE.md, coverage.json) the entry counts under: the row of each CAP in caps and the row named by the ID's group.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "protocol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "introduced"
+          ],
+          "properties": {
+            "introduced": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "removed": {
+              "type": "integer",
+              "minimum": 2
+            }
+          }
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "validity": {
+          "$ref": "#/$defs/validity"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:xcc:schema:manifest-entry:v1#/$defs/flag"
+          }
+        },
+        "sources": {
+          "description": "Distinct source kinds of the entry's variants, sorted; empty for api and strkey entries.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tier": {
+          "description": "curated: ships in a release archive's corpus/ root. stress: ships in its separate stress/ root (docs/release.md).",
+          "enum": [
+            "curated",
+            "stress"
+          ]
+        },
+        "manifest": {
+          "description": "Path of the manifest file.",
+          "type": "string",
+          "pattern": "^manifest/.+\\.json$"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/variant"
+          }
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "network",
+        "protocol",
+        "ledger_seq",
+        "xdr_type",
+        "validity",
+        "source",
+        "blob",
+        "sha256",
+        "bytes",
+        "decoded",
+        "decoded_sha256",
+        "focus"
+      ],
+      "properties": {
+        "network": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ledger_seq": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "xdr_type": {
+          "type": "string"
+        },
+        "validity": {
+          "$ref": "#/$defs/validity"
+        },
+        "source": {
+          "description": "source.kind of the variant.",
+          "type": "string"
+        },
+        "blob": {
+          "description": "Path of the blob; null for a bulk-tier variant fetched by hash.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "decoded": {
+          "description": "Path of the decoded sidecar (zstd SEP-51 JSON); null for a variant whose bytes do not decode.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "decoded_sha256": {
+          "description": "sha256 of the sidecar's uncompressed JSON.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "focus": {
+          "description": "The variant's focus as in the manifest: tx_index counts in apply order, path is a JSON Pointer into the decoded form, whose transaction set is in set order (manifest.md section 4.2).",
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

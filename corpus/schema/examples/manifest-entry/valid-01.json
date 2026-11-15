@@ -1,0 +1,432 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+  "title": "Liquidity-pool trustline whose two issuers sort one way as bytes and the other way as strkey text",
+  "kind": "ledger",
+  "caps": [
+    38
+  ],
+  "protocol": {
+    "introduced": 18
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "liquidity-pool-share-trustline",
+    "issuers-sort-differently-by-strkey-and-bytes",
+    "pool-created"
+  ],
+  "why": "stellar-core requires the two pool assets in XDR byte order. Readers that compare issuers as strkey text reject this valid transaction, or compute a pool ID for the reversed pair that does not exist.",
+  "fields": {
+    "validated": [
+      "VF-32"
+    ]
+  },
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 29,
+      "ledger_seq": 5521432,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "85eddc3bbd763677b914fe8f5170a7b880d82482c9c934894b9721347c722c08",
+        "bytes": 131628,
+        "path": "blobs/85/85eddc3bbd763677b914fe8f5170a7b880d82482c9c934894b9721347c722c08.xdr"
+      },
+      "decoded": "decoded/cap-0038/pool-issuers-order-by-bytes-not-strkey.testnet.json",
+      "decoded_sha256": "fec54eaf7ebf0f9fdc8ef0c903b5919061af2776d1159ac6c51b18bf3d8c055b",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), stellar-xdr CLI, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFAC03FF--5504000-5567999/FFABBFE7--5521432.xdr.zst",
+        "object_sha256": "9aa845398f6ae4aa478ceb19cc24be0b3d9a0d06fc1cd889422311f3fbe7926a",
+        "object_bytes": 17905,
+        "decompressed_sha256": "ef639c7c3f30f48419851c25f1f42eff68b9a6236643485325a54f18439c40d3",
+        "decompressed_bytes": 131640,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:01:47Z",
+        "written_by": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1); exporter 4d89b44",
+        "object_metadata": {
+          "core-version": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1)",
+          "compression-type": "zst",
+          "start-ledger": "5521432",
+          "version": "4d89b44",
+          "end-ledger-close-time": "1793630800",
+          "start-ledger-close-time": "1793630800",
+          "end-ledger": "5521432",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "29"
+        },
+        "refetch": "aws s3 cp --no-sign-request s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18/FFAC03FF--5504000-5567999/FFABBFE7--5521432.xdr.zst .",
+        "perishable": true,
+        "regenerated": false
+      },
+      "focus": {
+        "tx_index": 2,
+        "tx_hash": "0126748091930959a3aefac9296e1773b947f964a9b73f37ce856c4df32d346f",
+        "op_index": 2,
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/3/tx/tx/operations/2/body/change_trust/line/pool_share/liquidity_pool_constant_product"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "99efd5ab770fe7f4369735804f6d2c2e372020ff832e0c8cc1ae8ff7b35e4bec",
+        "tx_hash": "0126748091930959a3aefac9296e1773b947f964a9b73f37ce856c4df32d346f",
+        "tx_hashes": [
+          "92203c07f20daa58bfdd9b40982eda2bc222ff90907da3a7d9712b790defb3c3",
+          "e63b9ca457bf3dc035664919ddef355393210e5c72ce460caa02438e542379b4",
+          "0126748091930959a3aefac9296e1773b947f964a9b73f37ce856c4df32d346f",
+          "f6d59d2c0c43afd62f02f33c80bf713deb67fcfba8ce35fed79cc8570c132e94",
+          "e2f9ae38cb5a39b48241f4c2d50dc08c8381b2cf0b35fc30f027ea5b84bd652e",
+          "9b0dff1d5c498768487a7988a57a75640512b07666b98c25e9be68cb3d80b5dd",
+          "577cf4141e393c8f217cb4f765dc5516ada20afdd12ef59ca31277c91badb5c8",
+          "eae8ab6aeade3db7ddd613122dbaf9855e4df9caa5fc73acac456148d5705ecf",
+          "a3e5bd90ccab5a5c5cf8a8801ace6a86104a91854574c0001a8cf7bd3c5346ee",
+          "3d18c5ae6cafbb5865409db774230628d51e8fc22b5ff3ef8c2d3c661f34c906",
+          "74d844d11e899650ce2d09ad1993021f697113f4dd4497e223acb3b753562b52",
+          "6d873ccb000ddfd08384270f698b4a3551a146a7c7fa9bba0bf630a6e1216133",
+          "0ae2b7b83fcbaa2661df54939842fffbbc8fe5404a30ad9895221ac7ea8766b2",
+          "070abb1a1372aae0dadc44034891602f5318a7ac2708b0cd86e0417030ddf00d",
+          "bf28dc64881da5babc3d207110683c21346ba8569eb59cfa6707eb25edd04ed0",
+          "04dd5790527a9c7700d166852712bf53d88c7d3534822a8ea08d6a1bfc4fe812",
+          "0ecb344de2cea2fb27dfb35711c8a9dbbd4748c5fbde2504b8671e3727ed1b12",
+          "bf0f715f8ec1c722235382918a94f2248b3e3f39fe3b5c86c4407780d66afb80",
+          "bdaf7d4350ef1ac6892ebd9f08a7c18d41dcb1c644dfc092311b315540c57986"
+        ]
+      },
+      "notes": "Real testnet ledger with 19 transactions; this entry's pattern is transaction 2 in apply order (position 3 in the transaction set), operation 2. The ledger header says protocol 29; the lake object was written by stellar-core 30.0.0."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 19,
+      "operations": 21,
+      "events": 67,
+      "entry_changes": 284
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "92203c07f20daa58bfdd9b40982eda2bc222ff90907da3a7d9712b790defb3c3",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "e63b9ca457bf3dc035664919ddef355393210e5c72ce460caa02438e542379b4",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "0126748091930959a3aefac9296e1773b947f964a9b73f37ce856c4df32d346f",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "change_trust.success",
+          "change_trust.success",
+          "change_trust.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 3,
+        "hash": "f6d59d2c0c43afd62f02f33c80bf713deb67fcfba8ce35fed79cc8570c132e94",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 4,
+        "hash": "e2f9ae38cb5a39b48241f4c2d50dc08c8381b2cf0b35fc30f027ea5b84bd652e",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "9b0dff1d5c498768487a7988a57a75640512b07666b98c25e9be68cb3d80b5dd",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 6,
+        "hash": "577cf4141e393c8f217cb4f765dc5516ada20afdd12ef59ca31277c91badb5c8",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 7,
+        "hash": "eae8ab6aeade3db7ddd613122dbaf9855e4df9caa5fc73acac456148d5705ecf",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 8,
+        "hash": "a3e5bd90ccab5a5c5cf8a8801ace6a86104a91854574c0001a8cf7bd3c5346ee",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 9,
+        "hash": "3d18c5ae6cafbb5865409db774230628d51e8fc22b5ff3ef8c2d3c661f34c906",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 10,
+        "hash": "74d844d11e899650ce2d09ad1993021f697113f4dd4497e223acb3b753562b52",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 11,
+        "hash": "6d873ccb000ddfd08384270f698b4a3551a146a7c7fa9bba0bf630a6e1216133",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 12,
+        "hash": "0ae2b7b83fcbaa2661df54939842fffbbc8fe5404a30ad9895221ac7ea8766b2",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 13,
+        "hash": "070abb1a1372aae0dadc44034891602f5318a7ac2708b0cd86e0417030ddf00d",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 14,
+        "hash": "bf28dc64881da5babc3d207110683c21346ba8569eb59cfa6707eb25edd04ed0",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 15,
+        "hash": "04dd5790527a9c7700d166852712bf53d88c7d3534822a8ea08d6a1bfc4fe812",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 16,
+        "hash": "0ecb344de2cea2fb27dfb35711c8a9dbbd4748c5fbde2504b8671e3727ed1b12",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 17,
+        "hash": "bf0f715f8ec1c722235382918a94f2248b3e3f39fe3b5c86c4407780d66afb80",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 18,
+        "hash": "bdaf7d4350ef1ac6892ebd9f08a7c18d41dcb1c644dfc092311b315540c57986",
+        "successful": false,
+        "result_code": "tx_failed"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/3/tx/tx/operations/2/body/change_trust/line/pool_share/liquidity_pool_constant_product/asset_a/credit_alphanum4/issuer",
+        "equals": "GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL",
+        "note": "Raw key e305f885\u2026: sorts first as bytes, although its strkey sorts after the other issuer's ('R' 0x52 > '3' 0x33 at the third character)."
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/3/tx/tx/operations/2/body/change_trust/line/pool_share/liquidity_pool_constant_product/asset_b/credit_alphanum4/issuer",
+        "equals": "GD32JQHFWLIROCNQ564GLCB2M7T4GMQAP5UKHMVT64OQISWL2LHYK2HO",
+        "note": "Raw key f7a4c0e5\u2026"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/3/tx/tx/operations/2/body/change_trust/line/pool_share/liquidity_pool_constant_product/fee",
+        "equals": 30
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GABXSHMSYBF4VPWYKY45WYIYF7ONIHDSTO35U7EZVWHD4RGK7GX4JZXX",
+          "roles": [
+            "source",
+            "fee_payer",
+            "trustline_owner"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "trustline_created",
+        "tx_index": 2,
+        "op_index": 0,
+        "account": {
+          "address": "GABXSHMSYBF4VPWYKY45WYIYF7ONIHDSTO35U7EZVWHD4RGK7GX4JZXX"
+        },
+        "asset": "USD:GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL"
+      },
+      {
+        "kind": "trustline_created",
+        "tx_index": 2,
+        "op_index": 1,
+        "account": {
+          "address": "GABXSHMSYBF4VPWYKY45WYIYF7ONIHDSTO35U7EZVWHD4RGK7GX4JZXX"
+        },
+        "asset": "USD:GD32JQHFWLIROCNQ564GLCB2M7T4GMQAP5UKHMVT64OQISWL2LHYK2HO"
+      },
+      {
+        "kind": "trustline_created",
+        "tx_index": 2,
+        "op_index": 2,
+        "account": {
+          "address": "GABXSHMSYBF4VPWYKY45WYIYF7ONIHDSTO35U7EZVWHD4RGK7GX4JZXX"
+        },
+        "asset": "liquidity_pool:c2a730127d006897b021d6fcb279da68b4f65f9b6a408c74eb2cdd85ea862d5e",
+        "detail": {
+          "pool_strkey": "LDBKOMASPUAGRF5QEHLPZMTZ3JULJ5S7TNVEBDDU5MWN3BPKQYWV53DN"
+        }
+      },
+      {
+        "kind": "liquidity_pool_created",
+        "tx_index": 2,
+        "op_index": 2,
+        "account": {
+          "address": "LDBKOMASPUAGRF5QEHLPZMTZ3JULJ5S7TNVEBDDU5MWN3BPKQYWV53DN"
+        },
+        "detail": {
+          "asset_a": "USD:GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL",
+          "asset_b": "USD:GD32JQHFWLIROCNQ564GLCB2M7T4GMQAP5UKHMVT64OQISWL2LHYK2HO",
+          "fee_bp": 30,
+          "asset_a_issuer_key_hex": "e305f885fff4203598bf7a7bb29cf6dcb05f9ecc44f15a5c5557ef665c0e01f7",
+          "asset_b_issuer_key_hex": "f7a4c0e5b2d11709b0efb865883a67e7c332007f68a3b2b3f71d044acbd2cf85",
+          "pool_id": "c2a730127d006897b021d6fcb279da68b4f65f9b6a408c74eb2cdd85ea862d5e"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 2,
+        "asset": "native",
+        "amount": "300",
+        "from": {
+          "address": "GABXSHMSYBF4VPWYKY45WYIYF7ONIHDSTO35U7EZVWHD4RGK7GX4JZXX"
+        }
+      }
+    ],
+    "movements_exact": true,
+    "addresses": [
+      {
+        "strkey": "LDBKOMASPUAGRF5QEHLPZMTZ3JULJ5S7TNVEBDDU5MWN3BPKQYWV53DN",
+        "type": "liquidity_pool",
+        "xdr_bytes": 32,
+        "chars": 56
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "<16.3.1 || >=17.0.0 <17.2.1",
+        "level": "L1",
+        "outcome": "reject",
+        "detail": "Executed: 17.2.0 and 16.3.0 throw 'Assets are not in lexicographic order' from TransactionBuilder.fromXdr on this transaction; 17.2.1 and 16.3.1 parse it. The raw XDR codec round-trips on every version.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "fixed_in": "17.2.1 (16.3.1 on the 16.x line)",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "evidence/js-1766/ and reproduction in evidence/sdk-matrix/",
+        "match": {
+          "reason": "decode_error",
+          "rejected_tx_index": 2
+        }
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": ">=0.7.0 <0.7.2",
+        "level": "L1",
+        "outcome": "reject",
+        "detail": "Executed: v0.7.1 txnbuild.TransactionFromXDR fails with 'AssetA must be <= AssetB'; v0.7.2 parses it.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5974",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "reproduction in evidence/sdk-matrix/"
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": "<0.6.1",
+        "level": "L1",
+        "outcome": "reject",
+        "detail": "From the release notes of the v0.6.1 backport; no 0.6.x version was executed. Asserted only after one execution.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5974",
+        "fixed_in": "v0.6.1",
+        "status": "fixed",
+        "observed": "reported",
+        "evidence": "project research"
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0",
+        "level": "L1",
+        "outcome": "reject",
+        "detail": "Executed: 17.0.0 rejects the transaction with 'Assets are not in lexicographic order'; 17.0.1 parses it.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1246",
+        "fixed_in": "17.0.1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "reproduction in evidence/sdk-matrix/"
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "<17.0.0",
+        "level": "L1",
+        "outcome": "reject",
+        "detail": "Earlier versions were not executed; the comparison code predates 17.0.0. Asserted only after one execution.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1246",
+        "fixed_in": "17.0.1",
+        "status": "fixed",
+        "observed": "source-reading",
+        "evidence": "project research"
+      },
+      {
+        "target": "network.lightsail:stellar-sdk (Maven)",
+        "versions": "<=6.0.0",
+        "level": "L1",
+        "outcome": "reject",
+        "detail": "Executed: 6.0.0 rejects the valid order and returns pool ID c1324f87\u2026 for the reversed pair. A fix is merged on master (95bca0b5) and not released.",
+        "reference": "https://github.com/lightsail-network/java-stellar-sdk/pull/832",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "reproduction in evidence/sdk-matrix/"
+      }
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/pull/1766",
+    "https://github.com/stellar/go-stellar-sdk/pull/5974",
+    "https://github.com/StellarCN/py-stellar-base/issues/1246",
+    "https://github.com/Beans-BV/dotnet-stellar-sdk/issues/257",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md"
+  ],
+  "notes": "Sample entry. Kept as one ledger entry with a focus instead of a separate TransactionEnvelope slice: level L1 for a ledger entry already means parsing every envelope in the transaction set through the SDK's transaction object, which is where the defect shows, and the replay harness needs the whole ledger. The .NET SDK issue in 'related' is open but was read from source only, so it is not listed as a known divergence."
+}

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:claims:v1",
+  "title": "Guide claim-to-source map (guide/claims.yaml)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.claims/v1"
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "claim_id",
+          "guide_anchor",
+          "sentence",
+          "kind",
+          "source",
+          "verification",
+          "reviewer_status"
+        ],
+        "properties": {
+          "claim_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,4}$"
+          },
+          "guide_anchor": {
+            "type": "string"
+          },
+          "sentence": {
+            "type": "string",
+            "minLength": 10
+          },
+          "kind": {
+            "enum": [
+              "fact",
+              "recommendation"
+            ]
+          },
+          "source": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "ref"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "code",
+                    "cap",
+                    "sep",
+                    "rfc",
+                    "corpus",
+                    "probe",
+                    "issue"
+                  ]
+                },
+                "ref": {
+                  "type": "string"
+                },
+                "at": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "verification": {
+            "enum": [
+              "executed",
+              "code_reference"
+            ]
+          },
+          "corpus_entries": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^VF-[0-9]{2,3}[a-z]?$"
+            }
+          },
+          "reviewer_status": {
+            "enum": [
+              "unreviewed",
+              "confirmed",
+              "disputed",
+              "corrected"
+            ]
+          },
+          "reviewer_note": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "xcc": "xcc.driver/1",
+  "id": 1,
+  "op": "describe",
+  "driver": {
+    "name": "xcc-driver-js",
+    "version": "0.1.0",
+    "adapter": "js-v17"
+  },
+  "sdk": {
+    "ecosystem": "npm",
+    "package": "@stellar/stellar-sdk",
+    "version": "17.2.0",
+    "integrity": "sha512-hGdbvhnOMFwAe+QOAUVPrtLf8U+arO2XG+0osEeY87Ti5scj1R52YSw8HW828gf6UG4PW/jtAlfnyaGCj8t6UA==",
+    "dependencies": [
+      {
+        "package": "@stellar/js-xdr",
+        "version": "5.0.0"
+      }
+    ]
+  },
+  "runtime": {
+    "name": "node",
+    "version": "24.19.0",
+    "os": "linux",
+    "arch": "x64"
+  },
+  "xdr_schema": {
+    "protocol": 29,
+    "probes": {
+      "sc_address_type_muxed_contract": false,
+      "stellar_value_signed_ms": false
+    }
+  },
+  "levels": [
+    "L0",
+    "L1",
+    "L2",
+    "L3",
+    "L4"
+  ],
+  "object_parsers": {
+    "TransactionEnvelope": "TransactionBuilder.fromXdr"
+  },
+  "native_converters": {
+    "ScVal": "scValToNative"
+  },
+  "api_ops": [
+    "liquidity_pool.id",
+    "offer.manage_sell",
+    "muxed_account.encode",
+    "scval.to_native",
+    "scval.sort_map",
+    "strkey.decode",
+    "strkey.encode",
+    "transaction.parse"
+  ],
+  "decode": {
+    "entry_point": "xdr.<Type>.fromXdr",
+    "default_depth": 1500,
+    "depth_configurable": false,
+    "checks_consumed_length": true
+  }
+}

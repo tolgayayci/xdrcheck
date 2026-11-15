@@ -1,0 +1,40 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-strict/record-mark-errors.last-fragment-bit-clear",
+  "title": "Record-marked stream whose only record mark has the last-fragment bit clear",
+  "kind": "xdr",
+  "caps": [],
+  "caps_note": "An encoding rule of RFC 5531 record marking, not a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": false,
+  "negative": false,
+  "why": "stellar-core writes every record as one last fragment; a reader that joins fragments reads a stream core never writes.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "framing": "record-marked",
+      "frame_index": 0,
+      "blob": {
+        "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "bytes": 1200,
+        "path": "blobs/22/2222222222222222222222222222222222222222222222222222222222222222.xdr"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "base entry frame 0 with bit 31 of its record mark cleared",
+        "reason": "stellar-core sets the last-fragment bit on every record it writes"
+      }
+    }
+  ],
+  "expect": {
+    "reject": {
+      "reason": "record_mark"
+    }
+  }
+}

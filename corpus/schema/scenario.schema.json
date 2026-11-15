@@ -1,0 +1,585 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:scenario:v1",
+  "title": "Generator scenario file",
+  "description": "One file per pattern group. Transactions are SEP-51 JSON templates; placeholders: ${acct.L}, ${muxed(L, id)}, ${seq.L}, ${signer.payload(L, hex)}, ${signer.hash_x(NAME)} (X\u2026 signer key: sha256 of the preimage NAME), ${hash_x.preimage(NAME)} (the preimage as hex: sha256 of the UTF-8 string `xcc/hashx/<NAME>`), ${signer.pre_auth_tx(STEP)} (T\u2026 signer key: the transaction hash of step STEP under the run's passphrase), ${asset.NAME}, ${contract.sac(NAME)}, ${contract.id(NAME)}, ${close_time}, ${order_nonce} (in a ledger group with `order`: the nonce the generator chose for that apply order), ${derived.NAME}.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario",
+    "caps",
+    "protocols",
+    "profile",
+    "actors",
+    "steps"
+  ],
+  "properties": {
+    "scenario": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "caps": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "caps_note": {
+      "type": "string"
+    },
+    "protocols": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "description": "Target protocols, each a chain brought up from genesis in one upgrade. 13 to 30 except 20: below 20 no Soroban settings are applied; from 21 the vendored settings set of the protocol (none exists upstream for 20)."
+    },
+    "networks": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "testnet",
+          "pubnet",
+          "core-test"
+        ]
+      },
+      "default": [
+        "testnet",
+        "pubnet"
+      ]
+    },
+    "profile": {
+      "enum": [
+        "lake",
+        "golden-test",
+        "custom"
+      ]
+    },
+    "binary": {
+      "description": "The stellar-core binary the scenario runs on, each resolved from pins.toml and checked by sha256: the pinned release (default), a build with test hooks (buildtests), or the pinned next-protocol build (vnext). Entries record it as local-core core_role.",
+      "enum": [
+        "release",
+        "buildtests",
+        "vnext"
+      ],
+      "default": "release"
+    },
+    "channel": {
+      "description": "The release channel the scenario's entries belong to: stable (default), or next, the advisory -next corpus. A protocol above the newest released one (31) is allowed only under next.",
+      "enum": [
+        "stable",
+        "next"
+      ],
+      "default": "stable"
+    },
+    "profile_flags": {
+      "description": "Required for golden-test and custom: the stellar-core meta flags.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "settings": {
+      "description": "Soroban settings file per protocol (path under corpus/settings/), when a protocol needs one.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "actors": {
+      "description": "Labels; each derives an ed25519 key from seed = sha256 of the UTF-8 string `xcc/key/<label>`, independent of the network. The root account's seed is the network ID. The label `root` is reserved: ${acct.root}, ${seq.root}, {key: root} and fee_bump.fee_source: root name the network's root account (in expect, fields and mirrors ${acct.root} becomes ${derived.accounts.root}).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+      },
+      "uniqueItems": true
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wasm"
+        ],
+        "properties": {
+          "wasm": {
+            "type": "string",
+            "description": "Path of the wasm, relative to the corpus root (for example contracts/shape-emitter.wasm)."
+          },
+          "wasm_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "deployer": {
+            "type": "string",
+            "description": "Actor label of the deployer; root when absent."
+          },
+          "constructor_args": {
+            "description": "Arguments of the contract's constructor, as SEP-51 JSON ScVal values (for example {\"symbol\": \"xcc\"}); placeholders are resolved first. Absent: no arguments.",
+            "type": "array",
+            "items": {
+              "type": [
+                "object",
+                "string"
+              ]
+            }
+          }
+        }
+      },
+      "description": "Custom contracts, deployed by `deploy_contract` setup items (Protocol 29 or later). Each is uploaded (unless its code is already on the ledger) and created with CREATE_CONTRACT_V2 from its deployer (root when none is named) with salt = sha256 of the UTF-8 string `xcc/contract-salt/<name>`, so `${contract.id(NAME)}` is known before the run when a deployer is named."
+    },
+    "setup": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "fund": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "pattern": "^[0-9]+(\\.[0-9]{1,7})?$"
+            }
+          },
+          "trust": {
+            "description": "One transaction of change_trust operations with the maximum limit, sourced by the first label: label -> asset name, or a list of asset names.",
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": {
+              "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+            },
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+                  }
+                }
+              ]
+            }
+          },
+          "pay": {
+            "description": "One payment from `from` to `to` of `amount` (decimal, up to 7 places) of an asset name or `native`.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to",
+              "asset",
+              "amount"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+              },
+              "asset": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+              },
+              "amount": {
+                "type": "string",
+                "pattern": "^[0-9]+(\\.[0-9]{1,7})?$"
+              }
+            }
+          },
+          "deploy_sac": {
+            "type": "string",
+            "description": "Asset name (or native): deploy its Stellar Asset Contract from root, in one ledger."
+          },
+          "deploy_contract": {
+            "type": "string",
+            "description": "Contract name from `contracts`: upload (one ledger, skipped when the code is already on the ledger) and create (one ledger). Needs Protocol 29 or later."
+          },
+          "tx": {
+            "description": "A SEP-51 JSON value for the step's XDR type, with ${\u2026} placeholders resolved before parsing.",
+            "type": "object"
+          },
+          "close": {
+            "type": "object"
+          },
+          "entry": {
+            "description": "The entry this ledger is committed as.",
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+          },
+          "expect": {
+            "$ref": "urn:xcc:schema:manifest-entry:v1#/$defs/expect"
+          },
+          "fields": {
+            "type": "object"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "config_upgrade": {
+            "description": "Change Soroban configuration settings through the same fixed-salt upgrade path as the bring-up (salt = sha256 of the UTF-8 string `xcc/settings-upgrade-salt/<scenario>/setup-<index>`): five ledgers, the four upgrade transactions from root and the ledger that applies the set (an `entry` on the item names that last ledger). Keys are ConfigSettingEntry arm names (state_archival, contract_compute_v0, frozen_ledger_keys_delta, ...). An object value is merged into the setting the node holds, so only the fields given change; any other value, or a setting the node does not hold (the *_delta arms), is the SEP-51 JSON of the arm as written. In frozen_ledger_keys and frozen_ledger_keys_delta a key may be given as the SEP-51 JSON of a LedgerKey instead of its XDR in hex. Protocol 20 or later.",
+            "type": "object",
+            "minProperties": 1
+          }
+        },
+        "additionalProperties": false,
+        "description": "One action (fund, trust, pay, deploy_sac, deploy_contract, tx, close, config_upgrade), optionally with `entry` (and `expect`, `fields`, `notes`): the ledger of the item (its last transaction's ledger; the first ledger of a close) is then committed as that entry, like a step's.",
+        "oneOf": [
+          {
+            "required": [
+              "fund"
+            ]
+          },
+          {
+            "required": [
+              "trust"
+            ]
+          },
+          {
+            "required": [
+              "pay"
+            ]
+          },
+          {
+            "required": [
+              "deploy_sac"
+            ]
+          },
+          {
+            "required": [
+              "deploy_contract"
+            ]
+          },
+          {
+            "required": [
+              "tx"
+            ]
+          },
+          {
+            "required": [
+              "close"
+            ]
+          },
+          {
+            "required": [
+              "config_upgrade"
+            ]
+          }
+        ]
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "entry": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+          },
+          "protocols": {
+            "description": "Subset of the scenario's protocols for this step.",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "same_ledger_as": {
+            "type": "string"
+          },
+          "precondition": {
+            "type": "string"
+          },
+          "tx": {
+            "description": "A SEP-51 JSON value for the step's XDR type, with ${\u2026} placeholders resolved before parsing.",
+            "type": "object"
+          },
+          "fee_bump": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fee_source",
+              "fee"
+            ],
+            "properties": {
+              "fee_source": {
+                "type": "string"
+              },
+              "fee": {
+                "type": "string"
+              },
+              "sign": {
+                "type": "array"
+              }
+            }
+          },
+          "sign": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 1,
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "signed_payload": {
+                  "type": "object",
+                  "required": [
+                    "key",
+                    "payload_hex"
+                  ],
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "payload_hex": {
+                      "type": "string",
+                      "pattern": "^([0-9a-f]{2}){1,64}$"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "hash_x": {
+                  "description": "The preimage as hex (0-64 bytes), or ${hash_x.preimage(NAME)}.",
+                  "type": "string",
+                  "pattern": "^(([0-9a-f]{2})*|\\$\\{hash_x\\.preimage\\([A-Za-z][A-Za-z0-9_]*\\)\\})$"
+                },
+                "pre_auth": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "soroban_resources": {
+            "enum": [
+              "declared",
+              "simulated"
+            ]
+          },
+          "simulate": {
+            "description": "Soroban steps, Protocol 29 or later: before signing, simulate the transaction's one invoke_host_function operation with the pinned host against the node's state at the last closed ledger, and fill the footprint, resources, resource fee and (when the operation's auth list is empty or absent) the recorded authorization. The template then writes `ext: v0` (or omits `ext`), and its `fee` is the inclusion fee, to which the resource fee is added. Without this flag the template declares ext.v1 itself. The run records the step as simulated.",
+            "type": "boolean"
+          },
+          "close": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "empty": {
+                "type": "boolean"
+              },
+              "ledgers": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "upgrade": {
+            "type": "object"
+          },
+          "expect_result": {
+            "type": "string"
+          },
+          "expect_op_results": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expect": {
+            "$ref": "urn:xcc:schema:manifest-entry:v1#/$defs/expect"
+          },
+          "fields": {
+            "type": "object"
+          },
+          "mirrors": {
+            "description": "Golden mirror of the step's entry, copied into the manifest entry's `mirrors`; validated against that same definition.",
+            "$ref": "urn:xcc:schema:manifest-entry:v1#/properties/mirrors"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "expect_submit_reject": {
+            "description": "The step's transaction must be rejected by stellar-core at submission; no ledger results. The value is the expected result code. With `entry`, the refused TransactionResult core returned is written as that entry (a local-core source with `submission` set), with the submitted envelope beside it.",
+            "type": "string"
+          },
+          "order": {
+            "description": "On the first step of a ledger group (the step the others name in same_ledger_as): the group's transaction steps in the apply order wanted. stellar-core orders a ledger's transactions by their hashes XORed with the transaction-set hash, so the generator searches ${order_nonce} (0, 1, 2, ...; used in a template, for example as a memo id) per network and protocol until its model of core's set gives this order, records the nonce in the run record, and fails the run when the ledger core closed applies them in another order. Every transaction step of the group must be listed.",
+            "type": "array",
+            "minItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+            }
+          },
+          "expect_excluded": {
+            "description": "The step's transaction must be accepted at submission (PENDING) and left out of the ledger its group closes, as surge pricing leaves out the lowest bids when more operations are queued than the ledger admits. It has no result, consumes no sequence number and is never the entry's focus. It stays in core's queue: give it time bounds that end at this ledger (max_time: \"${close_time}\") so no later ledger includes it.",
+            "type": "boolean"
+          }
+        },
+        "allOf": [
+          {
+            "anyOf": [
+              {
+                "required": [
+                  "tx"
+                ]
+              },
+              {
+                "required": [
+                  "close"
+                ]
+              },
+              {
+                "required": [
+                  "upgrade"
+                ]
+              },
+              {
+                "required": [
+                  "same_ledger_as"
+                ]
+              }
+            ]
+          },
+          {
+            "if": {
+              "required": [
+                "expect_submit_reject"
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "expect"
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "entry"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "bring_up": {
+      "description": "Entries on the bring-up's own ledgers: 'upgrade' (ledger 2, the protocol upgrade from genesis; LedgerCloseMeta v0), 'enable-applied' (the ledger that applies the 'enable' Soroban settings set) and 'settings-applied' (the ledger that applies the protocol's network settings set). The settings ledgers exist only at protocols with Soroban settings.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ledger",
+          "entry"
+        ],
+        "properties": {
+          "ledger": {
+            "enum": [
+              "upgrade",
+              "enable-applied",
+              "settings-applied"
+            ]
+          },
+          "protocols": {
+            "description": "Subset of the scenario's protocols at which this ledger is an entry.",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "entry": {
+            "description": "The entry this ledger is committed as.",
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+          },
+          "expect": {
+            "$ref": "urn:xcc:schema:manifest-entry:v1#/$defs/expect"
+          },
+          "fields": {
+            "type": "object"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "profile": {
+            "enum": [
+              "golden-test",
+              "custom"
+            ]
+          }
+        },
+        "required": [
+          "profile"
+        ]
+      },
+      "then": {
+        "required": [
+          "profile_flags"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "protocols": {
+            "contains": {
+              "minimum": 31
+            }
+          }
+        },
+        "required": [
+          "protocols"
+        ]
+      },
+      "then": {
+        "properties": {
+          "channel": {
+            "const": "next"
+          }
+        },
+        "required": [
+          "channel"
+        ]
+      }
+    }
+  ]
+}

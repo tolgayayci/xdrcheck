@@ -1,0 +1,1250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:driver-protocol:v1",
+  "title": "Conformance driver protocol",
+  "description": "One JSON object per line (NDJSON) over stdio between the conformance orchestrator and a driver. A driver wraps exactly one SDK at exactly one version. The orchestrator writes requests to the driver's stdin; the driver writes exactly one response per request to stdout, echoing the request id and the protocol tag. stderr is free-form diagnostics and is captured, never parsed. The driver never sees expected values: it reports what the SDK did, and the orchestrator judges.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/describeRequest"
+    },
+    {
+      "$ref": "#/$defs/runRequest"
+    },
+    {
+      "$ref": "#/$defs/shutdownRequest"
+    },
+    {
+      "$ref": "#/$defs/describeResponse"
+    },
+    {
+      "$ref": "#/$defs/runResponse"
+    },
+    {
+      "$ref": "#/$defs/shutdownResponse"
+    },
+    {
+      "$ref": "#/$defs/protocolError"
+    }
+  ],
+  "$defs": {
+    "protocolVersion": {
+      "description": "Protocol tag, the same convention as the adapter protocol's \"xcc\": \"xcc.adapter/1\". A driver that does not support the tag answers with a protocolError.",
+      "const": "xcc.driver/1"
+    },
+    "requestId": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "hex": {
+      "type": "string",
+      "pattern": "^([0-9a-f]{2})*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "level": {
+      "enum": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L4",
+        "spec",
+        "json"
+      ]
+    },
+    "apiOp": {
+      "description": "SDK-neutral operation names. The list is owned by the manifest schema ($defs/apiOp) and referenced here, so the two cannot drift. Validators must load manifest-entry.schema.json alongside this file.",
+      "$ref": "urn:xcc:schema:manifest-entry:v1#/$defs/apiOp"
+    },
+    "describeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "op"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "op": {
+          "const": "describe"
+        }
+      }
+    },
+    "describeResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "op",
+        "driver",
+        "sdk",
+        "runtime",
+        "xdr_schema",
+        "levels",
+        "api_ops",
+        "decode"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "op": {
+          "const": "describe"
+        },
+        "driver": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "adapter": {
+              "description": "API generation the driver bridged, for example js-v16 or js-v17.",
+              "type": "string"
+            }
+          }
+        },
+        "sdk": {
+          "description": "The SDK under test, read from the installed package at run time, never from the driver's own configuration.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ecosystem",
+            "package",
+            "version"
+          ],
+          "properties": {
+            "ecosystem": {
+              "enum": [
+                "npm",
+                "go",
+                "crates.io",
+                "pypi",
+                "maven",
+                "nuget",
+                "pub",
+                "other"
+              ]
+            },
+            "package": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "integrity": {
+              "description": "Registry integrity value of the installed artefact (npm sha512, go.sum h1, crate sha256, wheel sha256, jar sha256).",
+              "type": "string"
+            },
+            "dependencies": {
+              "description": "Resolved versions of the libraries that decide decoding behaviour (js-xdr, go-xdr, stellar-strkey, xdrlib3, \u2026).",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package",
+                  "version"
+                ],
+                "properties": {
+                  "package": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "integrity": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "description": "node, go, rustc, cpython, temurin, \u2026",
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "os": {
+              "type": "string"
+            },
+            "arch": {
+              "type": "string"
+            },
+            "stack_bytes": {
+              "description": "Stack size of the thread that runs decodes, when the driver sets it.",
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "xdr_schema": {
+          "description": "What the SDK's generated XDR can represent, probed from its enums at start-up \u2014 not inferred from the version number.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "probes"
+          ],
+          "properties": {
+            "protocol": {
+              "description": "Highest protocol whose probes all pass.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "probes": {
+              "description": "Named capability probes. v1 requires at least sc_address_type_muxed_contract (ScAddressType 5) and stellar_value_signed_ms (StellarValueType 3).",
+              "type": "object",
+              "additionalProperties": {
+                "type": "boolean"
+              },
+              "required": [
+                "sc_address_type_muxed_contract",
+                "stellar_value_signed_ms"
+              ]
+            },
+            "types": {
+              "description": "XDR type names the driver can decode by name. Omitted means: every type in the pinned stellar-xdr definitions that the SDK generates.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "levels": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/level"
+          },
+          "uniqueItems": true
+        },
+        "object_parsers": {
+          "description": "L1 entry points per XDR type, for example {\"TransactionEnvelope\": \"TransactionBuilder.fromXdr\"}.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "object_rebuild": {
+          "description": "The rebuild fact's entry point (docs/conformance-protocol.md, the rebuild fact), for example \"TransactionBuilder.cloneFrom\": present only when the SDK can rebuild a parsed transaction through its builder; a driver that declares it reports `rebuild` on every L1 transaction it parses under a passphrase.",
+          "type": "string",
+          "minLength": 1
+        },
+        "native_converters": {
+          "description": "L3 entry points, for example {\"ScVal\": \"scValToNative\"}.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "api_ops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/apiOp"
+          },
+          "uniqueItems": true
+        },
+        "decode": {
+          "description": "How the driver decodes at L0.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry_point",
+            "default_depth",
+            "checks_consumed_length"
+          ],
+          "properties": {
+            "entry_point": {
+              "type": "string"
+            },
+            "default_depth": {
+              "description": "The SDK's default decode depth in its own units; null if unlimited.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "depth_configurable": {
+              "type": "boolean"
+            },
+            "checks_consumed_length": {
+              "description": "true if the entry point itself rejects trailing bytes; false if the driver had to check, in which case 'trailing_bytes_accepted' is reported from the SDK's own lenient entry point as well.",
+              "type": "boolean"
+            },
+            "profiles": {
+              "description": "Named decode profiles the driver offers (for example rust: limits-default, limits-none).",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "runRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "op",
+        "entry",
+        "level",
+        "input"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "op": {
+          "const": "run"
+        },
+        "entry": {
+          "description": "Canonical manifest entry ID (entry-ids.md). A family member is requested by its own ID.",
+          "type": "string"
+        },
+        "variant": {
+          "description": "Variant key: the network (testnet, pubnet, core-test, none), or network@protocol when the entry has the same step at several protocols. Absent for api and strkey entries.",
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/level"
+        },
+        "profile": {
+          "description": "One of the driver's decode profiles.",
+          "type": "string"
+        },
+        "input": {
+          "oneOf": [
+            {
+              "description": "L0\u2013L3 on a ledger or xdr entry.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "xdr_type"
+              ],
+              "oneOf": [
+                {
+                  "required": [
+                    "path"
+                  ]
+                },
+                {
+                  "required": [
+                    "xdr_hex"
+                  ]
+                }
+              ],
+              "properties": {
+                "kind": {
+                  "const": "xdr"
+                },
+                "xdr_type": {
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Absolute path of the blob. The driver opens it read-only.",
+                  "type": "string"
+                },
+                "xdr_hex": {
+                  "description": "Inline bytes for small values.",
+                  "$ref": "#/$defs/hex"
+                },
+                "framing": {
+                  "description": "none: the file is one value. record-marked: RFC 5531 record marks, decode frame 'frame_index'.",
+                  "enum": [
+                    "none",
+                    "record-marked"
+                  ],
+                  "default": "none"
+                },
+                "frame_index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "passphrase": {
+                  "description": "Network passphrase, needed by object parsers that compute hashes.",
+                  "type": "string"
+                },
+                "focus": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "tx_index": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "op_index": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "path": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "pinpoints": {
+                  "description": "L2 only: JSON Pointers into the neutral projection whose values the driver must return. Absent means: return the whole projection.",
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            {
+              "description": "L4 on an api entry.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "api_op",
+                "args"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "api"
+                },
+                "api_op": {
+                  "$ref": "#/$defs/apiOp"
+                },
+                "args": {
+                  "description": "The manifest entry's api.input, verbatim. Values carry an explicit native type tag (see docs/conformance-protocol.md \u00a72).",
+                  "type": "object"
+                },
+                "passphrase": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "description": "L4 on a strkey entry.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "text"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "strkey"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "declared_type": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "description": "spec level on a spec entry: a contract interface.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "container",
+                "path"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "spec"
+                },
+                "container": {
+                  "description": "wasm: a Wasm module; xdr-stream: a bare SCSpecEntry stream.",
+                  "enum": [
+                    "wasm",
+                    "xdr-stream"
+                  ]
+                },
+                "path": {
+                  "description": "Absolute path of the blob. The driver opens it read-only.",
+                  "type": "string"
+                },
+                "sections": {
+                  "description": "wasm only: where the corpus's own reader found each contractspecv0 section payload, for a driver whose SDK reads entry streams but has no Wasm reader.",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "offset",
+                      "length"
+                    ],
+                    "properties": {
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "length": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "runResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "op",
+        "entry",
+        "level",
+        "outcome"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "op": {
+          "const": "run"
+        },
+        "entry": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "level": {
+          "$ref": "#/$defs/level"
+        },
+        "profile": {
+          "type": "string"
+        },
+        "outcome": {
+          "description": "ok: the SDK accepted the input and the level's operation completed. diverge: the SDK accepted the input and the driver itself observed a self-evident mismatch (see reason). reject: the SDK refused the input through its normal error channel and the process is healthy. crash: a fault-class error was caught in-process (the orchestrator assigns crash itself when the process dies). n_a: the SDK has no API for this level, type or op.",
+          "enum": [
+            "ok",
+            "diverge",
+            "reject",
+            "crash",
+            "n_a"
+          ]
+        },
+        "reason": {
+          "description": "Typed reason. Required unless outcome is ok.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code"
+          ],
+          "properties": {
+            "code": {
+              "enum": [
+                "reencode_mismatch",
+                "object_reencode_mismatch",
+                "own_output_rejected",
+                "native_reencode_mismatch",
+                "decode_error",
+                "union_arm_undeclared",
+                "enum_undeclared",
+                "bool_range",
+                "optional_flag_range",
+                "nonzero_padding",
+                "trailing_bytes",
+                "length_exceeds_max",
+                "length_exceeds_input",
+                "depth",
+                "spec_sections",
+                "object_validation",
+                "value_out_of_range",
+                "ordering",
+                "lossy_conversion_refused",
+                "unsupported_address_type",
+                "strkey_checksum",
+                "strkey_length",
+                "strkey_version",
+                "strkey_padding",
+                "strkey_noncanonical",
+                "strkey_payload",
+                "stack_overflow",
+                "out_of_memory",
+                "panic",
+                "internal_error",
+                "type_not_generated",
+                "no_object_layer",
+                "no_native_layer",
+                "op_not_supported",
+                "value_not_representable",
+                "argument_type_not_accepted",
+                "schema_too_old",
+                "other"
+              ],
+              "description": "op_not_supported: the driver does not declare the api op (a declared op never answers it). value_not_representable: an argument carries a native-type tag whose value the driver's language cannot hold (for example an integer wider than the language's widest integer type); only for tagged native values. argument_type_not_accepted: an argument carries a native-type tag whose kind (number, string, bigint) the SDK parameter it is passed to does not take at all by its published declaration; decided from the declaration before the call, never from the SDK's reaction to the value (docs/conformance-protocol.md)."
+            },
+            "message": {
+              "description": "The SDK's own error text, trimmed to 500 characters. Never used for classification.",
+              "type": "string",
+              "maxLength": 500
+            },
+            "error_class": {
+              "description": "Exception class or error type name, when the language has one.",
+              "type": "string"
+            },
+            "entry_point": {
+              "description": "The SDK function that produced the outcome.",
+              "type": "string"
+            }
+          }
+        },
+        "actual": {
+          "description": "What the SDK produced. Present whenever the SDK accepted the input, and for L1 on a ledger entry also when some envelopes were rejected (see object.envelopes_rejected).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "consumed_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reencoded_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "reencoded_hex": {
+              "description": "Only when the re-encoding differs from the input and is at most 4096 bytes.",
+              "$ref": "#/$defs/hex"
+            },
+            "lenient_entry_points": {
+              "description": "L0: results of the SDK's other documented decode entry points on the same bytes, when they differ from the strict one (for example Go UnmarshalBinary accepting trailing bytes).",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "entry_point",
+                  "accepted"
+                ],
+                "properties": {
+                  "entry_point": {
+                    "type": "string"
+                  },
+                  "accepted": {
+                    "type": "boolean"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "object": {
+              "description": "L1: facts read back from the SDK object. For a ledger entry, L1 means every transaction envelope in the ledger's transaction set is handed to the SDK's transaction parser: the outcome is ok only if all of them parse; otherwise the outcome is reject, the reason is that of the first rejected envelope in apply order, and envelopes_rejected lists every one. Required on ok for a ledger input: transactions, envelopes_parsed, operations, tx_hashes, and focus when the request has one; on reject for a ledger input: transactions, envelopes_parsed, tx_hashes, envelopes_rejected. Required on ok for a TransactionEnvelope input: tx_hash (when the request carries a passphrase), operation_types, operations, reencoded_sha256, derived; for any other input: derived.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "tx_hash": {
+                  "$ref": "#/$defs/sha256",
+                  "description": "Xdr inputs (envelopes): the transaction hash the SDK computes under the given passphrase."
+                },
+                "operation_types": {
+                  "$ref": "#/$defs/operationTypes"
+                },
+                "transactions": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Ledger inputs: envelopes in the ledger's transaction set."
+                },
+                "operations": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "Ledger inputs: operations across every parsed envelope. Xdr inputs: operations in the object."
+                },
+                "events": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "reencoded_sha256": {
+                  "$ref": "#/$defs/sha256",
+                  "description": "Xdr inputs: sha256 of the bytes the SDK object re-serialises to, when it re-serialises."
+                },
+                "derived": {
+                  "$ref": "#/$defs/l1Derived"
+                },
+                "rebuild": {
+                  "$ref": "#/$defs/l1Rebuild"
+                },
+                "envelopes_parsed": {
+                  "description": "Ledger inputs: how many envelopes the SDK's transaction parser accepted.",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "envelopes_rejected": {
+                  "description": "Ledger inputs: every envelope the SDK's transaction parser rejected, in apply order.",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "tx_index",
+                      "tx_hash",
+                      "code"
+                    ],
+                    "properties": {
+                      "tx_index": {
+                        "description": "Zero-based position of the envelope in the ledger's transaction processing list (apply order), the order of the manifest's focus.tx_index.",
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      "tx_hash": {
+                        "$ref": "#/$defs/sha256",
+                        "description": "The transaction's hash as the ledger records it (its result pair), since the SDK could not compute it."
+                      },
+                      "code": {
+                        "description": "Reason code of this envelope's rejection (the reason.code vocabulary).",
+                        "type": "string"
+                      },
+                      "message": {
+                        "type": "string",
+                        "maxLength": 500
+                      }
+                    }
+                  }
+                },
+                "tx_hashes": {
+                  "description": "Ledger inputs: the hash of each parsed envelope as the SDK computes it under the given passphrase, in apply order; a rejected envelope is omitted; [] when there is none.",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/sha256"
+                  }
+                },
+                "focus": {
+                  "description": "Ledger inputs, when the request names a focus: what the SDK's transaction object says about the focus transaction (focus.tx_index, apply order) and, with focus.op_index, its operation.",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "tx_hash",
+                    "operation_types",
+                    "derived"
+                  ],
+                  "properties": {
+                    "tx_hash": {
+                      "$ref": "#/$defs/sha256"
+                    },
+                    "operation_types": {
+                      "$ref": "#/$defs/operationTypes"
+                    },
+                    "derived": {
+                      "$ref": "#/$defs/l1Derived"
+                    },
+                    "rebuild": {
+                      "$ref": "#/$defs/l1Rebuild"
+                    }
+                  }
+                }
+              }
+            },
+            "projection": {
+              "description": "L2: the neutral value projection of the whole value. Mutually exclusive with 'pinpoints'."
+            },
+            "pinpoints": {
+              "description": "L2: values at the requested JSON Pointers.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "found"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "found": {
+                    "type": "boolean"
+                  },
+                  "value": {}
+                }
+              }
+            },
+            "native": {
+              "description": "L3: what the native conversion kept.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "description": "Native type name, for example object, Map, dict, string, Uint8Array.",
+                  "type": "string"
+                },
+                "map_entries": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "reencoded_sha256": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "bytes_preserved": {
+                  "type": "boolean"
+                },
+                "summary": {
+                  "description": "Short rendering for the report, at most 300 characters.",
+                  "type": "string",
+                  "maxLength": 300
+                },
+                "error": {
+                  "description": "L3, an scvError value: the ScErrorType and ScErrorCode the SDK's native value carries, as XDR-JSON names (a contract error's code as its decimal number); a key is left out when the native value does not carry it (docs/conformance-protocol.md, the native error fact).",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "code": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            },
+            "api": {
+              "description": "L4: result of the call.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "xdr_hex": {
+                  "$ref": "#/$defs/hex"
+                },
+                "value": {
+                  "description": "Scalar or small structured result (strkey text, decimal-string ID, payload hex, ordering as a list of keys)."
+                },
+                "self_decode": {
+                  "description": "For encode ops: whether the SDK's own decoder accepts what it just produced.",
+                  "enum": [
+                    "accepted",
+                    "rejected",
+                    "not_checked"
+                  ]
+                }
+              }
+            },
+            "spec": {
+              "description": "spec level: what the SDK's spec reader returned. entries in the neutral rendering (docs/conformance-protocol.md, spec level); sections when the SDK reports how many contractspecv0 sections it read.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "entries"
+              ],
+              "properties": {
+                "sections": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "name",
+                      "args"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "enum": [
+                          "function",
+                          "struct",
+                          "union",
+                          "enum",
+                          "error_enum",
+                          "event"
+                        ]
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "args": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "name",
+                            "type"
+                          ],
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "outputs": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "entry_point": {
+                  "type": "string"
+                }
+              }
+            },
+            "json": {
+              "description": "json level: XDR to SEP-51 JSON with the binding, the JSON checked against the binding's own JSON Schema for the type, JSON back to XDR, compared with the input.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "json_sha256",
+                "schema",
+                "roundtrip"
+              ],
+              "properties": {
+                "json_sha256": {
+                  "description": "sha256 of the canonical JSON: object keys sorted, no whitespace, strings with only \\\" \\\\ and control characters escaped (\\u00XX), every other character as UTF-8.",
+                  "$ref": "#/$defs/sha256"
+                },
+                "json_bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "schema": {
+                  "description": "valid, invalid, or not_checked when the binding publishes no schema.",
+                  "enum": [
+                    "valid",
+                    "invalid",
+                    "not_checked"
+                  ]
+                },
+                "schema_errors": {
+                  "type": "array",
+                  "maxItems": 5,
+                  "items": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "roundtrip": {
+                  "description": "identical: JSON back to XDR gives the input bytes; changed: other bytes; refused: the binding refuses its own JSON; not_supported: the binding has no JSON to XDR.",
+                  "enum": [
+                    "identical",
+                    "changed",
+                    "refused",
+                    "not_supported"
+                  ]
+                },
+                "roundtrip_sha256": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "roundtrip_error": {
+                  "type": "string",
+                  "maxLength": 500
+                },
+                "pinpoints": {
+                  "description": "json level: the converter's own JSON at each JSON Pointer of the request's pinpoints, in request order (compared with the manifest's expected values exactly as JSON).",
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "path",
+                      "found"
+                    ],
+                    "properties": {
+                      "path": {
+                        "type": "string"
+                      },
+                      "found": {
+                        "type": "boolean"
+                      },
+                      "value": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "wall_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "peak_rss_kb": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "enum": [
+                  "diverge",
+                  "reject",
+                  "crash",
+                  "n_a"
+                ]
+              }
+            },
+            "required": [
+              "outcome"
+            ]
+          },
+          "then": {
+            "required": [
+              "reason"
+            ]
+          }
+        }
+      ]
+    },
+    "shutdownRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "op"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "op": {
+          "const": "shutdown"
+        }
+      }
+    },
+    "shutdownResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "op",
+        "ok"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "op": {
+          "const": "shutdown"
+        },
+        "ok": {
+          "const": true
+        }
+      }
+    },
+    "protocolError": {
+      "description": "The driver could not understand a request. Not an SDK outcome.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "op",
+        "error"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolVersion"
+        },
+        "id": {
+          "$ref": "#/$defs/requestId"
+        },
+        "op": {
+          "const": "protocol_error"
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "l1Derived": {
+      "description": "Derived facts read back from an SDK object (a closed list; all strings). operation_type: the XDR-JSON snake_case operation arm (change_trust); operation_source: strkey; pool_id: lower-case hex; asset: native or CODE:ISSUER; address: strkey; muxed_id: decimal; offer_id: decimal; memo_type: none, text, id, hash or return.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "operation_type": {
+          "type": "string"
+        },
+        "operation_source": {
+          "type": "string"
+        },
+        "pool_id": {
+          "type": "string"
+        },
+        "asset": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "muxed_id": {
+          "type": "string"
+        },
+        "offer_id": {
+          "type": "string"
+        },
+        "memo_type": {
+          "type": "string"
+        }
+      }
+    },
+    "l1Rebuild": {
+      "description": "L1: the parsed transaction rebuilt through the SDK's builder from what the parsed object exposes and hashed under the request's passphrase (docs/conformance-protocol.md, the rebuild fact).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry_point",
+        "outcome"
+      ],
+      "properties": {
+        "entry_point": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcome": {
+          "description": "rebuilt: the builder made a transaction (tx_hash); refused: the builder refused (message); not_rebuilt: the builder's declaration cannot express this transaction, decided before the call (reason).",
+          "enum": [
+            "rebuilt",
+            "refused",
+            "not_rebuilt"
+          ]
+        },
+        "tx_hash": {
+          "$ref": "#/$defs/sha256"
+        },
+        "reason": {
+          "enum": [
+            "fee_bump",
+            "no_time_bounds",
+            "fee_not_per_operation",
+            "soroban_memo",
+            "soroban_muxed_source"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "differs": {
+          "description": "Diagnostic: the Transaction fields whose encoding differs between the parsed and the rebuilt transaction.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "rebuilt"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "tx_hash"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "refused"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "message"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "outcome": {
+                "const": "not_rebuilt"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reason"
+            ]
+          }
+        }
+      ]
+    },
+    "operationTypes": {
+      "description": "Operation types in operation order, each the XDR-JSON snake_case arm name (payment, change_trust, invoke_host_function).",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      }
+    }
+  }
+}

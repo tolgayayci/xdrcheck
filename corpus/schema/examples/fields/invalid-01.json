@@ -1,0 +1,25 @@
+{
+  "schema": "xcc.fields/v1",
+  "pins": {},
+  "stages": {
+    "C1": "commonValidPreSeqNum"
+  },
+  "fields": [
+    {
+      "id": "VF-01",
+      "field": "TransactionEnvelope.type",
+      "controlled_by": "submitter",
+      "status": "maybe",
+      "core_checks": [
+        {
+          "stage": "C1",
+          "what": "ENVELOPE_TYPE_TX_V0 not supported from Protocol 13",
+          "code_ref": "src/transactions/TransactionFrame.cpp:1256-1264"
+        }
+      ],
+      "reader_may_assume": "V0 envelopes occur only in pre-Protocol-13 history.",
+      "reader_must_not_assume": "That V0 envelopes never need decoding.",
+      "verification": "executed"
+    }
+  ]
+}

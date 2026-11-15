@@ -1,0 +1,214 @@
+{
+  "scenario": "two-actions-in-one-setup-item",
+  "caps": [
+    42
+  ],
+  "protocols": [
+    23,
+    30
+  ],
+  "profile": "lake",
+  "actors": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "bring_up": [
+    {
+      "ledger": "upgrade",
+      "entry": "ledger/standalone-upgrade-0-to-30-lcm-v0",
+      "protocols": [
+        30
+      ],
+      "expect": {
+        "ledger": {
+          "transactions": 0
+        }
+      }
+    },
+    {
+      "ledger": "settings-applied",
+      "entry": "ledger/config-upgrade-set-applied"
+    }
+  ],
+  "setup": [
+    {
+      "fund": {
+        "A": "100",
+        "B": "100",
+        "C": "100",
+        "D": "100"
+      },
+      "entry": "classic/create-account-funded-from-root",
+      "close": {}
+    },
+    {
+      "config_upgrade": {
+        "state_archival": {
+          "min_persistent_ttl": 10,
+          "starting_eviction_scan_level": 1
+        }
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "root-pays-a",
+      "entry": "classic/create-account-funded-from-root",
+      "tx": {
+        "source_account": "${acct.root}",
+        "fee": 100,
+        "seq_num": "${seq.root}",
+        "cond": "none",
+        "memo": "none",
+        "operations": [
+          {
+            "source_account": null,
+            "body": {
+              "payment": {
+                "destination": "${acct.D}",
+                "asset": "native",
+                "amount": "1"
+              }
+            }
+          }
+        ],
+        "ext": "v0"
+      },
+      "sign": [
+        {
+          "key": "root"
+        }
+      ],
+      "expect_result": "tx_success",
+      "expect": {
+        "values": [
+          {
+            "select": {
+              "in": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes",
+              "key": {
+                "account": {
+                  "account_id": "${acct.D}"
+                }
+              },
+              "change": "updated"
+            },
+            "path": "/updated/data/account/balance",
+            "equals": "1000000001"
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-operations-per-ledger",
+      "entry": "cap-0042/surge-priced-set-discounted-base-fee",
+      "upgrade": {
+        "maxtxsetsize": 2
+      }
+    },
+    {
+      "id": "bid-300",
+      "entry": "cap-0042/surge-priced-set-discounted-base-fee",
+      "order": [
+        "bid-300",
+        "bid-200"
+      ],
+      "tx": {
+        "source_account": "${acct.A}",
+        "fee": 300,
+        "seq_num": "${seq.A}",
+        "cond": "none",
+        "memo": {
+          "id": "${order_nonce}"
+        },
+        "operations": [
+          {
+            "source_account": null,
+            "body": {
+              "payment": {
+                "destination": "${acct.D}",
+                "asset": "native",
+                "amount": "1"
+              }
+            }
+          }
+        ],
+        "ext": "v0"
+      },
+      "sign": [
+        {
+          "key": "A"
+        }
+      ],
+      "expect_result": "tx_success"
+    },
+    {
+      "id": "bid-200",
+      "entry": "cap-0042/surge-priced-set-discounted-base-fee",
+      "same_ledger_as": "bid-300",
+      "tx": {
+        "source_account": "${acct.B}",
+        "fee": 200,
+        "seq_num": "${seq.B}",
+        "cond": "none",
+        "memo": "none",
+        "operations": [
+          {
+            "source_account": null,
+            "body": {
+              "payment": {
+                "destination": "${acct.D}",
+                "asset": "native",
+                "amount": "1"
+              }
+            }
+          }
+        ],
+        "ext": "v0"
+      },
+      "sign": [
+        {
+          "key": "B"
+        }
+      ],
+      "expect_result": "tx_success"
+    },
+    {
+      "id": "bid-100",
+      "entry": "cap-0042/surge-priced-set-discounted-base-fee",
+      "same_ledger_as": "bid-300",
+      "tx": {
+        "source_account": "${acct.C}",
+        "fee": 100,
+        "seq_num": "${seq.C}",
+        "cond": {
+          "time": {
+            "min_time": "0",
+            "max_time": "${close_time}"
+          }
+        },
+        "memo": "none",
+        "operations": [
+          {
+            "source_account": null,
+            "body": {
+              "payment": {
+                "destination": "${acct.D}",
+                "asset": "native",
+                "amount": "1"
+              }
+            }
+          }
+        ],
+        "ext": "v0"
+      },
+      "sign": [
+        {
+          "key": "C"
+        }
+      ],
+      "expect_excluded": true
+    }
+  ]
+}

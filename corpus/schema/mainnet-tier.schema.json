@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:mainnet-tier:v1",
+  "title": "Mainnet tier header",
+  "description": "corpus/mainnet/tier.json: the header of the mainnet tier (corpus/mainnet/README.md). Written by `xdrcheck-corpus mainnet build`; `mainnet check` and scripts/py/check_mainnet_tier.py compare its counts and its sha256 of tier.jsonl with the lines.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "line_schema", "network", "passphrase", "lake", "scan", "cover", "counts", "lines"],
+  "properties": {
+    "schema": {"const": "xcc.mainnet.tier/v1"},
+    "line_schema": {"const": "xcc.mainnet.tx/v1"},
+    "network": {"const": "pubnet"},
+    "passphrase": {"const": "Public Global Stellar Network ; September 2015"},
+    "lake": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["store", "layout"],
+      "properties": {
+        "store": {"description": "The public lake store the lake keys are under (pins.toml [public_lake]).", "type": "string", "pattern": "^s3://"},
+        "layout": {"type": "string"}
+      }
+    },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["first_ledger", "last_ledger", "grammar", "tokens"],
+      "properties": {
+        "first_ledger": {"type": "integer", "minimum": 1},
+        "last_ledger": {"type": "integer", "minimum": 1},
+        "grammar": {"const": "xcc.shape/v1"},
+        "tokens": {"type": "string"}
+      }
+    },
+    "cover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "rarity"],
+      "properties": {
+        "order": {"type": "string"},
+        "rarity": {"type": "string"}
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transactions", "ledgers", "tokens", "parts", "part_bytes", "object_bytes", "per_protocol"],
+      "properties": {
+        "transactions": {"type": "integer", "minimum": 1},
+        "ledgers": {"type": "integer", "minimum": 1},
+        "tokens": {"description": "Distinct token ids over all lines.", "type": "integer", "minimum": 1},
+        "parts": {"type": "integer", "minimum": 1},
+        "part_bytes": {"type": "integer", "minimum": 1},
+        "object_bytes": {"description": "Total size of the distinct lake objects (compressed, as fetched).", "type": "integer", "minimum": 1},
+        "per_protocol": {
+          "description": "Transactions per header protocol version.",
+          "type": "object",
+          "propertyNames": {"pattern": "^[0-9]+$"},
+          "additionalProperties": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "lines": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256"],
+      "properties": {
+        "file": {"const": "tier.jsonl"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

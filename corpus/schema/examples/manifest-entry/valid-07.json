@@ -1,0 +1,171 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/set-options-account-fields",
+  "title": "SetOptions changing account flags, home domain and inflation destination",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "Classic behaviour with no CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "why": "Account fields other than balances and signers are easy to drop because no balance moves.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "blob": {
+        "sha256": "582e694b96bf69f894763909a1b058c1a2523d5634f2e0947393cee9765f4e0e",
+        "bytes": 58256,
+        "path": "blobs/58/582e694b96bf69f894763909a1b058c1a2523d5634f2e0947393cee9765f4e0e.xdr"
+      },
+      "decoded": "decoded/58/582e694b96bf69f894763909a1b058c1a2523d5634f2e0947393cee9765f4e0e.json.zst",
+      "decoded_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet",
+        "key": "FFBC9DFF--4416000-4479999/FFBC4A92--4437357.xdr.zst",
+        "object_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "captured_at": "2026-11-12T00:00:00Z",
+        "written_by": "stellar-core 28.0.1",
+        "regenerated": false
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "focus": {
+        "tx_index": 0
+      }
+    }
+  ],
+  "expect": {
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        },
+        {
+          "address": "LA3KXRI4LAYA6XAXA4WYTPVXMSWMLRCV5MRKW3T2ZJEAZGBCRKJDCKZE",
+          "roles": [
+            "liquidity_pool"
+          ]
+        },
+        {
+          "address": "BAAD6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGR4TU",
+          "roles": [
+            "claimable_balance"
+          ]
+        },
+        {
+          "address": "GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N",
+          "roles": [
+            "claimant"
+          ]
+        },
+        {
+          "address": "CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6",
+          "roles": [
+            "authorizer"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "account_flags_changed",
+        "account": {
+          "address": "GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N"
+        },
+        "op_index": 0,
+        "detail": {
+          "flags": 10,
+          "flags_before": 2,
+          "auth_required": false,
+          "auth_revocable": true,
+          "auth_immutable": false,
+          "auth_clawback_enabled": true
+        }
+      },
+      {
+        "kind": "home_domain_changed",
+        "account": {
+          "address": "GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N"
+        },
+        "op_index": 0,
+        "detail": {
+          "home_domain": "example.org",
+          "home_domain_hex": "6578616d706c652e6f7267",
+          "home_domain_before": ""
+        }
+      },
+      {
+        "kind": "inflation_destination_changed",
+        "account": {
+          "address": "GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N"
+        },
+        "op_index": 0,
+        "detail": {
+          "inflation_destination": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B"
+        }
+      },
+      {
+        "kind": "inflation_destination_changed",
+        "account": {
+          "address": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B"
+        },
+        "op_index": 1,
+        "detail": {
+          "inflation_destination_before": "GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N",
+          "cleared": true
+        }
+      },
+      {
+        "kind": "ttl_extended",
+        "account": {
+          "address": "CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6"
+        },
+        "op_index": 2,
+        "detail": {
+          "entry_type": "contract_data",
+          "contract": "CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6",
+          "key_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+          "live_until_ledger": 4600000,
+          "live_until_ledger_before": 4500000
+        }
+      },
+      {
+        "kind": "contract_code_created",
+        "account": {
+          "address": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B"
+        },
+        "op_index": 3,
+        "detail": {
+          "wasm_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+          "code_bytes": 1024
+        }
+      },
+      {
+        "kind": "entry_restored",
+        "account": {
+          "address": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B"
+        },
+        "op_index": 4,
+        "detail": {
+          "entry_type": "contract_code",
+          "wasm_hash": "8888888888888888888888888888888888888888888888888888888888888888"
+        }
+      }
+    ],
+    "state_changes_exact": true
+  }
+}

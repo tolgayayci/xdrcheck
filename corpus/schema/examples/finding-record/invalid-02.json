@@ -1,0 +1,73 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0009",
+  "title": "MuxedAccount accepts an ID of 2^64 and encodes ID 0",
+  "defect_group": "DG-id-range-on-encode",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "17.0.0 - 17.0.1 (lower bound not established)",
+    "versions_tested": [
+      "17.0.0",
+      "17.0.1"
+    ]
+  },
+  "component": "sdk",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Encode side only: a caller that passes an out-of-range ID gets a valid address for a different ID (0). Decoding of ledger data is not affected. No reader impact verified.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "entries": [
+    {
+      "id": "cap-0027/api-muxed-account-id-encoding.id-2-pow-64",
+      "scope": "L4",
+      "expected": "reject: 18446744073709551616 is outside the unsigned 64-bit range",
+      "observed": "ok: an M address whose ID is 0"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "stellar-sdk 17.0.1 from PyPI, probe vector 2m3: outcome ok, encoded ID 0. Same on 17.0.0.",
+    "transcripts": [
+      "evidence/sdk-matrix/results/python_17.0.1.jsonl",
+      "evidence/sdk-matrix/results/python_17.0.0.jsonl"
+    ],
+    "expected_basis": "MuxedAccount.med25519.id is an unsigned 64-bit integer in the XDR definitions (stellar-xdr v30.0). js-stellar-sdk rejects the same input since 17.3.0 (PR #1780)."
+  },
+  "reproduction": {
+    "by": "second-research-probe",
+    "date": "2026-11-12",
+    "method": "Independent re-execution in the matrix probe after the first observation in the Python and Java defect-surface probe",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "muxed",
+      "offer"
+    ],
+    "result": "none-found"
+  },
+  "issue_draft": {
+    "path": "issue-py-stellar-base.md",
+    "kind": "new-issue",
+    "dry_run_command": "gh issue create --repo StellarCN/py-stellar-base --title \"MuxedAccount accepts an ID of 2^64 and encodes ID 0\" --body-file findings/F-0009/issue-py-stellar-base.md"
+  },
+  "state": "draft",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the matrix probe row for vector 2m3."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "draft"
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ]
+}

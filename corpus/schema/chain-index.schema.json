@@ -1,0 +1,348 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:chain-index:v1",
+  "title": "Chain index",
+  "description": "One file per local-core scenario run kept in the corpus: chains/<id>.json. Written by the generator, read by the replay harness to serve a chain unit and to find the chain a ledger blob belongs to. A chain is one run of one scenario on one passphrase at one target protocol under one meta flag profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "scenario",
+    "scenario_sha256",
+    "network",
+    "passphrase",
+    "protocol",
+    "profile",
+    "core",
+    "settings",
+    "ledgers"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.chain.index/v1"
+    },
+    "id": {
+      "description": "<scenario>/p<protocol>-<network>[-<profile>], for example sac-trust/p28-testnet.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+    },
+    "scenario": {
+      "description": "Scenario file path relative to the corpus root.",
+      "type": "string"
+    },
+    "scenario_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "network": {
+      "enum": [
+        "pubnet",
+        "testnet",
+        "core-test"
+      ]
+    },
+    "passphrase": {
+      "type": "string",
+      "minLength": 1
+    },
+    "protocol": {
+      "description": "Protocol the chain was upgraded to at ledger 2 and ran at.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile": {
+      "description": "Meta flag profile of the run: 'lake', 'golden-test' (the flags of one named stellar-core golden test; 'golden_test' is then required) or 'custom'.",
+      "enum": [
+        "lake",
+        "golden-test",
+        "custom"
+      ]
+    },
+    "core_meta_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "core": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "commit"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "binary_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "image_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "package": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "url",
+            "sha256"
+          ],
+          "properties": {
+            "url": {
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          }
+        },
+        "config_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "settings": {
+      "description": "The Soroban settings upgrade applied, and where it came from. stellar-core's helper uses a random salt; the generator fixes it. A chain below Protocol 20 applies none: its source starts with 'none' and files is empty; every other chain lists at least one file.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "files",
+        "salt_rule"
+      ],
+      "properties": {
+        "source": {
+          "description": "Where the settings values came from, for example quickstart <commit> config-settings/p27/testnet.json; 'none: \u2026' when no settings were applied.",
+          "type": "string"
+        },
+        "source_protocol": {
+          "description": "Protocol the settings file was written for, when it differs from the chain's protocol (no upstream file exists for Protocol 28; the Protocol 27 file is used).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "sha256"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              }
+            }
+          }
+        },
+        "salt_rule": {
+          "description": "How the fixed salt is derived, for example sha256(<label>).",
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "pattern": "^none"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "files": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "files": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "stream": {
+      "description": "The run's meta stream, if kept.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "first_ledger": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "last_ledger": {
+      "type": "integer",
+      "minimum": 2
+    },
+    "ledgers": {
+      "description": "Every ledger of the chain in sequence order, with no gap.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "seq",
+          "blob_sha256",
+          "header_hash"
+        ],
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 2
+          },
+          "blob_sha256": {
+            "description": "sha256 of the LedgerCloseMeta bytes (the blob name in the corpus).",
+            "$ref": "#/$defs/sha256"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "header_hash": {
+            "description": "Ledger header hash. Stable across regenerations, unlike the raw bytes.",
+            "$ref": "#/$defs/sha256"
+          },
+          "previous_header_hash": {
+            "$ref": "#/$defs/sha256"
+          },
+          "close_time": {
+            "type": "string",
+            "pattern": "^(0|[1-9][0-9]*)$"
+          },
+          "ledger_close_meta_version": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "step": {
+            "description": "Scenario step that produced the ledger, if any.",
+            "type": "string"
+          },
+          "entries": {
+            "description": "IDs of manifest entries whose blob this ledger is.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "regenerate": {
+      "description": "Command that regenerates the chain.",
+      "type": "string"
+    },
+    "reproducibility": {
+      "enum": [
+        "byte-identical",
+        "normalised-identical"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "golden_test": {
+      "description": "Required when profile is 'golden-test'.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core_tag",
+        "test_name",
+        "flags_source"
+      ],
+      "properties": {
+        "core_tag": {
+          "type": "string"
+        },
+        "test_name": {
+          "type": "string"
+        },
+        "flags_source": {
+          "type": "string"
+        }
+      }
+    },
+    "orders": {
+      "description": "Ledger groups whose scenario declares an apply order (`order`), by the group's first step ID: the ${order_nonce} the generator's search chose on this chain and the transaction-set shape the search used ('default': its model of core's set without surge pricing; 'learned': the shape read back from core's ledger after a first attempt). `gen --check` repeats the search and reports a different nonce or shape as a difference.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "nonce",
+          "shape"
+        ],
+        "properties": {
+          "nonce": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "shape": {
+            "enum": [
+              "default",
+              "learned"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "profile": {
+            "const": "golden-test"
+          }
+        },
+        "required": [
+          "profile"
+        ]
+      },
+      "then": {
+        "required": [
+          "golden_test"
+        ]
+      }
+    }
+  ]
+}

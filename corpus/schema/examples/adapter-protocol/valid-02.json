@@ -1,0 +1,100 @@
+{
+  "xcc": "xcc.adapter/1",
+  "id": 1,
+  "method": "describe",
+  "result": {
+    "adapter": {
+      "name": "wallet-backend",
+      "version": "0.1.0"
+    },
+    "target": {
+      "name": "stellar/wallet-backend",
+      "version": "2c873353c1f0f3c9b145e25a7d009023ad104a1c",
+      "version_kind": "commit"
+    },
+    "protocol_version": "xcc.adapter/1",
+    "inputs": [
+      "sep54-s3",
+      "rpc"
+    ],
+    "units": [
+      "single",
+      "chain"
+    ],
+    "envelope": {
+      "enforcement": "sdk_limit",
+      "max_protocol": 29,
+      "min_protocol_with_transactions": 10,
+      "ledger_close_meta_versions": [
+        0,
+        1,
+        2
+      ],
+      "basis": "go.mod pins go-stellar-sdk v0.7.3 (XDR for Protocol 28; Protocol 29 changed no XDR); no gate in wallet-backend at this commit"
+    },
+    "observations": {
+      "receipts": {
+        "supported": true,
+        "subkinds": [
+          "transactions",
+          "operations"
+        ]
+      },
+      "transactions": {
+        "supported": true
+      },
+      "participants": {
+        "supported": true,
+        "muxed": "base_only"
+      },
+      "state_changes": {
+        "supported": true,
+        "subkinds": [
+          "signer_added",
+          "signer_removed",
+          "signer_changed",
+          "trustline_created",
+          "trustline_removed",
+          "trustline_flags_changed",
+          "balance_changed",
+          "account_created",
+          "account_removed"
+        ],
+        "modelling": [
+          "initial_authorization_separate"
+        ]
+      },
+      "movements": {
+        "supported": false,
+        "reason": "adapter v0.1 maps state changes only; balance movements are derived from them in a later version"
+      },
+      "addresses": {
+        "supported": true,
+        "address_encoding": "version_byte_payload_hex"
+      }
+    },
+    "concurrency": {
+      "max_parallel_sessions": 8
+    },
+    "requirements": {
+      "network": "none",
+      "services": [
+        "timescale/timescaledb:2.28.2-pg17@sha256:909e2c7577c074517c8936b6d8799294b33f25fb5bad978a2199250665f1ce1a",
+        "chrislusf/seaweedfs:4.46@sha256:08d516132314207d10c8e37cbffc1f32b147d870169688734cc61c6231625b62"
+      ],
+      "tools": [
+        "go>=1.25.9",
+        "git",
+        "docker"
+      ]
+    },
+    "timing": {
+      "prepare_cold_ms": 25000,
+      "ingest_per_ledger_ms": 300,
+      "slowest_failure_ms": {
+        "sep54-s3": 16000,
+        "rpc": 152000
+      }
+    }
+  }
+}

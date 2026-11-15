@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:run-verdict:v1",
+  "title": "Run verdict row",
+  "description": "One line of verdicts.jsonl: one check's result on one ledger, transaction or operation. Rows are written for every result that is not a pass; passes are counted per check in summary.json. tx is the 0-based position of the transaction in the ledger's apply order (the order of its transaction results), null for a ledger-level row.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ledger", "tx", "op", "check", "class", "verdict"],
+  "properties": {
+    "ledger": {"type": "integer", "minimum": 1},
+    "tx": {"type": ["integer", "null"], "minimum": 0},
+    "tx_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "op": {"type": ["integer", "null"], "minimum": 0},
+    "op_type": {"type": "string"},
+    "check": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+    "class": {"type": "string", "minLength": 1},
+    "verdict": {"enum": ["fail", "error", "unavailable"]},
+    "evidence": {"type": "object"}
+  }
+}

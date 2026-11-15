@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:coverage:v1",
+  "title": "Per-CAP coverage report (coverage.json)",
+  "description": "Generated from the manifest and corpus/caps.toml. One row per CAP (or protocol-gated change without a CAP) that changed what a ledger reader sees.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "corpus_version",
+    "rows",
+    "totals"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.coverage/v1"
+    },
+    "corpus_version": {
+      "type": "string"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "group",
+          "protocol",
+          "reader_visible",
+          "entries",
+          "by_source",
+          "twins",
+          "gap_reason"
+        ],
+        "properties": {
+          "group": {
+            "description": "cap-NNNN or protocol-NN or a cross-cutting group.",
+            "type": "string",
+            "pattern": "^(cap-[0-9]{4}|protocol-[0-9]{2}|[a-z][a-z0-9-]*)$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "reader_visible": {
+            "type": "boolean"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+            }
+          },
+          "by_source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "local-core",
+              "core-golden",
+              "history",
+              "history-archive",
+              "synthetic"
+            ],
+            "properties": {
+              "local-core": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "core-golden": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "history": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "history-archive": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "synthetic": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "twins": {
+            "description": "Entries with both a testnet and a pubnet-passphrase variant.",
+            "type": "integer",
+            "minimum": 0
+          },
+          "mirrors": {
+            "description": "Local-core entries with a computed golden counterpart: listed as mapped in corpus/mirrors.json (check AG-4).",
+            "type": "integer",
+            "minimum": 0
+          },
+          "gap_reason": {
+            "description": "Required (non-null) when entries is empty or twins is 0 for a reader-visible CAP.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "reader_visible": {
+                  "const": true
+                },
+                "entries": {
+                  "maxItems": 0
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "gap_reason": {
+                  "type": "string",
+                  "minLength": 5
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "reader_visible": {
+                  "const": true
+                },
+                "twins": {
+                  "const": 0
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "gap_reason": {
+                  "type": "string",
+                  "minLength": 5
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

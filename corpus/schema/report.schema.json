@@ -1,0 +1,726 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:report:v1",
+  "title": "Tool report",
+  "description": "The one result format shared by the replay harness, the conformance runner, the linter and corpus verification. `xcc findings check` and `xcc report acceptance` read only this format. A tool may stream rows as NDJSON (each line validates against #/$defs/row) and write header and summary last; the assembled document validates against this schema. Tool-specific detail lives in the row's `replay`, `conform`, `lint` or `corpus` block; the fields outside those blocks mean the same thing for every tool.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "header",
+    "rows",
+    "summary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.report/v1"
+    },
+    "header": {
+      "$ref": "#/$defs/header"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/row"
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "findingId": {
+      "type": "string",
+      "pattern": "^F-[0-9]{4}$"
+    },
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tool",
+        "corpus",
+        "pins",
+        "mode"
+      ],
+      "properties": {
+        "tool": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "enum": [
+                "xcc replay",
+                "xcc conform",
+                "xdrlint",
+                "xcc-corpus verify"
+              ]
+            },
+            "version": {
+              "type": "string"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{7,40}$"
+            }
+          }
+        },
+        "corpus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "manifest_sha256"
+          ],
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "manifest_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "schema": {
+              "type": "string"
+            },
+            "tier": {
+              "enum": [
+                "curated",
+                "bulk"
+              ]
+            }
+          }
+        },
+        "pins": {
+          "description": "The pins file that drove the run, and the pins that matter for reading this report.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "file_sha256"
+          ],
+          "properties": {
+            "file_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "values": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "mode": {
+          "description": "suite: what was run (for example assert-known, sdk-regression, pr, nightly, selftest, wallet-backend-findings).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "suite",
+            "overlay"
+          ],
+          "properties": {
+            "suite": {
+              "type": "string"
+            },
+            "overlay": {
+              "description": "true if the private overlay was loaded. A report with overlay true is private and is never uploaded by public CI.",
+              "type": "boolean"
+            },
+            "offline": {
+              "description": "How networking was disabled in the run step, or 'not-enforced'.",
+              "type": "string"
+            }
+          }
+        },
+        "run": {
+          "description": "Not part of the comparable body: two reports are compared without this block.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "started": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "wall_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "host": {
+              "type": "string"
+            },
+            "toolchains": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "timings": {
+              "description": "Wall time per phase of the run in milliseconds (for example fetch, build, run), by phase name.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "resumed": {
+          "description": "Set when the run was resumed from an earlier, interrupted one: the run it resumed and how many rows it carried over. Not part of the comparable body: a resumed run's rows equal a fresh run's.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from_run",
+            "rows_carried"
+          ],
+          "properties": {
+            "from_run": {
+              "type": "string"
+            },
+            "rows_carried": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_id",
+        "tool",
+        "target",
+        "failure",
+        "expectation"
+      ],
+      "properties": {
+        "row_id": {
+          "description": "Stable identifier of the row: the same entry, variant, target version and scope always produce the same row_id, so findings can refer to it.",
+          "type": "string"
+        },
+        "tool": {
+          "enum": [
+            "replay",
+            "conform",
+            "lint",
+            "corpus"
+          ]
+        },
+        "entry": {
+          "description": "Canonical manifest entry ID (entry-ids.md); a family member is cited by its own ID. Absent for linter rows that have no demonstrating entry.",
+          "type": "string"
+        },
+        "variant": {
+          "description": "Variant key: network, or network@protocol when an entry has several protocols.",
+          "type": "string"
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version",
+            "kind"
+          ],
+          "properties": {
+            "name": {
+              "description": "Package or repository under test, for example @stellar/stellar-sdk, stellar/wallet-backend.",
+              "type": "string"
+            },
+            "version": {
+              "description": "Exact version or full commit.",
+              "type": "string"
+            },
+            "kind": {
+              "description": "sdk, pipeline: a third-party reader under test. core: stellar-core's own decoder column. oracle: our own oracle. selftest: a seeded-bug indexer or adapter. fixture: linter fixtures. Rows whose target kind is selftest, fixture or oracle never need a finding.",
+              "enum": [
+                "sdk",
+                "pipeline",
+                "core",
+                "oracle",
+                "selftest",
+                "fixture"
+              ]
+            },
+            "column": {
+              "description": "Conformance column ID, for example js@17.2.0.",
+              "type": "string"
+            },
+            "profile": {
+              "description": "Decode or lint profile in force.",
+              "type": "string"
+            }
+          }
+        },
+        "failure": {
+          "description": "true when the reader under test got this entry wrong, whether or not that was expected: replay class mishandled, or dropped with qualifier silent or partial; conformance verdict diverge, accepts_invalid, reject_valid or crash; a linter diagnostic on third-party code, suppressed or not; a corpus check that failed. A declared fail-closed refusal and every side category are not failures.",
+          "type": "boolean"
+        },
+        "expectation": {
+          "description": "expected: the result is what the manifest (known divergence or default), the suppression file or the fixture said it should be. unexpected: it is not; the run fails. pending: it is not, and a committed, description-free pending list (findings/pending/*.json, lint/expected/*/*.pending.json) names the row as awaiting finding review; not counted in summary.unexpected, and a failure in the acceptance-mode findings check.",
+          "enum": [
+            "expected",
+            "unexpected",
+            "pending"
+          ]
+        },
+        "expected": {
+          "description": "What should have happened and where that comes from.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "enum": [
+                "default",
+                "known_divergence",
+                "suppression",
+                "fixture",
+                "selftest"
+              ]
+            },
+            "result": {
+              "description": "Expected result in the tool's own vocabulary, for example 'pass', 'mishandled\u00b7halt', 'reject at L1', 'XDR201 reported'.",
+              "type": "string"
+            }
+          }
+        },
+        "known_divergence": {
+          "description": "The manifest's known divergence this row matched, if any.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference",
+            "status",
+            "in_range"
+          ],
+          "properties": {
+            "reference": {
+              "type": "string",
+              "format": "uri"
+            },
+            "status": {
+              "enum": [
+                "fixed",
+                "fixed_unreleased",
+                "open",
+                "wont_fix",
+                "unreported"
+              ]
+            },
+            "in_range": {
+              "type": "boolean"
+            },
+            "fixed_in": {
+              "type": "string"
+            }
+          }
+        },
+        "finding": {
+          "description": "Finding record that accounts for this row. Required for every failure row on a target of kind sdk, pipeline or core; `xcc findings check` enforces it.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/findingId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "caps": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "replay": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "unit",
+            "class"
+          ],
+          "properties": {
+            "unit": {
+              "enum": [
+                "single",
+                "chain",
+                "stream"
+              ]
+            },
+            "input": {
+              "enum": [
+                "sep54-dir",
+                "sep54-s3",
+                "sep54-gcs",
+                "rpc"
+              ]
+            },
+            "range": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "start": {
+                  "type": "integer"
+                },
+                "end": {
+                  "type": "integer"
+                }
+              }
+            },
+            "class": {
+              "enum": [
+                "pass",
+                "mishandled",
+                "dropped",
+                "not_applicable",
+                "not_reached",
+                "harness_fault",
+                "flaky"
+              ]
+            },
+            "qualifier": {
+              "enum": [
+                "wrong_value",
+                "crash",
+                "hang",
+                "halt",
+                "silent",
+                "partial",
+                "refused"
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "class": {
+                    "const": "mishandled"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "qualifier"
+                ],
+                "properties": {
+                  "qualifier": {
+                    "enum": [
+                      "wrong_value",
+                      "crash",
+                      "hang",
+                      "halt"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "class": {
+                    "const": "dropped"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "qualifier"
+                ],
+                "properties": {
+                  "qualifier": {
+                    "enum": [
+                      "silent",
+                      "partial",
+                      "refused"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "conform": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level",
+            "outcome",
+            "verdict"
+          ],
+          "properties": {
+            "level": {
+              "enum": [
+                "L0",
+                "L1",
+                "L2",
+                "L3",
+                "L4",
+                "spec",
+                "json"
+              ]
+            },
+            "reference": {
+              "enum": [
+                "network",
+                "protocol-rule",
+                "spec"
+              ]
+            },
+            "outcome": {
+              "description": "What the driver reported.",
+              "enum": [
+                "ok",
+                "diverge",
+                "reject",
+                "crash",
+                "n_a"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "verdict": {
+              "description": "What the orchestrator concluded.",
+              "enum": [
+                "conform",
+                "diverge",
+                "schema_invalid",
+                "roundtrip_changed",
+                "roundtrip_refused",
+                "accepts_invalid",
+                "reject_valid",
+                "crash",
+                "n_a"
+              ]
+            },
+            "check": {
+              "description": "Against the manifest's known divergences.",
+              "enum": [
+                "conform",
+                "known",
+                "undeclared",
+                "unexpected-conform",
+                "known-changed",
+                "n_a"
+              ]
+            }
+          }
+        },
+        "lint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rule",
+            "severity",
+            "location",
+            "suppressed"
+          ],
+          "properties": {
+            "rule": {
+              "type": "string",
+              "pattern": "^XDR[0-9]{3}$"
+            },
+            "assumption": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]+:[a-z0-9>._-]+$"
+            },
+            "severity": {
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "location": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "file",
+                "line"
+              ],
+              "properties": {
+                "file": {
+                  "type": "string"
+                },
+                "line": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "function": {
+                  "type": "string"
+                }
+              }
+            },
+            "message": {
+              "type": "string"
+            },
+            "suppressed": {
+              "type": "boolean"
+            },
+            "suppression_reason": {
+              "type": "string"
+            }
+          }
+        },
+        "corpus": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "check",
+            "ok"
+          ],
+          "properties": {
+            "check": {
+              "enum": [
+                "schema",
+                "hashes",
+                "roundtrip",
+                "reject",
+                "sidecar",
+                "pinpoints",
+                "ag1",
+                "ag3",
+                "ag4",
+                "extractor",
+                "regenerate",
+                "coverage",
+                "guide-table",
+                "ids",
+                "guide-claims",
+                "orphans",
+                "spec"
+              ]
+            },
+            "ok": {
+              "type": "boolean"
+            },
+            "detail": {
+              "type": "string"
+            }
+          }
+        },
+        "evidence": {
+          "description": "Raw observations: signals, values, messages, log paths. Free-form per tool; capped in size by the writer.",
+          "type": "object"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "tool": {
+                "const": "replay"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "replay",
+              "entry"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "tool": {
+                "const": "conform"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "conform",
+              "entry"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "tool": {
+                "const": "lint"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "lint"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "tool": {
+                "const": "corpus"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "corpus",
+              "entry"
+            ]
+          }
+        }
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows",
+        "failures",
+        "unexpected",
+        "failures_without_finding"
+      ],
+      "properties": {
+        "rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failures": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unexpected": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failures_without_finding": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "by_result": {
+          "description": "Counts keyed by the tool's own result names (for example pass, mishandled\u00b7halt, dropped\u00b7partial, conform, known, undeclared).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

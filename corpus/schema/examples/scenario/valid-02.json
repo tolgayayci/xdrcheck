@@ -1,0 +1,160 @@
+{
+  "scenario": "soroban-in-runs",
+  "caps": [
+    46,
+    67
+  ],
+  "protocols": [
+    29,
+    30
+  ],
+  "profile": "lake",
+  "actors": [
+    "A",
+    "B",
+    "I"
+  ],
+  "assets": {
+    "USDC": {
+      "credit_alphanum4": {
+        "asset_code": "USDC",
+        "issuer": "${acct.I}"
+      }
+    }
+  },
+  "contracts": {
+    "emitter": {
+      "wasm": "contracts/shape-emitter.wasm",
+      "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+      "deployer": "A",
+      "constructor_args": [
+        {
+          "symbol": "xcc"
+        }
+      ]
+    }
+  },
+  "setup": [
+    {
+      "fund": {
+        "A": "10000",
+        "B": "10000",
+        "I": "10000"
+      }
+    },
+    {
+      "trust": {
+        "A": "USDC",
+        "B": [
+          "USDC"
+        ]
+      }
+    },
+    {
+      "pay": {
+        "from": "I",
+        "to": "A",
+        "asset": "USDC",
+        "amount": "1000"
+      }
+    },
+    {
+      "deploy_sac": "USDC"
+    },
+    {
+      "deploy_contract": "emitter"
+    }
+  ],
+  "steps": [
+    {
+      "id": "add-signers",
+      "entry": "cap-0028/pre-auth-signer-removed-on-failed-tx",
+      "tx": {
+        "source_account": "${acct.A}",
+        "operations": [
+          {
+            "source_account": null,
+            "body": {
+              "set_options": {
+                "signer": {
+                  "key": "${signer.pre_auth_tx(pre-authorised)}",
+                  "weight": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      "sign": [
+        {
+          "key": "A"
+        }
+      ],
+      "expect_result": "tx_success"
+    },
+    {
+      "id": "pre-authorised",
+      "entry": "cap-0028/pre-auth-signer-removed-on-failed-tx",
+      "tx": {
+        "source_account": "${acct.A}"
+      },
+      "sign": [
+        {
+          "pre_auth": true
+        },
+        {
+          "hash_x": "${hash_x.preimage(gate)}"
+        }
+      ]
+    },
+    {
+      "id": "emitter-colliding-keys",
+      "entry": "cap-0046/event-data-map-with-colliding-keys",
+      "tx": {
+        "source_account": "${acct.B}",
+        "fee": 1000,
+        "seq_num": "${seq.B}",
+        "cond": "none",
+        "memo": "none",
+        "operations": [
+          {
+            "source_account": null,
+            "body": {
+              "invoke_host_function": {
+                "host_function": {
+                  "invoke_contract": {
+                    "contract_address": "${contract.id(emitter)}",
+                    "function_name": "colliding_keys",
+                    "args": []
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "simulate": true,
+      "sign": [
+        {
+          "key": "B"
+        }
+      ],
+      "expect_result": "tx_success",
+      "mirrors": {
+        "core_golden": {
+          "core_tag": "v30.0.0",
+          "file": "test-lcm-current/InvokeHostFunctionTests/4c437318f87437c5.xdr",
+          "file_sha256": "20624d6db29bb4546312a1aafcc72c978c1781b40b90a4828ab0dc7166fefeda",
+          "test_name": "Trustline stellar asset contract|protocol version 30",
+          "frame_index": 42,
+          "tx_index": 0
+        },
+        "flags": [
+          "EMIT_CLASSIC_EVENTS"
+        ],
+        "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:219-225",
+        "state": "planned"
+      }
+    }
+  ]
+}

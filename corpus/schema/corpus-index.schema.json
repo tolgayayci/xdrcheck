@@ -1,0 +1,251 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:corpus-index:v1",
+  "title": "Corpus index (corpus.json)",
+  "description": "Top-level index of a corpus root: versions, the fail-closed gate, pins, tiers and checksum files.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "corpus_version",
+    "entry_schema",
+    "max_protocol",
+    "max_ledger_close_meta_version",
+    "pins",
+    "tiers",
+    "checksums"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.corpus/v1"
+    },
+    "corpus_version": {
+      "description": "MAJOR.MINOR.PATCH; MAJOR is the highest protocol covered.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.]+)?$"
+    },
+    "entry_schema": {
+      "const": "xcc.manifest.entry/v1"
+    },
+    "max_protocol": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_ledger_close_meta_version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stellar_core",
+        "xdr_definitions",
+        "oracle"
+      ],
+      "properties": {
+        "stellar_core": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "commit"
+          ],
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        },
+        "xdr_definitions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tag",
+            "commit"
+          ],
+          "properties": {
+            "tag": {
+              "type": "string"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        },
+        "oracle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "crate",
+            "version"
+          ],
+          "properties": {
+            "crate": {
+              "const": "stellar-xdr"
+            },
+            "version": {
+              "type": "string"
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            }
+          }
+        }
+      }
+    },
+    "tiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "curated"
+      ],
+      "properties": {
+        "curated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "in_repository",
+            "entries",
+            "blobs",
+            "bytes"
+          ],
+          "properties": {
+            "in_repository": {
+              "const": true
+            },
+            "entries": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "blobs": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "bulk": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "in_repository",
+            "source",
+            "ref",
+            "path",
+            "files",
+            "ledgers",
+            "bytes",
+            "file_index"
+          ],
+          "properties": {
+            "in_repository": {
+              "const": false
+            },
+            "description": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string",
+              "format": "uri"
+            },
+            "ref": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "files": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ledgers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "file_index": {
+              "description": "sha256sum-format file listing every bulk file, relative to the corpus root.",
+              "type": "string"
+            }
+          }
+        },
+        "mainnet": {
+          "description": "The mainnet tier (mainnet/README.md): pubnet transactions located in the public lake, which holds their bytes. The counts are those of the tier's header.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "in_repository",
+            "header",
+            "transactions",
+            "ledgers",
+            "tokens"
+          ],
+          "properties": {
+            "in_repository": {
+              "const": false
+            },
+            "description": {
+              "type": "string"
+            },
+            "header": {
+              "description": "The tier's header, relative to the corpus root.",
+              "type": "string"
+            },
+            "transactions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ledgers": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tokens": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "checksums": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "manifest"
+      ],
+      "properties": {
+        "algorithm": {
+          "const": "sha256"
+        },
+        "manifest": {
+          "type": "string"
+        },
+        "blobs": {
+          "type": "string"
+        },
+        "decoded": {
+          "type": "string"
+        }
+      }
+    },
+    "generated_at": {
+      "description": "The only timestamp; excluded from reproducibility checks.",
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

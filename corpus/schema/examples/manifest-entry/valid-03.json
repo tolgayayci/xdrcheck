@@ -1,0 +1,573 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0073/sac-trust-creates-trustline",
+  "title": "Stellar Asset Contract trust() creates a trustline with no ChangeTrust operation and no event",
+  "kind": "ledger",
+  "caps": [
+    73
+  ],
+  "protocol": {
+    "introduced": 26
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sac-trust",
+    "trustline-created-by-contract-call",
+    "state-change-without-event"
+  ],
+  "why": "The trustline appears only as a created ledger entry under an InvokeHostFunction operation. There is no ChangeTrust operation and the contract emits no event, so readers that derive trustlines from classic operations or from events never see it.",
+  "fields": {
+    "partially_validated": [
+      "VF-46"
+    ],
+    "validated": [
+      "VF-43",
+      "VF-47"
+    ]
+  },
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 28,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "86b9e4e5e578789b6194aa4f032510c63674472bbd587c1dcd1e9092b35066d0",
+        "bytes": 4716,
+        "path": "blobs/86/86b9e4e5e578789b6194aa4f032510c63674472bbd587c1dcd1e9092b35066d0.xdr"
+      },
+      "decoded": "decoded/cap-0073/sac-trust-creates-trustline.testnet.json",
+      "decoded_sha256": "01d329acb1e4dce0d18ab62cb66fb8f3280e51ff818127a2a7bddb3eb8d31fec",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), stellar-xdr CLI, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        },
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "evidence/local-core/driver/scenario.mjs",
+        "scenario_sha256": "1df73b0b8e31b41a0923048e87d8c3422068f3151e8d55f7b6a2520436a99962",
+        "step": "ledger 28: Stellar Asset Contract trust(B) for USDC:I1, account B has no trustline",
+        "config_sha256": "28a39b7cb87f6843e0a6a04b5495ae47bc41d1c8d703b179fa3bc9e01e59fbf0",
+        "close_time": "1726000000",
+        "stream_sha256": "065c9302cf0144a513c27f350fad4cfcf872a26c809d5082a2b3c84a925ff76b",
+        "frame_index": 26,
+        "generated_by": "research probe driver (Node 24, @stellar/stellar-sdk 17.4.0), not the final generator",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "settings upgrade set 1 (enable.xdr)",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "stellar-rpc v30.0.0 integration test upgrades"
+          },
+          {
+            "name": "settings upgrade set 2 (p30-testnet.xdr)",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e config-settings/p30/testnet.json encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "cd evidence/local-core && ./run-offline.sh testnet out/testnet/run-N   (see README.md there)",
+        "reproducibility": "normalised-identical"
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "9794aac56f62340e12602a6c10abe7cb638f4acabd4d66e49dd67e5a7541a2b8",
+        "op_index": 0,
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "984f69644a4d9a5452cd8df397c3d3bf9424caf8815ab75c101ac673f71f6634",
+        "tx_hash": "9794aac56f62340e12602a6c10abe7cb638f4acabd4d66e49dd67e5a7541a2b8",
+        "tx_hashes": [
+          "9794aac56f62340e12602a6c10abe7cb638f4acabd4d66e49dd67e5a7541a2b8"
+        ],
+        "contracts": {
+          "sac_usdc": "CDDJXDLTHHCN53T2PQJJBM663LI5PHERX6BCJI5TAZCJCLI6JWTJT42B",
+          "native_sac": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+        },
+        "accounts": {
+          "owner": "GD4OZEF7ZVL3GXWTZHZHM67NFC24RVZZMLWKP6E3VJYLLRLIQKEISRCS",
+          "issuer": "GDVZO7M4FVJ5JJSZ3O2IH3XWQ7LRKZ6ZSDPIF7PDITGQSK6IEOHSLWQB"
+        },
+        "assets": {
+          "usdc": "USDC:GDVZO7M4FVJ5JJSZ3O2IH3XWQ7LRKZ6ZSDPIF7PDITGQSK6IEOHSLWQB"
+        },
+        "fee_charged": "34800",
+        "fee_bid": "50000100",
+        "fee_refund": "49965300"
+      },
+      "notes": "Local standalone chain on the real testnet passphrase, never broadcast. Raw bytes of this ledger differed between runs only in diagnostic timing values; ledger hash and normalised bytes were identical in three runs."
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 28,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "9ea0c27a5c18ed237b034e7c655e51ad21e775e39d29826bb0c4ba7112d442ec",
+        "bytes": 4716,
+        "path": "blobs/9e/9ea0c27a5c18ed237b034e7c655e51ad21e775e39d29826bb0c4ba7112d442ec.xdr"
+      },
+      "decoded": "decoded/cap-0073/sac-trust-creates-trustline.pubnet.json",
+      "decoded_sha256": "c5063337b3af700e769574ee1aa9861c518f76b450fd7b8f6cd0edeb32f5f424",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), stellar-xdr CLI, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        },
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "evidence/local-core/driver/scenario.mjs",
+        "scenario_sha256": "1df73b0b8e31b41a0923048e87d8c3422068f3151e8d55f7b6a2520436a99962",
+        "step": "ledger 28: Stellar Asset Contract trust(B) for USDC:I1, account B has no trustline",
+        "config_sha256": "28a39b7cb87f6843e0a6a04b5495ae47bc41d1c8d703b179fa3bc9e01e59fbf0",
+        "close_time": "1726000000",
+        "stream_sha256": "a11d84a32e39ef9bb6f1f6e1910c532529387e6494236051b1c14361a75e4da8",
+        "frame_index": 26,
+        "generated_by": "research probe driver (Node 24, @stellar/stellar-sdk 17.4.0), not the final generator",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "settings upgrade set 1 (enable.xdr)",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "stellar-rpc v30.0.0 integration test upgrades"
+          },
+          {
+            "name": "settings upgrade set 2 (p30-testnet.xdr)",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e config-settings/p30/testnet.json encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "cd evidence/local-core && ./run-offline.sh mainnet out/mainnet/run-N   (see README.md there)",
+        "reproducibility": "normalised-identical"
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "5721b433a20c8d7b903cc1097edc0911bc0d389802db95ece303815f2b5b944c",
+        "op_index": 0,
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "7c481dedb32355000bebd5126b544db1e13296d65db83f4fda67f9d929973d48",
+        "tx_hash": "5721b433a20c8d7b903cc1097edc0911bc0d389802db95ece303815f2b5b944c",
+        "tx_hashes": [
+          "5721b433a20c8d7b903cc1097edc0911bc0d389802db95ece303815f2b5b944c"
+        ],
+        "contracts": {
+          "sac_usdc": "CC4HQKN63DBWDEDBDHDYUYZAPI4JU73GTRHDWV42FAXC3RNHN6D5K53C",
+          "native_sac": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"
+        },
+        "accounts": {
+          "owner": "GD4OZEF7ZVL3GXWTZHZHM67NFC24RVZZMLWKP6E3VJYLLRLIQKEISRCS",
+          "issuer": "GDVZO7M4FVJ5JJSZ3O2IH3XWQ7LRKZ6ZSDPIF7PDITGQSK6IEOHSLWQB"
+        },
+        "assets": {
+          "usdc": "USDC:GDVZO7M4FVJ5JJSZ3O2IH3XWQ7LRKZ6ZSDPIF7PDITGQSK6IEOHSLWQB"
+        },
+        "fee_charged": "34800",
+        "fee_bid": "50000100",
+        "fee_refund": "49965300"
+      },
+      "notes": "Local standalone chain on the real public-network passphrase, never broadcast. Raw bytes of this ledger differed between runs only in diagnostic timing values; ledger hash and normalised bytes were identical in three runs."
+    },
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 15,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "fe7ebd94df50cff714681207f98699c4e5d86a0eeca9175f96a38358b28dfb75",
+        "bytes": 4552,
+        "path": "blobs/fe/fe7ebd94df50cff714681207f98699c4e5d86a0eeca9175f96a38358b28dfb75.xdr"
+      },
+      "decoded": "decoded/cap-0073/sac-trust-creates-trustline.testnet.p28.json",
+      "decoded_sha256": "91bfc616990f8ac2d810b2083be43da340dc937498232d3853e8ec73986028f7",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), stellar-xdr CLI, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        },
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "evidence/wallet-backend-731/core/driver/scenario731.mjs",
+        "scenario_sha256": "f1edcebd7e4d2db093f5428234b98841229c2c9610e311219b0b12aa14a1c0d8",
+        "step": "ledger 15: Stellar Asset Contract trust(B) for USDC:I, account B has no trustline; the only transaction in the ledger",
+        "config_sha256": "1928f6c138103e06b17fa05c6303f2a02d06416ed8354f9a3a7b21e425870de9",
+        "close_time": "1713000000",
+        "stream_sha256": "108c358829bc9fd665ce7236d92bcb74652a150a66688144a90c6b5612067005",
+        "frame_index": 13,
+        "generated_by": "research probe driver (Node 24, @stellar/stellar-sdk 17.4.0), not the final generator",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "settings upgrade set 1 (enable.xdr)",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "stellar-rpc v30.0.0 integration test upgrades"
+          },
+          {
+            "name": "settings upgrade set 2 (p27-testnet.xdr)",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e config-settings/p27/testnet.json encoded with stellar-xdr 30.0.0. Protocol 27 settings on a Protocol 28 chain: no upstream Protocol 28 settings file exists (quickstart never had a p28 directory)"
+          }
+        ],
+        "regenerate": "cd evidence/wallet-backend-731 && PROTOCOL=28 SETTINGS=p27-testnet.xdr core/run-offline.sh testnet out/p28-testnet/run-N   (see README.md there)",
+        "reproducibility": "normalised-identical"
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5",
+        "op_index": 0,
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "c0f754e7c9a7a47a0969dbf88f861c89bf79ae0e97ffe464e90aaa8c292145b3",
+        "tx_hash": "8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5",
+        "tx_hashes": [
+          "8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5"
+        ],
+        "contracts": {
+          "sac_usdc": "CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6",
+          "native_sac": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+        },
+        "accounts": {
+          "owner": "GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6",
+          "issuer": "GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N"
+        },
+        "assets": {
+          "usdc": "USDC:GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N"
+        },
+        "fee_charged": "74541",
+        "fee_bid": "50000100",
+        "fee_refund": "49925559"
+      },
+      "notes": "Local standalone chain at Protocol 28 on the real testnet passphrase, never broadcast. The ledger header carries the pre-Protocol-30 StellarValue arm (signed), so go-stellar-sdk v0.7.3 decodes it (executed). Soroban network settings are the Protocol 27 set, because no upstream Protocol 28 settings file exists; that combination never existed on a public network. This is the variant the wallet-backend#731 acceptance runs used. Header hashes were identical across repeated runs; raw bytes differ only in change order and timing diagnostics."
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 15,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "854cdcd471c04d884479b189582e7757a4d0f0d12b2a82872c7eb6af23a601bb",
+        "bytes": 4552,
+        "path": "blobs/85/854cdcd471c04d884479b189582e7757a4d0f0d12b2a82872c7eb6af23a601bb.xdr"
+      },
+      "decoded": "decoded/cap-0073/sac-trust-creates-trustline.pubnet.p28.json",
+      "decoded_sha256": "891db4062bf44d1661f60872345b4490bff51c716bebfd4eb8e31a914b1f5054",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), stellar-xdr CLI, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        },
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "evidence/wallet-backend-731/core/driver/scenario731.mjs",
+        "scenario_sha256": "f1edcebd7e4d2db093f5428234b98841229c2c9610e311219b0b12aa14a1c0d8",
+        "step": "ledger 15: Stellar Asset Contract trust(B) for USDC:I, account B has no trustline; the only transaction in the ledger",
+        "config_sha256": "bc215d0e661bca64027c85f3d0284d1e743390cdfa4aba60f6f274504062b0dd",
+        "close_time": "1713000000",
+        "stream_sha256": "2367b90f854cc52a78100f2718f5983a9245471f070de581c707a4ffc0c3879d",
+        "frame_index": 13,
+        "generated_by": "research probe driver (Node 24, @stellar/stellar-sdk 17.4.0), not the final generator",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "settings upgrade set 1 (enable.xdr)",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "stellar-rpc v30.0.0 integration test upgrades"
+          },
+          {
+            "name": "settings upgrade set 2 (p27-testnet.xdr)",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e config-settings/p27/testnet.json encoded with stellar-xdr 30.0.0. Protocol 27 settings on a Protocol 28 chain: no upstream Protocol 28 settings file exists (quickstart never had a p28 directory)"
+          }
+        ],
+        "regenerate": "cd evidence/wallet-backend-731 && PROTOCOL=28 SETTINGS=p27-testnet.xdr core/run-offline.sh mainnet out/p28-mainnet/run-N   (see README.md there)",
+        "reproducibility": "normalised-identical"
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "8decbdd50ac0e33a0382cc2e06c74b522a3280a86f93b3e2ace371cf13df35fc",
+        "op_index": 0,
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "6f09aa250d53acb32af316152a905fb7689bd52f00daeb9714ba32d700ad4343",
+        "tx_hash": "8decbdd50ac0e33a0382cc2e06c74b522a3280a86f93b3e2ace371cf13df35fc",
+        "tx_hashes": [
+          "8decbdd50ac0e33a0382cc2e06c74b522a3280a86f93b3e2ace371cf13df35fc"
+        ],
+        "contracts": {
+          "sac_usdc": "CB526NSI7UVYJFDHDAPGENXGXNY3XO46ASBNZBMBZGECCOKTEE7ARV5J",
+          "native_sac": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"
+        },
+        "accounts": {
+          "owner": "GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6",
+          "issuer": "GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N"
+        },
+        "assets": {
+          "usdc": "USDC:GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N"
+        },
+        "fee_charged": "74541",
+        "fee_bid": "50000100",
+        "fee_refund": "49925559"
+      },
+      "notes": "Local standalone chain at Protocol 28 on the real public passphrase, never broadcast. The ledger header carries the pre-Protocol-30 StellarValue arm (signed), so go-stellar-sdk v0.7.3 decodes it (executed). Soroban network settings are the Protocol 27 set, because no upstream Protocol 28 settings file exists; that combination never existed on a public network. This is the variant the wallet-backend#731 acceptance runs used. Header hashes were identical across repeated runs; raw bytes differ only in change order and timing diagnostics."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 2,
+      "entry_changes": 9
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "${derived.tx_hash}",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "${derived.fee_charged}"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "trust",
+        "note": "The only operation is a contract call; there is no ChangeTrust."
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/contract_address",
+        "equals": "${derived.contracts.sac_usdc}"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events",
+        "equals": [],
+        "note": "trust() emits no contract event."
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline/flags",
+        "equals": 1,
+        "note": "Created already authorized."
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline/limit",
+        "equals": "9223372036854775807"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "${derived.accounts.owner}",
+          "roles": [
+            "source",
+            "fee_payer",
+            "trustline_owner"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "trustline_created",
+        "tx_index": 0,
+        "op_index": 0,
+        "account": {
+          "address": "${derived.accounts.owner}"
+        },
+        "asset": "${derived.assets.usdc}",
+        "cause": "contract-call",
+        "detail": {
+          "balance": "0",
+          "limit": "9223372036854775807",
+          "flags": 1,
+          "authorized": true,
+          "num_sub_entries_after": 1
+        }
+      },
+      {
+        "kind": "trustline_flags_changed",
+        "only_if": "initial_authorization_separate",
+        "tx_index": 0,
+        "op_index": 0,
+        "account": {
+          "address": "${derived.accounts.owner}"
+        },
+        "asset": "${derived.assets.usdc}",
+        "cause": "contract-call",
+        "detail": {
+          "flags": 1,
+          "authorized": true,
+          "initial": true
+        }
+      }
+    ],
+    "state_changes_exact": true,
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "${derived.fee_bid}",
+        "from": {
+          "address": "${derived.accounts.owner}"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "${derived.fee_refund}",
+        "to": {
+          "address": "${derived.accounts.owner}"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "..764a4f5bcbff5abb0949d93da37f769063013ea0",
+        "level": "replay",
+        "outcome": "dropped",
+        "qualifier": "partial",
+        "detail": "Executed at 764a4f5b on the Protocol 28 variants (also Protocols 26 and 27; both passphrases; both inputs; single ledger and whole chain): ingestion reaches the ledger with no error, the transaction, the operation and the fee row are stored and the current-state balance table holds the new trustline, but no TRUSTLINE/ADD and no BALANCE_AUTHORIZATION/SET state change exists. Executed at c152783c and at e967ce8b: both rows are present. The lower end of the range (how far back the gap goes) is not executed; CAP-0073 needs Protocol 26.",
+        "reference": "https://github.com/stellar/wallet-backend/issues/731",
+        "fixed_in": "c152783c054c765c8b51fd26ed313fd1ebc1c50c",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "reproduction in evidence/wallet-backend-731/; evidence/wallet-backend-731/transcript-prefix.txt, transcript-fixed.txt, transcript-head.txt, diff-prefix-vs-fixed.txt"
+      }
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/wallet-backend/issues/731",
+    "https://github.com/stellar/wallet-backend/pull/734",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0073.md"
+  ],
+  "notes": "Sample entry, produced by two research probes, not by the final generator. Four variants: Protocol 30 on both passphrases and Protocol 28 on both passphrases. The two probes used different scenario files, so the account, the issuer and the fees differ between the Protocol 30 and Protocol 28 variants and sit under derived; in the built corpus one scenario file yields every protocol and only hashes, contract IDs and fees are per variant. The wallet-backend#731 acceptance check uses the Protocol 28 variants, because the pre-fix and fixed wallet-backend commits use a Go SDK that cannot decode Protocol 30 ledgers. The ledger is replayable alone: serving only this ledger gave the same wallet-backend rows as replaying its chain from ledger 2 (executed). The Soroban resources in the envelope were declared by the scenario author, not simulated; the refund in the fee events reflects that.",
+  "mirrors": {
+    "core_golden": {
+      "core_tag": "v30.0.0",
+      "file": "test-lcm-current/InvokeHostFunctionTests/4c437318f87437c5.xdr",
+      "file_sha256": "20624d6db29bb4546312a1aafcc72c978c1781b40b90a4828ab0dc7166fefeda",
+      "test_name": "Trustline stellar asset contract|protocol version 30",
+      "frame_index": 42,
+      "tx_index": 0
+    },
+    "flags": [
+      "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+      "EMIT_CLASSIC_EVENTS",
+      "BACKFILL_STELLAR_ASSET_EVENTS",
+      "BACKFILL_RESTORE_META"
+    ],
+    "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:219-225; src/test/test.cpp:885,893-897 (stellar-core v30.0.0)",
+    "scenario": "throwaway mirror driver evidence/golden-mirror/driver/mirror_trust.mjs (Protocol 30); to be replaced by the scenario file's mirror step",
+    "skeleton_sha256": "14603d361d2bbd845938a02cb0d02af648a44b371949f4caf6b8a1862017c125",
+    "run_skeletons": {
+      "testnet": "14603d361d2bbd845938a02cb0d02af648a44b371949f4caf6b8a1862017c125",
+      "pubnet": "14603d361d2bbd845938a02cb0d02af648a44b371949f4caf6b8a1862017c125",
+      "core-test": "14603d361d2bbd845938a02cb0d02af648a44b371949f4caf6b8a1862017c125"
+    },
+    "state": "executed",
+    "evidence": "reproduction in evidence/golden-mirror/; evidence/golden-mirror/out/trust/ and out/summary.tsv. The mirror runs are separate Protocol 30 runs made with the golden test's flags and setup; they are not this entry's variants, whose bytes use the lake profile. Skeleton hashes depend on the spike's skeleton definition and the stellar-xdr 30.0.0 schema and must be re-pinned when the typed skeleton is implemented."
+  }
+}

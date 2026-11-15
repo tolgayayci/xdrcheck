@@ -1,0 +1,50 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-9003",
+  "title": "Contract-supplied display string is stored as text without a validity check (fictional example)",
+  "target": {
+    "project": "example/indexer",
+    "ecosystem": "source",
+    "versions_affected": "0000000000000000000000000000000000000000 (range not established)",
+    "versions_tested": [
+      "0000000000000000000000000000000000000000"
+    ]
+  },
+  "component": "pipeline",
+  "class": "halt",
+  "severity": "critical",
+  "severity_basis": "Fictional example of an embargoed record. Worst plausible case, not verified: a contract-supplied string with bytes the database rejects makes the write fail and ingestion stop.",
+  "security_relevant": true,
+  "visibility": "embargoed",
+  "entries": [
+    {
+      "id": "none",
+      "scope": "XDR103",
+      "expected": "contract-supplied bytes are validated, or stored as bytes, before reaching a text column",
+      "observed": "an ScString is passed through to a text parameter unchanged"
+    }
+  ],
+  "embargo": {
+    "trigger": "severity-undetermined",
+    "policy": "none in repository (the example project has no SECURITY.md)",
+    "channel": "the project's private security contact",
+    "lift_condition": "Either the halt is shown not to be reachable (the record becomes public, low or not-a-defect), or it is reported and fixed, or 90 days pass from the report",
+    "withheld": [
+      "the XDR103 suppression for this site in the project's suppression list",
+      "the report row for this site in the linter report",
+      "any corpus entry built to trigger it"
+    ]
+  },
+  "state": "candidate",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate"
+    },
+    {
+      "date": "2026-11-12",
+      "state": "embargoed",
+      "note": "Severity undetermined; embargoed by default."
+    }
+  ]
+}

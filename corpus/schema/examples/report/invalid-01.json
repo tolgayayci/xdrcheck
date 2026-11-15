@@ -1,0 +1,80 @@
+{
+  "header": {
+    "tool": {
+      "name": "xcc replay",
+      "version": "0.1.0"
+    },
+    "corpus": {
+      "version": "30.0.0",
+      "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "tier": "curated"
+    },
+    "pins": {
+      "file_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "values": {
+        "wallet-backend": "2a0a84ea12523b6c92e278c0c84b443041240095"
+      }
+    },
+    "mode": {
+      "suite": "assert-known",
+      "overlay": false,
+      "offline": "docker internal network"
+    }
+  },
+  "rows": [
+    {
+      "row_id": "replay:cap-0040/signed-payload-signer-added:testnet:stellar/wallet-backend@2a0a84ea:single",
+      "tool": "replay",
+      "entry": "cap-0040/signed-payload-signer-added",
+      "variant": "testnet",
+      "target": {
+        "name": "stellar/wallet-backend",
+        "version": "2a0a84ea12523b6c92e278c0c84b443041240095",
+        "kind": "pipeline"
+      },
+      "failure": true,
+      "expectation": "expected",
+      "expected": {
+        "source": "known_divergence",
+        "result": "mishandled\u00b7halt"
+      },
+      "known_divergence": {
+        "reference": "https://github.com/stellar/wallet-backend/pull/729",
+        "status": "fixed",
+        "in_range": true,
+        "fixed_in": "2c873353c1f0f3c9b145e25a7d009023ad104a1c"
+      },
+      "finding": "F-0003",
+      "caps": [
+        40
+      ],
+      "replay": {
+        "unit": "single",
+        "input": "sep54-s3",
+        "range": {
+          "start": 4437357,
+          "end": 4437357
+        },
+        "class": "mishandled",
+        "qualifier": "halt"
+      },
+      "evidence": {
+        "exit_code": 2,
+        "cursor_before": 4437356,
+        "cursor_after": 4437356,
+        "rows_for_failing_ledger": 0,
+        "wall_ms": 15420,
+        "delivered": true
+      }
+    }
+  ],
+  "summary": {
+    "rows": 1,
+    "failures": 1,
+    "unexpected": 0,
+    "failures_without_finding": 0,
+    "by_result": {
+      "mishandled\u00b7halt": 1
+    }
+  }
+}

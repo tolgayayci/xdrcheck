@@ -1,0 +1,1299 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:adapter-protocol:v1",
+  "title": "Replay adapter protocol",
+  "description": "Messages exchanged between the replay harness and an adapter process. One JSON object per line on stdin (requests) and stdout (responses). See adapter-protocol.md.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/response"
+    }
+  ],
+  "$defs": {
+    "protocolTag": {
+      "description": "Protocol name and major version.",
+      "const": "xcc.adapter/1"
+    },
+    "id": {
+      "description": "Request ID chosen by the harness; echoed in the response.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "session": {
+      "description": "Session ID chosen by the harness. One session covers one replay unit: prepare, ingest, observe, teardown.",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,62}$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "request": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/describeRequest"
+        },
+        {
+          "$ref": "#/$defs/prepareRequest"
+        },
+        {
+          "$ref": "#/$defs/ingestRequest"
+        },
+        {
+          "$ref": "#/$defs/observeRequest"
+        },
+        {
+          "$ref": "#/$defs/teardownRequest"
+        }
+      ]
+    },
+    "response": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/describeResponse"
+        },
+        {
+          "$ref": "#/$defs/prepareResponse"
+        },
+        {
+          "$ref": "#/$defs/ingestResponse"
+        },
+        {
+          "$ref": "#/$defs/observeResponse"
+        },
+        {
+          "$ref": "#/$defs/teardownResponse"
+        },
+        {
+          "$ref": "#/$defs/errorResponse"
+        }
+      ]
+    },
+    "describeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "describe"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "harness_version",
+            "protocol_versions"
+          ],
+          "properties": {
+            "harness_version": {
+              "type": "string"
+            },
+            "protocol_versions": {
+              "description": "Protocol versions the harness speaks, newest first.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "target_version": {
+              "description": "Version of the indexer the harness intends to test (tag, or commit for repositories without tags). The envelope in the response is for this version.",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "describeResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "result"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "describe"
+        },
+        "result": {
+          "$ref": "#/$defs/describeResult"
+        }
+      }
+    },
+    "describeResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "adapter",
+        "target",
+        "protocol_version",
+        "inputs",
+        "units",
+        "envelope",
+        "observations"
+      ],
+      "properties": {
+        "adapter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "version"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            }
+          }
+        },
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "description": "Package or repository of the indexer under test.",
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "version_kind": {
+              "enum": [
+                "tag",
+                "commit",
+                "opaque"
+              ]
+            }
+          }
+        },
+        "protocol_version": {
+          "description": "The protocol version the adapter selected from the harness's list.",
+          "type": "string"
+        },
+        "inputs": {
+          "description": "Ledger inputs the indexer can read.",
+          "type": "array",
+          "items": {
+            "enum": [
+              "sep54-dir",
+              "sep54-s3",
+              "sep54-gcs",
+              "rpc"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "units": {
+          "description": "Replay units the adapter can run.",
+          "type": "array",
+          "items": {
+            "enum": [
+              "single",
+              "chain",
+              "stream"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "envelope": {
+          "$ref": "#/$defs/envelope"
+        },
+        "observations": {
+          "description": "Which observation kinds the indexer models. Anything not supported is reported not_applicable, never dropped.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "receipts",
+            "transactions",
+            "participants",
+            "state_changes",
+            "movements",
+            "addresses"
+          ],
+          "properties": {
+            "receipts": {
+              "$ref": "#/$defs/kindCapability"
+            },
+            "transactions": {
+              "$ref": "#/$defs/kindCapability"
+            },
+            "participants": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/kindCapability"
+                }
+              ],
+              "properties": {
+                "muxed": {
+                  "description": "base_only: the indexer records the base account and discards the muxed ID. base_and_alias: it records both.",
+                  "enum": [
+                    "base_only",
+                    "base_and_alias"
+                  ]
+                }
+              }
+            },
+            "state_changes": {
+              "$ref": "#/$defs/kindCapability"
+            },
+            "movements": {
+              "$ref": "#/$defs/kindCapability"
+            },
+            "addresses": {
+              "$ref": "#/$defs/kindCapability"
+            }
+          }
+        },
+        "concurrency": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "max_parallel_sessions": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "requirements": {
+          "description": "What the adapter needs on the host. Informational; printed by the harness before a run.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "network": {
+              "description": "The adapter and the indexer must work with outbound networking disabled.",
+              "const": "none"
+            },
+            "services": {
+              "description": "Local services the adapter starts itself (image references pinned by digest).",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "tools": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "timing": {
+          "description": "Advisory durations so the harness can size deadlines.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "prepare_cold_ms": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ingest_per_ledger_ms": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "slowest_failure_ms": {
+              "description": "Longest time the indexer takes to give up on a ledger it cannot handle, per input.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "kindCapability": {
+      "type": "object",
+      "required": [
+        "supported"
+      ],
+      "properties": {
+        "supported": {
+          "type": "boolean"
+        },
+        "reason": {
+          "description": "Required when not supported.",
+          "type": "string"
+        },
+        "subkinds": {
+          "description": "Supported sub-kinds (state-change kinds, movement kinds, receipt counters). Absent means all.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "address_encoding": {
+          "description": "How addresses are stored, for the addresses kind.",
+          "enum": [
+            "strkey_text",
+            "version_byte_payload_hex",
+            "xdr_hex",
+            "raw_key_hex"
+          ]
+        },
+        "modelling": {
+          "description": "Modelling choices the indexer makes for this kind, from a closed list. For state_changes: 'initial_authorization_separate' \u2014 the authorisation state a trustline is created with is recorded as its own change (trustline_flags_changed) beside trustline_created. Expected facts marked only_if are required only when the matching choice is declared.",
+          "type": "array",
+          "items": {
+            "enum": [
+              "initial_authorization_separate"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "supported": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reason"
+            ]
+          }
+        }
+      ]
+    },
+    "envelope": {
+      "description": "What the indexer at this version declares it handles, stated before any ledger is replayed. A stop on an entry inside the envelope is always a halt.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min_protocol": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_protocol": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_protocol_with_transactions": {
+          "description": "Ledgers below this protocol are handled only if they carry no transactions.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "ledger_close_meta_versions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "uniqueItems": true
+        },
+        "transaction_meta_versions": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "uniqueItems": true
+        },
+        "operation_types": {
+          "description": "Allow-list of operation type names; absent means all.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "enforcement": {
+          "description": "indexer_gate: the indexer itself checks the limit and stops deliberately before writing anything; a stop on an out-of-envelope entry may then be scored as a fail-closed refusal. sdk_limit: the limit is only what the indexer's pinned SDK can decode; the indexer has no deliberate gate, so out-of-envelope entries are not run and are reported not_applicable. none: no limit is declared.",
+          "enum": [
+            "indexer_gate",
+            "sdk_limit",
+            "none"
+          ]
+        },
+        "basis": {
+          "description": "Where the declaration comes from, for the report: file and line of the gate, or the SDK version pinned.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enforcement"
+      ]
+    },
+    "prepareRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "prepare"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "session",
+            "target_version",
+            "network",
+            "workdir"
+          ],
+          "properties": {
+            "session": {
+              "$ref": "#/$defs/session"
+            },
+            "target_version": {
+              "type": "string"
+            },
+            "network": {
+              "$ref": "#/$defs/network"
+            },
+            "workdir": {
+              "description": "Directory the adapter may write to for this session. Removed by the harness after teardown.",
+              "type": "string"
+            },
+            "cachedir": {
+              "description": "Directory that persists across sessions and runs (builds, templates).",
+              "type": "string"
+            },
+            "port_range": {
+              "description": "Loopback ports reserved for this session.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "first",
+                "count"
+              ],
+              "properties": {
+                "first": {
+                  "type": "integer",
+                  "minimum": 1024,
+                  "maximum": 65535
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            },
+            "limits": {
+              "$ref": "#/$defs/limits"
+            },
+            "resolve_ranges": {
+              "description": "Version ranges from the manifest's known divergences for this target, when the target has no tags. The adapter, which holds the repository, answers whether target_version lies inside each ('A..B' = every commit from A to B inclusive on the default branch's first-parent history; '..B' = everything up to and including B).",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "prepareResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "result"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "prepare"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ready",
+            "target_version"
+          ],
+          "properties": {
+            "ready": {
+              "const": true
+            },
+            "target_version": {
+              "description": "Fully resolved version (full commit SHA or exact tag).",
+              "type": "string"
+            },
+            "build": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "cached": {
+                  "type": "boolean"
+                },
+                "artifact_sha256": {
+                  "$ref": "#/$defs/hash"
+                },
+                "wall_ms": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "state": {
+              "description": "The indexer starts this session with no data from earlier sessions.",
+              "const": "clean"
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "ranges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "range",
+                  "contains"
+                ],
+                "properties": {
+                  "range": {
+                    "type": "string"
+                  },
+                  "contains": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "passphrase"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "pubnet",
+            "testnet",
+            "core-test"
+          ],
+          "description": "Passphrase family, the same vocabulary as variants[].network in the manifest (whose fourth value, 'none', marks passphrase-independent values that are never replayed)."
+        },
+        "passphrase": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "limits": {
+      "description": "Limits the harness enforces from outside. Passed for information so an adapter can forward them to services it starts in containers.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memory_max_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cpu_max": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "pids_max": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ingestRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "ingest"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "session",
+            "input",
+            "range",
+            "network",
+            "deadline_ms"
+          ],
+          "properties": {
+            "session": {
+              "$ref": "#/$defs/session"
+            },
+            "input": {
+              "$ref": "#/$defs/input"
+            },
+            "range": {
+              "$ref": "#/$defs/range"
+            },
+            "network": {
+              "$ref": "#/$defs/network"
+            },
+            "unit": {
+              "enum": [
+                "single",
+                "chain",
+                "stream"
+              ]
+            },
+            "deadline_ms": {
+              "description": "The adapter must answer within this many milliseconds; otherwise the harness kills the adapter's process group and records a timeout itself.",
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "input": {
+      "description": "Where the indexer reads ledgers from. All four are views over the same ledgers.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "path",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sep54-dir"
+            },
+            "path": {
+              "description": "Local directory that holds .config.json and the partition directories.",
+              "type": "string"
+            },
+            "schema": {
+              "$ref": "#/$defs/sep54Schema"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "endpoint_url",
+            "bucket_path",
+            "region",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sep54-s3"
+            },
+            "endpoint_url": {
+              "description": "Loopback URL of an S3-compatible endpoint (path-style addressing).",
+              "type": "string",
+              "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\])(:[0-9]+)?(/.*)?$"
+            },
+            "bucket_path": {
+              "description": "<bucket>/<prefix> under which .config.json sits.",
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "access_key_id": {
+              "description": "Dummy static credentials for the local endpoint. Never real credentials.",
+              "type": "string"
+            },
+            "secret_access_key": {
+              "type": "string"
+            },
+            "schema": {
+              "$ref": "#/$defs/sep54Schema"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "emulator_host",
+            "bucket_path",
+            "schema"
+          ],
+          "properties": {
+            "kind": {
+              "const": "sep54-gcs"
+            },
+            "emulator_host": {
+              "description": "host:port of a GCS-compatible endpoint on loopback, for STORAGE_EMULATOR_HOST.",
+              "type": "string",
+              "pattern": "^(127\\.0\\.0\\.1|localhost):[0-9]+$"
+            },
+            "bucket_path": {
+              "type": "string"
+            },
+            "schema": {
+              "$ref": "#/$defs/sep54Schema"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "url"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rpc"
+            },
+            "url": {
+              "description": "Loopback URL of the mock JSON-RPC endpoint (getHealth, getLedgers).",
+              "type": "string",
+              "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\])(:[0-9]+)?(/.*)?$"
+            }
+          }
+        }
+      ]
+    },
+    "sep54Schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ledgers_per_batch",
+        "batches_per_partition"
+      ],
+      "properties": {
+        "ledgers_per_batch": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "batches_per_partition": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "compression": {
+          "const": "zstd"
+        }
+      }
+    },
+    "ingestResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "result"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "ingest"
+        },
+        "result": {
+          "$ref": "#/$defs/ingestResult"
+        }
+      }
+    },
+    "ingestResult": {
+      "description": "What happened, as machine-observable facts. The adapter states a status and the facts behind it; the harness checks the facts and does the scoring.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "last_ledger",
+        "signals"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "completed",
+            "halted",
+            "crashed",
+            "refused",
+            "timeout"
+          ]
+        },
+        "last_ledger": {
+          "description": "Highest ledger the indexer reports as fully ingested (its own cursor or equivalent), or null if none in this session.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "signals": {
+          "$ref": "#/$defs/signals"
+        },
+        "refusal": {
+          "description": "Only with status refused.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gate",
+            "reason",
+            "ledger"
+          ],
+          "properties": {
+            "gate": {
+              "description": "Which declared envelope gate applied.",
+              "enum": [
+                "min_protocol",
+                "max_protocol",
+                "min_protocol_with_transactions",
+                "ledger_close_meta_version",
+                "transaction_meta_version",
+                "operation_type"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            },
+            "ledger": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "observed": {
+              "description": "The value that tripped the gate, for example the protocol version.",
+              "type": [
+                "integer",
+                "string"
+              ]
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "refused"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "refusal"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "refusal"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cursor_before",
+        "cursor_after",
+        "process_exited",
+        "wall_ms"
+      ],
+      "properties": {
+        "cursor_before": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "cursor_after": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "process_exited": {
+          "description": "true if the indexer process ended on its own before the adapter stopped it.",
+          "type": "boolean"
+        },
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "term_signal": {
+          "description": "Signal that ended the process, if any (for example SIGKILL after the kernel's out-of-memory killer, SIGSEGV).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stopped_by_adapter": {
+          "description": "true if the adapter stopped a still-running indexer after it reached the end of the range.",
+          "type": "boolean"
+        },
+        "wall_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failing_ledger": {
+          "description": "Ledger the indexer was working on when it stopped, if known.",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "phase": {
+          "description": "Where the indexer stopped, if the adapter can tell from a structured signal.",
+          "enum": [
+            "startup",
+            "fetch",
+            "decode",
+            "process",
+            "persist",
+            null
+          ]
+        },
+        "runtime_panic": {
+          "description": "true if the process died from an uncaught runtime fault rather than returning an error. null if the adapter cannot tell.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "rows_for_failing_ledger": {
+          "description": "Number of records the indexer holds for the ledger it stopped on; non-zero means a partial write.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "attempts": {
+          "description": "How many times the indexer retried before giving up, if known.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "stderr_tail": {
+          "description": "Last lines of the indexer's error output, for the report only. Never used for scoring.",
+          "type": "string",
+          "maxLength": 4000
+        }
+      }
+    },
+    "observeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "observe"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "session",
+            "range",
+            "kinds"
+          ],
+          "properties": {
+            "session": {
+              "$ref": "#/$defs/session"
+            },
+            "range": {
+              "$ref": "#/$defs/range"
+            },
+            "kinds": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "receipts",
+                  "transactions",
+                  "participants",
+                  "state_changes",
+                  "movements",
+                  "addresses"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "tx_hashes": {
+              "description": "Optional filter: only these transactions.",
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/hash"
+              }
+            }
+          }
+        }
+      }
+    },
+    "observeResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "result"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "observe"
+        },
+        "result": {
+          "$ref": "urn:xcc:schema:observation:v1"
+        }
+      }
+    },
+    "teardownRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "params"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "teardown"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "session"
+          ],
+          "properties": {
+            "session": {
+              "$ref": "#/$defs/session"
+            },
+            "keep_state": {
+              "description": "Keep the session's data for debugging.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        }
+      }
+    },
+    "teardownResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "result"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "const": "teardown"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ok"
+          ],
+          "properties": {
+            "ok": {
+              "const": true
+            },
+            "left_behind": {
+              "description": "Anything the adapter could not remove.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "errorResponse": {
+      "description": "The adapter could not carry out the request. This is an adapter or environment failure, never a statement about the indexer's handling of a ledger.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "xcc",
+        "id",
+        "method",
+        "error"
+      ],
+      "properties": {
+        "xcc": {
+          "$ref": "#/$defs/protocolTag"
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "method": {
+          "enum": [
+            "describe",
+            "prepare",
+            "ingest",
+            "observe",
+            "teardown"
+          ]
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "enum": [
+                "unsupported_protocol_version",
+                "unknown_method",
+                "invalid_params",
+                "unknown_session",
+                "unsupported_input",
+                "unsupported_unit",
+                "unsupported_target_version",
+                "prepare_failed",
+                "environment",
+                "internal"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "maxLength": 4000
+            },
+            "retryable": {
+              "type": "boolean",
+              "default": false
+            },
+            "data": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  }
+}

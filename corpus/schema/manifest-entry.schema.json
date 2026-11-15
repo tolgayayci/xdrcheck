@@ -1,0 +1,3209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:manifest-entry:v1",
+  "title": "Corpus manifest entry",
+  "description": "One entry describes one rare-but-valid pattern of Stellar ledger data: where its bytes came from, which CAP and protocol made it possible, and what a correct reader must produce from it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "title",
+    "kind",
+    "caps",
+    "protocol",
+    "synthetic",
+    "why",
+    "expect"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.manifest.entry/v1"
+    },
+    "id": {
+      "description": "Stable entry ID: <group>/<slug>. The group is normally cap-NNNN; protocol-gated behaviour without a CAP uses protocol-NN; cross-cutting groups are xdr-strict, strkey, limits.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 140
+    },
+    "kind": {
+      "description": "ledger: one full LedgerCloseMeta. xdr: one standalone XDR value. api: an SDK-neutral call with an expected result, no blob. strkey: a text address vector. spec: a contract interface (SEP-48): a Wasm module whose contractspecv0 custom sections hold an SCSpecEntry stream, or a bare SCSpecEntry stream.",
+      "enum": [
+        "ledger",
+        "xdr",
+        "api",
+        "strkey",
+        "spec"
+      ]
+    },
+    "caps": {
+      "description": "CAP numbers that introduced or changed this pattern. Empty only for protocol-gated behaviour with no CAP or for pure encoding rules; then 'caps_note' is required.",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "uniqueItems": true
+    },
+    "caps_note": {
+      "type": "string"
+    },
+    "protocol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "introduced"
+      ],
+      "properties": {
+        "introduced": {
+          "description": "First protocol version at which stellar-core can emit this pattern.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "removed": {
+          "description": "First protocol version at which core can no longer emit it (for example inflation).",
+          "type": "integer",
+          "minimum": 2
+        }
+      }
+    },
+    "synthetic": {
+      "description": "true if the bytes were hand-crafted and stellar-core did not emit them. Bytes imported from core goldens, emitted by a local stellar-core, captured from network history, or sliced contiguously out of such bytes are not synthetic.",
+      "type": "boolean"
+    },
+    "negative": {
+      "description": "true if a correct reader must reject this input. Negative entries are always synthetic. For kinds ledger, xdr, spec and strkey it is true exactly when validity is malformed or invalid.",
+      "type": "boolean",
+      "default": false
+    },
+    "validity": {
+      "$ref": "#/$defs/validity"
+    },
+    "flags": {
+      "description": "Bug classes the input exercises, Wycheproof style; on valid entries too (for example depth at a limit).",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/flag"
+      }
+    },
+    "shapes": {
+      "description": "Free-form tags for the structural variants this entry exercises.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+      },
+      "uniqueItems": true
+    },
+    "why": {
+      "description": "Why this pattern trips readers, in one or two sentences.",
+      "type": "string",
+      "minLength": 20
+    },
+    "fields": {
+      "description": "Rows of the guide's field-by-field table (fields.yaml) that this entry demonstrates.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "validated": {
+          "$ref": "#/$defs/vfList"
+        },
+        "partially_validated": {
+          "$ref": "#/$defs/vfList"
+        },
+        "passed_through": {
+          "$ref": "#/$defs/vfList"
+        }
+      }
+    },
+    "variants": {
+      "description": "The bytes of this pattern on each network. Required for kinds ledger and xdr.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/variant"
+      }
+    },
+    "api": {
+      "$ref": "#/$defs/apiVector"
+    },
+    "strkey": {
+      "$ref": "#/$defs/strkeyVector"
+    },
+    "expect": {
+      "$ref": "#/$defs/expect"
+    },
+    "conformance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "levels": {
+          "description": "Conformance levels that apply. L0 codec round-trip, L1 SDK object parse, L2 decoded values, L3 native conversion, L4 API call.",
+          "type": "array",
+          "items": {
+            "enum": [
+              "L0",
+              "L1",
+              "L2",
+              "L3",
+              "L4",
+              "spec",
+              "json"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "known_divergences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/knownDivergence"
+          }
+        }
+      }
+    },
+    "replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "description": "single: served alone at its real sequence. chain: served as part of its scenario run from the first ledger.",
+          "enum": [
+            "single",
+            "chain"
+          ]
+        },
+        "chain": {
+          "description": "Scenario run ID when unit is chain.",
+          "type": "string"
+        },
+        "indexer_scope": {
+          "description": "sdk-only marks entries indexers are not expected to ingest (for example very old protocols).",
+          "enum": [
+            "all",
+            "sdk-only"
+          ],
+          "default": "all"
+        },
+        "requires_prior_state": {
+          "description": "true if a reader needs the earlier ledgers of the same chain for this entry to be meaningful (for example a balance update on an existing trustline). Such entries are replayed only as part of their chain.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "related": {
+      "description": "Issues, pull requests, CAP sections and advisories this entry relates to.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "added_in": {
+      "description": "Corpus version that first shipped this entry.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "notes": {
+      "description": "Free-form remarks for reviewers that are not part of any check.",
+      "type": "string"
+    },
+    "reference": {
+      "description": "What makes the expected value authoritative: bytes or behaviour of the network (stellar-core), a protocol rule (CAP/XDR definition), or a specification (SEP, RFC 4506).",
+      "enum": [
+        "network",
+        "protocol-rule",
+        "spec"
+      ]
+    },
+    "core_behaviour": {
+      "description": "For negative entries: what stellar-core itself does with this input, and how that was established.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accepts",
+        "observed"
+      ],
+      "properties": {
+        "accepts": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        },
+        "observed": {
+          "enum": [
+            "executed",
+            "source-reading"
+          ]
+        },
+        "evidence": {
+          "type": "string"
+        }
+      }
+    },
+    "mirrors": {
+      "description": "Golden mirror (check AG-4): this entry's focus transaction, replayed on a local stellar-core with the named golden test's own meta flags and setup, has a structural skeleton byte-equal to the golden's focus transaction, with no masks. The mirror run is evidence; the entry's own variants keep their recorded profile.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "core_golden",
+        "flags",
+        "flags_source",
+        "state"
+      ],
+      "properties": {
+        "core_golden": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "core_tag",
+            "file",
+            "file_sha256",
+            "test_name",
+            "frame_index",
+            "tx_index"
+          ],
+          "properties": {
+            "core_tag": {
+              "type": "string"
+            },
+            "file": {
+              "type": "string"
+            },
+            "file_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "test_name": {
+              "type": "string"
+            },
+            "frame_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tx_index": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "flags": {
+          "description": "Meta flags the golden's test runs with (those set to true).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "flags_source": {
+          "description": "Where in the test source the flags are set (file and lines at the tag).",
+          "type": "string"
+        },
+        "settings_overrides": {
+          "description": "Network settings copied from the test because they change the meta (for example min_persistent_ttl).",
+          "type": "object"
+        },
+        "scenario": {
+          "description": "Scenario file and step of the mirror run.",
+          "type": "string"
+        },
+        "skeleton_sha256": {
+          "description": "Skeleton hash of the golden's focus transaction.",
+          "$ref": "#/$defs/sha256"
+        },
+        "run_skeletons": {
+          "description": "Skeleton hash of the mirror run per network; each must equal skeleton_sha256.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "state": {
+          "description": "executed: hashes recorded and equal. planned: declared, not yet run.",
+          "enum": [
+            "executed",
+            "planned"
+          ]
+        },
+        "evidence": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "executed"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "required": [
+              "skeleton_sha256",
+              "run_skeletons"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "ledger",
+              "xdr",
+              "spec"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "variants"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "api"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "api"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "strkey"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "strkey"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "negative": {
+            "const": true
+          }
+        },
+        "required": [
+          "negative"
+        ]
+      },
+      "then": {
+        "properties": {
+          "synthetic": {
+            "const": true
+          },
+          "variants": {
+            "items": {
+              "not": {
+                "required": [
+                  "json_roundtrip"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "caps": {
+            "maxItems": 0
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "caps_note"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "variants": {
+            "contains": {
+              "properties": {
+                "framing": {
+                  "const": "record-marked"
+                }
+              },
+              "required": [
+                "framing"
+              ]
+            }
+          }
+        },
+        "required": [
+          "variants"
+        ]
+      },
+      "then": {
+        "required": [
+          "negative"
+        ],
+        "properties": {
+          "negative": {
+            "const": true
+          },
+          "kind": {
+            "const": "xdr"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "spec"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "variants"
+        ],
+        "properties": {
+          "expect": {
+            "required": [
+              "spec"
+            ]
+          },
+          "variants": {
+            "items": {
+              "required": [
+                "container"
+              ],
+              "properties": {
+                "xdr_type": {
+                  "const": "SCSpecEntry"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "$comment": "negative entries are malformed or invalid.",
+      "if": {
+        "properties": {
+          "negative": {
+            "const": true
+          }
+        },
+        "required": [
+          "negative"
+        ]
+      },
+      "then": {
+        "properties": {
+          "validity": {
+            "enum": [
+              "malformed",
+              "invalid"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "$comment": "A malformed or invalid entry with bytes or a text vector is negative.",
+      "if": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "ledger",
+              "xdr",
+              "spec",
+              "strkey"
+            ]
+          },
+          "validity": {
+            "enum": [
+              "malformed",
+              "invalid"
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "validity"
+        ]
+      },
+      "then": {
+        "required": [
+          "negative"
+        ],
+        "properties": {
+          "negative": {
+            "const": true
+          }
+        }
+      }
+    },
+    {
+      "$comment": "A reject reason that is a rule about decoded values makes the entry invalid.",
+      "if": {
+        "properties": {
+          "expect": {
+            "properties": {
+              "reject": {
+                "properties": {
+                  "reason": {
+                    "enum": [
+                      "value_out_of_range",
+                      "ordering",
+                      "spec_sections"
+                    ]
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            },
+            "required": [
+              "reject"
+            ]
+          }
+        },
+        "required": [
+          "expect"
+        ]
+      },
+      "then": {
+        "properties": {
+          "validity": {
+            "const": "invalid"
+          }
+        }
+      }
+    },
+    {
+      "$comment": "Every other reject reason is a decoding rule: the entry is malformed.",
+      "if": {
+        "properties": {
+          "expect": {
+            "properties": {
+              "reject": {
+                "properties": {
+                  "reason": {
+                    "enum": [
+                      "nonzero_padding",
+                      "bool_range",
+                      "optional_flag_range",
+                      "enum_undeclared",
+                      "union_arm_undeclared",
+                      "length_exceeds_max",
+                      "length_exceeds_input",
+                      "trailing_bytes",
+                      "depth",
+                      "strkey_checksum",
+                      "strkey_length",
+                      "strkey_version",
+                      "strkey_padding",
+                      "strkey_noncanonical",
+                      "record_mark"
+                    ]
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            },
+            "required": [
+              "reject"
+            ]
+          }
+        },
+        "required": [
+          "expect"
+        ]
+      },
+      "then": {
+        "properties": {
+          "validity": {
+            "const": "malformed"
+          }
+        }
+      }
+    },
+    {
+      "$comment": "api: exact or refuse is acceptable; refuse only is malformed or invalid; no refusal is valid.",
+      "if": {
+        "properties": {
+          "api": {
+            "properties": {
+              "expect_reject": {
+                "const": true
+              }
+            },
+            "required": [
+              "expect_reject"
+            ]
+          }
+        },
+        "required": [
+          "api"
+        ]
+      },
+      "then": {
+        "if": {
+          "properties": {
+            "api": {
+              "anyOf": [
+                {
+                  "required": [
+                    "expect_xdr_hex"
+                  ]
+                },
+                {
+                  "required": [
+                    "expect_value"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "validity": {
+              "const": "acceptable"
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "validity": {
+              "enum": [
+                "malformed",
+                "invalid"
+              ]
+            }
+          }
+        }
+      },
+      "else": {
+        "if": {
+          "required": [
+            "api"
+          ]
+        },
+        "then": {
+          "properties": {
+            "validity": {
+              "const": "valid"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "vfList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^VF-[0-9]{2,3}[a-z]?$"
+      },
+      "uniqueItems": true
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "decimal": {
+      "description": "An integer of any width as a decimal string. Never a JSON number, so 64-bit and wider values survive every JSON parser.",
+      "type": "string",
+      "pattern": "^-?(0|[1-9][0-9]*)$"
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "network",
+        "passphrase",
+        "protocol",
+        "xdr_type",
+        "requires",
+        "blob",
+        "source"
+      ],
+      "properties": {
+        "network": {
+          "enum": [
+            "pubnet",
+            "testnet",
+            "core-test",
+            "none"
+          ],
+          "description": "Passphrase family of the bytes. 'pubnet' and 'testnet' name the passphrase, not the origin: a local standalone chain run on the public passphrase is 'pubnet' with source.kind 'local-core'. 'core-test' is stellar-core's fixed unit-test passphrase. 'none' is for passphrase-independent values."
+        },
+        "passphrase": {
+          "description": "Network passphrase the bytes were produced under. 'none' variants (passphrase-independent values such as a bare ScVal) use an empty string.",
+          "type": "string"
+        },
+        "protocol": {
+          "description": "Protocol version applied when core emitted these bytes.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "header_protocol": {
+          "description": "Protocol version in the ledger header, when it differs from the protocol applied (upgrade ledgers).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "ledger_seq": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "xdr_type": {
+          "description": "XDR type name as in the pinned stellar-xdr definitions, for example LedgerCloseMeta, TransactionEnvelope, ScVal, LedgerEntry.",
+          "type": "string"
+        },
+        "validity": {
+          "description": "This variant's validity when it differs from the entry's; absent means the entry's validity.",
+          "$ref": "#/$defs/validity"
+        },
+        "container": {
+          "description": "spec entries only: how the blob holds the SCSpecEntry stream. wasm: a Wasm module, the stream in its contractspecv0 custom sections; xdr-stream: the bare stream.",
+          "enum": [
+            "wasm",
+            "xdr-stream"
+          ]
+        },
+        "framing": {
+          "description": "How the blob holds the value. none: the blob is one value of xdr_type. record-marked: the blob is an RFC 5531 record-marked stream (4-byte marks, as stellar-core writes its meta streams) and the value is record 'frame_index'; every record mark of the stream must be well formed. Only negative xdr entries use record-marked (record-mark error vectors).",
+          "enum": [
+            "none",
+            "record-marked"
+          ],
+          "default": "none"
+        },
+        "frame_index": {
+          "description": "With framing record-marked: the zero-based record that holds the value.",
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "xdr_definitions": {
+          "description": "stellar-xdr tag or commit the type name refers to.",
+          "type": "string"
+        },
+        "blob": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sha256",
+            "bytes"
+          ],
+          "properties": {
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "path": {
+              "description": "Path relative to the corpus root. Omitted for bulk-tier entries fetched by hash.",
+              "type": "string"
+            }
+          }
+        },
+        "slice_of": {
+          "description": "For an xdr entry cut out of a ledger entry: the parent and where the value sits in it.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entry",
+            "path"
+          ],
+          "properties": {
+            "entry": {
+              "type": "string"
+            },
+            "path": {
+              "description": "JSON Pointer into the parent's decoded form.",
+              "type": "string"
+            },
+            "byte_offset": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "decoded": {
+          "description": "Path to the SEP-51 XDR-JSON rendering produced by the oracle.",
+          "type": "string"
+        },
+        "decoded_by": {
+          "description": "Oracle library and version that produced 'decoded'.",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "focus": {
+          "description": "Where in a ledger the pattern is. Lets several entries share one ledger blob.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tx_index": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Zero-based index into the ledger's transaction processing list (apply order), which is the order of results and meta. It is not the position in the transaction set."
+            },
+            "tx_hash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "op_index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "path": {
+              "description": "JSON Pointer into the decoded form.",
+              "type": "string"
+            }
+          }
+        },
+        "meta": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "ledger_close_meta_version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "transaction_meta_version": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "core_meta_flags": {
+              "description": "stellar-core config flags that affect what meta is emitted.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "profile": {
+              "description": "Which stellar-core meta flag set produced these bytes. One ledger has several valid encodings. 'lake' is the flag set Galexie-written public-lake objects have (classic and fee events, ext v1). 'golden-test' is the flag set of one named stellar-core golden test, read from that test's source \u2014 there is no single core default, each test sets its own; 'golden_test' must then name the test. 'custom' is any other set, listed in core_meta_flags.",
+              "enum": [
+                "lake",
+                "golden-test",
+                "custom"
+              ]
+            },
+            "golden_test": {
+              "description": "Required when profile is 'golden-test': the stellar-core test whose meta flags these bytes were produced with.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "core_tag",
+                "test_name",
+                "flags_source"
+              ],
+              "properties": {
+                "core_tag": {
+                  "type": "string"
+                },
+                "test_name": {
+                  "description": "Human test name from the golden index, without relying on its hash.",
+                  "type": "string"
+                },
+                "flags_source": {
+                  "description": "Source file and lines at the tag where the test sets its flags, for example src/transactions/test/InvokeHostFunctionTests.cpp:219-225.",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "profile": {
+                    "const": "golden-test"
+                  }
+                },
+                "required": [
+                  "profile"
+                ]
+              },
+              "then": {
+                "required": [
+                  "golden_test"
+                ]
+              }
+            }
+          ]
+        },
+        "derived": {
+          "description": "Values that depend on the network passphrase or on this particular run. Expectations refer to them as ${derived.<name>}.",
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "array",
+              "object"
+            ]
+          },
+          "properties": {
+            "ledger_hash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "tx_hashes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/sha256"
+              }
+            },
+            "tx_hash": {
+              "description": "Hash of the focus transaction on this network.",
+              "$ref": "#/$defs/sha256"
+            },
+            "header": {
+              "description": "Values of this variant's ledger header, as decimal strings, so a shared expectation can pin a header field whose value differs per variant (${derived.header.fee_pool}). Verify checks each against the blob.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "ledger_version": {
+                  "$ref": "#/$defs/decimal"
+                },
+                "total_coins": {
+                  "$ref": "#/$defs/decimal"
+                },
+                "fee_pool": {
+                  "$ref": "#/$defs/decimal"
+                },
+                "base_fee": {
+                  "$ref": "#/$defs/decimal"
+                },
+                "base_reserve": {
+                  "$ref": "#/$defs/decimal"
+                },
+                "max_tx_set_size": {
+                  "$ref": "#/$defs/decimal"
+                }
+              }
+            },
+            "contracts": {
+              "description": "Contract addresses that depend on the network ID, by name.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "l1": {
+              "description": "Values an SDK's object layer reads from the variant's focus (manifest.md section 10.1), computed by verify with the oracle and compared key for key: a key the focus implies must be present, and no other key may be.",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "operation_type": {
+                  "description": "XDR-JSON snake_case arm of the focus operation's body, for example change_trust.",
+                  "type": "string",
+                  "pattern": "^[a-z0-9_]+$"
+                },
+                "operation_source": {
+                  "description": "The focus operation's own source account as it is on chain (G... or M...).",
+                  "type": "string"
+                },
+                "pool_id": {
+                  "description": "Liquidity pool ID, lower-case hex.",
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "asset": {
+                  "description": "native or CODE:ISSUER.",
+                  "type": "string"
+                },
+                "address": {
+                  "description": "The focus operation's counterpart account as it is on chain (G... or M...).",
+                  "type": "string"
+                },
+                "muxed_id": {
+                  "description": "Muxed ID of address, else of operation_source, as a decimal string.",
+                  "$ref": "#/$defs/decimal"
+                },
+                "offer_id": {
+                  "$ref": "#/$defs/decimal"
+                },
+                "memo_type": {
+                  "enum": [
+                    "none",
+                    "text",
+                    "id",
+                    "hash",
+                    "return"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "notes": {
+          "description": "Remarks specific to this variant.",
+          "type": "string"
+        },
+        "decoded_sha256": {
+          "description": "sha256 of the decoded sidecar file, so a tampered or regenerated sidecar is detected.",
+          "$ref": "#/$defs/sha256"
+        },
+        "json_roundtrip": {
+          "description": "A declared exception to the JSON half of the round trip: SEP-51 JSON of these bytes does not reproduce them (for example an empty signed payload). The oracle still requires bytes -> value -> identical bytes and still renders the sidecar; it skips JSON -> bytes, and fails if the JSON round trip in fact succeeds (a stale exception).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "skip",
+            "reason"
+          ],
+          "properties": {
+            "skip": {
+              "const": true
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 10
+            }
+          }
+        },
+        "requires": {
+          "description": "Mandatory on every variant: the XDR features of the pinned definitions that these bytes use and that older definitions lack, so a reader built on older definitions cannot decode them; [] when none. For a positive variant verify derives the list from the decoded sidecar and requires equality; a negative variant states it by hand ([] unless the defect sits behind such a feature). stellar_value_signed_ms: a StellarValue ext arm with a millisecond close time, signed_ms (arm 3) or empty_tx_set_ms (arm 4) (Protocol 30, CAP-88); sc_address_type_muxed_contract: an SCAddress of type SC_ADDRESS_TYPE_MUXED_CONTRACT (CAP-84).",
+          "type": "array",
+          "items": {
+            "enum": [
+              "stellar_value_signed_ms",
+              "sc_address_type_muxed_contract"
+            ]
+          },
+          "uniqueItems": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "frame_index"
+            ]
+          },
+          "then": {
+            "required": [
+              "framing"
+            ],
+            "properties": {
+              "framing": {
+                "const": "record-marked"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "source": {
+      "description": "Where the bytes came from, with enough detail for a reviewer to obtain the same bytes again.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "core_tag",
+            "core_commit",
+            "tier",
+            "file",
+            "file_sha256",
+            "frame_index",
+            "test_name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "core-golden"
+            },
+            "core_tag": {
+              "type": "string"
+            },
+            "core_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "tier": {
+              "enum": [
+                "current",
+                "next"
+              ]
+            },
+            "file": {
+              "description": "Path inside the stellar-core repository.",
+              "type": "string"
+            },
+            "file_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "frame_index": {
+              "description": "Zero-based index of the record-marked LedgerCloseMeta in the file.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "test_name": {
+              "description": "Human-readable test name from the golden index.",
+              "type": "string"
+            },
+            "rng_seed": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "core_version",
+            "core_commit",
+            "scenario",
+            "step",
+            "config_sha256",
+            "reproducibility"
+          ],
+          "properties": {
+            "kind": {
+              "const": "local-core"
+            },
+            "submission": {
+              "description": "Set when the bytes are stellar-core's answer to a submission rather than ledger output: the refused TransactionResult its /tx endpoint returned for the envelope stored as envelope_entry.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "endpoint",
+                "status",
+                "envelope_entry"
+              ],
+              "properties": {
+                "endpoint": {
+                  "const": "tx"
+                },
+                "status": {
+                  "description": "The status /tx answered with.",
+                  "enum": [
+                    "ERROR",
+                    "TRY_AGAIN_LATER",
+                    "DUPLICATE",
+                    "PENDING",
+                    "FILTERED"
+                  ]
+                },
+                "envelope_entry": {
+                  "description": "Entry ID of the submitted TransactionEnvelope.",
+                  "type": "string"
+                }
+              }
+            },
+            "core_role": {
+              "description": "Which stellar-core binary emitted the bytes: the pinned release, a build with test hooks (buildtests), a next-protocol build (vnext), or an old release replaying history (old-core). Absent: release.",
+              "enum": [
+                "release",
+                "buildtests",
+                "vnext",
+                "old-core"
+              ]
+            },
+            "core_version": {
+              "type": "string"
+            },
+            "core_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "core_image_digest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "scenario": {
+              "description": "Scenario file path relative to the corpus root.",
+              "type": "string"
+            },
+            "scenario_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "step": {
+              "type": "string"
+            },
+            "config_sha256": {
+              "description": "Hash of the stellar-core config used.",
+              "$ref": "#/$defs/sha256"
+            },
+            "close_time": {
+              "$ref": "#/$defs/decimal"
+            },
+            "regenerate": {
+              "description": "Command that regenerates this entry.",
+              "type": "string"
+            },
+            "reproducibility": {
+              "description": "What regeneration guarantees.",
+              "enum": [
+                "byte-identical",
+                "normalised-identical"
+              ]
+            },
+            "core_package": {
+              "description": "Official release package the binary came from.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "url",
+                "sha256"
+              ],
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "sha256": {
+                  "$ref": "#/$defs/sha256"
+                }
+              }
+            },
+            "core_binary_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "stream_sha256": {
+              "description": "sha256 of the complete record-marked meta stream of the canonical run.",
+              "$ref": "#/$defs/sha256"
+            },
+            "frame_index": {
+              "description": "Zero-based index of this ledger's record in that stream.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "generated_by": {
+              "description": "Tool and version that drove stellar-core.",
+              "type": "string"
+            },
+            "soroban_resources": {
+              "description": "How the Soroban footprint and resource declaration in the envelope were obtained. 'declared' means chosen by the scenario author, not produced by simulation.",
+              "enum": [
+                "not-applicable",
+                "declared",
+                "simulated"
+              ]
+            },
+            "inputs": {
+              "description": "Other pinned inputs of the run, for example Soroban settings-upgrade sets.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "sha256"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  "origin": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "core_image_digest"
+              ]
+            },
+            {
+              "required": [
+                "core_package"
+              ]
+            },
+            {
+              "required": [
+                "core_binary_sha256"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "store",
+            "key",
+            "object_sha256",
+            "captured_at",
+            "written_by",
+            "regenerated"
+          ],
+          "properties": {
+            "kind": {
+              "const": "history"
+            },
+            "selected_by": {
+              "description": "Set when the ledger was chosen by a census query rather than by hand: the census file and the query that selected it.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "census",
+                "query_id"
+              ],
+              "properties": {
+                "census": {
+                  "description": "Path of the census file, relative to the corpus root.",
+                  "type": "string"
+                },
+                "query_id": {
+                  "type": "string"
+                }
+              }
+            },
+            "store": {
+              "description": "Public SEP-54 store, for example s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet.",
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "object_sha256": {
+              "description": "Hash of the object as stored (compressed).",
+              "$ref": "#/$defs/sha256"
+            },
+            "batch_index": {
+              "description": "Index of the ledger inside the LedgerCloseMetaBatch.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "captured_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "written_by": {
+              "description": "Core and exporter versions from the object metadata, if present.",
+              "type": "string"
+            },
+            "refetch": {
+              "description": "Command that fetches the same object.",
+              "type": "string"
+            },
+            "perishable": {
+              "description": "true if the public source will disappear (testnet resets).",
+              "type": "boolean"
+            },
+            "object_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "decompressed_sha256": {
+              "description": "sha256 of the object after decompression (the LedgerCloseMetaBatch XDR).",
+              "$ref": "#/$defs/sha256"
+            },
+            "decompressed_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "blob_offset": {
+              "description": "Byte offset of this entry's blob inside the decompressed object. The blob is the contiguous XDR encoding of ledgerCloseMetas[batch_index].",
+              "type": "integer",
+              "minimum": 0
+            },
+            "object_metadata": {
+              "description": "User metadata of the object exactly as the store returned it.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "regenerated": {
+              "description": "true if the lake object was written by a core version newer than the ledger's protocol era (the public lake regenerated old ledgers with current meta).",
+              "type": "boolean"
+            },
+            "object_path": {
+              "description": "Path of the vendored original object (.xdr.zst), so the entry can be served byte-identical to the public lake.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "recipe",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "synthetic"
+            },
+            "recipe": {
+              "description": "How the bytes were built: a base entry plus an edit, or a literal construction.",
+              "type": "string"
+            },
+            "base_entry": {
+              "type": "string"
+            },
+            "reason": {
+              "description": "Why stellar-core cannot or would not emit these bytes.",
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "store",
+            "object",
+            "object_sha256",
+            "byte_offset"
+          ],
+          "properties": {
+            "kind": {
+              "const": "history-archive"
+            },
+            "file_kind": {
+              "description": "The archive file the record is cut from: a bucket file or an SCP history file. Absent: bucket.",
+              "enum": [
+                "bucket",
+                "scp"
+              ]
+            },
+            "store": {
+              "type": "string"
+            },
+            "object": {
+              "type": "string"
+            },
+            "object_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "byte_offset": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "refetch": {
+              "type": "string"
+            },
+            "perishable": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "description": "Contract code read from a network's ledger: the CONTRACT_CODE entry's code, whose hash is the blob's sha256.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "network",
+            "wasm_hash",
+            "upload_ledger",
+            "fetched_via",
+            "captured_at"
+          ],
+          "properties": {
+            "kind": {
+              "const": "contract-code"
+            },
+            "network": {
+              "enum": [
+                "pubnet",
+                "testnet"
+              ]
+            },
+            "wasm_hash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "upload_ledger": {
+              "description": "lastModifiedLedgerSeq of the CONTRACT_CODE ledger entry: the ledger that uploaded (or last restored) the code.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "fetched_via": {
+              "description": "How the code was read, for example getLedgerEntries on a stellar-rpc.",
+              "type": "string"
+            },
+            "captured_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "perishable": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    },
+    "account": {
+      "description": "An account as a reader should record it: the base account is the identity; a muxed ID is extra routing information, never a different account.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "address"
+      ],
+      "properties": {
+        "address": {
+          "description": "Base address: G\u2026 account, C\u2026 contract, B\u2026 claimable balance, L\u2026 liquidity pool.",
+          "type": "string"
+        },
+        "muxed_id": {
+          "$ref": "#/$defs/decimal"
+        },
+        "on_chain_form": {
+          "description": "The address exactly as its on-chain form renders (M\u2026 or W\u2026 when muxed).",
+          "type": "string"
+        },
+        "roles": {
+          "description": "Why the account is a participant. Vocabulary (open; manifest.md section 6.5): source, fee_payer, operation_source, destination, signer_owner, trustline_owner, issuer, counterparty, sponsor, contract, authorizer, liquidity_pool, claimable_balance, claimant. liquidity_pool and claimable_balance mark the L\u2026 or B\u2026 address of a pool or balance entry that changed; claimant an account named as a claimant of a claimable balance that changed; authorizer an address whose Soroban authorization created a nonce entry (no state change is recorded for nonce entries). counterparty is any other affected address and stays valid for pools and balances.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "uniqueItems": true
+        },
+        "unverified": {
+          "description": "The author's explicit exception: a stated value the reference extractor cannot derive from the bytes, with the reason. verify's extractor agreement does not require the item; the replay harness scores it not_applicable. It still accounts for the facts it describes under the exactness flags.",
+          "type": "string",
+          "minLength": 10
+        }
+      }
+    },
+    "expect": {
+      "description": "What a correct reader must produce. Layer 1 is the bytes (variants[].blob). Layer 2 is variants[].decoded. This block is layer 3: semantic facts in a neutral vocabulary, shared by all variants.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reject": {
+          "description": "For negative entries: the input must be rejected.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reason"
+          ],
+          "properties": {
+            "reason": {
+              "enum": [
+                "nonzero_padding",
+                "bool_range",
+                "optional_flag_range",
+                "enum_undeclared",
+                "union_arm_undeclared",
+                "length_exceeds_max",
+                "length_exceeds_input",
+                "trailing_bytes",
+                "depth",
+                "strkey_checksum",
+                "strkey_length",
+                "strkey_version",
+                "strkey_padding",
+                "strkey_noncanonical",
+                "value_out_of_range",
+                "ordering",
+                "record_mark",
+                "spec_sections"
+              ]
+            },
+            "note": {
+              "type": "string"
+            },
+            "limits": {
+              "description": "Decode limits the oracle's reject check uses for this entry instead of its own defaults. 'depth' is a nesting depth in stellar-xdr (rs-stellar-xdr) depth units: set it to the boundary the vector is measured against (stellar-core's, converted to these units) so that a vector just beyond that boundary is rejected there and not only at the oracle's provisional default.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "depth"
+              ],
+              "properties": {
+                "depth": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        },
+        "values": {
+          "description": "Pinpointed decoded values: a JSON Pointer into the decoded form and the value found there. With 'select', the element of an array of ledger-entry changes, ledger entries or ledger keys is chosen by its ledger key instead of its position (stellar-core writes an operation's change list from an unordered map, so positions differ between runs and passphrases), and 'path' is relative to that element.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "equals"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "JSON Pointer into the decoded form; with 'select', a JSON Pointer relative to the selected element ('' for the element itself)."
+              },
+              "select": {
+                "description": "Choose one array element by ledger key. Exactly one element of the array at 'in' must match: a LedgerEntryChange whose entry (or, for 'removed', whose key) has the ledger key 'key' and, when 'change' is given, whose arm is 'change'; a LedgerEntry with that key; or a LedgerKey equal to 'key'. Consumers resolve it per variant to a plain JSON Pointer before comparing; ${derived.*} tokens are allowed in 'in' and 'key'.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "in",
+                  "key"
+                ],
+                "properties": {
+                  "in": {
+                    "type": "string",
+                    "description": "JSON Pointer to the array, for example /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes."
+                  },
+                  "key": {
+                    "type": "object",
+                    "minProperties": 1,
+                    "maxProperties": 1,
+                    "description": "SEP-51 JSON of the LedgerKey, for example {\"account\": {\"account_id\": \"${derived.accounts.A}\"}}."
+                  },
+                  "change": {
+                    "enum": [
+                      "created",
+                      "updated",
+                      "removed",
+                      "state",
+                      "restored"
+                    ],
+                    "description": "The LedgerEntryChange arm; needed when the key occurs in more than one change of the array (a 'state' and its 'updated')."
+                  }
+                }
+              },
+              "equals": {},
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "ledger": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "transactions": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "operations": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "events": {
+              "description": "Consensus events (transaction, operation and contract events); diagnostic events are not counted.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "entry_changes": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "transactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "index",
+              "successful"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Zero-based index in apply order."
+              },
+              "hash": {
+                "type": "string"
+              },
+              "successful": {
+                "type": "boolean"
+              },
+              "result_code": {
+                "description": "Transaction result arm as XDR-JSON names it, for example tx_success, tx_failed, tx_fee_bump_inner_failed.",
+                "type": "string"
+              },
+              "operation_result_codes": {
+                "description": "One per operation, as <operation>.<code> in XDR-JSON names, for example set_options.success.",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "fee_charged": {
+                "$ref": "#/$defs/decimalOrDerived"
+              },
+              "inner_hash": {
+                "type": "string"
+              },
+              "inner_successful": {
+                "type": "boolean"
+              },
+              "inner_result_code": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "participants": {
+          "description": "Who the ledger meta shows was affected. Envelope-only claims are never participants.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "must_include": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/account"
+              }
+            },
+            "must_not_include": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "address",
+                  "because"
+                ],
+                "properties": {
+                  "address": {
+                    "type": "string"
+                  },
+                  "because": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "exact": {
+              "description": "true if must_include is the complete set.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
+        "state_changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "account"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "account_created",
+                  "account_removed",
+                  "balance_changed",
+                  "trustline_created",
+                  "trustline_removed",
+                  "trustline_flags_changed",
+                  "trustline_limit_changed",
+                  "signer_added",
+                  "signer_removed",
+                  "signer_changed",
+                  "sponsorship_changed",
+                  "offer_changed",
+                  "liquidity_pool_created",
+                  "liquidity_pool_removed",
+                  "liquidity_pool_changed",
+                  "claimable_balance_created",
+                  "claimable_balance_claimed",
+                  "contract_data_changed",
+                  "contract_deployed",
+                  "entry_restored",
+                  "entry_evicted",
+                  "data_entry_changed",
+                  "thresholds_changed",
+                  "sequence_bumped",
+                  "account_flags_changed",
+                  "home_domain_changed",
+                  "inflation_destination_changed",
+                  "ttl_extended",
+                  "contract_code_created"
+                ],
+                "description": "Closed list. Must stay identical to state_changes[].kind in observation.schema.json."
+              },
+              "account": {
+                "$ref": "#/$defs/account"
+              },
+              "asset": {
+                "type": "string"
+              },
+              "signer": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "key"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "ed25519",
+                      "pre_auth_tx",
+                      "hash_x",
+                      "ed25519_signed_payload"
+                    ]
+                  },
+                  "key": {
+                    "description": "Canonical strkey of the signer key (G\u2026, T\u2026, X\u2026, P\u2026).",
+                    "type": "string"
+                  },
+                  "payload_hex": {
+                    "type": "string",
+                    "pattern": "^([0-9a-f]{2})*$"
+                  },
+                  "weight": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 255
+                  }
+                }
+              },
+              "detail": {
+                "type": "object",
+                "description": "Extra facts about the change. The keys allowed for each kind are fixed (see the allOf rules below and manifest.md section 6.6); values are strings (decimal strings for amounts), integers or booleans. A stated key is compared only when the observation carries the same key."
+              },
+              "cause": {
+                "description": "What caused the change when it is not the obvious operation, for example 'contract-call' for a trustline created by the Stellar Asset Contract.",
+                "type": "string"
+              },
+              "tx_index": {
+                "description": "Transaction this fact belongs to (apply order). Defaults to the variant's focus transaction.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "op_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "only_if": {
+                "description": "Makes the item conditional on a modelling choice the adapter declares in describe (observations.state_changes.modelling). Without the declaration the item is not required, and a reader that reports a matching fact anyway is not penalised. 'initial_authorization_separate': the reader records the authorisation state a trustline is created with as its own change, beside the creation.",
+                "enum": [
+                  "initial_authorization_separate"
+                ]
+              },
+              "unverified": {
+                "description": "The author's explicit exception: a stated value the reference extractor cannot derive from the bytes, with the reason. verify's extractor agreement does not require the item; the replay harness scores it not_applicable. It still accounts for the facts it describes under the exactness flags.",
+                "type": "string",
+                "minLength": 10
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "account_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "starting_balance",
+                          "sponsor"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "account_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "merged_into",
+                          "balance_transferred"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "balance_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "delta",
+                          "balance_after",
+                          "reason"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance",
+                          "limit",
+                          "flags",
+                          "authorized",
+                          "authorized_to_maintain_liabilities",
+                          "clawback_enabled",
+                          "sponsor",
+                          "num_sub_entries_after",
+                          "pool_strkey"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance",
+                          "pool_strkey"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_flags_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "flags",
+                          "authorized",
+                          "authorized_to_maintain_liabilities",
+                          "clawback_enabled",
+                          "initial"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "trustline_limit_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "limit",
+                          "limit_before"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "signer_added"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "signer_key_xdr_hex",
+                          "signer_ed25519_key",
+                          "payload_bytes",
+                          "weight_before",
+                          "sponsor"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "signer_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "signer_key_xdr_hex",
+                          "signer_ed25519_key",
+                          "payload_bytes",
+                          "weight_before",
+                          "sponsor"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "signer_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "signer_key_xdr_hex",
+                          "signer_ed25519_key",
+                          "payload_bytes",
+                          "weight_before",
+                          "sponsor"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "sponsorship_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "sponsor_before",
+                          "sponsor_after"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "offer_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "offer_id",
+                          "change",
+                          "selling",
+                          "buying",
+                          "amount",
+                          "price_n",
+                          "price_d"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "liquidity_pool_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "pool_id",
+                          "pool_strkey",
+                          "asset_a",
+                          "asset_b",
+                          "fee_bp",
+                          "reserve_a",
+                          "reserve_b",
+                          "total_shares",
+                          "pool_shares_trust_line_count",
+                          "asset_a_issuer_key_hex",
+                          "asset_b_issuer_key_hex"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "liquidity_pool_removed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "pool_id",
+                          "pool_strkey"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "liquidity_pool_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "pool_id",
+                          "pool_strkey",
+                          "asset_a",
+                          "asset_b",
+                          "fee_bp",
+                          "reserve_a",
+                          "reserve_b",
+                          "total_shares",
+                          "pool_shares_trust_line_count",
+                          "asset_a_issuer_key_hex",
+                          "asset_b_issuer_key_hex"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "claimable_balance_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance_id",
+                          "amount",
+                          "claimants",
+                          "sponsor"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "claimable_balance_claimed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "balance_id",
+                          "amount"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_data_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "contract",
+                          "key_xdr_hex",
+                          "durability",
+                          "change"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_deployed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "contract",
+                          "executable",
+                          "wasm_hash",
+                          "asset"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "entry_restored"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "key_xdr_hex",
+                          "wasm_hash"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "entry_evicted"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "key_xdr_hex",
+                          "wasm_hash"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "data_entry_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "name",
+                          "value_hex",
+                          "change"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "thresholds_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "master_weight",
+                          "low",
+                          "medium",
+                          "high"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "sequence_bumped"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "sequence_after"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "account_flags_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "flags",
+                          "flags_before",
+                          "auth_required",
+                          "auth_revocable",
+                          "auth_immutable",
+                          "auth_clawback_enabled"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "home_domain_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "home_domain",
+                          "home_domain_hex",
+                          "home_domain_before"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "inflation_destination_changed"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "inflation_destination",
+                          "inflation_destination_before",
+                          "cleared"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "ttl_extended"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "entry_type",
+                          "key_xdr_hex",
+                          "key_hash",
+                          "contract",
+                          "wasm_hash",
+                          "live_until_ledger",
+                          "live_until_ledger_before"
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "kind": {
+                      "const": "contract_code_created"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "detail": {
+                      "propertyNames": {
+                        "enum": [
+                          "wasm_hash",
+                          "code_bytes"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "movements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "asset",
+              "amount"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "transfer",
+                  "mint",
+                  "burn",
+                  "clawback",
+                  "fee",
+                  "fee_refund"
+                ]
+              },
+              "asset": {
+                "description": "native, CODE:ISSUER, or a contract address.",
+                "type": "string"
+              },
+              "amount": {
+                "$ref": "#/$defs/decimalOrDerived"
+              },
+              "from": {
+                "$ref": "#/$defs/account"
+              },
+              "to": {
+                "$ref": "#/$defs/account"
+              },
+              "routing": {
+                "description": "The event's to_muxed_id when present. Its type follows what core copied in: a u64 ID, text or 32 bytes. Text and bytes come from memos and are never an address.",
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type"
+                ],
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "absent",
+                      "void",
+                      "u64",
+                      "text",
+                      "bytes"
+                    ]
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              },
+              "count": {
+                "description": "How many records a reader must hold for this movement. Normally 1; pins double-counting bugs.",
+                "type": "integer",
+                "minimum": 0,
+                "default": 1
+              },
+              "tx_index": {
+                "description": "Transaction this fact belongs to (apply order). Defaults to the variant's focus transaction.",
+                "type": "integer",
+                "minimum": 0
+              },
+              "op_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unverified": {
+                "description": "The author's explicit exception: a stated value the reference extractor cannot derive from the bytes, with the reason. verify's extractor agreement does not require the item; the replay harness scores it not_applicable. It still accounts for the facts it describes under the exactness flags.",
+                "type": "string",
+                "minLength": 10
+              }
+            }
+          }
+        },
+        "addresses": {
+          "description": "Addresses a reader must be able to store and return unchanged.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "strkey",
+              "type"
+            ],
+            "properties": {
+              "strkey": {
+                "type": "string"
+              },
+              "type": {
+                "enum": [
+                  "account",
+                  "muxed_account",
+                  "contract",
+                  "muxed_contract",
+                  "claimable_balance",
+                  "liquidity_pool",
+                  "signed_payload",
+                  "pre_auth_tx",
+                  "hash_x"
+                ]
+              },
+              "xdr_bytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "chars": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "native": {
+          "description": "Level L3: what a lossless native conversion must preserve.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "map_entries": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "on_lossy_conversion": {
+              "description": "Acceptable behaviour when the native type cannot hold the value.",
+              "enum": [
+                "error",
+                "preserve_all"
+              ]
+            },
+            "bytes_preserved": {
+              "type": "boolean"
+            },
+            "error": {
+              "description": "An scvError value: the ScError it holds, as XDR-JSON names (type, for example storage; code, for example exceeded_limit; a contract error's code as its decimal number). The SDK's native value must carry both.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "type",
+                "code"
+              ],
+              "properties": {
+                "type": {
+                  "enum": [
+                    "contract",
+                    "wasm_vm",
+                    "context",
+                    "storage",
+                    "object",
+                    "crypto",
+                    "events",
+                    "budget",
+                    "value",
+                    "auth"
+                  ]
+                },
+                "code": {
+                  "type": "string",
+                  "pattern": "^([a-z_]+|[0-9]+)$"
+                }
+              }
+            }
+          }
+        },
+        "state_changes_exact": {
+          "description": "true if state_changes is the complete set of operation-level state changes of the focus transaction. Scope and exclusions (manifest.md section 6.6): only the focus transaction is looked at; ambient kinds (balance_changed and sequence_bumped, which every transaction causes, and ttl_extended, which the host causes on access) are never counted as extras; an only_if item the reader reports is allowed. Any other state change the reader reports in that scope is a wrong fact.",
+          "type": "boolean",
+          "default": false
+        },
+        "movements_exact": {
+          "description": "true if movements is the complete set of value movements of the focus transaction, fee and fee_refund excluded (they are matched only when listed and only for readers that model fees). Any other movement the reader reports for that transaction (for example a fabricated or doubled transfer) is a wrong fact.",
+          "type": "boolean",
+          "default": false
+        },
+        "spec": {
+          "description": "spec entries: the facts the corpus's own section reader reads from the bytes. sections: the number of contractspecv0 custom sections (Wasm only); entries: every whole SCSpecEntry in stream order across all sections, in the neutral rendering of docs/conformance-protocol.md; clean_end: every section decodes to whole entries with no bytes left over.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "entries",
+            "clean_end"
+          ],
+          "properties": {
+            "sections": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "entries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/specEntryFact"
+              }
+            },
+            "clean_end": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "apiVector": {
+      "description": "An SDK-neutral call. Drivers map 'op' onto their SDK's function.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "op",
+        "input"
+      ],
+      "properties": {
+        "op": {
+          "$ref": "#/$defs/apiOp"
+        },
+        "input": {
+          "type": "object",
+          "description": "Arguments by name. A value that must be passed in a language-native numeric type is written {\"native\":\"number\",\"value\":\"9007199254740993\"}; bytes are {\"hex\":\"\u2026\"}; everything else is a string."
+        },
+        "expect_xdr_hex": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$"
+        },
+        "expect_value": {},
+        "expect_reject": {
+          "type": "boolean",
+          "description": "true if the call must be refused. When expect_reject is true AND expect_xdr_hex or expect_value is also given, either outcome conforms: the exact result, or a refusal (\"exact or refuse\")."
+        }
+      }
+    },
+    "strkeyVector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "account",
+            "muxed_account",
+            "secret_seed",
+            "pre_auth_tx",
+            "hash_x",
+            "signed_payload",
+            "contract",
+            "muxed_contract",
+            "liquidity_pool",
+            "claimable_balance"
+          ]
+        },
+        "payload_hex": {
+          "type": "string",
+          "pattern": "^([0-9a-f]{2})*$"
+        },
+        "origin": {
+          "description": "For published vectors: the document and vector label, for example SEP-0023 v1.4.0 invalid #15.",
+          "type": "string"
+        }
+      }
+    },
+    "knownDivergence": {
+      "description": "A reader known to get this entry wrong in a version range. The conformance runner and harness assert the divergence inside the range and its absence outside it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "versions",
+        "outcome",
+        "reference"
+      ],
+      "properties": {
+        "target": {
+          "description": "Package or repository, for example @stellar/stellar-sdk, github.com/stellar/go-stellar-sdk, stellar/wallet-backend.",
+          "type": "string"
+        },
+        "versions": {
+          "description": "Version range. Packages: a semver range. Repositories without tags: a commit range 'A..B' meaning every commit from A to B inclusive on the default branch's first-parent history; '..B' means everything up to and including B.",
+          "type": "string"
+        },
+        "level": {
+          "enum": [
+            "L0",
+            "L1",
+            "L2",
+            "L3",
+            "L4",
+            "spec",
+            "json",
+            "replay"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "reject",
+            "crash",
+            "wrong_value",
+            "accepts_invalid",
+            "dropped",
+            "halt",
+            "hang"
+          ],
+          "description": "reject always means a VALID input was rejected; accepts_invalid means an invalid input was accepted."
+        },
+        "detail": {
+          "type": "string"
+        },
+        "reference": {
+          "type": "string",
+          "format": "uri"
+        },
+        "fixed_in": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "fixed",
+            "fixed_unreleased",
+            "open",
+            "wont_fix",
+            "unreported"
+          ],
+          "description": "'unreported' is never used in the public manifest for a security-relevant defect; those annotations live in the private overlay until disclosure completes."
+        },
+        "observed": {
+          "description": "How we know: executed by us against the named version, read from source, or reported upstream and not re-run.",
+          "enum": [
+            "executed",
+            "source-reading",
+            "reported"
+          ]
+        },
+        "evidence": {
+          "description": "Path or URL of the transcript or note that shows the divergence.",
+          "type": "string"
+        },
+        "qualifier": {
+          "description": "For level 'replay': the exact class qualifier the harness must report inside the range.",
+          "enum": [
+            "wrong_value",
+            "crash",
+            "hang",
+            "halt",
+            "silent",
+            "partial",
+            "refused"
+          ]
+        },
+        "profile": {
+          "description": "Set when the divergence exists only under a non-default decode profile or sandbox (for example Rust Limits::none()).",
+          "type": "string"
+        },
+        "finding": {
+          "description": "Finding record ID, when one exists.",
+          "type": "string"
+        },
+        "match": {
+          "description": "Details the observed cell must also show for the divergence to count as observed, beyond the outcome class. Every field is optional; a stated field must equal the driver's report.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "reason": {
+              "description": "The driver's reason code: one of the driver protocol's runResponse.reason.code values (verify checks it against that list).",
+              "type": "string",
+              "pattern": "^[a-z0-9_]+$"
+            },
+            "envelopes_parsed": {
+              "description": "L1 on a ledger: how many envelopes the SDK parsed.",
+              "type": "integer",
+              "minimum": 0
+            },
+            "rejected_tx_index": {
+              "description": "L1 on a ledger: an envelope (apply order) that must be among those the SDK rejected.",
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "decimalOrDerived": {
+      "description": "A decimal string, or a ${derived.<path>} token resolved per variant (fees and refunds differ between protocols and networks).",
+      "type": "string",
+      "pattern": "^(-?(0|[1-9][0-9]*)|\\$\\{derived\\.[A-Za-z0-9_.]+\\})$"
+    },
+    "apiOp": {
+      "description": "SDK-neutral operation names for api entries. This named list is the single source; the driver protocol schema references it. Extended only with a schema minor version.",
+      "enum": [
+        "asset.compare",
+        "liquidity_pool.id",
+        "liquidity_pool.asset",
+        "muxed_account.encode",
+        "muxed_account.decode",
+        "offer.manage_sell",
+        "offer.manage_buy",
+        "scval.from_native",
+        "scval.to_native",
+        "scval.sort_map",
+        "strkey.encode",
+        "strkey.decode",
+        "transaction.parse",
+        "transaction.hash",
+        "memo.text_roundtrip",
+        "address.to_strkey",
+        "address.from_sc_address",
+        "signer_key.to_strkey",
+        "scval.native_roundtrip",
+        "operation.object_roundtrip",
+        "xdrjson.decode",
+        "asset.from_operation",
+        "price.encode",
+        "xdr.custom_union_encode"
+      ]
+    },
+    "specEntryFact": {
+      "description": "One SCSpecEntry, neutral: kind, name, args ({name, type}) and, for a function, outputs.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "name",
+        "args"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "function",
+            "struct",
+            "union",
+            "enum",
+            "error_enum",
+            "event"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "type"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "validity": {
+      "description": "What a correct reader does with the input (the negative-case vocabulary of the WebAssembly spec tests and Wycheproof). valid: the bytes decode and are accepted (every ledger stellar-core wrote is valid). malformed: the bytes (or text) must fail to decode. invalid: the input decodes, and a validating reader must reject it. acceptable: a reader may accept or reject, and both conform. The schema leaves it optional so older entries stay readable; xdrcheck-corpus verify and the repository checks require it on every corpus entry.",
+      "enum": [
+        "valid",
+        "malformed",
+        "invalid",
+        "acceptable"
+      ]
+    },
+    "flag": {
+      "description": "A bug class this input exercises (manifest.md section 9.5). Each expect.reject.reason has the flag of the same name in kebab case, and an entry with one carries that flag. core-lenient: stellar-core's own decoder accepts the input (core_behaviour.accepts).",
+      "enum": [
+        "nonzero-padding",
+        "bool-range",
+        "optional-flag-range",
+        "enum-undeclared",
+        "union-arm-undeclared",
+        "length-exceeds-max",
+        "length-exceeds-input",
+        "trailing-bytes",
+        "depth",
+        "record-mark",
+        "strkey-checksum",
+        "strkey-length",
+        "strkey-version",
+        "strkey-padding",
+        "strkey-noncanonical",
+        "value-out-of-range",
+        "ordering",
+        "spec-sections",
+        "discriminant-type",
+        "native-number-precision",
+        "non-utf8-text",
+        "core-lenient"
+      ]
+    }
+  }
+}

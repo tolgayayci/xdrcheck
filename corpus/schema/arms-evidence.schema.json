@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:arms-evidence:v1",
+  "title": "Evidence of an arm exclusion in corpus/arms.toml (`evidence` of an [[arm]] override, and validation_only_evidence)",
+  "description": "Either the free-text form (`unverified`, or `indexer: <query, date, ledger range, count 0>`, kept readable for old rows) or a census reference: the census file and query that count the arm 0 over a range, and the positive control of the same query shape that counts above 0.",
+  "oneOf": [
+    {
+      "type": "string",
+      "pattern": "^(unverified|indexer: .+)$"
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "file",
+        "query",
+        "as_of",
+        "range",
+        "count",
+        "control"
+      ],
+      "properties": {
+        "kind": {
+          "const": "census"
+        },
+        "file": {
+          "description": "The census file, relative to the repository root.",
+          "type": "string",
+          "pattern": "^corpus/census/[a-z0-9._-]+\\.json$"
+        },
+        "query": {
+          "description": "query_id of the row that counts the arm.",
+          "type": "string"
+        },
+        "as_of": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "range": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.\\.[0-9]+$"
+        },
+        "count": {
+          "const": 0
+        },
+        "control": {
+          "description": "query_id of a positive control of the same query shape.",
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

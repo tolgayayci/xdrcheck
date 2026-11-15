@@ -1,0 +1,173 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:plan:v1",
+  "title": "Corpus plan and entry-ID registry (corpus/plan.json)",
+  "description": "Every planned corpus row. An entry ID exists only if it is a row ID here, or <row ID>.<member> for a family row. Entries in corpus/manifest must use these IDs.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "kind",
+      "negative",
+      "caps",
+      "protocol_min",
+      "source",
+      "locator",
+      "networks",
+      "synthetic",
+      "serves",
+      "pins",
+      "levels",
+      "replayable",
+      "priority",
+      "scenario",
+      "shape",
+      "vector_count",
+      "members",
+      "evidence"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+      },
+      "kind": {
+        "enum": [
+          "ledger",
+          "xdr",
+          "api",
+          "strkey",
+          "spec"
+        ]
+      },
+      "negative": {
+        "type": "boolean"
+      },
+      "caps": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "protocol_min": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "source": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "enum": [
+            "local-core",
+            "core-golden",
+            "history",
+            "history-archive",
+            "synthetic",
+            "contract-code"
+          ]
+        }
+      },
+      "locator": {
+        "type": "string"
+      },
+      "networks": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "testnet",
+            "pubnet",
+            "core-test",
+            "none"
+          ]
+        }
+      },
+      "synthetic": {
+        "type": "boolean"
+      },
+      "serves": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "pins": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "levels": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "L0",
+            "L1",
+            "L2",
+            "L3",
+            "L4",
+            "spec",
+            "json"
+          ]
+        }
+      },
+      "replayable": {
+        "type": "boolean"
+      },
+      "priority": {
+        "enum": [
+          "M1-must",
+          "should",
+          "extra"
+        ]
+      },
+      "scenario": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^S[0-9]{2}$"
+      },
+      "shape": {
+        "type": "string"
+      },
+      "vector_count": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "note": {
+        "type": "string"
+      },
+      "members": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "uniqueItems": true
+      },
+      "mirror": {
+        "type": [
+          "object",
+          "string",
+          "null"
+        ]
+      },
+      "evidence": {
+        "type": "object",
+        "additionalProperties": {
+          "enum": [
+            "in-hand",
+            "executed",
+            "to-fetch",
+            "not-executed",
+            "not-built",
+            "tbd"
+          ]
+        }
+      }
+    }
+  }
+}

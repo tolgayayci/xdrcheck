@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:dataset-manifest:v1",
+  "title": "Dataset manifest",
+  "description": "manifest.json of a dataset directory: the dataset version and tip ledger, named roots (overridable by the environment variable XDRCHECK_DATASET_ROOT_<NAME>), read-only lakes, tables with their files and sha256, and named ledger sets. Files are referenced, never copied. See docs/data.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "network", "tip_ledger", "roots", "tables", "sets"],
+  "properties": {
+    "schema": {"const": "xcc.dataset/v1"},
+    "version": {"type": "string"},
+    "network": {"enum": ["pubnet", "testnet"]},
+    "tip_ledger": {"type": "integer", "minimum": 0},
+    "created": {"type": "string", "format": "date-time"},
+    "roots": {"type": "object", "additionalProperties": {"type": "string"}},
+    "lakes": {"type": "array", "items": {"type": "string"}},
+    "tables": {"type": "object", "additionalProperties": {
+      "type": "object", "additionalProperties": false, "required": ["description", "format"],
+      "properties": {
+        "description": {"type": "string"},
+        "format": {"enum": ["tsv", "parquet", "locate-index"]},
+        "files": {"type": "array", "items": {"$ref": "#/$defs/file"}},
+        "glob": {"type": "string"},
+        "checksum_glob": {"type": "string"},
+        "filename_columns": {"type": "object", "additionalProperties": {"type": "string"}},
+        "missing": {"type": "string"}
+      }}},
+    "sets": {"type": "object", "additionalProperties": {
+      "type": "object", "additionalProperties": false, "required": ["description", "unit"],
+      "properties": {
+        "description": {"type": "string"},
+        "file": {"$ref": "#/$defs/file"},
+        "unit": {"enum": ["ledger", "tx"]},
+        "count": {"type": "integer", "minimum": 0},
+        "missing": {"type": "string"}
+      }}}
+  },
+  "$defs": {"file": {"type": "object", "additionalProperties": false, "required": ["path", "bytes"],
+    "properties": {"path": {"type": "string"}, "sha256": {"type": "string", "pattern": "^([0-9a-f]{64})?$"}, "bytes": {"type": "integer", "minimum": 0}}}}
+}

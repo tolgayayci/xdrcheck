@@ -1,0 +1,50 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "limits/scvec-nesting-beyond-core-decoder",
+  "title": "SCVal nested one vector deeper than stellar-core's decoder admits",
+  "kind": "xdr",
+  "caps": [],
+  "caps_note": "A decoder limit, not a CAP.",
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "depth"
+  ],
+  "why": "stellar-core's decoder stops at 499 nested vectors; a reader with a deeper limit accepts a value core itself refuses.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "blob": {
+        "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "bytes": 4008,
+        "path": "blobs/11/1111111111111111111111111111111111111111111111111111111111111111.xdr"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "literal: 500 nested one-element SCV_VEC values around SCV_VOID",
+        "reason": "stellar-core cannot decode the value, so it never emits it"
+      }
+    }
+  ],
+  "expect": {
+    "reject": {
+      "reason": "depth",
+      "limits": {
+        "depth": 2000
+      },
+      "note": "The depth is stated in stellar-xdr units, converted from stellar-core's decoder boundary."
+    }
+  },
+  "core_behaviour": {
+    "accepts": false,
+    "observed": "executed"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:mainnet-tx:v1",
+  "title": "Mainnet tier line",
+  "description": "One line of corpus/mainnet/tier.jsonl: one pubnet transaction, located in its public-lake object. Lines are in the cover's order; `tokens` are the token ids the transaction holds that no earlier line holds.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ledger", "tx_index", "tx_hash", "protocol", "lcm_version", "lake_key", "object_sha256", "object_bytes", "blob_offset", "parts", "tokens", "rarity"],
+  "properties": {
+    "ledger": {"type": "integer", "minimum": 1, "maximum": 4294967295},
+    "tx_index": {"description": "Apply order: the index into the ledger's tx_processing.", "type": "integer", "minimum": 0},
+    "tx_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "protocol": {"description": "The ledger header's protocol version.", "type": "integer", "minimum": 1},
+    "lcm_version": {"description": "The LedgerCloseMeta arm.", "enum": [0, 1, 2]},
+    "lake_key": {"description": "The object's key under the header's lake store.", "type": "string", "pattern": "^[0-9A-F]{8}--[0-9]+-[0-9]+/[0-9A-F]{8}--[0-9]+\\.xdr\\.zst$"},
+    "object_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "object_bytes": {"type": "integer", "minimum": 1},
+    "blob_offset": {"description": "Offset of the ledger's LedgerCloseMeta in the decompressed object.", "type": "integer", "minimum": 12},
+    "parts": {
+      "description": "The transaction's parts as `scan cut-slices` cuts them: name, XDR type, JSON path in the ledger, byte offset in the LedgerCloseMeta, length, sha256.",
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {"type": "string", "pattern": "^(env|res|meta|fee[0-9]+|postfee[0-9]+)$"},
+          {"enum": ["TransactionEnvelope", "TransactionResultPair", "TransactionMeta", "LedgerEntryChange"]},
+          {"type": "string", "pattern": "^/v[012]/"},
+          {"type": "integer", "minimum": 0},
+          {"type": "integer", "minimum": 1},
+          {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        ],
+        "items": false,
+        "minItems": 6
+      }
+    },
+    "tokens": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[0-9a-f]{32}$"}},
+    "rarity": {"description": "Occurrences of the transaction's rarest token in the scan's token table (an upper bound on the transactions carrying it).", "type": "integer", "minimum": 1}
+  }
+}

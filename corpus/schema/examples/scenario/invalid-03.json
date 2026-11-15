@@ -1,0 +1,38 @@
+{
+  "scenario": "untyped-pay",
+  "caps": [
+    1
+  ],
+  "protocols": [
+    30
+  ],
+  "profile": "lake",
+  "actors": [
+    "A",
+    "B"
+  ],
+  "setup": [
+    {
+      "fund": {
+        "A": "100",
+        "B": "100"
+      }
+    },
+    {
+      "pay": {
+        "from": "A",
+        "to": "B",
+        "asset": "native"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "settle",
+      "entry": "probe/settle",
+      "close": {
+        "ledgers": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "schema": "xcc.report/v1",
+  "header": {
+    "tool": {
+      "name": "xcc conform",
+      "version": "0.1.0"
+    },
+    "corpus": {
+      "version": "30.0.0",
+      "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "pins": {
+      "file_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "mode": {
+      "suite": "sdk-regression",
+      "overlay": false,
+      "offline": "network namespace"
+    }
+  },
+  "rows": [
+    {
+      "row_id": "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey:testnet:js@17.2.0:L1",
+      "tool": "conform",
+      "entry": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "variant": "testnet",
+      "target": {
+        "name": "@stellar/stellar-sdk",
+        "version": "17.2.0",
+        "kind": "sdk",
+        "column": "js@17.2.0"
+      },
+      "failure": true,
+      "expectation": "expected",
+      "expected": {
+        "source": "known_divergence",
+        "result": "reject at L1"
+      },
+      "known_divergence": {
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "status": "fixed",
+        "in_range": true,
+        "fixed_in": "17.2.1"
+      },
+      "finding": "F-0001",
+      "caps": [
+        38
+      ],
+      "conform": {
+        "level": "L1",
+        "reference": "network",
+        "outcome": "reject",
+        "reason": "ordering",
+        "verdict": "reject_valid",
+        "check": "known"
+      },
+      "evidence": {
+        "message": "Assets are not in lexicographic order",
+        "tx_index": 2,
+        "entry_point": "TransactionBuilder.fromXdr"
+      }
+    }
+  ],
+  "summary": {
+    "rows": 1,
+    "failures": 1,
+    "unexpected": 0,
+    "failures_without_finding": 0,
+    "by_result": {
+      "known": 1
+    }
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:census:v1",
+  "title": "Census of one network's history (corpus/census/<network>.json)",
+  "description": "Counts of predicates (union arms, result codes, enum values, meta shapes, classes) over a ledger range of one network, from whoever ran the queries; provider-neutral. A predicate whose needed capability is false has count null (not answerable), never 0. Every zero names a positive control: a query of the same shape whose count is above 0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "network",
+    "as_of_ledger",
+    "range",
+    "generated_at",
+    "capabilities",
+    "rows"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.census/v1"
+    },
+    "network": {
+      "enum": [
+        "pubnet",
+        "testnet"
+      ]
+    },
+    "as_of_ledger": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "range": {
+      "description": "Ledger range the counts cover, inclusive: FIRST..LAST.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.\\.[0-9]+$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "capabilities": {
+      "description": "What the source of the counts can see. A row needing a capability that is false has count null.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "failed_tx_results",
+        "validation_refusals",
+        "original_meta_versions",
+        "scp",
+        "upgrade_sets",
+        "per_protocol_counts"
+      ],
+      "properties": {
+        "failed_tx_results": {
+          "type": "boolean"
+        },
+        "validation_refusals": {
+          "type": "boolean"
+        },
+        "original_meta_versions": {
+          "type": "boolean"
+        },
+        "scp": {
+          "type": "boolean"
+        },
+        "upgrade_sets": {
+          "type": "boolean"
+        },
+        "per_protocol_counts": {
+          "type": "boolean"
+        }
+      }
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "predicate",
+          "count",
+          "query_id",
+          "query_text_sha256"
+        ],
+        "properties": {
+          "predicate": {
+            "description": "Same language as `xdrcheck-corpus mine --want`.",
+            "type": "string",
+            "pattern": "^(arm|result|enum|meta|class):[A-Za-z0-9_.:/\\-\\[\\]]+$"
+          },
+          "count": {
+            "description": "Occurrences over the range; null when the source cannot answer.",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "first_seen": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ledger"
+            ],
+            "properties": {
+              "ledger": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tx": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "last_seen": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ledger"
+            ],
+            "properties": {
+              "ledger": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tx": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "per_protocol": {
+            "type": "object",
+            "propertyNames": {
+              "pattern": "^[0-9]+$"
+            },
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "samples": {
+            "type": "array",
+            "maxItems": 32,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "ledger"
+              ],
+              "properties": {
+                "ledger": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "tx": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "object_bytes": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "query_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          },
+          "query_text_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "control": {
+            "description": "On a zero: the query_id of a positive control of the same query shape.",
+            "type": "string"
+          },
+          "confirmed": {
+            "description": "The first-seen and last-seen ledgers were captured and the predicate confirmed on their lake bytes.",
+            "type": "boolean"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "count": {
+                  "const": 0
+                }
+              },
+              "required": [
+                "count"
+              ]
+            },
+            "then": {
+              "required": [
+                "control"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

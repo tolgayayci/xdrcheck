@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:issues:v1",
+  "title": "Known issues",
+  "description": "issues.json: known public issues mapped to the ledgers that show them and to the target versions before and after the fix. Read by xdrcheck replay --issue. Public issues only; a private overlay file in the same format may add more.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "issues"],
+  "properties": {
+    "schema": {"const": "xcc.issues/v1"},
+    "description": {"type": "string"},
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "url", "title", "target", "prefix", "fixed"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9._-]+#[0-9]+$"},
+          "url": {"type": "string", "pattern": "^https://github\\.com/"},
+          "title": {"type": "string"},
+          "target": {"enum": ["go", "js", "rust", "python", "wallet-backend", "stellar-etl", "horizon"]},
+          "prefix": {"type": "string", "description": "a version (tag or commit) that shows the issue"},
+          "fixed": {"type": "string", "description": "the first version (tag or commit) with the fix"},
+          "corpus_entry": {"type": "string"},
+          "network": {"enum": ["pubnet", "testnet"]},
+          "ledger": {"type": "integer", "minimum": 1},
+          "tx": {"type": "integer", "minimum": 0},
+          "tx_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "expect": {"type": "object", "additionalProperties": false, "required": ["check", "class"],
+            "properties": {"check": {"type": "string"}, "class": {"type": "string"}}}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "scenario": "cap-0073-sac-trust",
+  "caps": [
+    73
+  ],
+  "protocols": [
+    28,
+    30
+  ],
+  "profile": "lake",
+  "actors": [
+    "B",
+    "I1"
+  ],
+  "assets": {
+    "USDC": {
+      "credit_alphanum4": {
+        "asset_code": "USDC",
+        "issuer": "${acct.I1}"
+      }
+    }
+  },
+  "setup": [
+    {
+      "fund": {
+        "B": "10000",
+        "I1": "10000"
+      }
+    },
+    {
+      "deploy_sac": "USDC"
+    }
+  ],
+  "steps": [
+    {
+      "id": "sac-trust",
+      "entry": "cap-0073/sac-trust-creates-trustline",
+      "tx": {
+        "source_account": "${acct.B}"
+      },
+      "soroban_resources": "declared",
+      "sign": [
+        {
+          "key": "B"
+        }
+      ],
+      "expect_result": "tx_success"
+    }
+  ],
+  "binary": "debug"
+}

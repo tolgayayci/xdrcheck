@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:fields:v1",
+  "title": "Guide field table source (corpus/fields.yaml)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "pins",
+    "stages",
+    "fields"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.fields/v1"
+    },
+    "pins": {
+      "type": "object"
+    },
+    "stages": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "general_rule": {
+      "type": "string"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "field",
+          "controlled_by",
+          "status",
+          "core_checks",
+          "reader_may_assume",
+          "reader_must_not_assume",
+          "verification"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^VF-[0-9]{2,3}$"
+          },
+          "field": {
+            "type": "string"
+          },
+          "controlled_by": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "validated",
+              "partially_validated",
+              "passed_through",
+              "undetermined"
+            ]
+          },
+          "status_detail": {
+            "type": "string"
+          },
+          "core_checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "stage",
+                "what"
+              ],
+              "properties": {
+                "stage": {
+                  "type": "string"
+                },
+                "what": {
+                  "type": "string"
+                },
+                "code_ref": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "code_ref_note": {
+            "type": "string"
+          },
+          "reader_may_assume": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reader_must_not_assume": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "result_code_when_rejected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "verification": {
+            "enum": [
+              "executed",
+              "code_reference",
+              "unverified"
+            ]
+          },
+          "verification_note": {
+            "type": "string"
+          },
+          "spot_checked": {
+            "type": "boolean"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "aspect",
+                "status",
+                "verification"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^VF-[0-9]{2,3}[a-z]$"
+                },
+                "aspect": {
+                  "type": "string"
+                },
+                "status": {
+                  "enum": [
+                    "validated",
+                    "partially_validated",
+                    "passed_through",
+                    "undetermined"
+                  ]
+                },
+                "verification": {
+                  "enum": [
+                    "executed",
+                    "code_reference",
+                    "unverified"
+                  ]
+                }
+              }
+            }
+          },
+          "unverified_parts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "demonstrated_by": {
+            "description": "Generated from manifest citations in the build; never hand-edited.",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$"
+            }
+          },
+          "demonstration_note": {
+            "type": "string"
+          },
+          "no_demonstration_reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0014",
+  "title": "walkInvocation recurses over authorization sub-invocations with no depth bound",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "e967ce8b7362b79c277e700e789181d76fbb5967 (first affected commit not established)",
+    "versions_tested": [
+      "e967ce8b7362b79c277e700e789181d76fbb5967"
+    ]
+  },
+  "component": "pipeline",
+  "class": "hardening",
+  "severity": "low",
+  "severity_basis": "A linear, success-gated walk over a tree the decoder has already bounded. No halt has been demonstrated; the request is for an explicit bound and a stated behaviour when it is exceeded.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/auth-unmatched-entries-succeed",
+      "scope": "XDR201",
+      "expected": "recursion over SorobanAuthorizedInvocation carries a depth bound",
+      "observed": "closure recursion over inv.SubInvocations with no depth parameter"
+    }
+  ],
+  "location": {
+    "commit": "e967ce8b7362b79c277e700e789181d76fbb5967",
+    "file": "internal/indexer/processors/contract_deploy.go",
+    "lines": "115-143",
+    "function": "walkInvocation"
+  },
+  "state": "candidate",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Predicted from a manual study; to be confirmed by the first linter run on the pinned commit."
+    }
+  ]
+}

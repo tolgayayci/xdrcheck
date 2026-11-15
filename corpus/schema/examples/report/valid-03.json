@@ -1,0 +1,63 @@
+{
+  "schema": "xcc.report/v1",
+  "header": {
+    "tool": {
+      "name": "xdrlint",
+      "version": "0.1.0"
+    },
+    "corpus": {
+      "version": "30.0.0",
+      "manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "pins": {
+      "file_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "values": {
+        "wallet-backend": "e967ce8b7362b79c277e700e789181d76fbb5967"
+      }
+    },
+    "mode": {
+      "suite": "wallet-backend",
+      "overlay": false
+    }
+  },
+  "rows": [
+    {
+      "row_id": "lint:stellar/wallet-backend@e967ce8b:XDR201:internal/indexer/processors/contract_deploy.go:walkInvocation",
+      "tool": "lint",
+      "target": {
+        "name": "stellar/wallet-backend",
+        "version": "e967ce8b7362b79c277e700e789181d76fbb5967",
+        "kind": "pipeline",
+        "profile": "wallet-backend"
+      },
+      "failure": true,
+      "expectation": "expected",
+      "expected": {
+        "source": "suppression",
+        "result": "XDR201 reported"
+      },
+      "finding": "F-0014",
+      "lint": {
+        "rule": "XDR201",
+        "severity": "error",
+        "location": {
+          "file": "internal/indexer/processors/contract_deploy.go",
+          "line": 115,
+          "function": "walkInvocation"
+        },
+        "message": "recursion over a self-referential xdr type with no depth bound",
+        "suppressed": true,
+        "suppression_reason": "linear, success-gated walk over a host-decoded tree; hardening requested upstream"
+      }
+    }
+  ],
+  "summary": {
+    "rows": 1,
+    "failures": 1,
+    "unexpected": 0,
+    "failures_without_finding": 0,
+    "by_result": {
+      "XDR201 suppressed": 1
+    }
+  }
+}

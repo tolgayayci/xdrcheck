@@ -1,0 +1,814 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:finding-record:v1",
+  "title": "Finding record",
+  "description": "One record is one defect in one target project. Sibling defects in other projects are separate records that share a defect_group. A record lives in findings/<id>/finding.json in the public tree, or in the private overlay while it is embargoed. See findings/README.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "id",
+    "title",
+    "target",
+    "component",
+    "class",
+    "severity",
+    "security_relevant",
+    "visibility",
+    "entries",
+    "state",
+    "history"
+  ],
+  "properties": {
+    "schema": {
+      "const": "xcc.finding/v1"
+    },
+    "id": {
+      "description": "Stable finding ID. Never reused.",
+      "type": "string",
+      "pattern": "^F-[0-9]{4}$"
+    },
+    "title": {
+      "description": "The symptom in the target project's own terms.",
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 160
+    },
+    "defect_group": {
+      "description": "Shared by sibling records: the same defect class found in several projects. Used to cross-link sibling issues.",
+      "type": "string",
+      "pattern": "^DG-[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "versions_affected",
+        "versions_tested"
+      ],
+      "properties": {
+        "project": {
+          "description": "Upstream repository, owner/name.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "package": {
+          "description": "Published package name, when the project publishes one.",
+          "type": "string"
+        },
+        "ecosystem": {
+          "enum": [
+            "npm",
+            "go",
+            "crates",
+            "pypi",
+            "maven",
+            "nuget",
+            "source"
+          ]
+        },
+        "versions_affected": {
+          "description": "Version range (packages) or commit range A..B over first-parent history (repositories without tags).",
+          "type": "string"
+        },
+        "versions_tested": {
+          "description": "Exact versions or commits on which the defect was observed or shown absent.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "fixed_in": {
+          "description": "First release or commit without the defect, if any.",
+          "type": "string"
+        }
+      }
+    },
+    "component": {
+      "enum": [
+        "sdk",
+        "xdr-library",
+        "pipeline",
+        "core",
+        "specification",
+        "documentation"
+      ]
+    },
+    "class": {
+      "description": "What goes wrong.",
+      "enum": [
+        "halt",
+        "crash",
+        "hang",
+        "wrong_value",
+        "silent_drop",
+        "partial_drop",
+        "accepts_invalid",
+        "rejects_valid",
+        "encode_mismatch",
+        "resource_exhaustion",
+        "hardening",
+        "documentation"
+      ]
+    },
+    "severity": {
+      "description": "critical: attacker-triggerable halt, crash or resource exhaustion of a production reader, or silent corruption of balances or participants at scale. high: silent wrong value or drop affecting balances or participants. medium: wrong value in secondary fields, or acceptance of invalid input. low: hardening or documentation.",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "severity_basis": {
+      "description": "One or two sentences: why this severity, and what is and is not verified about reachability.",
+      "type": "string"
+    },
+    "security_relevant": {
+      "description": "true if any embargo trigger in findings/README.md (section Embargo) applies, or it is not yet known that none applies.",
+      "type": "boolean"
+    },
+    "visibility": {
+      "description": "public: the record may live in the public tree. embargoed: the record, the entries and annotations that would reveal it, and its report rows exist only in the private overlay.",
+      "enum": [
+        "public",
+        "embargoed"
+      ]
+    },
+    "caps": {
+      "description": "The CAPs the defect's pattern belongs to: those of the record's corpus entries, or of the XDR type it concerns. Empty only together with 'caps_note', as in the manifest.",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "uniqueItems": true
+    },
+    "caps_note": {
+      "description": "Required when 'caps' is empty: why no CAP applies (behaviour that predates CAPs, an encoding rule, or a SEP text format with no CAP).",
+      "type": "string",
+      "minLength": 10
+    },
+    "entries": {
+      "description": "Corpus entries that demonstrate the defect. The first is the minimal reproducing entry.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "scope",
+          "expected",
+          "observed"
+        ],
+        "properties": {
+          "id": {
+            "description": "Canonical manifest entry ID (entry-ids.md; a family member is cited by its own ID, <family>.<member>), or for a linter finding with no demonstrating entry the literal string 'none'.",
+            "type": "string"
+          },
+          "variant": {
+            "type": "string"
+          },
+          "scope": {
+            "description": "Conformance level, 'replay', or a linter rule ID.",
+            "type": "string",
+            "pattern": "^(L[0-4]|spec|json|replay|XDR[0-9]{3})$"
+          },
+          "expected": {
+            "type": "string"
+          },
+          "observed": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "location": {
+      "description": "For findings in source code (linter): where.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commit",
+        "file"
+      ],
+      "properties": {
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "file": {
+          "type": "string"
+        },
+        "lines": {
+          "type": "string"
+        },
+        "function": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pre_fix": {
+          "description": "What was observed on an affected version: version, command, result.",
+          "type": "string"
+        },
+        "post_fix": {
+          "description": "What was observed on a fixed version, if a fix exists.",
+          "type": "string"
+        },
+        "transcripts": {
+          "description": "Paths of saved transcripts or report files.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "report_rows": {
+          "description": "row_id values in xcc.report/v1 reports that this finding accounts for.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_basis": {
+          "description": "Why the expected behaviour is right: a stellar-core rule at a pinned tag, a specification clause, or the ledger and transaction core accepted.",
+          "type": "string"
+        },
+        "observed": {
+          "description": "How the defect was seen. executed: run, by the kit or by hand. source-reading: read from the source and never executed. private-run: executed in the maintainer's private acceptance run, whose rows no public report holds. A source-reading record with no report_rows, on a target the kit has no driver column for, and a private-run record with no report_rows can have no public report rows; the findings check exempts them from the orphan rule and lists them.",
+          "enum": [
+            "executed",
+            "source-reading",
+            "private-run"
+          ]
+        }
+      }
+    },
+    "reproduction": {
+      "description": "Independent reproduction, required before a record leaves 'candidate'.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "by",
+        "date",
+        "result"
+      ],
+      "properties": {
+        "by": {
+          "description": "A role, never a person's name: for example 'independent-reviewer'.",
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "method": {
+          "type": "string"
+        },
+        "result": {
+          "description": "reproduced: the reproduction showed the defect again; not-reproduced: it did not; source-reading: the defect was confirmed by reading the source again, not by running it.",
+          "enum": [
+            "reproduced",
+            "not-reproduced",
+            "source-reading"
+          ]
+        }
+      }
+    },
+    "upstream_search": {
+      "description": "De-duplication against the target's tracker, required before a record leaves 'candidate'.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "date",
+        "queries",
+        "result"
+      ],
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "queries": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "result": {
+          "enum": [
+            "none-found",
+            "existing-open",
+            "existing-closed",
+            "fix-merged-unreleased"
+          ]
+        },
+        "existing": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "issue_draft": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "description": "Path of the draft issue body relative to the finding directory.",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "new-issue",
+            "comment-on-existing",
+            "release-request",
+            "private-report"
+          ]
+        },
+        "dry_run_command": {
+          "description": "The exact command that would file it. Printed by the tools, never executed by them.",
+          "type": "string"
+        }
+      }
+    },
+    "approval": {
+      "description": "The user's decision to file. Nothing is sent upstream without it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "by",
+        "date",
+        "scope"
+      ],
+      "properties": {
+        "by": {
+          "const": "user"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "scope": {
+          "description": "What was approved: this exact draft and channel.",
+          "type": "string"
+        }
+      }
+    },
+    "upstream": {
+      "description": "Where the defect is recorded upstream.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "url": {
+          "description": "Public issue or pull request.",
+          "type": "string",
+          "format": "uri"
+        },
+        "private_reference": {
+          "description": "Reference of a private report (bug-bounty report number, private advisory ID, or 'email <date>'). Never a URL that would expose content.",
+          "type": "string"
+        },
+        "filed_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "state": {
+          "description": "State of the upstream item when last checked.",
+          "enum": [
+            "open",
+            "fixed",
+            "fix-merged-unreleased",
+            "wont-fix",
+            "closed-other",
+            "acknowledged-private"
+          ]
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "evidence_added": {
+          "description": "For duplicate-of: how our evidence reached the existing item.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "comment",
+                "not-needed"
+              ]
+            },
+            "url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "comment"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "url"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "kind": {
+                    "const": "not-needed"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    "embargo": {
+      "description": "Required while visibility is 'embargoed'.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trigger",
+        "policy",
+        "channel"
+      ],
+      "properties": {
+        "trigger": {
+          "enum": [
+            "production-halt-or-crash",
+            "silent-corruption-exploitable",
+            "resource-exhaustion-default-settings",
+            "maintainer-policy-requires-private",
+            "severity-undetermined"
+          ]
+        },
+        "policy": {
+          "description": "The target's disclosure policy: file path at a commit, or 'none in repository'.",
+          "type": "string"
+        },
+        "channel": {
+          "description": "Where the private report goes or went.",
+          "type": "string"
+        },
+        "reported_at": {
+          "type": "string",
+          "format": "date"
+        },
+        "embargo_until": {
+          "type": "string",
+          "format": "date"
+        },
+        "lift_condition": {
+          "description": "What ends the embargo.",
+          "type": "string"
+        },
+        "withheld": {
+          "description": "What is held back from the public tree for this finding: entry IDs, known-divergence annotations, suppressions, rule or profile changes.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "resolution": {
+      "description": "For not-a-defect.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reason",
+        "reviewer",
+        "date"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 20
+        },
+        "reviewer": {
+          "description": "A role, never a person's name.",
+          "type": "string"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "manifest_action": {
+          "description": "What changed in the corpus as a result: expectation corrected, entry deprecated, divergence recorded as wont_fix.",
+          "type": "string"
+        }
+      }
+    },
+    "state": {
+      "description": "candidate: created from a report row, not yet reviewed. draft: reproduced, de-duplicated, issue text written. approved: the user approved filing. Terminal states: filed, duplicate-of, not-a-defect.",
+      "enum": [
+        "candidate",
+        "draft",
+        "approved",
+        "filed",
+        "duplicate-of",
+        "not-a-defect"
+      ]
+    },
+    "history": {
+      "description": "Append-only state changes.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "date",
+          "state"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "state": {
+            "enum": [
+              "candidate",
+              "draft",
+              "approved",
+              "filed",
+              "duplicate-of",
+              "not-a-defect",
+              "embargoed",
+              "embargo-lifted"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "siblings": {
+      "description": "IDs of sibling finding records in the same defect group.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^F-[0-9]{4}$"
+      },
+      "uniqueItems": true
+    },
+    "related": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "An empty caps says why no CAP applies.",
+      "if": {
+        "required": [
+          "caps"
+        ]
+      },
+      "then": {
+        "if": {
+          "properties": {
+            "caps": {
+              "minItems": 1
+            }
+          }
+        },
+        "else": {
+          "required": [
+            "caps_note"
+          ]
+        }
+      }
+    },
+    {
+      "description": "Leaving 'candidate' needs a reproduction and an upstream search.",
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "draft",
+              "approved",
+              "filed",
+              "duplicate-of"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "reproduction",
+          "upstream_search",
+          "evidence"
+        ]
+      }
+    },
+    {
+      "description": "A draft or approved record has issue text.",
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "draft",
+              "approved"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "issue_draft"
+        ]
+      }
+    },
+    {
+      "description": "Nothing is filed without the user's approval.",
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "approved",
+              "filed"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "approval"
+        ]
+      }
+    },
+    {
+      "description": "filed, public: a public URL.",
+      "if": {
+        "properties": {
+          "state": {
+            "const": "filed"
+          },
+          "visibility": {
+            "const": "public"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "upstream"
+        ],
+        "properties": {
+          "upstream": {
+            "required": [
+              "url",
+              "filed_at"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "filed, embargoed: a private report reference.",
+      "if": {
+        "properties": {
+          "state": {
+            "const": "filed"
+          },
+          "visibility": {
+            "const": "embargoed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "upstream"
+        ],
+        "properties": {
+          "upstream": {
+            "required": [
+              "private_reference",
+              "filed_at"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "duplicate-of: the existing upstream item and how our evidence reached it.",
+      "if": {
+        "properties": {
+          "state": {
+            "const": "duplicate-of"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "upstream"
+        ],
+        "properties": {
+          "upstream": {
+            "required": [
+              "url",
+              "evidence_added"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "Posting a comment upstream is an upstream action and needs approval.",
+      "if": {
+        "properties": {
+          "state": {
+            "const": "duplicate-of"
+          },
+          "upstream": {
+            "properties": {
+              "evidence_added": {
+                "properties": {
+                  "kind": {
+                    "const": "comment"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "upstream"
+        ]
+      },
+      "then": {
+        "required": [
+          "approval"
+        ]
+      }
+    },
+    {
+      "description": "not-a-defect: a reviewer's reason.",
+      "if": {
+        "properties": {
+          "state": {
+            "const": "not-a-defect"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "resolution"
+        ]
+      }
+    },
+    {
+      "description": "Embargoed records carry embargo details and are security-relevant by definition.",
+      "if": {
+        "properties": {
+          "visibility": {
+            "const": "embargoed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "embargo"
+        ],
+        "properties": {
+          "security_relevant": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
+}
