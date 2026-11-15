@@ -1,0 +1,50 @@
+{
+  "schema": "xcc.issues/v1",
+  "description": "Known public issues mapped to the ledgers that show them and to the target versions before and after the fix. Public issues only; a private overlay file (--issues-overlay) may add more.",
+  "issues": [
+    {
+      "id": "js-stellar-sdk#1766",
+      "url": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+      "title": "Liquidity-pool assets compared as strkey text instead of bytes: a valid pool-share trustline operation is rejected",
+      "target": "js",
+      "prefix": "17.2.0",
+      "fixed": "17.2.1",
+      "corpus_entry": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "network": "testnet",
+      "ledger": 5521432,
+      "tx_hash": "0126748091930959a3aefac9296e1773b947f964a9b73f37ce856c4df32d346f",
+      "expect": {"check": "tx-parse", "class": "Error:Assets are not in lexicographic order"}
+    },
+    {
+      "id": "wallet-backend#729",
+      "url": "https://github.com/stellar/wallet-backend/pull/729",
+      "title": "Signed-payload signer wider than an address column halts ingestion",
+      "target": "wallet-backend",
+      "prefix": "2a0a84ea12523b6c92e278c0c84b443041240095",
+      "fixed": "2c873353c1f0f3c9b145e25a7d009023ad104a1c",
+      "corpus_entry": "cap-0040/signed-payload-signer-added",
+      "network": "testnet",
+      "ledger": 4437357
+    },
+    {
+      "id": "wallet-backend#716",
+      "url": "https://github.com/stellar/wallet-backend/issues/716",
+      "title": "Signed-payload signer stored truncated",
+      "target": "wallet-backend",
+      "prefix": "79ea2acd1dc65a07166133cc04b12e76db314db0",
+      "fixed": "bb0b162b072583c7dabffbdee664d1c117e5ba56",
+      "corpus_entry": "cap-0040/signed-payload-signer-added",
+      "network": "testnet",
+      "ledger": 4437357
+    },
+    {
+      "id": "wallet-backend#731",
+      "url": "https://github.com/stellar/wallet-backend/issues/731",
+      "title": "Trustline created through a Stellar Asset Contract trust call is not recorded",
+      "target": "wallet-backend",
+      "prefix": "764a4f5bcbff5abb0949d93da37f769063013ea0",
+      "fixed": "c152783c054c765c8b51fd26ed313fd1ebc1c50c",
+      "corpus_entry": "cap-0073/sac-trust-creates-trustline"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:run-manifest:v1",
+  "title": "Run manifest",
+  "description": "manifest.json of a run directory: what ran (tool, target and its exact version), on what (dataset version, inputs with their sha256), how (the command line) and where (operating system and architecture; the host name only when asked for). See docs/run-directory.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "tool", "dataset", "target", "version", "network", "selection", "inputs", "command", "host", "started", "finished"],
+  "properties": {
+    "schema": {"const": "xcc.run/v1"},
+    "tool": {
+      "type": "object", "additionalProperties": false, "required": ["name", "version"],
+      "properties": {"name": {"type": "string"}, "version": {"type": "string"}, "commit": {"type": "string"}}
+    },
+    "dataset": {
+      "description": "The dataset the selection was resolved through; null when the run named its ledgers directly.",
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object", "additionalProperties": false, "required": ["version"],
+         "properties": {"version": {"type": "string"}, "tip_ledger": {"type": "integer", "minimum": 0}, "manifest_sha256": {"$ref": "#/$defs/sha256"}}}
+      ]
+    },
+    "target": {"enum": ["go", "js", "rust", "python", "wallet-backend", "stellar-etl", "horizon"]},
+    "version": {
+      "type": "object", "additionalProperties": false, "required": ["requested", "resolved"],
+      "properties": {
+        "requested": {"type": "string", "description": "As given: a tag, a commit, a branch such as main, or a local path."},
+        "resolved": {"type": "string", "description": "What was built: the tag, the module pseudo-version or the commit."},
+        "source": {"type": "string", "description": "Where it came from (registry, repository URL or local path)."}
+      }
+    },
+    "network": {"enum": ["pubnet", "testnet"]},
+    "selection": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "ledgers": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+        "txs": {"type": "array", "items": {"type": "string", "pattern": "^[0-9]+:[0-9]+$"}},
+        "set": {"type": "string"},
+        "cap": {"type": "integer", "minimum": 1},
+        "issue": {"type": "string"},
+        "ledger_files": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["kind", "ledger", "sha256", "bytes"],
+        "properties": {
+          "kind": {"enum": ["ledger"]},
+          "ledger": {"type": "integer", "minimum": 1},
+          "object": {"type": "string", "description": "The public-lake object key, or the corpus blob the batch was built from."},
+          "sha256": {"$ref": "#/$defs/sha256"},
+          "bytes": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "command": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "host": {
+      "type": "object", "additionalProperties": false, "required": ["os", "arch"],
+      "properties": {"os": {"type": "string"}, "arch": {"type": "string"}, "cpus": {"type": "integer"}, "hostname": {"type": "string"}}
+    },
+    "started": {"type": "string", "format": "date-time"},
+    "finished": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

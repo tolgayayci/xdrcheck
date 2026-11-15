@@ -1,0 +1,29 @@
+target	check	class_pattern	disposition	note
+# Public dispositions: noise that the target's own documentation or design explains. One rule per line; the
+# first match wins; every pattern is a full-match regular expression. A private overlay table in the same format
+# (flag --dispositions or the environment variable named in docs/run-directory.md) is read first; only an overlay
+# may add a sixth column naming a finding. Anything no rule matches is a candidate.
+#
+# Go txnbuild: what the builder cannot express
+go	tx-rebuild	rebuild-differs:cond:none>time;retry:infinite-timeout	builder-default	txnbuild requires time bounds; the original transaction has none
+go	tx-rebuild	rebuild-differs:cond:v2>v2;retry:infinite-timeout	builder-default	preconditions without time bounds; the builder adds infinite time bounds
+go	tx-rebuild	rebuild-differs:(.*;)?fee:not-multiple(;.*)?	builder-default	fee is not a multiple of the operation count; txnbuild takes a fee per operation
+go	tx-rebuild	rebuild-error:base fee cannot be negative;inner-fee-below-resource-fee	builder-default	fee-bump inner transaction whose fee is below its resource fee cannot be built on its own
+go	feebump-rebuild	rebuild-differs:feebump\.fee:not-multiple	builder-default	fee-bump fee is not a multiple of the operation count plus one
+# Go ingest helpers: documented refusals and corrections
+go	helper-error	GetContractEvents:error:not a soroban transaction	expected-refusal	documented: classic transactions are refused with an error
+go	sac-event	not-sac:.*	expected-refusal	event from a contract that is not a Stellar Asset Contract: documented refusal
+go	byte-presence	FeeCharged:helper-value-differs\[p20-soroban-feebump\]	by-design	documented protocol 20 fee-bump correction in FeeCharged
+# JavaScript: decimal records and builder rules
+js	op-rebuild	op-differs:Operation\.body\.(manage_sell_offer|manage_buy_offer|create_passive_sell_offer)\.price\.[nd]:value(:differs)?	by-design	the operation record carries the price as a reduced decimal
+js	op-rebuild	op-differs:Operation\.body\.liquidity_pool_deposit\.(min|max)_price\.[nd]:value(:differs)?	by-design	the operation record carries the price as a reduced decimal
+js	tx-rebuild	rebuild-throws:TimeBounds has to be set or you must call setTimeout\(TimeoutInfinite\)\.	builder-default	the builder requires time bounds
+js	tx-rebuild	rebuild-differs:Transaction\.fee:value(:differs)?	by-design	cloneFrom recomputes the fee per operation (upstream test)
+# Python: JSON dialect against the Rust reference form
+python	json-reference	.*:key-name:[a-z_0-9]+>[a-z_0-9]+	dialect	naming family: keys without the reference's underscores
+python	json-reference	.*\.contract_id:value:hex>strkey	dialect	format family: contract id as hex, the reference uses strkey
+python	json-reference	.*\.allow_trust\.asset:type:object>string	dialect	format family: allow_trust asset code as an object
+python	json-reference	.*:value:enum-spelling	dialect	naming family: enum value without underscores
+js	feebump-rebuild	rebuild-differs:FeeBumpTransaction\.fee:value(:differs)?;feebump\.fee:not-multiple	builder-default	the fee-bump fee is not a multiple of the operation count plus one; the builder takes a fee per operation
+python	feebump-rebuild	rebuild-differs:fee:differs;feebump\.fee:not-multiple	builder-default	the fee-bump fee is not a multiple of the operation count plus one; the builder takes a fee per operation
+python	tx-rebuild	rebuild-differs:(.*;)?fee:not-multiple(;.*)?	builder-default	fee is not a multiple of the operation count; the builder takes a fee per operation

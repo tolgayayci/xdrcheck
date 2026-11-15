@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:run-summary:v1",
+  "title": "Run summary",
+  "description": "summary.json of a run directory: the run's status, counts per verdict and per check, cluster counts by disposition, and its cost. status is complete when every selected ledger was processed, partial when some were not, unavailable when the target's tools are missing (no result at all), failed when the target could not run.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "status", "verdicts", "checks", "clusters", "cost"],
+  "properties": {
+    "schema": {"const": "xcc.run.summary/v1"},
+    "status": {"enum": ["complete", "partial", "unavailable", "failed"]},
+    "message": {"type": "string"},
+    "verdicts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+    "checks": {
+      "type": "object",
+      "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["tested", "failed"],
+        "properties": {"tested": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}}}
+    },
+    "clusters": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}, "description": "cluster count per disposition, and total"},
+    "cost": {
+      "type": "object", "additionalProperties": false, "required": ["wall_s", "ledgers", "txs"],
+      "properties": {"wall_s": {"type": "number", "minimum": 0}, "cpu_s": {"type": "number", "minimum": 0}, "build_s": {"type": "number", "minimum": 0}, "ledgers": {"type": "integer", "minimum": 0}, "txs": {"type": "integer", "minimum": 0}}
+    }
+  }
+}

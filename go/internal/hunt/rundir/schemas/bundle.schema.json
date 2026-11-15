@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:bundle:v1",
+  "title": "Repro bundle",
+  "description": "bundle.json of a repro bundle: the input bytes (by file and sha256), the target and its exact version, the one command that reproduces the result, the expected verdict, a standalone script for SDK targets, and the stellar-core commands that show the input is a ledger core accepts. See docs/repro.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "tool", "target", "version", "network", "cluster", "ledger", "tx", "expect", "command", "inputs", "verify", "created"],
+  "properties": {
+    "schema": {"const": "xcc.bundle/v1"},
+    "tool": {"type": "object", "required": ["name", "version"], "properties": {"name": {"type": "string"}, "version": {"type": "string"}}, "additionalProperties": false},
+    "target": {"enum": ["go", "js", "rust", "python", "wallet-backend", "stellar-etl", "horizon"]},
+    "version": {"type": "object", "additionalProperties": false, "required": ["requested", "resolved"],
+      "properties": {"requested": {"type": "string"}, "resolved": {"type": "string"}, "source": {"type": "string"}}},
+    "network": {"enum": ["pubnet", "testnet"]},
+    "cluster": {"type": "string"},
+    "ledger": {"type": "integer", "minimum": 1},
+    "tx": {"type": ["integer", "null"], "minimum": 0},
+    "tx_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "expect": {"type": "object", "additionalProperties": false, "required": ["verdict", "check", "class"],
+      "properties": {"verdict": {"enum": ["fail", "error"]}, "check": {"type": "string"}, "class": {"type": "string"}}},
+    "command": {"type": "array", "items": {"type": "string"}, "minItems": 2, "description": "argv, relative to the bundle directory"},
+    "standalone": {"type": "object", "additionalProperties": false, "required": ["file", "run"],
+      "properties": {"file": {"type": "string"}, "run": {"type": "string"}, "setup": {"type": "string"}}},
+    "inputs": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["file", "sha256", "bytes"],
+      "properties": {"file": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "bytes": {"type": "integer"}, "origin": {"type": "string"}}}},
+    "verify": {"type": "object", "additionalProperties": false, "required": ["ledger_header_hash", "core"],
+      "properties": {
+        "ledger_header_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "lake_url": {"type": "string"},
+        "core": {"type": "array", "items": {"type": "string"}}
+      }},
+    "created": {"type": "string", "format": "date-time"}
+  }
+}

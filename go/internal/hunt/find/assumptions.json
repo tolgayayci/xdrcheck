@@ -1,0 +1,17 @@
+{
+  "description": "Linter assumption keys (xdrlint, the assumption field of each diagnostic) mapped to the mainnet inputs that violate them: a value tag of the dataset, a token class, a token substring or an operation type. A key with no entry has no mainnet selector yet; find says so.",
+  "assumptions": [
+    {"key": "narrowing:u64->int64", "tag": "u64>=2^63", "why": "64-bit unsigned values at or above 2^63"},
+    {"key": "narrowing:u64->float64", "tag": "u64>=2^53", "why": "64-bit unsigned values above what float64 holds exactly"},
+    {"key": "narrowing:i128->int64", "tag": "int>=2^63", "why": "128-bit amounts beyond int64"},
+    {"key": "narrowing:i128->float64", "tag": "custom_balance>=2^63", "why": "token balances far beyond 2^53 raw units"},
+    {"key": "text-to-db:memo", "tag": "text:nonutf8", "why": "strings (memos among them) with invalid UTF-8"},
+    {"key": "text-to-db:bytes", "tag": "text:*", "why": "strings with invalid UTF-8, NUL, control bytes or maximal length"},
+    {"key": "address-kind:base-account", "token_contains": "KEY_TYPE_MUXED_ED25519", "why": "muxed (M…) accounts where a G… address may be expected"},
+    {"key": "event-emitter:token", "tag": "token_event:nonsac:*", "why": "token-shaped events from contracts that are not a Stellar Asset Contract"},
+    {"key": "depth:recursion", "tag": "scval_depth", "why": "the deepest ScVal nesting seen"},
+    {"key": "participant:auth-tree", "tag": "auth_depth", "why": "deep authorization trees"},
+    {"key": "meta-version:v4-only", "class": "T|arm", "token_contains": "TransactionMeta::", "why": "every TransactionMeta arm mainnet has shown"},
+    {"key": "size:decoded-length", "tag": "len=max", "why": "lengths at the maximum their type allows"}
+  ]
+}

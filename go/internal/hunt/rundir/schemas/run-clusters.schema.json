@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:xcc:schema:run-clusters:v1",
+  "title": "Run clusters",
+  "description": "clusters.json of a run directory: verdict rows grouped by (check, class). The key leaves out the target's version, so two runs of one target at two versions name the same defect with the same key. A disposition other than candidate comes from the public dispositions table or from a private overlay given by flag or environment; finding is set only by an overlay.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "target", "version", "clusters"],
+  "properties": {
+    "schema": {"const": "xcc.run.clusters/v1"},
+    "target": {"type": "string"},
+    "version": {"type": "string"},
+    "clusters": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["key", "check", "class", "count", "txs", "ledgers", "first_ledger", "last_ledger", "strata", "examples", "disposition", "finding"],
+        "properties": {
+          "key": {"type": "string", "description": "check|class"},
+          "check": {"type": "string"},
+          "class": {"type": "string"},
+          "count": {"type": "integer", "minimum": 1},
+          "txs": {"type": "integer", "minimum": 0},
+          "ledgers": {"type": "integer", "minimum": 1},
+          "first_ledger": {"type": "integer"},
+          "last_ledger": {"type": "integer"},
+          "op_types": {"type": "object", "additionalProperties": {"type": "integer"}},
+          "strata": {"type": "object", "additionalProperties": {"type": "integer"}, "description": "rows per named stratum of the dataset (none when the ledger is in no stratum)"},
+          "examples": {
+            "type": "array", "maxItems": 20,
+            "items": {"type": "object", "additionalProperties": false, "required": ["ledger", "tx"],
+              "properties": {"ledger": {"type": "integer"}, "tx": {"type": ["integer", "null"]}, "op": {"type": ["integer", "null"]}, "tx_hash": {"type": "string"}, "detail": {"type": "string"}}}
+          },
+          "disposition": {"enum": ["candidate", "known", "by-design", "builder-default", "dialect", "expected-refusal", "recipe-artefact", "harness"]},
+          "note": {"type": "string"},
+          "finding": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}
