@@ -1,0 +1,75 @@
+# The named column sets `xdrcheck conform run --set NAME` selects. The columns themselves live in drivers/sets.d/, one
+# file per SDK family (js, js16, go, rust, python, core, stub, spec, json), loaded after this file in name order;
+# a fragment may also append members to a set defined here with [extend] (`[extend] public = ["go@v0.9.1"]`).
+# A column is defined once; this file keeps only [sets].
+#
+# A column is one SDK at one pinned version (and, for Rust, one decode profile), driven by the program in
+# its driver directory. `xdrcheck conform fetch` runs `make -C <dir> fetch`, `xdrcheck conform build` runs
+# `make -C <dir> build`, and `xdrcheck conform run` starts `run` with the driver directory as its working
+# directory (drivers/README.md has the contract). Every sdk column's version must be listed in pins.toml
+# [conformance.columns]; the core column's version must be pins.toml [stellar_core] version. The tools check
+# both on every load.
+#
+# Keys per column:
+#   sdk        the pins.toml [conformance.columns] key (js, go, rust, python), or core, stub
+#   kind       report target kind: sdk, core, selftest
+#   ecosystem  package       what the driver's describe must report as sdk.ecosystem and sdk.package
+#   target     the name manifest known divergences use for this SDK
+#   version    the pinned version; describe sdk.version must equal it
+#   profile    decode profile sent with every run request (Rust: limits-default, limits-none; Go: views)
+#   role       required (gates CI), historical (acceptance and regression pins), extra, selftest
+#   levels     the only levels the column runs (soroban-spec: spec; the XDR-JSON converters: json); omitted: all
+#   dir        driver directory, relative to the repository root
+#   run        the driver command; a first word containing a slash is relative to dir
+#   floor      judged-cell floor per level ({L0 = 0.95}); read, not enforced yet; omitted: the kind's default
+#   limits     resource limits of the driver process ({memory, tasks, cpu_seconds, nofile, fsize, as}); read,
+#              not applied yet; omitted: the runtime defaults
+#
+# Sets: a member "@name" includes another set. `pr` is the default when neither --set nor --columns is given.
+# `pr` runs on every pull request, `public` is the widest set a public scheduled job may run, and `all` is `public`
+# plus what an overlay adds to it (the views, spec, json and selftest sets are outside it). A private overlay may
+# keep its own sets file at drivers/sets.toml under the overlay directory (`xdrcheck conform run --overlay DIR`, or
+# $XDRCHECK_OVERLAY): its columns are relative to the overlay and run only with it.
+
+[sets]
+required = [
+  "js@17.4.0",
+  "go@v0.9.0",
+  "rust@30.0.0:limits-default",
+  "rust@30.0.0:limits-none",
+]
+acceptance = ["@required", "js@17.2.0", "js@17.2.1", "js@17.3.0"]
+pr = [
+  "@acceptance",
+  "go@v0.7.1",
+  "go@v0.7.2",
+  "go@v0.7.3",
+  "go@v0.8.0",
+  "rust@28.0.0:limits-default",
+  "rust@28.0.0:limits-none",
+  "rust@28.0.1:limits-default",
+  "rust@28.0.1:limits-none",
+  "python@17.0.1",
+]
+public = ["@pr", "js@16.3.0", "js@16.3.1", "js@16.4.1", "python@17.0.0", "core@30.0.0"]
+all = ["@public"]
+# The Go view path (decode profile "views", go-stellar-sdk v0.8.0 and later): the same bytes through the SDK's
+# zero-copy XDR views and view-based ingest extractors, compared with the full decode. Not part of `pr`.
+views = ["go@v0.8.0:views", "go@v0.9.0:views"]
+# The orchestrator's own test driver; not part of any SDK set.
+selftest = ["stub@0.1.0"]
+# Contract-spec readers (the spec level on spec entries): Rust soroban-spec, the JS SDK's Spec.fromWasm on both
+# API lines, go-stellar-sdk's SCSpecEntry stream decoding and the Python SDK's ContractSpec.
+spec = [
+  "soroban-spec@29.0.1",
+  "soroban-spec@30.0.0-rc.1",
+  "js@17.4.0",
+  "js@16.3.0",
+  "go@v0.9.0",
+  "python@17.0.1",
+]
+# XDR-JSON converters (the json level, `xdrcheck conform run --level json`): rs-stellar-xdr 30.0.0 and main.
+json = [
+  "rs-xdr-json@30.0.0",
+  "rs-xdr-json@30.0.0+ebec5fb1c76e",
+]
