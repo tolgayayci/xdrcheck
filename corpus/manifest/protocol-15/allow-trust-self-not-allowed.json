@@ -1,0 +1,270 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "protocol-15/allow-trust-self-not-allowed",
+  "title": "AllowTrust naming the issuer itself as trustor fails at apply with ALLOW_TRUST_SELF_NOT_ALLOWED (Protocol 15)",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "No CAP: the self-trust rule dates from Protocol 3, and CAP-0035 (Protocol 16) moved it to validation.",
+  "protocol": {
+    "introduced": 3
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "failed-transaction",
+    "apply-time-failure",
+    "allow-trust-self-not-allowed",
+    "ledger-close-meta-v0",
+    "protocol-15"
+  ],
+  "why": "From Protocol 3 to 15 an AllowTrust whose trustor is the issuer itself reaches the ledger and fails while applying; from 16 it is refused as malformed. Only ledgers of those protocols hold the arm.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 15,
+      "ledger_seq": 6,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "7c74804764a6b17d585248d7a6746985b1dcda74700a5a53e3a84e6c571ab3ba",
+        "bytes": 1332,
+        "path": "blobs/7c/7c74804764a6b17d585248d7a6746985b1dcda74700a5a53e3a84e6c571ab3ba.xdr"
+      },
+      "decoded": "decoded/7c/7c74804764a6b17d585248d7a6746985b1dcda74700a5a53e3a84e6c571ab3ba.json.zst",
+      "decoded_sha256": "79e6710cb674615807c9310ad9b28cfb59aa74fd92292e97f2e43420a9dfed18",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s26-protocol-15-self-trust.yaml",
+        "scenario_sha256": "11d8ee242f3b7248811137aba6f30e460445a3251647f280a032fb6311b9ea7f",
+        "step": "allow-trust-self",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1704000000",
+        "stream_sha256": "96fdcae559b9242152ebed09c24d6ad30e9973c0b357fef23fa3773207535374",
+        "frame_index": 4,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [],
+        "regenerate": "xdrcheck-corpus gen scenarios/s26-protocol-15-self-trust.yaml --network testnet --protocol 15",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "7e4dd82c9fd104eb78a439d3290e766acd41f01f6c52bb2f0ae7b0d76647b1b9",
+        "path": "/v0/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "6a76f1090e7faa7e2f9b901b7cb1e993502bcd57ed9edc7bb8a855ff513b6fb8",
+        "header": {
+          "ledger_version": "15",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "2200",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "7e4dd82c9fd104eb78a439d3290e766acd41f01f6c52bb2f0ae7b0d76647b1b9",
+        "fee_charged": "1000",
+        "tx_hashes": [
+          "7e4dd82c9fd104eb78a439d3290e766acd41f01f6c52bb2f0ae7b0d76647b1b9"
+        ],
+        "contracts": {
+          "sac_st": "CBQ6QEMGRWMAEZW7LVWQNLEFKXOSCBVLEB6N4JXEA2WUTT4SNEEKLO5E"
+        },
+        "accounts": {
+          "IS": "GAHEDX25V3SGURPF4H4XF7G2G7KXCHKUV7SWRFLR2QASR3IUXIC6ZIL6"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 15,
+      "ledger_seq": 6,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "ae43e32e7822b988df48830ef860c33b52e7abb93c9d99ff91a774f44e6b0c8d",
+        "bytes": 1332,
+        "path": "blobs/ae/ae43e32e7822b988df48830ef860c33b52e7abb93c9d99ff91a774f44e6b0c8d.xdr"
+      },
+      "decoded": "decoded/ae/ae43e32e7822b988df48830ef860c33b52e7abb93c9d99ff91a774f44e6b0c8d.json.zst",
+      "decoded_sha256": "581c1b1ebb7fc5daa6ce240deff29165d129325854e0deb65f144a2010e6a678",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s26-protocol-15-self-trust.yaml",
+        "scenario_sha256": "11d8ee242f3b7248811137aba6f30e460445a3251647f280a032fb6311b9ea7f",
+        "step": "allow-trust-self",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1704000000",
+        "stream_sha256": "4a2511898e8d8562c5c0404cb1b9e370ddef3ad51b4d1fd22e7380eb7a726ed9",
+        "frame_index": 4,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [],
+        "regenerate": "xdrcheck-corpus gen scenarios/s26-protocol-15-self-trust.yaml --network pubnet --protocol 15",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "ddff102c63956a316c0cb4bad86d20e03a7f45e1f599d8598e13e83a40eee643",
+        "path": "/v0/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "7e00af0e11ffc8c73460ab0a43f435a08d64a4f94c6178b12b50e2b011236638",
+        "header": {
+          "ledger_version": "15",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "2200",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "ddff102c63956a316c0cb4bad86d20e03a7f45e1f599d8598e13e83a40eee643",
+        "fee_charged": "1000",
+        "tx_hashes": [
+          "ddff102c63956a316c0cb4bad86d20e03a7f45e1f599d8598e13e83a40eee643"
+        ],
+        "contracts": {
+          "sac_st": "CAURPEWDV5FY5FC7ZC572BQKYXLKMKABDJPVYIXITG4E2UNLS2UPWRUL"
+        },
+        "accounts": {
+          "IS": "GAHEDX25V3SGURPF4H4XF7G2G7KXCHKUV7SWRFLR2QASR3IUXIC6ZIL6"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 4
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "${derived.tx_hash}",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "allow_trust.self_not_allowed"
+        ],
+        "fee_charged": "${derived.fee_charged}"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v0/tx_processing/0/result/result/result/tx_failed/0/op_inner/allow_trust",
+        "equals": "self_not_allowed"
+      },
+      {
+        "path": "/v0/ledger_header/header/ledger_version",
+        "equals": 15
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GAHEDX25V3SGURPF4H4XF7G2G7KXCHKUV7SWRFLR2QASR3IUXIC6ZIL6",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "exact": true
+    },
+    "state_changes": [
+      {
+        "kind": "sequence_bumped",
+        "tx_index": 0,
+        "account": {
+          "address": "GAHEDX25V3SGURPF4H4XF7G2G7KXCHKUV7SWRFLR2QASR3IUXIC6ZIL6"
+        },
+        "detail": {
+          "sequence_after": "12884901891"
+        }
+      }
+    ],
+    "state_changes_exact": true,
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "${derived.fee_charged}",
+        "from": {
+          "address": "GAHEDX25V3SGURPF4H4XF7G2G7KXCHKUV7SWRFLR2QASR3IUXIC6ZIL6"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s26-protocol-15-self-trust.yaml on a local stellar-core, at Protocol 15 on the testnet and public passphrases (2 variants); the accounts are label-derived and equal across variants, hashes and fees are per variant under derived. At Protocol 15 LedgerCloseMeta is v0 and transaction meta v2. No reader has been run against these ledgers yet, so the entry declares no known divergence."
+}

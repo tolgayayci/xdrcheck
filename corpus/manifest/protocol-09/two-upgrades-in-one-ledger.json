@@ -1,0 +1,180 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "protocol-09/two-upgrades-in-one-ledger",
+  "title": "Ledger carrying two upgrades at once: protocol version 9 and base reserve 0.5 XLM",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "Ledger-upgrade mechanics (LedgerUpgrade in StellarValue.upgrades) with no CAP of its own: two upgrades of different types applied in one ledger.",
+  "protocol": {
+    "introduced": 9
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "upgrade-ledger",
+    "two-upgrades-one-ledger",
+    "ledger-upgrade-version",
+    "ledger-upgrade-base-reserve",
+    "header-protocol-differs-from-applied",
+    "tx-v0-envelopes"
+  ],
+  "why": "StellarValue.upgrades can hold up to six upgrades and this ledger has two, a protocol version and a base reserve, each with its own entry in upgradesProcessing. Readers that assume at most one upgrade per ledger, or that only look for the version arm, mis-read the header or the second upgrade.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 8,
+      "header_protocol": 9,
+      "ledger_seq": 15582229,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "acf6acbc28f5d8d647e078cee412929488702f66b0c2892561c843020abd9df3",
+        "bytes": 5216,
+        "path": "blobs/ac/acf6acbc28f5d8d647e078cee412929488702f66b0c2892561c843020abd9df3.xdr"
+      },
+      "decoded": "decoded/ac/acf6acbc28f5d8d647e078cee412929488702f66b0c2892561c843020abd9df3.json.zst",
+      "decoded_sha256": "f7e9ecebb2ca5d78c27774b64df09a3f364c5e32c4502520ad6b96c6228215a3",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FF12B1FF--15552000-15615999/FF123BEA--15582229.xdr.zst",
+        "object_sha256": "d9065e6ff0cee741e5572b5869e3d25be7454509d3842190ca2aac21fd363933",
+        "object_bytes": 1796,
+        "decompressed_sha256": "6165d33a1b9c9e113fd901292f1daceac9521222f9e5cb44ada484092a505677",
+        "decompressed_bytes": 5228,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T16:20:37Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "15582229",
+          "end-ledger-close-time": "1515693605",
+          "file-mtime": "1757521095000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "9",
+          "start-ledger": "15582229",
+          "start-ledger-close-time": "1515693605",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FF123BEA--15582229.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FF12B1FF--15552000-15615999/FF123BEA--15582229.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/15582229/FF123BEA--15582229.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "6f30a84f93dfe569764a14e405364bb9f769e85da0556adb3bae43022a307c52",
+        "tx_hashes": [
+          "016a5bbe2aa9049c82a5a046d02ead129945c8c2317fed0df0d682223321b81a",
+          "81f67e0912a14199a9189420c8a44619733a0d0d468b92cf762c334c5477cfef",
+          "1d6cb06e60cac918e4a737260e8e54e278d3f33c2cf7319f99458e92646659a4",
+          "b56c217d3bfba92f372a7f3be7ab8f8dda82ca8fc3fda65fbe535f26d9151f15"
+        ]
+      },
+      "focus": {
+        "path": "/v0/upgrades_processing"
+      },
+      "notes": "Real pubnet ledger with 4 transactions; the lake object is 1,796 bytes."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 4,
+      "operations": 6,
+      "events": 5,
+      "entry_changes": 21
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "016a5bbe2aa9049c82a5a046d02ead129945c8c2317fed0df0d682223321b81a",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "81f67e0912a14199a9189420c8a44619733a0d0d468b92cf762c334c5477cfef",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "1d6cb06e60cac918e4a737260e8e54e278d3f33c2cf7319f99458e92646659a4",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 3,
+        "hash": "b56c217d3bfba92f372a7f3be7ab8f8dda82ca8fc3fda65fbe535f26d9151f15",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v0/ledger_header/header/ledger_version",
+        "equals": 9
+      },
+      {
+        "path": "/v0/ledger_header/header/scp_value/upgrades",
+        "equals": [
+          "0000000100000009",
+          "00000004004c4b40"
+        ],
+        "note": "Two opaque LedgerUpgrades: type 1 (version) 9, and type 4 (base reserve) 0x4c4b40 = 5000000."
+      },
+      {
+        "path": "/v0/ledger_header/header/scp_value/ext",
+        "equals": "basic"
+      },
+      {
+        "path": "/v0/ledger_header/header/base_reserve",
+        "equals": 5000000
+      },
+      {
+        "path": "/v0/upgrades_processing",
+        "equals": [
+          {
+            "upgrade": {
+              "version": 9
+            },
+            "changes": []
+          },
+          {
+            "upgrade": {
+              "base_reserve": 5000000
+            },
+            "changes": []
+          }
+        ]
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "sdk-only",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/curr/Stellar-ledger.x"
+  ],
+  "reference": "network",
+  "notes": "The header already shows protocol 9 and base reserve 5000000 stroops; the 4 transactions (all ENVELOPE_TYPE_TX_V0) were applied under Protocol 8, so the variant states protocol 8 and header_protocol 9. Neither upgrade changes a ledger entry (both changes lists are empty). The lake object was written by stellar-core 23.0.1 long after the ledger closed (source.regenerated true), so its TransactionMeta is v4 with backfilled classic and fee events, not what a node emitted at the time. replay.indexer_scope is sdk-only: indexers are not expected to ingest Protocol 8 ledgers."
+}

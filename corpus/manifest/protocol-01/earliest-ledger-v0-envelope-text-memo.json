@@ -1,0 +1,273 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "protocol-01/earliest-ledger-v0-envelope-text-memo",
+  "title": "Earliest pubnet transaction: LedgerCloseMeta v0, a TX_V0 envelope with MEMO_TEXT \"hello world\", three operations",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "Protocol 1 shapes with no CAP of their own: the pre-Protocol-13 ENVELOPE_TYPE_TX_V0 envelope (raw ed25519 source) and LedgerCloseMeta v0, read through a lake object that carries backfilled CAP-67 events.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "lcm-v0",
+    "tx-v0-envelopes",
+    "memo-text",
+    "create-account",
+    "payment-native",
+    "set-options-master-weight",
+    "regenerated-meta-v4",
+    "to-muxed-id-string",
+    "memo-text-copied-into-event"
+  ],
+  "why": "Ledger 3 holds the first transaction of the public network: the root account creates an account, pays it almost every lumen and sets its own master weight to 0, under a MEMO_TEXT \"hello world\" and in the pre-Protocol-13 ENVELOPE_TYPE_TX_V0 form whose source is a raw ed25519 key. The lake object is a recent stellar-core's re-emission, so this Protocol 1 ledger carries TransactionMeta v4 with backfilled transfer events whose to_muxed_id is the memo text. Readers that require V1 envelopes, that pick the meta layout from the protocol, or that turn the memo text into an address all fail on it.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 1,
+      "ledger_seq": 3,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "d664d8e7f9929df8742003cacf2269966baca40ef60c473ceda580fbb18b2b1a",
+        "bytes": 2592,
+        "path": "blobs/d6/d664d8e7f9929df8742003cacf2269966baca40ef60c473ceda580fbb18b2b1a.xdr"
+      },
+      "decoded": "decoded/d6/d664d8e7f9929df8742003cacf2269966baca40ef60c473ceda580fbb18b2b1a.json.zst",
+      "decoded_sha256": "e233aedb598c690a18c94d2e8eab0301514246c3c200fe4ccd852f6cf28a7cfc",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FFFFFFFF--0-63999/FFFFFFFC--3.xdr.zst",
+        "object_sha256": "05aaa57c9a51f8436aee9bdeabc4279ef150b4d161e54d1c1351549bda95fa5f",
+        "object_bytes": 756,
+        "decompressed_sha256": "9b1a8a517fe492feac7fcf6333de09597e4323a80970ab20348e0c27e911d0b8",
+        "decompressed_bytes": 2604,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:02:05Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "3",
+          "end-ledger-close-time": "1443633354",
+          "file-mtime": "1757487531000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "1",
+          "start-ledger": "3",
+          "start-ledger-close-time": "1443633354",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FFFFFFFC--3.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FFFFFFFF--0-63999/FFFFFFFC--3.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/3/FFFFFFFC--3.xdr.zst"
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889",
+        "op_index": 0,
+        "path": "/v0/tx_set/txs/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "ec168d452542589dbc2d0eb6d58c74b9bb2ccb93bba879a3b3fa73fdfa730182",
+        "tx_hashes": [
+          "3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889"
+        ],
+        "tx_hash": "3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889",
+        "l1": {
+          "memo_type": "text",
+          "operation_type": "create_account",
+          "address": "GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB"
+        }
+      },
+      "notes": "Real pubnet ledger 3; the lake object is a regenerated re-emission."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 3,
+      "events": 3,
+      "entry_changes": 11
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "3389e9f0f1a65f19736cacf544c2e825313e8447f569233bb8db39aa607c8889",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "create_account.success",
+          "payment.success",
+          "set_options.success"
+        ],
+        "fee_charged": "300"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v0/ledger_header/header/ledger_version",
+        "equals": 1
+      },
+      {
+        "path": "/v0/tx_set/txs/0/tx_v0/tx/source_account_ed25519",
+        "equals": "019472628ee78eb92714d22d0390963c24d927ea009999486e891fac2daa9c21",
+        "note": "ENVELOPE_TYPE_TX_V0: the source is a raw key, the root account GAAZI4TC\u2026."
+      },
+      {
+        "path": "/v0/tx_set/txs/0/tx_v0/tx/memo",
+        "equals": {
+          "text": "hello world"
+        }
+      },
+      {
+        "path": "/v0/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data",
+        "equals": {
+          "map": [
+            {
+              "key": {
+                "symbol": "amount"
+              },
+              "val": {
+                "i128": "200000000"
+              }
+            },
+            {
+              "key": {
+                "symbol": "to_muxed_id"
+              },
+              "val": {
+                "string": "hello world"
+              }
+            }
+          ]
+        },
+        "note": "Backfilled transfer event of the create_account: the memo text is copied into to_muxed_id."
+      },
+      {
+        "path": "/v0/tx_processing/0/tx_apply_processing/v4/events/0/event/body/v0/data",
+        "equals": {
+          "i128": "300"
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        },
+        {
+          "address": "GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB",
+          "roles": [
+            "destination"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "account_created",
+        "tx_index": 0,
+        "op_index": 0,
+        "account": {
+          "address": "GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB"
+        },
+        "cause": "create_account",
+        "detail": {
+          "starting_balance": "200000000"
+        }
+      },
+      {
+        "kind": "thresholds_changed",
+        "tx_index": 0,
+        "op_index": 2,
+        "account": {
+          "address": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+        },
+        "cause": "set_options",
+        "detail": {
+          "master_weight": 0
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "300",
+        "from": {
+          "address": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+        }
+      },
+      {
+        "kind": "transfer",
+        "tx_index": 0,
+        "op_index": 0,
+        "asset": "native",
+        "amount": "200000000",
+        "from": {
+          "address": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+        },
+        "to": {
+          "address": "GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB"
+        },
+        "routing": {
+          "type": "text",
+          "value": "hello world"
+        }
+      },
+      {
+        "kind": "transfer",
+        "tx_index": 0,
+        "op_index": 1,
+        "asset": "native",
+        "amount": "999999999599999700",
+        "from": {
+          "address": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+        },
+        "to": {
+          "address": "GALPCCZN4YXA3YMJHKL6CVIECKPLJJCTVMSNYWBTKJW4K5HQLYLDMZTB"
+        },
+        "routing": {
+          "type": "text",
+          "value": "hello world"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "sdk-only",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md"
+  ],
+  "reference": "network",
+  "notes": "One transaction with three operations: create_account of GALPCCZN\u2026 with 20 XLM, a native payment of 999999999599999700 stroops to it, and set_options master_weight 0 on the root. The source GAAZI4TC\u2026 is the raw ed25519 key 01947262\u20269c21 of the envelope. Both backfilled transfer events carry to_muxed_id \"hello world\" (the memo text, never an address) and the backfilled fee event charges 300. The lake object was written by stellar-core 23.0.1 long after the ledger closed (source.regenerated true), so its TransactionMeta is v4 with backfilled classic and fee events, not what a node emitted at the time. replay.indexer_scope is sdk-only: indexers are not expected to ingest Protocol 1 ledgers."
+}

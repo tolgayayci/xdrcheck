@@ -1,0 +1,142 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "protocol-02/upgrade-ledger-empty-changes",
+  "title": "Protocol 2 upgrade ledger: no transactions and one LEDGER_UPGRADE_VERSION whose change list is empty",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "Ledger-upgrade mechanics (LedgerUpgrade in StellarValue.upgrades) with no CAP of its own: the first protocol upgrade of the public network.",
+  "protocol": {
+    "introduced": 2
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "upgrade-ledger",
+    "ledger-upgrade-version",
+    "header-protocol-differs-from-applied",
+    "lcm-v0",
+    "empty-ledger-no-transactions",
+    "upgrade-changes-empty"
+  ],
+  "why": "The first protocol upgrade on pubnet closes a ledger with an empty transaction set and one LEDGER_UPGRADE_VERSION to 2 whose upgradesProcessing changes list is empty. Readers that expect every upgrade to change a ledger entry, or that skip ledgers with no transactions and so miss the version change, get the protocol history wrong.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 1,
+      "header_protocol": 2,
+      "ledger_seq": 3659589,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "40c1eafc751c6edfeb7f71a0c58bd0d89577a2a8a6335e5406d6d90f323c1abd",
+        "bytes": 436,
+        "path": "blobs/40/40c1eafc751c6edfeb7f71a0c58bd0d89577a2a8a6335e5406d6d90f323c1abd.xdr"
+      },
+      "decoded": "decoded/40/40c1eafc751c6edfeb7f71a0c58bd0d89577a2a8a6335e5406d6d90f323c1abd.json.zst",
+      "decoded_sha256": "06a2fc2ad1a9c9f0fe1394d38830fb8d6f12955e20aaaa14c543982b6403f179",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FFC855FF--3648000-3711999/FFC828BA--3659589.xdr.zst",
+        "object_sha256": "beb791b7eaba660088c4e7c416bde3c98d5aa9793f1632fbfdd6155812a39071",
+        "object_bytes": 382,
+        "decompressed_sha256": "7b7dd6a94f0a0ff059dd9b280161b86a7ab68be9364e3030efe1f88b94a18e25",
+        "decompressed_bytes": 448,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T17:29:09Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "3659589",
+          "end-ledger-close-time": "1461256996",
+          "file-mtime": "1757516330000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "2",
+          "start-ledger": "3659589",
+          "start-ledger-close-time": "1461256996",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FFC828BA--3659589.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FFC855FF--3648000-3711999/FFC828BA--3659589.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/3659589/FFC828BA--3659589.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "40fad340a23005c6d857ce904a9b61f4648c46d0febc37c27018adc07674af1c",
+        "tx_hashes": []
+      },
+      "focus": {
+        "path": "/v0/upgrades_processing/0"
+      },
+      "notes": "Real pubnet ledger with no transactions; the lake object is 382 bytes, captured for this entry."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 0,
+      "operations": 0,
+      "events": 0,
+      "entry_changes": 0
+    },
+    "transactions": [],
+    "values": [
+      {
+        "path": "/v0/ledger_header/header/ledger_version",
+        "equals": 2
+      },
+      {
+        "path": "/v0/ledger_header/header/scp_value/upgrades",
+        "equals": [
+          "0000000100000002"
+        ],
+        "note": "One opaque LedgerUpgrade: type 1 (version), 2."
+      },
+      {
+        "path": "/v0/upgrades_processing",
+        "equals": [
+          {
+            "upgrade": {
+              "version": 2
+            },
+            "changes": []
+          }
+        ]
+      },
+      {
+        "path": "/v0/tx_set/txs",
+        "equals": []
+      },
+      {
+        "path": "/v0/tx_processing",
+        "equals": []
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "sdk-only",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/curr/Stellar-ledger.x"
+  ],
+  "reference": "network",
+  "notes": "The header already shows protocol 2; with no transactions nothing was applied under either protocol, so the variant states protocol 1 (the previous one) and header_protocol 2, as for the other upgrade ledgers. The lake object was written by stellar-core 23.0.1 long after the ledger closed (source.regenerated true), so its meta is in the format stellar-core 23.0.1 writes, not what a node emitted at the time. replay.indexer_scope is sdk-only: indexers are not expected to ingest Protocol 1 ledgers."
+}
