@@ -1,0 +1,79 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0088/stellar-value-empty-tx-set-ms",
+  "title": "LedgerHeader whose scpValue is STELLAR_VALUE_EMPTY_TX_SET_MS: zero txSetHash, closeTimeMs in proposedMsValue",
+  "kind": "xdr",
+  "caps": [
+    88
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "why": "The protocol 30 form of the empty-set vote (CAP-0083 with CAP-0088 millisecond close times): ext arm 4 carries closeTimeMs next to the proposed set's hash, the previous ledger's hash and version. Readers that read closeTimeMs only from the SIGNED_MS arm fall back to whole seconds on these ledgers, and readers built before XDR 30 cannot decode arm 4 at all.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "LedgerHeader",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "2d055411aa356d5ea81fcc79392f65fa6cf3e046a128d7e32d89657037bf27ac",
+        "bytes": 504,
+        "path": "blobs/2d/2d055411aa356d5ea81fcc79392f65fa6cf3e046a128d7e32d89657037bf27ac.xdr"
+      },
+      "decoded": "decoded/2d/2d055411aa356d5ea81fcc79392f65fa6cf3e046a128d7e32d89657037bf27ac.json.zst",
+      "decoded_sha256": "b69fc5f91fa5a0297f4ad34ef655ddbf974b7f8f7334cd1617dd5265bc450534",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/cap-0088/stellar-value-empty-tx-set-ms.json",
+        "reason": "the millisecond form of the empty-transaction-set value (protocol 30), built by stellar-core under the same multi-validator condition as STELLAR_VALUE_EMPTY_TX_SET; this is testnet ledger 5690456's header (protocol 30) with its signed_ms value rewritten as makeEmptyTxSetValueFromValue does: txSetHash zero, closeTimeMs kept, the proposed set hash, the previous ledger hash and version, and the original signature"
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/scp_value/tx_set_hash",
+        "equals": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "path": "/scp_value/ext/empty_tx_set_ms/tx_set_hash",
+        "equals": "21d7351a08fd6a596dfc29635f9e0f041fc634baa16789898d92c9949e9685e1"
+      },
+      {
+        "path": "/scp_value/ext/empty_tx_set_ms/previous_ledger_hash",
+        "equals": "b3c397e007156e6d7da3789a4424c52da1d5723553b0477d1a0f44d6c3041b01"
+      },
+      {
+        "path": "/scp_value/ext/empty_tx_set_ms/previous_ledger_version",
+        "equals": 30
+      },
+      {
+        "path": "/scp_value/ext/empty_tx_set_ms/close_time_ms",
+        "equals": "1794475923913"
+      }
+    ]
+  },
+  "notes": "Built from corpus/objects/testnet/5690456 header, scpValue rewritten as makeEmptyTxSetValueFromValue does. The header hash of a real ledger with this value would differ; the bytes are checked by the oracle only.",
+  "shapes": [
+    "stellar-value-empty-tx-set-ms",
+    "close-time-ms",
+    "ledger-header-bare-value"
+  ],
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0083.md"
+  ]
+}

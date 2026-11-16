@@ -1,0 +1,107 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0085/bucket-entry-with-executable-tag",
+  "title": "116-byte bucket record: INITENTRY of contract data keyed by SCV_EXECUTABLE_TAG, which Protocol 27 XDR cannot decode",
+  "kind": "xdr",
+  "caps": [
+    85
+  ],
+  "protocol": {
+    "introduced": 28
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "bucket-entry",
+    "bucket-initentry",
+    "scv-executable-tag",
+    "new-scval-arm",
+    "persistent-contract-data",
+    "history-archive-record"
+  ],
+  "why": "A history-archive bucket holds every live ledger entry, including other people's contract data, so a catch-up reader decodes entries it never asked for. This record is the contract data entry created in cap-0085/contract-data-keyed-by-executable-tag, merged into a level 6 bucket: its key uses SCV_EXECUTABLE_TAG (ScVal arm 22, added in Protocol 28), and a decoder built on Protocol 27 XDR rejects it with an invalid-value error and cannot restore the checkpoint at all.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "xdr_type": "BucketEntry",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "bffde98367a71509a4a530f63e8bcbc210d93a419825fbd6e6fe75497393d6c0",
+        "bytes": 116,
+        "path": "blobs/bf/bffde98367a71509a4a530f63e8bcbc210d93a419825fbd6e6fe75497393d6c0.xdr"
+      },
+      "decoded": "decoded/bf/bffde98367a71509a4a530f63e8bcbc210d93a419825fbd6e6fe75497393d6c0.json.zst",
+      "decoded_sha256": "bc99a55697015629066c857fc8d7f3d85a6b1ca6443a97665503ac9b6458d2e0",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history-archive",
+        "store": "https://history.stellar.org/prd/core-testnet/core_testnet_001",
+        "object": "bucket/ab/14/0a/bucket-ab140ae5757d5bef1ff43fe364099d9d55b1477d2f17130e18485308fdada404.xdr.gz",
+        "object_sha256": "fe43c8fe7e75020db4c937f00ba4df0afd1a140c2ab6d5331e1db6819ed87578",
+        "byte_offset": 4483092,
+        "refetch": "curl -fsS -o bucket-ab140ae5757d5bef1ff43fe364099d9d55b1477d2f17130e18485308fdada404.xdr.gz https://history.stellar.org/prd/core-testnet/core_testnet_001/bucket/ab/14/0a/bucket-ab140ae5757d5bef1ff43fe364099d9d55b1477d2f17130e18485308fdada404.xdr.gz",
+        "perishable": true
+      },
+      "notes": "Record 31,241 (zero-based) of live bucket level 6 curr at testnet checkpoint 4378879, record mark 0x80000074. The archive object is vendored unmodified at objects/testnet/history-archive/4378879/ with the checkpoint's History Archive State and capture.json. byte_offset counts from the start of the gzip-decompressed bucket (whose sha256 is the bucket hash ab140ae5\u2026a404) and points at the record mark; the blob is the record body that follows the 4-byte mark. Testnet is reset on 2026-12-16; its archive may then no longer serve this checkpoint."
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/initentry/data/contract_data/key",
+        "equals": {
+          "executable_tag": "pocket"
+        },
+        "note": "ScVal arm 22, SCV_EXECUTABLE_TAG."
+      },
+      {
+        "path": "/initentry/data/contract_data/contract",
+        "equals": "CATF2IK7TVCUHK4KMGNKBN2OBBAT5NA3JAPXY2DHS2U5QMFPDUWL5DTJ"
+      },
+      {
+        "path": "/initentry/data/contract_data/durability",
+        "equals": "persistent"
+      },
+      {
+        "path": "/initentry/data/contract_data/val",
+        "equals": {
+          "bytes": "07ee977b9fdd91610544e9e84f7d3869d580d9965c69b49bc80887b3e297f32c"
+        }
+      },
+      {
+        "path": "/initentry/last_modified_ledger_seq",
+        "equals": 4372189,
+        "note": "The ledger of cap-0085/contract-data-keyed-by-executable-tag, where the entry was created."
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar-xdr (crates.io)",
+        "versions": "27.0.0",
+        "level": "L0",
+        "outcome": "reject",
+        "reference": "https://github.com/stellar-experimental/henyey/issues/3941",
+        "detail": "A catch-up client pinned to stellar-xdr 27.0.0 failed to restore checkpoint 4378879 with \"Failed to parse bucket entry at offset 4483092: xdr value invalid\" (BucketEntry::from_xdr); 27.0.0 has no SCV_EXECUTABLE_TAG arm.",
+        "fixed_in": "28.0.0",
+        "status": "fixed",
+        "observed": "reported"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0085.md",
+    "https://github.com/stellar-experimental/henyey/issues/3941"
+  ],
+  "reference": "network",
+  "notes": "The record is an INITENTRY (BucketEntry arm 2): the entry was created within the ledgers merged into this bucket. The same bytes, as a LedgerEntry inside LedgerCloseMeta, are in cap-0085/contract-data-keyed-by-executable-tag (testnet ledger 4372189). The known divergence is the upstream report, not re-run here: the pinned stellar-xdr versions (28.0.0 and later) all decode the record. Byte offset 4483092 in the report is the offset of this record's mark in the decompressed bucket."
+}

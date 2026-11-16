@@ -1,0 +1,224 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0088/sub-second-close-time",
+  "title": "Protocol 30 ledger whose millisecond close time is not a whole second (closeTimeMs 1794475923913)",
+  "kind": "ledger",
+  "caps": [
+    88
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "stellar-value-signed-ms",
+    "close-time-ms-sub-second",
+    "close-time-truncated"
+  ],
+  "why": "With the SIGNED_MS StellarValue arm the close time has millisecond precision: here closeTimeMs is 1794475923913 while closeTime is 1794475923, so the two differ by 913 ms. Readers that derive one from the other by multiplying, or that store whole seconds only, report a time that is off by up to a second.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 5690456,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "a13a440e7541e7d62e6c945a458d8f3eed8c6e36422f174482c992a01437633b",
+        "bytes": 233512,
+        "path": "blobs/a1/a13a440e7541e7d62e6c945a458d8f3eed8c6e36422f174482c992a01437633b.xdr"
+      },
+      "decoded": "decoded/a1/a13a440e7541e7d62e6c945a458d8f3eed8c6e36422f174482c992a01437633b.json.zst",
+      "decoded_sha256": "9e95787a25d8fc93f9ca54b2980fb1f8c05e7568ff01408f6f4b984043f94d64",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFAA0FFF--5632000-5695999/FFA92BA7--5690456.xdr.zst",
+        "object_sha256": "ff229edc282d91b919670bec68085208f021939aed1bd0f2466a3476b5bf988a",
+        "object_bytes": 31706,
+        "decompressed_sha256": "b26c6193cc7e05e352f6b994e35cc7efab20a8f4609cf8c87df3f64a99b9e8a2",
+        "decompressed_bytes": 233524,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T16:20:36Z",
+        "written_by": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1); exporter 4d89b44",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1)",
+          "end-ledger": "5690456",
+          "end-ledger-close-time": "1794475923",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "30",
+          "start-ledger": "5690456",
+          "start-ledger-close-time": "1794475923",
+          "version": "4d89b44"
+        },
+        "refetch": "curl -fsS -o FFA92BA7--5690456.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFAA0FFF--5632000-5695999/FFA92BA7--5690456.xdr.zst",
+        "perishable": true,
+        "regenerated": false,
+        "object_path": "objects/testnet/5690456/FFA92BA7--5690456.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "4ad2a77b5ced2bfb46d0a7d36d11c1bd51eea7d784639ee5f413eee32f49ec7c",
+        "tx_hashes": [
+          "bb173dc58991a15ed8de923f0818a7cd1aa88d30f08f0b58758829c280a2b643",
+          "94055c3448c47e6f4f78685becc06b6907804b0709647b678626abb6537eb705",
+          "73cffe44f1c02b75a5080f2839334f16c56b50766106811cc10bf068393f2c1e",
+          "0a13369f52f7b5b41ad95f37b2d1c5976275841ed891acbd5bae19dc0928a5f1",
+          "2a92fb5390f5e0176747f519b6a1081ed522ed4302514c309f5d945242197eef",
+          "b35f9638249e0e23e9f69a862785acb36a753f9e94fbc28ad6fd5011e4765f1f",
+          "461b9748ad4268bb346c3b04bab5ba7ae5cc01e1c706b65b3f95a2092ed647e9",
+          "d001293cee4bb2f0745ae269dfe505fc0bea6bbbd2ba12a292617920b2d1e9ff",
+          "8844a5e749bd48c353d7e60fec9613bd69455d5f365272c857c67130f2aab6ca",
+          "7910ad1715fce0388b687f1270b470a086ebb7107b86a637fa8204d5dc27f7dd",
+          "35139bc61ef352848894bce3714594d42bedae56176edc5d2625a28dddeecc12",
+          "e662b2a00396a32d510ab19bd17bc6c45ab304b23205cb507a73eeba35ccd314",
+          "f835f9ef88752f38dfe58649b7c0c3452885a77de00e6a7d01b53e3892ec3e72",
+          "5eaa3c33712955a8e6288a226a79e230a8eb194ceef9b9c5a5eeee6a002be508"
+        ]
+      },
+      "focus": {
+        "path": "/v2/ledger_header/header/scp_value/ext/signed_ms"
+      },
+      "notes": "Real testnet ledger, written live by stellar-core 30.0.0; perishable."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 14,
+      "operations": 14,
+      "events": 55,
+      "entry_changes": 196
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "bb173dc58991a15ed8de923f0818a7cd1aa88d30f08f0b58758829c280a2b643",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 1,
+        "hash": "94055c3448c47e6f4f78685becc06b6907804b0709647b678626abb6537eb705",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "73cffe44f1c02b75a5080f2839334f16c56b50766106811cc10bf068393f2c1e",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 3,
+        "hash": "0a13369f52f7b5b41ad95f37b2d1c5976275841ed891acbd5bae19dc0928a5f1",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 4,
+        "hash": "2a92fb5390f5e0176747f519b6a1081ed522ed4302514c309f5d945242197eef",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "b35f9638249e0e23e9f69a862785acb36a753f9e94fbc28ad6fd5011e4765f1f",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "461b9748ad4268bb346c3b04bab5ba7ae5cc01e1c706b65b3f95a2092ed647e9",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 7,
+        "hash": "d001293cee4bb2f0745ae269dfe505fc0bea6bbbd2ba12a292617920b2d1e9ff",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 8,
+        "hash": "8844a5e749bd48c353d7e60fec9613bd69455d5f365272c857c67130f2aab6ca",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 9,
+        "hash": "7910ad1715fce0388b687f1270b470a086ebb7107b86a637fa8204d5dc27f7dd",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 10,
+        "hash": "35139bc61ef352848894bce3714594d42bedae56176edc5d2625a28dddeecc12",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 11,
+        "hash": "e662b2a00396a32d510ab19bd17bc6c45ab304b23205cb507a73eeba35ccd314",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 12,
+        "hash": "f835f9ef88752f38dfe58649b7c0c3452885a77de00e6a7d01b53e3892ec3e72",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 13,
+        "hash": "5eaa3c33712955a8e6288a226a79e230a8eb194ceef9b9c5a5eeee6a002be508",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/ledger_header/header/scp_value/close_time",
+        "equals": "1794475923"
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/ext/signed_ms/close_time_ms",
+        "equals": "1794475923913",
+        "note": "913 ms past the whole second."
+      },
+      {
+        "path": "/v2/ledger_header/header/ledger_version",
+        "equals": 30
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0088.md"
+  ],
+  "reference": "network",
+  "notes": "14 transactions. Testnet is reset on 2026-12-16; the vendored object will then be the only copy."
+}

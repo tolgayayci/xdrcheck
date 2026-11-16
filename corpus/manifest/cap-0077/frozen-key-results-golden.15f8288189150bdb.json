@@ -1,0 +1,110 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0077/frozen-key-results-golden.15f8288189150bdb",
+  "title": "Configuration upgrade setting the frozen-ledger-keys list (keys stored as encoded bytes)",
+  "kind": "ledger",
+  "caps": [
+    77
+  ],
+  "protocol": {
+    "introduced": 26
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "frozen-ledger-keys",
+    "config-upgrade",
+    "encoded-ledger-key"
+  ],
+  "why": "The frozen-keys configuration setting holds ledger keys as EncodedLedgerKey byte strings inside a CONFIG_SETTING entry, changed by a configuration upgrade with no transaction. Readers that decode config settings with a closed list of arms, or expect keys as structured XDR, fail on it.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 7,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "cd1eb7d625b71d38015a2272d025f6dc881152557792c004d7fdc8faa16074e2",
+        "bytes": 1816,
+        "path": "blobs/cd/cd1eb7d625b71d38015a2272d025f6dc881152557792c004d7fdc8faa16074e2.xdr"
+      },
+      "decoded": "decoded/cd/cd1eb7d625b71d38015a2272d025f6dc881152557792c004d7fdc8faa16074e2.json.zst",
+      "decoded_sha256": "33763cadcfdca0352a3c133c5178f743443cee8e58eb50f658a9a6af525ad749",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/FrozenLedgerKeysTests/15f8288189150bdb.xdr",
+        "file_sha256": "c312ea2e761a60d5fc9da629748410afc4e3983a08d30db0df7139657232e524",
+        "frame_index": 5,
+        "test_name": "source account frozen|tx source frozen via muxed account ID",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "path": "/v2/upgrades_processing/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "source account frozen|tx source frozen via muxed account ID",
+          "flags_source": "src/transactions/test/FrozenLedgerKeysTests.cpp:736 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "aae3110b194b69e5596d0bec831a96f623619020320714ed89bc5f0f9b56cad9",
+        "tx_hashes": []
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 0,
+      "operations": 0,
+      "events": 0,
+      "entry_changes": 28
+    },
+    "transactions": [],
+    "values": [
+      {
+        "path": "/v2/upgrades_processing/0/upgrade",
+        "equals": {
+          "config": {
+            "contract_id": "CBINMC5KSEB5K4UO4S4XUZBZTQ63SWJWNCTUYELBV3IJT2VBVOOQQ3JQ",
+            "content_hash": "a778757f4a98d262325ee7d7808c381b095f1994cfc5ef822ec1eb4f5d5eaf7d"
+          }
+        }
+      },
+      {
+        "path": "/v2/tx_processing",
+        "equals": []
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 5 of 'source account frozen|tx source frozen via muxed account ID': the upgrade that freezes the key. The test's transaction from the frozen muxed source is rejected before it reaches a ledger, so no ledger contains it."
+}

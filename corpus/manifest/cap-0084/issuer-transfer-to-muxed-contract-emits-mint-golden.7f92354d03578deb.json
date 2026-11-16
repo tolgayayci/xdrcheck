@@ -1,0 +1,176 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0084/issuer-transfer-to-muxed-contract-emits-mint-golden.7f92354d03578deb",
+  "title": "SAC mint to a muxed contract address that fails",
+  "kind": "ledger",
+  "caps": [
+    84
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sac-mint",
+    "scaddress-muxed-contract",
+    "failed-soroban-transaction"
+  ],
+  "why": "A SAC mint whose destination is a W address fails and the transaction traps; no event and no balance change. Readers that credit the destination from the envelope's arguments record a mint that never happened.",
+  "fields": {
+    "validated": [
+      "VF-41"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 13,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "sc_address_type_muxed_contract",
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "47ade328851054c49f73b19d58f773f2ec36aa583c12ed94c77bfbf9128a28db",
+        "bytes": 3952,
+        "path": "blobs/47/47ade328851054c49f73b19d58f773f2ec36aa583c12ed94c77bfbf9128a28db.xdr"
+      },
+      "decoded": "decoded/47/47ade328851054c49f73b19d58f773f2ec36aa583c12ed94c77bfbf9128a28db.json.zst",
+      "decoded_sha256": "968cd2c6fda4cae17eb7bee09af99a4b9a9a65526de3167f6998a895b71cb029",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/7f92354d03578deb.xdr",
+        "file_sha256": "a25aced6fbf768f38059923d888b5d1e860597e77a071acad3df6b3caf1f2260",
+        "frame_index": 11,
+        "test_name": "Stellar asset contract transfer to muxed contract (CAP-0084)|custom asset|mint fails",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "f8ef05004101238ecaa0ef1ecc0173048349622c7f3c4a705497598274b15559",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Stellar asset contract transfer to muxed contract (CAP-0084)|custom asset|mint fails",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:738 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "7a91bf54eec077308acb84e4d77550f81103176a8c6c071c9f1cacc40bd80f02",
+        "tx_hashes": [
+          "f8ef05004101238ecaa0ef1ecc0173048349622c7f3c4a705497598274b15559"
+        ],
+        "tx_hash": "f8ef05004101238ecaa0ef1ecc0173048349622c7f3c4a705497598274b15559",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 6
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "f8ef05004101238ecaa0ef1ecc0173048349622c7f3c4a705497598274b15559",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "invoke_host_function.trapped"
+        ],
+        "fee_charged": "55225"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "mint"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args",
+        "equals": [
+          {
+            "address": "WAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWDNU3JPX55ASWEDNS"
+          },
+          {
+            "i128": "500000000"
+          }
+        ]
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/invoke_host_function",
+        "equals": "trapped"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1944875",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 11 of the golden."
+}

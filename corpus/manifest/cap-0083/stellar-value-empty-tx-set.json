@@ -1,0 +1,72 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0083/stellar-value-empty-tx-set",
+  "title": "LedgerHeader whose scpValue is STELLAR_VALUE_EMPTY_TX_SET: txSetHash zero, the proposed set in proposedValue",
+  "kind": "xdr",
+  "caps": [
+    83
+  ],
+  "protocol": {
+    "introduced": 28
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "why": "From protocol 28 a validator that cannot download a nominated transaction set in time may vote for an empty one (CAP-0083): the header's txSetHash is all zeros and the set that was proposed moves into ext.proposedValue with the previous ledger's hash and version. Readers that take scpValue.txSetHash as the applied set's hash, or that know only the BASIC and SIGNED ext arms, misread or reject such a ledger.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "LedgerHeader",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "2a5ac7025a78c806958f0dd1293e34a79fab32a6d323070ee8221f50527e7c5d",
+        "bytes": 496,
+        "path": "blobs/2a/2a5ac7025a78c806958f0dd1293e34a79fab32a6d323070ee8221f50527e7c5d.xdr"
+      },
+      "decoded": "decoded/2a/2a5ac7025a78c806958f0dd1293e34a79fab32a6d323070ee8221f50527e7c5d.json.zst",
+      "decoded_sha256": "6715e97d3ed8e0d3b496d5c1e44565547dd13d30c788e68d47336e1c31fc1794",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/cap-0083/stellar-value-empty-tx-set.json",
+        "reason": "stellar-core builds an empty-transaction-set value only when a validator nominates a set it could not download in time (HerderSCPDriver::makeEmptyTxSetValueFromValue); a single standalone validator never does, so this is pubnet ledger 65437035's header (protocol 29) with its signed value rewritten into that form: txSetHash zero, then the proposed set hash, the previous ledger hash and version, and the original signature"
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/scp_value/tx_set_hash",
+        "equals": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "path": "/scp_value/ext/empty_tx_set/tx_set_hash",
+        "equals": "195e701a5b616eba606b6ccc797739dded21ad9161d927bdea760732514918e6"
+      },
+      {
+        "path": "/scp_value/ext/empty_tx_set/previous_ledger_hash",
+        "equals": "c19c0012e8df75146c7e8d7706f6e052f239eece47c678e793c126a3aea90be8"
+      },
+      {
+        "path": "/scp_value/ext/empty_tx_set/previous_ledger_version",
+        "equals": 29
+      }
+    ]
+  },
+  "notes": "Built from corpus/objects/pubnet/65437035 header, scpValue rewritten as makeEmptyTxSetValueFromValue does. The header hash of a real ledger with this value would differ; the bytes are checked by the oracle only.",
+  "shapes": [
+    "stellar-value-empty-tx-set",
+    "ledger-header-bare-value"
+  ],
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0083.md"
+  ]
+}

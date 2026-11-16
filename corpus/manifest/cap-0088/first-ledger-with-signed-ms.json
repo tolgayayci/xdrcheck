@@ -1,0 +1,260 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0088/first-ledger-with-signed-ms",
+  "title": "First ledger whose StellarValue uses the STELLAR_VALUE_SIGNED_MS arm with a millisecond close time",
+  "kind": "ledger",
+  "caps": [
+    88
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "stellar-value-signed-ms",
+    "close-time-ms",
+    "first-ledger-after-upgrade"
+  ],
+  "why": "Protocol 30 adds arm 3 (STELLAR_VALUE_SIGNED_MS) to StellarValue.ext, carrying closeTimeMs. Every ledger after the upgrade ledger uses it, so a decoder generated before Protocol 30 rejects the whole LedgerCloseMeta at the ledger header, and an indexer built on one stops at this ledger.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 5540314,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "ee742912551436ce338747a1428c5917c589dbeaa415000f8de768493c82bb71",
+        "bytes": 168364,
+        "path": "blobs/ee/ee742912551436ce338747a1428c5917c589dbeaa415000f8de768493c82bb71.xdr"
+      },
+      "decoded": "decoded/ee/ee742912551436ce338747a1428c5917c589dbeaa415000f8de768493c82bb71.json.zst",
+      "decoded_sha256": "a04f0070caca38e8f5e64fc9ff98c2c5db00945464229c3857b7c464960fb5f2",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFAC03FF--5504000-5567999/FFAB7625--5540314.xdr.zst",
+        "object_sha256": "969df29df5f4c36faa9bdf6af0c5a1e80807632beb32f7d8eae5c9b86d59b568",
+        "object_bytes": 16869,
+        "decompressed_sha256": "79caf2c48b41e7b0b37cf2ffb70df2ffdcfc03cb5d69677fe38c36534e43f1b4",
+        "decompressed_bytes": 168376,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:01:47Z",
+        "written_by": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1); exporter 4d89b44",
+        "object_metadata": {
+          "core-version": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1)",
+          "compression-type": "zst",
+          "start-ledger": "5540314",
+          "version": "4d89b44",
+          "end-ledger-close-time": "1793725210",
+          "start-ledger-close-time": "1793725210",
+          "end-ledger": "5540314",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "30"
+        },
+        "refetch": "aws s3 cp --no-sign-request s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18/FFAC03FF--5504000-5567999/FFAB7625--5540314.xdr.zst .",
+        "object_path": "objects/testnet/5540314/FFAB7625--5540314.xdr.zst",
+        "perishable": true,
+        "regenerated": false
+      },
+      "focus": {
+        "path": "/v2/ledger_header/header/scp_value/ext"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "02e10c8cf3345ce0001fd0cce72e55ccb6e18317ed543a725627e102fd6d337c",
+        "tx_hashes": [
+          "e3977b63cf6df0e91ec99fcba1989bf3db34c93e01d30065a0f38129066b24e6",
+          "21961aa47440111cde8ce96b94b2c4f9ca6031bfa86a064b91f1a84c168abe78",
+          "e74391663da1229cb6223a675f85e8e215322774ce76838f3f267d523d438ef3",
+          "1bb7996d2f2f6535e66432f4e84d3defe5934ad5dd66765705d68d5b867a5a2b",
+          "52b707b4b68ab95a89d49d8d15a3f61df29eb131a4e55b34131d0fae6158e3de",
+          "357a3d909a0c3bb7564d04cfacc8930e0b012e49b9f7e6d0c43a9dbd8a1f55b5",
+          "4978a718b770f8352d98885878cf395426410495edd4a8c4df0d452ae43fe79e",
+          "19d6f2a2ef0301514184a87de6ab6d5b340516140155116ee34551342508eec6",
+          "603324c830581f8342fbdbc89dbeb6b14d6666db1f9b19c3f9b842a7ae664921",
+          "757139fd0ac37521aa2896d96825f4949b27e7dafea915b23964d3de8dbfead5",
+          "850a958d12ce73f200a1947be387018534af2356a8f6e5b7812916a1ce57cb5e",
+          "331a3e040fb80e14db824301eabcd698b72530f5a1b7598b098e23f527c2226d",
+          "69d58ee871652ed80b22071e094797921092b4c692771b8a291d0834272f12f1",
+          "88b24723ef32bb158b06c894de5c5c84de4f2b53f358ae88326512d92af7c4ae"
+        ]
+      },
+      "notes": "Real testnet ledger with 14 transactions: the first ledger after the Protocol 30 upgrade ledger 5540313. Written live by stellar-core 30.0.0. Testnet resets on 2026-12-16, after which the vendored bytes are the only copy."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 14,
+      "operations": 14,
+      "events": 50,
+      "entry_changes": 359
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "e3977b63cf6df0e91ec99fcba1989bf3db34c93e01d30065a0f38129066b24e6",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "21961aa47440111cde8ce96b94b2c4f9ca6031bfa86a064b91f1a84c168abe78",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "e74391663da1229cb6223a675f85e8e215322774ce76838f3f267d523d438ef3",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "1bb7996d2f2f6535e66432f4e84d3defe5934ad5dd66765705d68d5b867a5a2b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 4,
+        "hash": "52b707b4b68ab95a89d49d8d15a3f61df29eb131a4e55b34131d0fae6158e3de",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 5,
+        "hash": "357a3d909a0c3bb7564d04cfacc8930e0b012e49b9f7e6d0c43a9dbd8a1f55b5",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "4978a718b770f8352d98885878cf395426410495edd4a8c4df0d452ae43fe79e",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 7,
+        "hash": "19d6f2a2ef0301514184a87de6ab6d5b340516140155116ee34551342508eec6",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 8,
+        "hash": "603324c830581f8342fbdbc89dbeb6b14d6666db1f9b19c3f9b842a7ae664921",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 9,
+        "hash": "757139fd0ac37521aa2896d96825f4949b27e7dafea915b23964d3de8dbfead5",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 10,
+        "hash": "850a958d12ce73f200a1947be387018534af2356a8f6e5b7812916a1ce57cb5e",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 11,
+        "hash": "331a3e040fb80e14db824301eabcd698b72530f5a1b7598b098e23f527c2226d",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 12,
+        "hash": "69d58ee871652ed80b22071e094797921092b4c692771b8a291d0834272f12f1",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 13,
+        "hash": "88b24723ef32bb158b06c894de5c5c84de4f2b53f358ae88326512d92af7c4ae",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/ledger_header/header/ledger_version",
+        "equals": 30
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/close_time",
+        "equals": "1793725210"
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/ext/signed_ms/close_time_ms",
+        "equals": "1793725210000",
+        "note": "closeTimeMs is the full time in milliseconds (closeTime * 1000 here), not a 0-999 remainder."
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/ext/signed_ms/lc_value_signature/node_id",
+        "equals": "GCUCJTIYXSOXKBSNFGNFWW5MUQ54HKRPGJUTQFJ5RQXZXNOLNXYDHRAP"
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/upgrades",
+        "equals": []
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "2a0a84ea12523b6c92e278c0c84b443041240095..2a0a84ea12523b6c92e278c0c84b443041240095",
+        "level": "replay",
+        "outcome": "halt",
+        "qualifier": "halt",
+        "detail": "Executed at 2a0a84ea (go-stellar-sdk v0.7.3), serving this ledger's lake object: the datastore backend exits 2 after about 1.2 s with 'decoding StellarValueType: 3 is not a valid StellarValueType enum value'; the RPC backend exits 2 after 151 s and 10 fetch attempts. Only this one commit was executed; the wider range is the next item.",
+        "reference": "https://github.com/stellar/wallet-backend/pull/791",
+        "fixed_in": "a9bac8d2f59f7590d393c3e72e67d95b7cb2fba1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "evidence/wallet-backend-replay/logs/ingest-p30-prefix-ds.log, evidence/wallet-backend-replay/logs/ingest-p30-prefix-rpc.log (described in evidence/wallet-backend-replay/README.md)"
+      },
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "..bf15e8c263c70dd5c4080593f455eabc8053b204",
+        "level": "replay",
+        "outcome": "halt",
+        "qualifier": "halt",
+        "detail": "Every commit before the go-stellar-sdk v0.8.0 bump (#791) decodes ledgers with a pre-Protocol 30 SDK. Not executed beyond 2a0a84ea (previous item); asserted only after one execution.",
+        "reference": "https://github.com/stellar/wallet-backend/pull/791",
+        "fixed_in": "a9bac8d2f59f7590d393c3e72e67d95b7cb2fba1",
+        "status": "fixed",
+        "observed": "reported",
+        "evidence": "project research"
+      }
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0088.md",
+    "https://github.com/stellar/wallet-backend/pull/791"
+  ],
+  "notes": "The pattern is the ledger header, so the variant has no focus transaction and expect lists no participants, state changes or movements. Python stellar-sdk 17.0.x and Java stellar-sdk 6.0.0 decode this ledger (same matrix row). The upgrade ledger just before it, cap-0088/upgrade-ledger-header-30-whole-second-value, still uses the SIGNED arm and decodes in every SDK version tested. Protocol 30 readiness (not known divergences: a schema that predates Protocol 30 refusing an undeclared union arm is the expected clean refusal, judged n_a by the conformance runner's schema-reach rule): @stellar/stellar-sdk 16.3.0-16.3.1 and 17.2.0-17.2.1, go-stellar-sdk v0.7.1-v0.7.3 and stellar-xdr (crates.io) 28.0.0-28.0.1 refuse this ledger at L0 because StellarValue.ext arm 3 is undeclared; versions with the Protocol 30 schema decode it. Executed in the SDK matrix probe (evidence/sdk-matrix, vector 10l5540314)."
+}

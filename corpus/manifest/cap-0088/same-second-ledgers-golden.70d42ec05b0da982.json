@@ -1,0 +1,165 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0088/same-second-ledgers-golden.70d42ec05b0da982",
+  "title": "Ledger closing in the same whole second as its predecessor, with a transaction expiring at that second",
+  "kind": "ledger",
+  "caps": [
+    88
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sub-second-ledgers",
+    "close-time-ms",
+    "same-second-ledger"
+  ],
+  "why": "With millisecond close times, two consecutive ledgers can share closeTime and differ only in closeTimeMs. A transaction whose maxTime equals the current second still applies. Readers that assume close times strictly increase, or compare time bounds against milliseconds, mis-order the ledgers or misjudge the bound.",
+  "fields": {
+    "validated": [
+      "VF-14a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 3,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "1ab51300f801d53b9283af7853cf3a8eb66f4917337886f111d53bfd89d26685",
+        "bytes": 1356,
+        "path": "blobs/1a/1ab51300f801d53b9283af7853cf3a8eb66f4917337886f111d53bfd89d26685.xdr"
+      },
+      "decoded": "decoded/1a/1ab51300f801d53b9283af7853cf3a8eb66f4917337886f111d53bfd89d26685.json.zst",
+      "decoded_sha256": "0c9c27f63ffba20de1b2d1fb4218ba2ed18a8f0ce84f173ba1db1a291eff92e1",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/TxEnvelopeTests/70d42ec05b0da982.xdr",
+        "file_sha256": "fef8f5d5d1dbbf67c318699686e87a017e27548c747e651e67e4cf0e97f0117e",
+        "frame_index": 1,
+        "test_name": "transaction time bounds under sub-second ledgers|tx expiring at the current second applies in a same-second ledger",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "051c6bf12c64a72f92f148fbde8d32129ddf1d78ffda36e837a0842435009a50",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "transaction time bounds under sub-second ledgers|tx expiring at the current second applies in a same-second ledger",
+          "flags_source": "src/transactions/test/TxEnvelopeTests.cpp:3326 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "efff2bf4a9e6c69e061bb629e59182bed51d08ed3463dccdce9a0a26e0c49958",
+        "tx_hashes": [
+          "051c6bf12c64a72f92f148fbde8d32129ddf1d78ffda36e837a0842435009a50"
+        ],
+        "tx_hash": "051c6bf12c64a72f92f148fbde8d32129ddf1d78ffda36e837a0842435009a50",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "payment",
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "asset": "native"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 4
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "051c6bf12c64a72f92f148fbde8d32129ddf1d78ffda36e837a0842435009a50",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "100"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/ledger_header/header/scp_value/close_time",
+        "equals": "2"
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/ext/signed_ms/close_time_ms",
+        "equals": "2400"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/cond",
+        "equals": {
+          "time": {
+            "min_time": "0",
+            "max_time": "2"
+          }
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 1 of the golden (ledger 3)."
+}

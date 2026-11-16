@@ -1,0 +1,64 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0077/config-upgrade-set-frozen-ledger-keys-delta",
+  "title": "ConfigUpgradeSet holding CONFIG_SETTING_FROZEN_LEDGER_KEYS_DELTA, the upgrade-set bytes stellar-core stores in contract data",
+  "kind": "xdr",
+  "caps": [
+    77
+  ],
+  "protocol": {
+    "introduced": 26
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "why": "From protocol 26 the frozen ledger keys setting (CAP-0077) changes through a delta: keys to freeze and keys to unfreeze. stellar-core applies the delta to the stored CONFIG_SETTING_FROZEN_LEDGER_KEYS entry and never stores the delta, so the only place a ledger holds this arm is the ConfigUpgradeSet kept as SCV_BYTES contract data before the upgrade. Readers that decode those bytes and know only the stored setting arms reject them.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ConfigUpgradeSet",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "93bbf5233ac6bf44d73f396fc91350f5c7583014c4f98570b90a5617c7c5c873",
+        "bytes": 112,
+        "path": "blobs/93/93bbf5233ac6bf44d73f396fc91350f5c7583014c4f98570b90a5617c7c5c873.xdr"
+      },
+      "decoded": "decoded/93/93bbf5233ac6bf44d73f396fc91350f5c7583014c4f98570b90a5617c7c5c873.json.zst",
+      "decoded_sha256": "352769e438ca2f5402afe35aaa6bda187a3db505f48ed26a7ae026656dcefd87",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/cap-0077/config-upgrade-set-frozen-ledger-keys-delta.json",
+        "reason": "a delta setting is an upgrade instruction that stellar-core applies to the stored setting and never stores itself, so a ledger holds it only inside a ConfigUpgradeSet kept as SCV_BYTES contract data; these are the exact upgrade-set bytes scenario s19-upgrades-archival-and-config uploaded (identical under both passphrases), as an entry of their own"
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/updated_entry/1/frozen_ledger_keys_delta/keys_to_freeze/0",
+        "equals": "0000000000000000dfda23c56f64d2d81b183cf04f803f667451e00880389c790de4882e33e490b5"
+      },
+      {
+        "path": "/updated_entry/1/frozen_ledger_keys_delta/keys_to_unfreeze",
+        "equals": []
+      }
+    ]
+  },
+  "notes": "The bytes are copied from the scenario's chain, where they sit inside contract data; coverage counts the arm there only as upgrade-set bytes, and this entry gives readers the value itself.",
+  "shapes": [
+    "config-upgrade-set-bytes",
+    "frozen-ledger-keys-delta"
+  ],
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0077.md"
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0088/same-second-ledgers-golden.fa3e2dcc9ad7fa98",
+  "title": "Empty ledger closing within the same whole second as the previous ledger",
+  "kind": "ledger",
+  "caps": [
+    88
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sub-second-ledgers",
+    "close-time-ms",
+    "same-second-ledger",
+    "empty-transaction-set"
+  ],
+  "why": "Ledger 3 closes in the same whole second as ledger 2, so closeTime is equal and only closeTimeMs differs; the test's transaction with minSeqAge 1 is rejected because the age is still 0. Readers that assume closeTime strictly increases between ledgers mis-order or merge them.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 3,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "91400c535b852daa32c19e063723ee2ee2a8f048e4d2513d2dedc99b8865730b",
+        "bytes": 564,
+        "path": "blobs/91/91400c535b852daa32c19e063723ee2ee2a8f048e4d2513d2dedc99b8865730b.xdr"
+      },
+      "decoded": "decoded/91/91400c535b852daa32c19e063723ee2ee2a8f048e4d2513d2dedc99b8865730b.json.zst",
+      "decoded_sha256": "07fab47016fe4273d0847177737de5d171bf6f1757977f9632e2e1aa4188c84d",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/BumpSequenceTests/fa3e2dcc9ad7fa98.xdr",
+        "file_sha256": "9c2ae5666aea8ebdc4d57abf4b5cc40645abd681b08eaf2ec1232869f52b3bf2",
+        "frame_index": 1,
+        "test_name": "minSeqAge under sub-second ledgers|sub-second ledger in the same whole second: age still 0",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "path": "/v2/ledger_header/header/scp_value"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "minSeqAge under sub-second ledgers|sub-second ledger in the same whole second: age still 0",
+          "flags_source": "src/transactions/test/BumpSequenceTests.cpp:196 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "13cd4e0ab9e93bc82fd3c36eaf30b2f05e24796da0c0dbf99c5c30c8eb48ece9",
+        "tx_hashes": []
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 0,
+      "operations": 0,
+      "events": 0,
+      "entry_changes": 0
+    },
+    "transactions": [],
+    "values": [
+      {
+        "path": "/v2/ledger_header/header/scp_value/close_time",
+        "equals": "2"
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/ext/signed_ms/close_time_ms",
+        "equals": "2800"
+      },
+      {
+        "path": "/v2/tx_processing",
+        "equals": []
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 1 of the golden (ledger 3). The test's rejected transaction never reaches a ledger."
+}

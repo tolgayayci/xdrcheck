@@ -1,0 +1,402 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0070/scp-timing-config-setting-created-at-upgrade",
+  "title": "Upgrade ledger of a fresh chain creating CONFIG_SETTING_SCP_TIMING among the other settings",
+  "kind": "ledger",
+  "caps": [
+    70
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "ledger-upgrade-version",
+    "config-setting-created",
+    "config-setting-scp-timing",
+    "ledger-close-meta-v0"
+  ],
+  "why": "CAP-0070 adds the SCP timing setting, created by the version upgrade that crosses Protocol 23 with the other configuration settings. A reader built on definitions without CONFIG_SETTING_SCP_TIMING cannot decode the upgrade ledger of any chain that crosses 23.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 2,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "2eca75f4ee74f1348e4718dc96058a08b2bee563afea2d37c08fdb55d02d5440",
+        "bytes": 5268,
+        "path": "blobs/2e/2eca75f4ee74f1348e4718dc96058a08b2bee563afea2d37c08fdb55d02d5440.xdr"
+      },
+      "decoded": "decoded/2e/2eca75f4ee74f1348e4718dc96058a08b2bee563afea2d37c08fdb55d02d5440.json.zst",
+      "decoded_sha256": "817423e76e11141ad5ca06865fb48116e6fc0853a4b3816ca8ff4e5cce1dea52",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s14-ledger-level.yaml",
+        "scenario_sha256": "6654f650c17ea9057377e7a1fea2666e798019206e7c846ab28a44a3e260dbf5",
+        "step": "bring-up-upgrade",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1700000000",
+        "stream_sha256": "b8336dea46f5760c95600591c3fcb3934873d59ec8dfaf476261873fe95fabfe",
+        "frame_index": 0,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s14-ledger-level.yaml --network testnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "d8a9b04b940776b4ffa83bf27c5118555663e835b85db9b00040a9665f62a600",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "0",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "accounts": {
+          "P": "GCLI5BBS3Z7RSEGAK2SKKEEV7BHXQX4C5WHXG4PYZQFX7GUMYVSBD5TV",
+          "Q": "GDQLMIYKOFJG3ZYEVWBTBPXGEEZHICXCOHMB4T3NDZFHD7W4LIDD4UZI",
+          "U": "GDPCHJ7HAG2BDZHCHLBPKXU46GWAYAZ2DSQ5XJB4WPLCV53JEUJSKT7P",
+          "V": "GBE27RVHVLBSD4AGHT72JOPLOFCJOBOTMILUJIQODT6R2FZ7BCA5DAWA"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 2,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "b4b7335c0370ee813300bdc1789c93c1da74275889099d1d06ac5d272188adfe",
+        "bytes": 5268,
+        "path": "blobs/b4/b4b7335c0370ee813300bdc1789c93c1da74275889099d1d06ac5d272188adfe.xdr"
+      },
+      "decoded": "decoded/b4/b4b7335c0370ee813300bdc1789c93c1da74275889099d1d06ac5d272188adfe.json.zst",
+      "decoded_sha256": "8f456fb5ea97eea888c8ba049ae916feeee331857ee734f495f603af7cc4c67a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s14-ledger-level.yaml",
+        "scenario_sha256": "6654f650c17ea9057377e7a1fea2666e798019206e7c846ab28a44a3e260dbf5",
+        "step": "bring-up-upgrade",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1700000000",
+        "stream_sha256": "00b7455a7ddb9553494df9025a0b5a9d9b89cba866f1cbbfc718ac03eb6cb2c7",
+        "frame_index": 0,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s14-ledger-level.yaml --network pubnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "a2eece0c2d7d43e262d1a8fc65a7a5c29e3ddc74d0882982e11e85603bea832e",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "0",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "accounts": {
+          "P": "GCLI5BBS3Z7RSEGAK2SKKEEV7BHXQX4C5WHXG4PYZQFX7GUMYVSBD5TV",
+          "Q": "GDQLMIYKOFJG3ZYEVWBTBPXGEEZHICXCOHMB4T3NDZFHD7W4LIDD4UZI",
+          "U": "GDPCHJ7HAG2BDZHCHLBPKXU46GWAYAZ2DSQ5XJB4WPLCV53JEUJSKT7P",
+          "V": "GBE27RVHVLBSD4AGHT72JOPLOFCJOBOTMILUJIQODT6R2FZ7BCA5DAWA"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    },
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 2,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "3796bb8d24cdda4e1de251538631735572403633eb38076ebb25bbbd2a7c6edc",
+        "bytes": 4908,
+        "path": "blobs/37/3796bb8d24cdda4e1de251538631735572403633eb38076ebb25bbbd2a7c6edc.xdr"
+      },
+      "decoded": "decoded/37/3796bb8d24cdda4e1de251538631735572403633eb38076ebb25bbbd2a7c6edc.json.zst",
+      "decoded_sha256": "6d1db05b7e838d73a751c89a69edabc13f395959f246c527687c921da63fb238",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s14-ledger-level.yaml",
+        "scenario_sha256": "6654f650c17ea9057377e7a1fea2666e798019206e7c846ab28a44a3e260dbf5",
+        "step": "bring-up-upgrade",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1700000000",
+        "stream_sha256": "8c9f146c5010b2bb685db32d3ec2de53472b02f5ab56e5e10d7110e0958c7bb5",
+        "frame_index": 0,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s14-ledger-level.yaml --network testnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "1da1fa347455b23342e90513a387a59f51a42951c0678048d489a4232d5630b6",
+        "header": {
+          "ledger_version": "28",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "0",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "accounts": {
+          "P": "GCLI5BBS3Z7RSEGAK2SKKEEV7BHXQX4C5WHXG4PYZQFX7GUMYVSBD5TV",
+          "Q": "GDQLMIYKOFJG3ZYEVWBTBPXGEEZHICXCOHMB4T3NDZFHD7W4LIDD4UZI",
+          "U": "GDPCHJ7HAG2BDZHCHLBPKXU46GWAYAZ2DSQ5XJB4WPLCV53JEUJSKT7P",
+          "V": "GBE27RVHVLBSD4AGHT72JOPLOFCJOBOTMILUJIQODT6R2FZ7BCA5DAWA"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 2,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "7c718a1efd4e28a9e89c3eff509d652de2a4a15f222361fa32f509bc27e1e617",
+        "bytes": 4908,
+        "path": "blobs/7c/7c718a1efd4e28a9e89c3eff509d652de2a4a15f222361fa32f509bc27e1e617.xdr"
+      },
+      "decoded": "decoded/7c/7c718a1efd4e28a9e89c3eff509d652de2a4a15f222361fa32f509bc27e1e617.json.zst",
+      "decoded_sha256": "696011f7891ca0a048ca315c826b87912ec88ea0f06a4c207ceb8e8409b4aadd",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s14-ledger-level.yaml",
+        "scenario_sha256": "6654f650c17ea9057377e7a1fea2666e798019206e7c846ab28a44a3e260dbf5",
+        "step": "bring-up-upgrade",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1700000000",
+        "stream_sha256": "cbe5bcfbbf2a88319acf767338b33846b18f3ea6ac89c4c63edf2fffbb02ae35",
+        "frame_index": 0,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s14-ledger-level.yaml --network pubnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "f10e48b4973564e69949433ec7a9b3e2916de620e3ae00edb31e9fd26e05b16d",
+        "header": {
+          "ledger_version": "28",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "0",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "accounts": {
+          "P": "GCLI5BBS3Z7RSEGAK2SKKEEV7BHXQX4C5WHXG4PYZQFX7GUMYVSBD5TV",
+          "Q": "GDQLMIYKOFJG3ZYEVWBTBPXGEEZHICXCOHMB4T3NDZFHD7W4LIDD4UZI",
+          "U": "GDPCHJ7HAG2BDZHCHLBPKXU46GWAYAZ2DSQ5XJB4WPLCV53JEUJSKT7P",
+          "V": "GBE27RVHVLBSD4AGHT72JOPLOFCJOBOTMILUJIQODT6R2FZ7BCA5DAWA"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 0,
+      "operations": 0,
+      "events": 0,
+      "entry_changes": 19
+    },
+    "values": [
+      {
+        "select": {
+          "in": "/v0/upgrades_processing/0/changes",
+          "key": {
+            "config_setting": {
+              "config_setting_id": "scp_timing"
+            }
+          },
+          "change": "created"
+        },
+        "path": "/created",
+        "equals": {
+          "last_modified_ledger_seq": 2,
+          "data": {
+            "config_setting": {
+              "scp_timing": {
+                "ledger_target_close_time_milliseconds": 5000,
+                "nomination_timeout_initial_milliseconds": 1000,
+                "nomination_timeout_increment_milliseconds": 1000,
+                "ballot_timeout_initial_milliseconds": 1000,
+                "ballot_timeout_increment_milliseconds": 1000
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "note": "CONFIG_SETTING_SCP_TIMING (CAP-0070), created with its initial values by the upgrade from protocol 0, beside the other configuration settings."
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0070.md"
+  ],
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s14-ledger-level.yaml on a local stellar-core, at Protocols 28 and 30 on the testnet and public passphrases (4 variants); the accounts are label-derived and equal across variants, hashes and fees are per variant under derived. The entry shares its ledger (the bring-up's ledger 2, upgrading from protocol 0) with ledger/standalone-upgrade-0-to-30-lcm-v0 at Protocol 30; at 28 it is the 0-to-28 upgrade. The setting is selected by its key; stellar-core writes the created settings in no fixed order. No reader has been run against these ledgers yet, so the entry declares no known divergence."
+}

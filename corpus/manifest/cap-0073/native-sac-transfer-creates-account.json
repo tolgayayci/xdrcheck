@@ -1,0 +1,256 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0073/native-sac-transfer-creates-account",
+  "title": "Native Stellar Asset Contract transfer to a non-existent account creates the account",
+  "kind": "ledger",
+  "caps": [
+    73
+  ],
+  "protocol": {
+    "introduced": 26
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sac-transfer",
+    "native-sac",
+    "account-created-by-contract-call"
+  ],
+  "why": "A native SAC transfer to a G address that does not exist creates the account entry with the transferred balance; there is no CreateAccount operation. Readers that only record account creation from CreateAccount miss the new account.",
+  "fields": {
+    "validated": [
+      "VF-41"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 19,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "9f5f8ac91928fdc6815f828900f980ac6ee9c3c684e1c27c5d5eedd679eeef97",
+        "bytes": 5232,
+        "path": "blobs/9f/9f5f8ac91928fdc6815f828900f980ac6ee9c3c684e1c27c5d5eedd679eeef97.xdr"
+      },
+      "decoded": "decoded/9f/9f5f8ac91928fdc6815f828900f980ac6ee9c3c684e1c27c5d5eedd679eeef97.json.zst",
+      "decoded_sha256": "1a0a6abfeb8faa63a208be4c8cd402abfc700c081b02259b36e0761306397703",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/692fdd0e57531ce4.xdr",
+        "file_sha256": "fa160c143bf9e60307ab1d2d184068def65b14e9f5e85baad7709e8dcb3027a2",
+        "frame_index": 17,
+        "test_name": "Native stellar asset contract",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "88f25cc7d51244c8c62b87b927a63e199248bd7f0ee287a20114e5a9251d1fb0",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Native stellar asset contract",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:396 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "01bbe98fc8be2ae9a755177b591229ce1caad73e898030a7930211177b0ba2a8",
+        "tx_hashes": [
+          "88f25cc7d51244c8c62b87b927a63e199248bd7f0ee287a20114e5a9251d1fb0"
+        ],
+        "tx_hash": "88f25cc7d51244c8c62b87b927a63e199248bd7f0ee287a20114e5a9251d1fb0",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 9
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "88f25cc7d51244c8c62b87b927a63e199248bd7f0ee287a20114e5a9251d1fb0",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "80296"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/1",
+        "equals": {
+          "address": "GBMZAFOQUSIHUQ54RL5HQKG56TTAUOO3RJS7ZCWQKV6EPBJNLMLOKJPN"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/account/balance",
+        "equals": "200000000"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "GBMZAFOQUSIHUQ54RL5HQKG56TTAUOO3RJS7ZCWQKV6EPBJNLMLOKJPN",
+          "roles": [
+            "counterparty"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "account_created",
+        "op_index": 0,
+        "account": {
+          "address": "GBMZAFOQUSIHUQ54RL5HQKG56TTAUOO3RJS7ZCWQKV6EPBJNLMLOKJPN"
+        },
+        "cause": "contract-call",
+        "detail": {
+          "starting_balance": "200000000"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1919804",
+        "to": {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF"
+        }
+      },
+      {
+        "kind": "transfer",
+        "tx_index": 0,
+        "op_index": 0,
+        "asset": "native",
+        "amount": "200000000",
+        "from": {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF"
+        },
+        "to": {
+          "address": "GBMZAFOQUSIHUQ54RL5HQKG56TTAUOO3RJS7ZCWQKV6EPBJNLMLOKJPN"
+        },
+        "routing": {
+          "type": "absent"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "e967ce8b7362b79c277e700e789181d76fbb5967..e967ce8b7362b79c277e700e789181d76fbb5967",
+        "level": "replay",
+        "outcome": "dropped",
+        "qualifier": "partial",
+        "detail": "Executed at e967ce8b through the replay harness on both inputs: the account the native Stellar Asset Contract transfer creates (GBMZAFOQ\u2026) gets no account_created state change; every other compared fact matched. The same defect as cap-0073/native-sac-transfer-creates-account-local-twins.",
+        "reference": "https://github.com/stellar/wallet-backend/issues/804",
+        "finding": "F-0039",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "make replay-full (reports/replay-full/wallet-backend-sep54-s3 and wallet-backend-rpc)"
+      },
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "3e22515a44979fdc3a558fda3991ca2b48e38cef..3e22515a44979fdc3a558fda3991ca2b48e38cef",
+        "level": "replay",
+        "outcome": "dropped",
+        "qualifier": "partial",
+        "detail": "Executed again at 3e22515a (pinned current, 2026-11-18) with the same result on both inputs as at e967ce8b. Executed at e967ce8b through the replay harness on both inputs: the account the native Stellar Asset Contract transfer creates (GBMZAFOQ\u2026) gets no account_created state change; every other compared fact matched. The same defect as cap-0073/native-sac-transfer-creates-account-local-twins.",
+        "reference": "https://github.com/stellar/wallet-backend/issues/804",
+        "finding": "F-0039",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "make replay-full (reports/replay-full/wallet-backend-sep54-s3 and wallet-backend-rpc)"
+      },
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "18db88f4ba481c49a782d157be42177700c4385e..18db88f4ba481c49a782d157be42177700c4385e",
+        "level": "replay",
+        "outcome": "dropped",
+        "qualifier": "partial",
+        "detail": "Executed again at 18db88f4 (pinned current, 2026-11-19) and at 3e22515a (2026-11-18) with the same result on both inputs as at e967ce8b. Executed at e967ce8b through the replay harness on both inputs: the account the native Stellar Asset Contract transfer creates (GBMZAFOQ\u2026) gets no account_created state change; every other compared fact matched. The same defect as cap-0073/native-sac-transfer-creates-account-local-twins.",
+        "reference": "https://github.com/stellar/wallet-backend/issues/804",
+        "finding": "F-0039",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "make replay-full (reports/replay-full/wallet-backend-sep54-s3 and wallet-backend-rpc)"
+      },
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7..f0c00cf5242048d0438d07151cc1ef1a4b98d7c7",
+        "level": "replay",
+        "outcome": "dropped",
+        "qualifier": "partial",
+        "detail": "Executed again at f0c00cf5 (pinned current, 2026-11-20), at 18db88f4 (2026-11-19) and at 3e22515a (2026-11-18) with the same result on both inputs as at e967ce8b. Executed at e967ce8b through the replay harness on both inputs: the account the native Stellar Asset Contract transfer creates (GBMZAFOQ\u2026) gets no account_created state change; every other compared fact matched. The same defect as cap-0073/native-sac-transfer-creates-account-local-twins.",
+        "reference": "https://github.com/stellar/wallet-backend/issues/804",
+        "finding": "F-0039",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "make replay-full (reports/replay-full/wallet-backend-sep54-s3 and wallet-backend-rpc)"
+      }
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 17 of 'Native stellar asset contract', ledger 19, transaction 88f25cc7... as the plan names it. Local twins on both passphrases, with different whole-ledger counts, are cap-0073/native-sac-transfer-creates-account-local-twins."
+}

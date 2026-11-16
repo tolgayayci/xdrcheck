@@ -1,0 +1,41 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0084/api-muxed-address-field-order.9e4",
+  "title": "MuxedAccount med25519{id, ed25519} renders as an M address with the key first",
+  "kind": "api",
+  "caps": [
+    84
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "muxed-account-strkey",
+    "strkey-field-order"
+  ],
+  "why": "In XDR the 64-bit ID comes before the key in MuxedEd25519Account and MuxedContract, while the SEP-0023 strkey payload puts the key first; code that copies bytes between the two forms instead of converting field by field produces a valid-looking address for another key and ID.",
+  "api": {
+    "op": "address.to_strkey",
+    "input": {
+      "xdr_hex": "0000010001020304050607083f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a",
+      "xdr_type": "MuxedAccount"
+    },
+    "expect_value": "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAICAMCAKBQHBA7T4"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-contract.x#L189-L199",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x#L21-L31",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0084.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0084/api-muxed-address-field-order.9e4.json. Origin: probe vector 9E4, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). XDR: KEY_TYPE_MUXED_ED25519, id 0102030405060708, key 3f0c\u2026e89a. Strkey payload: key || id. The same field-order trap as the muxed contract, on the older type. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "spec"
+}

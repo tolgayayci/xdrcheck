@@ -1,0 +1,59 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0084/api-muxed-address-field-order.9e2",
+  "title": "SCAddress MuxedContract{id, contractId} renders as a W address with the contract first",
+  "kind": "api",
+  "caps": [
+    84
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "muxed-contract-strkey",
+    "strkey-field-order",
+    "sc-address-muxed-contract"
+  ],
+  "why": "In XDR the 64-bit ID comes before the key in MuxedEd25519Account and MuxedContract, while the SEP-0023 strkey payload puts the key first; code that copies bytes between the two forms instead of converting field by field produces a valid-looking address for another key and ID.",
+  "api": {
+    "op": "address.from_sc_address",
+    "input": {
+      "xdr_hex": "0000000501020304050607083f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
+    },
+    "expect_value": "WA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAICAMCAKBQHBCARO"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.4.1",
+        "level": "L4",
+        "outcome": "reject",
+        "detail": "Executed on 16.4.1: the Protocol 30 XDR decodes the SCAddress, but Address.fromScAddress throws 'Unsupported address type: scAddressTypeMuxedContract'. Muxed contract addresses came to the Address class in 17.3.0 (#1811); the 16.x line does not have them.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1811",
+        "finding": "F-0020",
+        "fixed_in": "17.3.0 (not on the 16.x line)",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9E2 (evidence/sdk-matrix), executed on js 16.4.1; xcc conform run --columns 'js@*' --entries 'cap-0084/api-muxed-address-field-order.9e2'",
+        "match": {
+          "reason": "unsupported_address_type"
+        }
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-contract.x#L189-L199",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x#L21-L31",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0084.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0084/api-muxed-address-field-order.9e2.json. Origin: probe vector 9E2, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). XDR: SC_ADDRESS_TYPE_MUXED_CONTRACT (5), id 0102030405060708, contract ID 3f0c\u2026e89a. Strkey payload: contract ID || id. Needs the Protocol 30 definitions. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "spec"
+}

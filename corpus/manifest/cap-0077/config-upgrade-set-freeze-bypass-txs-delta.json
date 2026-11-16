@@ -1,0 +1,64 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0077/config-upgrade-set-freeze-bypass-txs-delta",
+  "title": "ConfigUpgradeSet holding CONFIG_SETTING_FREEZE_BYPASS_TXS_DELTA, the upgrade-set bytes stellar-core stores in contract data",
+  "kind": "xdr",
+  "caps": [
+    77
+  ],
+  "protocol": {
+    "introduced": 26
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "why": "From protocol 26 the list of transactions allowed to bypass frozen keys (CAP-0077) changes through a delta: hashes to add and hashes to remove. stellar-core applies the delta to the stored CONFIG_SETTING_FREEZE_BYPASS_TXS entry and never stores the delta, so the only place a ledger holds this arm is the ConfigUpgradeSet kept as SCV_BYTES contract data before the upgrade. Readers that decode those bytes and know only the stored setting arms reject them.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ConfigUpgradeSet",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "05d5dd76f2753ddcbf4a0c870b7b6665c19eedc447b69f54d0cb13819f3e21ec",
+        "bytes": 48,
+        "path": "blobs/05/05d5dd76f2753ddcbf4a0c870b7b6665c19eedc447b69f54d0cb13819f3e21ec.xdr"
+      },
+      "decoded": "decoded/05/05d5dd76f2753ddcbf4a0c870b7b6665c19eedc447b69f54d0cb13819f3e21ec.json.zst",
+      "decoded_sha256": "d5ab13d30434e01fda35ebad384741943a3222f78570922f52909770c48c617b",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/cap-0077/config-upgrade-set-freeze-bypass-txs-delta.json",
+        "reason": "a delta setting is an upgrade instruction that stellar-core applies to the stored setting and never stores itself, so a ledger holds it only inside a ConfigUpgradeSet kept as SCV_BYTES contract data; these are the exact upgrade-set bytes scenario s21-rare-scval-arms uploaded (identical under both passphrases), as an entry of their own"
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/updated_entry/0/freeze_bypass_txs_delta/add_txs/0",
+        "equals": "7863632f667265657a652d6279706173732f7363656e6172696f2f7332312f30"
+      },
+      {
+        "path": "/updated_entry/0/freeze_bypass_txs_delta/remove_txs",
+        "equals": []
+      }
+    ]
+  },
+  "notes": "The bytes are copied from the scenario's chain, where they sit inside contract data; coverage counts the arm there only as upgrade-set bytes, and this entry gives readers the value itself.",
+  "shapes": [
+    "config-upgrade-set-bytes",
+    "freeze-bypass-txs-delta"
+  ],
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0077.md"
+  ]
+}

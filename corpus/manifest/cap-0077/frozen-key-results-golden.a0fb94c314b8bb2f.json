@@ -1,0 +1,146 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0077/frozen-key-results-golden.a0fb94c314b8bb2f",
+  "title": "ClaimClaimableBalance failing with CLAIM_CLAIMABLE_BALANCE_TRUSTLINE_FROZEN",
+  "kind": "ledger",
+  "caps": [
+    77
+  ],
+  "protocol": {
+    "introduced": 26
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "frozen-ledger-keys",
+    "trustline-frozen",
+    "new-result-code"
+  ],
+  "why": "Protocol 26 adds frozen ledger keys and new result codes for operations that touch them. A claim whose trustline is frozen fails with claim_claimable_balance.trustline_frozen. Readers with a closed table of result codes fail to map it.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 17,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "897a993d6dc15f2445d29547425051c4d8369d0d979d4371cf3693aa8d2a222b",
+        "bytes": 1472,
+        "path": "blobs/89/897a993d6dc15f2445d29547425051c4d8369d0d979d4371cf3693aa8d2a222b.xdr"
+      },
+      "decoded": "decoded/89/897a993d6dc15f2445d29547425051c4d8369d0d979d4371cf3693aa8d2a222b.json.zst",
+      "decoded_sha256": "b53b4099630580e036fe395569606165f7e339cc50697258bcb8efe95f76c65e",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/FrozenLedgerKeysTests/a0fb94c314b8bb2f.xdr",
+        "file_sha256": "9cf9f7284fe4446df6cf1ecbda227dff478371ca8827edd1d19d1bd76bc0c9cf",
+        "frame_index": 15,
+        "test_name": "frozen ledger keys apply time validation|claim claimable balance trustline frozen",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "21ac89ef9b4401d0a081419b2792c47effb71b8fe2f58d595f50c3b3e1b5cccb",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "frozen ledger keys apply time validation|claim claimable balance trustline frozen",
+          "flags_source": "src/transactions/test/FrozenLedgerKeysTests.cpp:1164 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "0863bfc0481a31d23d13c36c38a70a22347c9bc96b27500eed1e09687ca7ec79",
+        "tx_hashes": [
+          "21ac89ef9b4401d0a081419b2792c47effb71b8fe2f58d595f50c3b3e1b5cccb"
+        ],
+        "tx_hash": "21ac89ef9b4401d0a081419b2792c47effb71b8fe2f58d595f50c3b3e1b5cccb",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "claim_claimable_balance"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 4
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "21ac89ef9b4401d0a081419b2792c47effb71b8fe2f58d595f50c3b3e1b5cccb",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "claim_claimable_balance.trustline_frozen"
+        ],
+        "fee_charged": "100"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/claim_claimable_balance",
+        "equals": "trustline_frozen"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GCLO7ZAKQZIK2VS3DRVWFGCYLILXF7Q3SJEUV5WHTTZ7KHFDFXHJMOVJ",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GCLO7ZAKQZIK2VS3DRVWFGCYLILXF7Q3SJEUV5WHTTZ7KHFDFXHJMOVJ"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 15 of the golden."
+}

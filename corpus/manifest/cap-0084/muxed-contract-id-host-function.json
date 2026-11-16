@@ -1,0 +1,258 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0084/muxed-contract-id-host-function",
+  "title": "muxed_id host function on a muxed contract address (W\u2026): the call returns u64 42",
+  "kind": "ledger",
+  "caps": [
+    84
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sc-address-muxed-contract",
+    "w-strkey",
+    "muxed-id-host-function",
+    "invoke-host-function",
+    "read-only-invocation"
+  ],
+  "why": "Protocol 30 (CAP-84) added SC_ADDRESS_TYPE_MUXED_CONTRACT, written W\u2026: a contract address with a 64-bit routing ID, and host functions that read the ID. Here a contract is called with the W\u2026 form of its own address and returns its ID, 42, so the envelope carries the new ScAddress arm. Readers built on older XDR cannot decode the transaction set at all; readers that decode it must keep the W\u2026 argument and the returned u64 intact.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 5545000,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "sc_address_type_muxed_contract",
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "e0eb3c882bac57b93c7a0ff12013b275442fd636f6ddc4ffaaadf779a6b739a0",
+        "bytes": 69928,
+        "path": "blobs/e0/e0eb3c882bac57b93c7a0ff12013b275442fd636f6ddc4ffaaadf779a6b739a0.xdr"
+      },
+      "decoded": "decoded/e0/e0eb3c882bac57b93c7a0ff12013b275442fd636f6ddc4ffaaadf779a6b739a0.json.zst",
+      "decoded_sha256": "3e3c33c3c3e50d6c301cc076b88046f73bdf333f900e469290af29cebf51ecae",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFAC03FF--5504000-5567999/FFAB63D7--5545000.xdr.zst",
+        "object_sha256": "8cc6554c6f931510b64fe1507221c71044f54c4e76226cd6b898f7adaf8a1dc9",
+        "object_bytes": 10861,
+        "decompressed_sha256": "003afd0efc1d3f162612b38dee47eb3b9a172a219278c498d810c71c99d0bc93",
+        "decompressed_bytes": 69940,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:12:40Z",
+        "written_by": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1); exporter 4d89b44",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1)",
+          "end-ledger": "5545000",
+          "end-ledger-close-time": "1793748640",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "30",
+          "start-ledger": "5545000",
+          "start-ledger-close-time": "1793748640",
+          "version": "4d89b44"
+        },
+        "refetch": "curl -fsS -o FFAB63D7--5545000.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFAC03FF--5504000-5567999/FFAB63D7--5545000.xdr.zst",
+        "perishable": true,
+        "regenerated": false,
+        "object_path": "objects/testnet/5545000/FFAB63D7--5545000.xdr.zst"
+      },
+      "focus": {
+        "tx_index": 7,
+        "tx_hash": "fd43f4a6299a5d7656edccd204c6e94a92e348531ca50f2ff66dc70bfc7fcc18",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/5/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "c408350e7da19b78a0cacdc5ee6e7971084af77ef6b983473322a19285d41ab7",
+        "tx_hashes": [
+          "46f2c62b1186288c798db37448572c29f2a19f8131b7976253468fdd4f9b0ab5",
+          "339017b82b564ba3e1248f72aea9f87cfdd6e33ece910582792d7d146ebbcd05",
+          "f39b68ac3e78f43438099d6af0e9168d0dc2b12fac1cee3dd87f8be94890f0b8",
+          "114aeaf929cfc94c7336aac0596db7594d44aae8085274b1076469224b7d2096",
+          "df1aeda14eb353972d753922754ac92c688cf467d79482530ddfffc709bb97f7",
+          "a803ea65407e1e79d4e3acd106a6e3d703f3a8bb9437bcabdfcc68db74b6b72f",
+          "bb007f2dcba166a9ce1db5b9ab6587338d86083a6431f14eeaf1772c9632e84e",
+          "fd43f4a6299a5d7656edccd204c6e94a92e348531ca50f2ff66dc70bfc7fcc18",
+          "b08bd2798ed6652fbc0fe3fe916e3145ac09f9ff294782fdb02bcc8dfc89b55f",
+          "504dbe642a844fc8132f9235d5fbe4d7e3e306fd10ab4386d5e760b15fb95f1b",
+          "ed8515f474aaac0e1f8d2813ba77a4bdff92d7a06f4d2f75e1572040312fbff4"
+        ],
+        "tx_hash": "fd43f4a6299a5d7656edccd204c6e94a92e348531ca50f2ff66dc70bfc7fcc18",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      },
+      "notes": "Real testnet ledger at Protocol 30, written live by stellar-core 30.0.0; perishable."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 11,
+      "operations": 11,
+      "events": 34,
+      "entry_changes": 158
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "46f2c62b1186288c798db37448572c29f2a19f8131b7976253468fdd4f9b0ab5",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 1,
+        "hash": "339017b82b564ba3e1248f72aea9f87cfdd6e33ece910582792d7d146ebbcd05",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "f39b68ac3e78f43438099d6af0e9168d0dc2b12fac1cee3dd87f8be94890f0b8",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "114aeaf929cfc94c7336aac0596db7594d44aae8085274b1076469224b7d2096",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 4,
+        "hash": "df1aeda14eb353972d753922754ac92c688cf467d79482530ddfffc709bb97f7",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "a803ea65407e1e79d4e3acd106a6e3d703f3a8bb9437bcabdfcc68db74b6b72f",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "bb007f2dcba166a9ce1db5b9ab6587338d86083a6431f14eeaf1772c9632e84e",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 7,
+        "hash": "fd43f4a6299a5d7656edccd204c6e94a92e348531ca50f2ff66dc70bfc7fcc18",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1680"
+      },
+      {
+        "index": 8,
+        "hash": "b08bd2798ed6652fbc0fe3fe916e3145ac09f9ff294782fdb02bcc8dfc89b55f",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 9,
+        "hash": "504dbe642a844fc8132f9235d5fbe4d7e3e306fd10ab4386d5e760b15fb95f1b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 10,
+        "hash": "ed8515f474aaac0e1f8d2813ba77a4bdff92d7a06f4d2f75e1572040312fbff4",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/5/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/contract_address",
+        "equals": "CCGU5KUWVWJUKAAK5PBB5VDVIHEZ7W4WBKEAPDQLBZJMZW4HABUFSQYT"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/5/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "muxed_id"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/5/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/0",
+        "equals": {
+          "address": "WCGU5KUWVWJUKAAK5PBB5VDVIHEZ7W4WBKEAPDQLBZJMZW4HABUFSAAAAAAAAAAAFIUOA"
+        },
+        "note": "SC_ADDRESS_TYPE_MUXED_CONTRACT: the contract CCGU5KUW\u2026 with ID 42."
+      },
+      {
+        "path": "/v2/tx_processing/7/tx_apply_processing/v4/soroban_meta/return_value",
+        "equals": {
+          "u64": "42"
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GAPVWIR6SYFVAOA3XD3JMIZRN3VNOTQPTZB47OCKBKPAALCXY4EBPRR6",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 7,
+        "asset": "native",
+        "amount": "6488",
+        "from": {
+          "address": "GAPVWIR6SYFVAOA3XD3JMIZRN3VNOTQPTZB47OCKBKPAALCXY4EBPRR6"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 7,
+        "asset": "native",
+        "amount": "4808",
+        "to": {
+          "address": "GAPVWIR6SYFVAOA3XD3JMIZRN3VNOTQPTZB47OCKBKPAALCXY4EBPRR6"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0084.md"
+  ],
+  "reference": "network",
+  "notes": "Apply index 7 of 11; envelope stage 0, cluster 0, position 5. GAPVWIR6\u2026 calls muxed_id(WCGU5KUW\u2026) on CCGU5KUW\u2026; the W\u2026 address is CCGU5KUW\u2026 (key 8d4eaa96\u20266859) with ID 42, and the return value is u64 42. The call is read-only: no ledger entry changes besides the source's fee and sequence number, so the contract is not a participant and the W\u2026 address appears only in the envelope. The fee events charge 6488 and refund -4808 (fee_charged 1680). Written live by stellar-core 30.0.0. Testnet is reset on 2026-12-16; the vendored object will then be the only copy."
+}

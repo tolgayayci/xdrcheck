@@ -1,0 +1,171 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0073/sac-payment-after-trustline-or-account-removed-golden.d4d1e55e021885af",
+  "title": "SAC transfer to an account merged earlier in the same ledger fails",
+  "kind": "ledger",
+  "caps": [
+    73
+  ],
+  "protocol": {
+    "introduced": 26
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sac-transfer",
+    "failed-soroban-transaction",
+    "same-ledger-removal"
+  ],
+  "why": "An AccountMerge removes the destination, and a SAC transfer to it later in the same ledger traps. Readers that credit the destination from the envelope record a credit to an account that no longer exists.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 14,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "deb2c335d0f0c9fd5d20cdc469eb60b9cf7e5f5dc257bb41bb7371cb178ada64",
+        "bytes": 5460,
+        "path": "blobs/de/deb2c335d0f0c9fd5d20cdc469eb60b9cf7e5f5dc257bb41bb7371cb178ada64.xdr"
+      },
+      "decoded": "decoded/de/deb2c335d0f0c9fd5d20cdc469eb60b9cf7e5f5dc257bb41bb7371cb178ada64.json.zst",
+      "decoded_sha256": "7f769696a5a8c4f0018dc05a5355e81d2593ceb0e72f9225c6ca0e7acbb95d8a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/d4d1e55e021885af.xdr",
+        "file_sha256": "0b53c8e341c43682f80659a468a85522ab3a2e8d836b0228c385e4d4a613089d",
+        "frame_index": 12,
+        "test_name": "merge account then SAC payment scenarios|protocol version 30|SAC payment to the merged account",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 1,
+        "tx_hash": "d915f964c75faa9a9f2e456cc40b737633d8bf23803a04d8f22e6a552a301407",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "merge account then SAC payment scenarios|protocol version 30|SAC payment to the merged account",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:9268 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "5773a4e405e59ad3013fcd908a287f4209593130c32054c266c0b1d02bef3aaa",
+        "tx_hashes": [
+          "ff9f094915a704d828a5650f2f12b7d97d8937dfce3f9b9a27a562fa4ffb66fc",
+          "d915f964c75faa9a9f2e456cc40b737633d8bf23803a04d8f22e6a552a301407"
+        ],
+        "tx_hash": "d915f964c75faa9a9f2e456cc40b737633d8bf23803a04d8f22e6a552a301407",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function",
+          "operation_source": "GCNR7SM5CIN33UEKO4G6ZLNPTWDXCBFRQSTDTJDDGVSMPUVSMAOXEA4M"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 2,
+      "operations": 2,
+      "events": 0,
+      "entry_changes": 14
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "ff9f094915a704d828a5650f2f12b7d97d8937dfce3f9b9a27a562fa4ffb66fc",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "d915f964c75faa9a9f2e456cc40b737633d8bf23803a04d8f22e6a552a301407",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "invoke_host_function.trapped"
+        ],
+        "fee_charged": "80479"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/1/result/result/result",
+        "equals": {
+          "tx_failed": [
+            {
+              "op_inner": {
+                "invoke_host_function": "trapped"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 1,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 1,
+        "asset": "native",
+        "amount": "1919621",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 12 of the golden; the focus is the failed SAC transfer (transaction 1 in apply order), after the removal earlier in the same ledger."
+}

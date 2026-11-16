@@ -1,0 +1,234 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0076/fee-pool-adjustment-on-public-passphrase",
+  "title": "Stepwise Protocol 23 to 24 upgrade on the public passphrase adding 31,879,035 stroops to the fee pool",
+  "kind": "ledger",
+  "caps": [
+    76
+  ],
+  "protocol": {
+    "introduced": 24
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "ledger-upgrade-version",
+    "fee-pool-adjustment",
+    "header-only-change",
+    "no-transactions"
+  ],
+  "why": "On the public passphrase the Protocol 24 upgrade adds 31,879,035 stroops to the header's fee pool with no ledger-entry change and no transaction. Readers that reconcile the fee pool from fee charges alone, or that assume upgrades only change entries, find the numbers do not add up.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 23,
+      "header_protocol": 24,
+      "ledger_seq": 14,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "c1892c9fc9dc3326613812a32734594e70bb23ea2af8760f48beb948c6fcfed4",
+        "bytes": 1120,
+        "path": "blobs/c1/c1892c9fc9dc3326613812a32734594e70bb23ea2af8760f48beb948c6fcfed4.xdr"
+      },
+      "decoded": "decoded/c1/c1892c9fc9dc3326613812a32734594e70bb23ea2af8760f48beb948c6fcfed4.json.zst",
+      "decoded_sha256": "9f065634b7fdc62c49a3e26d0eef71e88fb30e9c288d630a778b65f9c1ff433b",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s19-protocol-24-upgrade.yaml",
+        "scenario_sha256": "4af2ff1229671d03de0280544fa99f8973e40c2aaff1a395886e73cac13546cc",
+        "step": "upgrade-to-24",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1712000000",
+        "stream_sha256": "80c5100727fd109bbd35133a2aad4f33bdbbc27e5667c40544433929077f2b45",
+        "frame_index": 12,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p23-testnet.xdr",
+            "sha256": "49c2af08cbbded7bcaa9bb0a646176283f2f9eb637b2e77ef49ab103025dc32f",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p23/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s19-protocol-24-upgrade.yaml --network testnet --protocol 23",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "cf627c79543dfc1bbe2a5aa5aa70824b9dc3c4c90dd7b0834d26c949fc7623c0",
+        "header": {
+          "ledger_version": "24",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "9765439",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 23,
+      "header_protocol": 24,
+      "ledger_seq": 14,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "cfcd5cd36bcbf8d15e0397634d2c79b61e46ee7d1b12c22d05668deeaaa48976",
+        "bytes": 1120,
+        "path": "blobs/cf/cfcd5cd36bcbf8d15e0397634d2c79b61e46ee7d1b12c22d05668deeaaa48976.xdr"
+      },
+      "decoded": "decoded/cf/cfcd5cd36bcbf8d15e0397634d2c79b61e46ee7d1b12c22d05668deeaaa48976.json.zst",
+      "decoded_sha256": "c5eeeef4004495b3b55a90da34e3aba68e1282a7d38126bd382186e49ebfd13e",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s19-protocol-24-upgrade.yaml",
+        "scenario_sha256": "4af2ff1229671d03de0280544fa99f8973e40c2aaff1a395886e73cac13546cc",
+        "step": "upgrade-to-24",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1712000000",
+        "stream_sha256": "9deaecc87fa4ebc5732d0f40fcb6f2cbe7e57b9a096ec3593e768ba230f08123",
+        "frame_index": 12,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p23-testnet.xdr",
+            "sha256": "49c2af08cbbded7bcaa9bb0a646176283f2f9eb637b2e77ef49ab103025dc32f",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p23/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s19-protocol-24-upgrade.yaml --network pubnet --protocol 23",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "8a0bf4c1a8997f4a9bedb8698058bc13fcfaa56e4d4482742b1ea63451982d31",
+        "header": {
+          "ledger_version": "24",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "41644474",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 0,
+      "operations": 0,
+      "events": 0,
+      "entry_changes": 2
+    },
+    "values": [
+      {
+        "path": "/v2/ledger_header/header/ledger_version",
+        "equals": 24
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/upgrades",
+        "equals": [
+          "0000000100000018"
+        ],
+        "note": "LEDGER_UPGRADE_VERSION (1) to 24, the only upgrade nominated."
+      },
+      {
+        "path": "/v2/ledger_header/header/fee_pool",
+        "equals": "${derived.header.fee_pool}",
+        "note": "On the public passphrase 41644474: the previous ledger's fee pool, 9765439, plus 31879035 stroops added by the upgrade itself; the ledger has no transaction, and no ledger entry records the addition. On testnet the fee pool stays 9765439."
+      },
+      {
+        "path": "/v2/upgrades_processing/0/upgrade",
+        "equals": {
+          "version": 24
+        }
+      },
+      {
+        "path": "/v2/tx_processing",
+        "equals": []
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0076.md"
+  ],
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s19-protocol-24-upgrade.yaml on a local stellar-core, at Protocol 23 on the testnet and public passphrases (2 variants); the accounts are label-derived and equal across variants, hashes and the fee pool are per variant under derived. The two upgrade ledgers have the same shape and length; only the public-passphrase one carries the adjustment: its fee pool is 41644474 (9765439 + 31879035), the testnet one stays at 9765439. The shared expectation pins the fee pool through each variant's derived.header.fee_pool, and verify checks each variant's derived.header against the header in its blob. Each variant's protocol is the one transactions are applied under (23); the header already shows 24 (header_protocol). No reader has been run against these ledgers yet, so the entry declares no known divergence."
+}
