@@ -1,0 +1,163 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/change-trust-native-line-before-p10",
+  "title": "ChangeTrust whose line is the native asset, accepted before Protocol 10 and failed with txINTERNAL_ERROR",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "A classic operation rule older than the CAP process: stellar-core rejects a native trust line at validation from Protocol 10 (ChangeTrustOpFrame::doCheckValid); before that the operation reached apply",
+  "protocol": {
+    "introduced": 1,
+    "removed": 10
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "shapes": [
+    "change-trust-native-line",
+    "tx-internal-error",
+    "real-ledger-arm-coverage"
+  ],
+  "why": "Before Protocol 10 stellar-core let a ChangeTrust with the native asset as its line through validation and threw while applying it, so the ledger holds the native arm of the trust-line asset union with a txINTERNAL_ERROR result and no operation results. Readers that assume a trust line always names a credit asset or a pool, or that expect operation results on every failed transaction, break on it.",
+  "notes": "Chosen with the locate index of the full pubnet scan (token `T|arm|ChangeTrustAsset::ASSET_TYPE_NATIVE`): among the ledgers that hold the shape, the one with the smallest lake object. Header hash recomputed from the header and every transaction hash recomputed from its envelope at capture. `expect.values` are written by hand from the decoded sidecar; participants, state changes and movements are the reference extractor's output, checked against the sidecar.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 8,
+      "ledger_seq": 13012938,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "ec983cf3bd44eea10b87a830fc431a29affd3554d186a069c4f5a56b6c46499b",
+        "bytes": 1292,
+        "path": "blobs/ec/ec983cf3bd44eea10b87a830fc431a29affd3554d186a069c4f5a56b6c46499b.xdr"
+      },
+      "decoded": "decoded/ec/ec983cf3bd44eea10b87a830fc431a29affd3554d186a069c4f5a56b6c46499b.json.zst",
+      "decoded_sha256": "1b8de3d48f666ef4de75f23348ecad6ae1903a03cf668cb40b02f785d7d19b4b",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FF39C1FF--12992000-13055999/FF397035--13012938.xdr.zst",
+        "object_sha256": "6cb11119c27c7788052edeb4d87f2e39e60e17fbbd232cddd9e0e9dabcfca108",
+        "object_bytes": 860,
+        "decompressed_sha256": "ee6f15e0a2e5c1dce22e379431d494dcd11ca301549ee6ed8c6f4323425efbc9",
+        "decompressed_bytes": 1304,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-18T09:40:17Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "13012938",
+          "end-ledger-close-time": "1503187980",
+          "file-mtime": "1757496011000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "8",
+          "start-ledger": "13012938",
+          "start-ledger-close-time": "1503187980",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FF397035--13012938.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FF39C1FF--12992000-13055999/FF397035--13012938.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/13012938/FF397035--13012938.xdr.zst"
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "c74bd2388a847973914688417c1df061f84dbb85606c816513c79674adaeb9ea"
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "d4da5d4cfa372d3f6c1303dbfed7f15aeed25e4cc28e8ae4f79aa4af1de3c79b",
+        "tx_hashes": [
+          "c74bd2388a847973914688417c1df061f84dbb85606c816513c79674adaeb9ea"
+        ],
+        "tx_hash": "c74bd2388a847973914688417c1df061f84dbb85606c816513c79674adaeb9ea",
+        "l1": {
+          "memo_type": "none"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 2,
+      "events": 1,
+      "entry_changes": 2
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "c74bd2388a847973914688417c1df061f84dbb85606c816513c79674adaeb9ea",
+        "successful": false,
+        "result_code": "tx_internal_error",
+        "operation_result_codes": [],
+        "fee_charged": "200"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v0/tx_set/txs/0/tx_v0/tx/operations/0/body/change_trust/line",
+        "equals": "native",
+        "note": "ChangeTrustAsset arm ASSET_TYPE_NATIVE (Asset at Protocol 8)."
+      },
+      {
+        "path": "/v0/tx_set/txs/0/tx_v0/tx/operations/0/body/change_trust/limit",
+        "equals": "9223372036854775807"
+      },
+      {
+        "path": "/v0/tx_processing/0/result/result/result",
+        "equals": "tx_internal_error",
+        "note": "txINTERNAL_ERROR has a void body: no operation results, although the transaction has two operations."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GAFXANVKXCKS45PXMM5OT33GGSIHN7KQ45M6SRS5BGD3GCKCHC52XSAA",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GAXX3LVCL7CTS657DAZNN5G5O4PJX7ZAMOD36C7XJ5CTBDEQOQQ4I4ND",
+          "because": "named in the envelope of a failed transaction; only the fee payer and the source changed (candidate)"
+        }
+      ]
+    },
+    "state_changes": [],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "200",
+        "from": {
+          "address": "GAFXANVKXCKS45PXMM5OT33GGSIHN7KQ45M6SRS5BGD3GCKCHC52XSAA"
+        }
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/muxed-id-max-and-offer-id-max-roundtrip",
+  "title": "Transaction envelope carrying muxed id 2^64-1 and offer id 2^63-1, the largest values both fields hold",
+  "kind": "xdr",
+  "caps": [
+    27
+  ],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "muxed-account-id-max",
+    "offer-id-max",
+    "unsigned-envelope",
+    "positive-control"
+  ],
+  "why": "The muxed id is unsigned 64-bit and the offer id signed 64-bit; a reader that holds either in a float64 or the wrong signedness decodes a different id. Every SDK tested round-trips these bytes, so the entry is the positive control for the 64-bit ID encoders.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "TransactionEnvelope",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "ecbb9baf9859ccbdc89bcdc11b9be844c132781b7cfaf6dcdf502902d52280e9",
+        "bytes": 224,
+        "path": "blobs/ec/ecbb9baf9859ccbdc89bcdc11b9be844c132781b7cfaf6dcdf502902d52280e9.xdr"
+      },
+      "decoded": "decoded/ec/ecbb9baf9859ccbdc89bcdc11b9be844c132781b7cfaf6dcdf502902d52280e9.json.zst",
+      "decoded_sha256": "8356b7522a5bd758ba2da7bd97952556a490cd275b5f390a70b701950adc9346",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/classic/muxed-id-max-and-offer-id-max-roundtrip.json",
+        "reason": "An unsigned envelope built by hand to carry both 64-bit extremes in one value; stellar-core would accept a signed equivalent, but these bytes were not taken from core output"
+      },
+      "derived": {
+        "l1": {
+          "memo_type": "none"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/tx/tx/source_account",
+        "equals": "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJV7777777777775ZO4",
+        "note": "MuxedAccount med25519{id 0xffffffffffffffff, key 3f0c34bf\u2026e89a} read from the bytes; strkey payload is key then id"
+      },
+      {
+        "path": "/tx/tx/operations/0/body/payment/destination",
+        "equals": "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJV7777777777775ZO4",
+        "note": "the same muxed account as the payment destination"
+      },
+      {
+        "path": "/tx/tx/operations/1/body/manage_sell_offer/offer_id",
+        "equals": "9223372036854775807",
+        "note": "int64 0x7fffffffffffffff"
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0027.md",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785"
+  ],
+  "notes": "Unsigned TransactionEnvelope (no signatures), so its hash is passphrase-dependent and is not pinned. stellar-core 30.0.0 print-xdr --filetype tx decodes it to the same ids (run by hand for this entry).",
+  "reference": "protocol-rule"
+}

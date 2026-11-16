@@ -1,0 +1,41 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/api-memo-text-non-utf8-roundtrip",
+  "title": "Text memo with the non-UTF-8 bytes ff fe survives a native round trip, or is refused",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "MEMO_TEXT is an XDR string<28> (bytes, no character set) since the first protocol; not a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "acceptable",
+  "flags": [
+    "non-utf8-text"
+  ],
+  "shapes": [
+    "memo-text",
+    "non-utf8-text"
+  ],
+  "why": "An XDR string is a byte string and stellar-core does not validate MEMO_TEXT, so ledgers hold text memos that are not UTF-8; an SDK that turns them into a native string and back replaces the bytes, and the rebuilt memo no longer matches the signed transaction.",
+  "api": {
+    "op": "memo.text_roundtrip",
+    "input": {
+      "xdr_hex": "0000000100000002fffe0000"
+    },
+    "expect_xdr_hex": "0000000100000002fffe0000",
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x",
+    "https://github.com/stellar/js-stellar-sdk/issues/1823"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/classic/api-memo-text-non-utf8-roundtrip.json. Origin: probe vector 7a, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). Exact or refuse: the re-encoded Memo must be the input bytes (MEMO_TEXT, length 2, ff fe, padding), or the SDK refuses to give a native text. The driver's value (the native text's bytes) is not judged. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

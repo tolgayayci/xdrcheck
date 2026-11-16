@@ -1,0 +1,157 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/real-result-codes.testnet-7858",
+  "title": "Testnet ledger 7858: real CHANGE_TRUST_NO_ISSUER",
+  "kind": "ledger",
+  "caps": [],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "why": "A ledger the network actually closed that holds this arm: ChangeTrustResult::CHANGE_TRUST_NO_ISSUER. Generated entries had none of them, so a reader's handling of them was never exercised on bytes stellar-core wrote under real traffic.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 24,
+      "ledger_seq": 7858,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "3bad4401a6963efbab8f28abaf3b3f7cc66b32002da84a6beadcb6324513b0ee",
+        "bytes": 1484,
+        "path": "blobs/3b/3bad4401a6963efbab8f28abaf3b3f7cc66b32002da84a6beadcb6324513b0ee.xdr"
+      },
+      "decoded": "decoded/3b/3bad4401a6963efbab8f28abaf3b3f7cc66b32002da84a6beadcb6324513b0ee.json.zst",
+      "decoded_sha256": "1d26a0a212e9c794cc6949e34d8c085c325c01b2a5ab4e62193b821cd965b407",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFFFFFFF--0-63999/FFFFE14D--7858.xdr.zst",
+        "object_sha256": "f343c59fdc00ae51a09acce39a4e96b7a14cb7750f7f0d80ec9349e9aa7ae09d",
+        "object_bytes": 811,
+        "decompressed_sha256": "52ba884d47e7dd99dc4e4108cfb8e5b2d1837712aa01dbbf2d3adf47aae2b05b",
+        "decompressed_bytes": 1496,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-14T03:11:20Z",
+        "written_by": "stellar-core 25.0.0 (e9748b05a70d613437a52c8388dc0d8e68149394); exporter 5ae46e1",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 25.0.0 (e9748b05a70d613437a52c8388dc0d8e68149394)",
+          "end-ledger": "7858",
+          "end-ledger-close-time": "1766031311",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "24",
+          "start-ledger": "7858",
+          "start-ledger-close-time": "1766031311",
+          "version": "5ae46e1"
+        },
+        "refetch": "curl -fsS -o FFFFE14D--7858.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFFFFFFF--0-63999/FFFFE14D--7858.xdr.zst",
+        "perishable": true,
+        "regenerated": false,
+        "object_path": "objects/testnet/7858/FFFFE14D--7858.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "b4232a367938da7d0a55a4420acb9357dda1f97a18551ec3bdccbb2970b6f6e3",
+        "tx_hashes": [
+          "9c91a4f4635b43b6fb2fa2be8cdc4a6fbdb7b9538fb25273f3b458ac020b1d00"
+        ],
+        "tx_hash": "9c91a4f4635b43b6fb2fa2be8cdc4a6fbdb7b9538fb25273f3b458ac020b1d00",
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "9c91a4f4635b43b6fb2fa2be8cdc4a6fbdb7b9538fb25273f3b458ac020b1d00"
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 4
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "9c91a4f4635b43b6fb2fa2be8cdc4a6fbdb7b9538fb25273f3b458ac020b1d00",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "change_trust.no_issuer"
+        ],
+        "fee_charged": "100"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GDGGUG6PVSX75XSBMJUBIWEW2DSSJDJLOWSQFQXGGIA3IBKZAUEA7GX5",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GAAL2LNXJTDQ2F6QBYRFCTNNNFEZ3A522E2NIMTKQR3AOHKOLMA3WQXD",
+          "because": "named in the envelope of a failed transaction; only the fee payer and the source changed (candidate)"
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "sequence_bumped",
+        "tx_index": 0,
+        "account": {
+          "address": "GDGGUG6PVSX75XSBMJUBIWEW2DSSJDJLOWSQFQXGGIA3IBKZAUEA7GX5"
+        },
+        "detail": {
+          "sequence_after": "33745558044673"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GDGGUG6PVSX75XSBMJUBIWEW2DSSJDJLOWSQFQXGGIA3IBKZAUEA7GX5"
+        }
+      }
+    ]
+  },
+  "notes": "Found by xdrcheck-corpus mine (the smallest ledger of the sampled range that shows the arm). Header hash recomputed from the header and every transaction hash recomputed from its envelope at capture; expect is the reference extractor's output. Focus: apply index 0 carries ChangeTrustResult::CHANGE_TRUST_NO_ISSUER.",
+  "caps_note": "Classic shapes found in real traffic; no single CAP",
+  "shapes": [
+    "change-trust-no-issuer",
+    "real-ledger-arm-coverage"
+  ],
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  }
+}

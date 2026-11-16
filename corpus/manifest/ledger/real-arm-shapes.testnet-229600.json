@@ -1,0 +1,132 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "ledger/real-arm-shapes.testnet-229600",
+  "title": "Testnet ledger 229600: real CREATE_PASSIVE_SELL_OFFER",
+  "kind": "ledger",
+  "caps": [],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "why": "A ledger the network actually closed that holds this arm: OperationBody::CREATE_PASSIVE_SELL_OFFER. Generated entries had none of them, so a reader's handling of them was never exercised on bytes stellar-core wrote under real traffic.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 24,
+      "ledger_seq": 229600,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "05c81d98d238a987453ed46c706d48a1205866e481e8dd3faed2e1c9be7afc94",
+        "bytes": 5640,
+        "path": "blobs/05/05c81d98d238a987453ed46c706d48a1205866e481e8dd3faed2e1c9be7afc94.xdr"
+      },
+      "decoded": "decoded/05/05c81d98d238a987453ed46c706d48a1205866e481e8dd3faed2e1c9be7afc94.json.zst",
+      "decoded_sha256": "1c05c7841ad934f2e32741a021b552454756672931fefdcb9c8760eafc8af7fa",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFFD11FF--192000-255999/FFFC7F1F--229600.xdr.zst",
+        "object_sha256": "8cbc73051c72b41f4bba0895fffe9468e9d82cd3ec5301055af024e0f43ce4df",
+        "object_bytes": 1920,
+        "decompressed_sha256": "a4b386dd40f526184649505e08a19e665cc43781eb174aa971c9be908c287de5",
+        "decompressed_bytes": 5652,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-14T03:11:24Z",
+        "written_by": "stellar-core 25.0.0 (e9748b05a70d613437a52c8388dc0d8e68149394); exporter 5ae46e1",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 25.0.0 (e9748b05a70d613437a52c8388dc0d8e68149394)",
+          "end-ledger": "229600",
+          "end-ledger-close-time": "1767141220",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "24",
+          "start-ledger": "229600",
+          "start-ledger-close-time": "1767141220",
+          "version": "5ae46e1"
+        },
+        "refetch": "curl -fsS -o FFFC7F1F--229600.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFFD11FF--192000-255999/FFFC7F1F--229600.xdr.zst",
+        "perishable": true,
+        "regenerated": false,
+        "object_path": "objects/testnet/229600/FFFC7F1F--229600.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "ee93bd1da59bec3b1cad479d48586cf3a8602f4723e40e278ddb3000f67fc8e2",
+        "tx_hashes": [
+          "e1a14f8ddf6a3d7460684dc708ce31fbb1aaf658bdf51e58c6e0661ae7576118",
+          "4866a1aa34935eaa69ce54d18d49b9fd1346bda21fbff8799daec7bc6dee8544",
+          "ed38c38619081d08589ad3a98e4278c76918be148d199a5d7d9b182b589e9953"
+        ]
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 3,
+      "operations": 4,
+      "events": 4,
+      "entry_changes": 20
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "e1a14f8ddf6a3d7460684dc708ce31fbb1aaf658bdf51e58c6e0661ae7576118",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "payment.success",
+          "payment.no_trust"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 1,
+        "hash": "4866a1aa34935eaa69ce54d18d49b9fd1346bda21fbff8799daec7bc6dee8544",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 2,
+        "hash": "ed38c38619081d08589ad3a98e4278c76918be148d199a5d7d9b182b589e9953",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "create_account.success"
+        ],
+        "fee_charged": "100"
+      }
+    ]
+  },
+  "notes": "Found by xdrcheck-corpus mine (the smallest ledger of the sampled range that shows the arm). Header hash recomputed from the header and every transaction hash recomputed from its envelope at capture; expect is the reference extractor's output. No focus transaction: the arm sits outside a result code, so expect holds the ledger and per-transaction results only.",
+  "caps_note": "Classic shapes found in real traffic; no single CAP",
+  "shapes": [
+    "create-passive-sell-offer",
+    "real-ledger-arm-coverage"
+  ],
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  }
+}

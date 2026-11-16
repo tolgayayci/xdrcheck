@@ -1,0 +1,81 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "limits/scvec-nesting-99",
+  "title": "ScVal of 99 nested vectors around a Void, the deepest the Soroban host converts",
+  "kind": "xdr",
+  "caps": [],
+  "caps_note": "A reader-limit probe: the nesting depth limit is the Soroban host's (DEFAULT_HOST_DEPTH_LIMIT = 100), not a CAP",
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "flags": [
+    "depth"
+  ],
+  "shapes": [
+    "scval-nesting",
+    "depth-boundary",
+    "scval-bare-value"
+  ],
+  "why": "The host converts at most 99 nested vectors around a Void as an argument, return value or event data and refuses 100, so a contract can return or emit this value (cap-0046/scval-nested-vec-99-in-event carries it in meta). A reader whose default decode depth is lower rejects a value that a successful transaction can carry.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "0c076b7b2791ff65af972f11890babd1b52730b468d87c607d5f32606e01fec1",
+        "bytes": 1192,
+        "path": "blobs/0c/0c076b7b2791ff65af972f11890babd1b52730b468d87c607d5f32606e01fec1.xdr"
+      },
+      "decoded": "decoded/0c/0c076b7b2791ff65af972f11890babd1b52730b468d87c607d5f32606e01fec1.json.zst",
+      "decoded_sha256": "1730f3fdc3ca003b093bde3fdc6c54a9ce09d019183053bf60f8ed968cad5834",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/limits/scvec-nesting-99.json",
+        "reason": "A reader-limit probe built by hand as a bare value: 99 nested vectors is the deepest the Soroban host converts (100 fails, measured for cap-0046/scval-nested-vec-99-in-event), so core can emit such a value inside a transaction, but these bytes were not taken from core output"
+      }
+    }
+  ],
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L0"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L0",
+        "outcome": "reject",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: 'exceeded max decoding depth'. js-xdr 4.0.0's default depth of 200 allows about 66 nested vectors; js-xdr 5 (the v17 line) raised it to 1500.",
+        "reference": "https://github.com/stellar/js-xdr/pull/155",
+        "finding": "F-0022",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 8n99 (evidence/sdk-matrix), executed on js 16.3.0, js 16.3.1 and js 16.4.1; boundary in the evidence/sdk-matrix probe, executed on depth boundaries"
+      },
+      {
+        "target": "stellar-xdr (crates.io)",
+        "versions": "30.0.0",
+        "level": "json",
+        "outcome": "reject",
+        "detail": "Executed on stellar-xdr 30.0.0 and main ebec5fb1c76e: the crate decodes the value (99 nested vectors) and writes its SEP-51 JSON, but Type::from_json refuses that JSON ('recursion limit exceeded'): from_json keeps serde_json's default recursion limit of 128, below the nesting of the value. SDF keeps this limit on purpose: stellar-rpc pins it in TestJSONConversionDepthLimit (pull request #943) and states that the deepest protocol-legal values convert only from their base64 form. Status wont_fix: recorded so the cell is expected.",
+        "reference": "https://github.com/stellar/stellar-rpc/pull/943",
+        "status": "wont_fix",
+        "observed": "executed",
+        "evidence": "xcc conform run --set json --levels json --entries 'limits/scvec-nesting-99' (verdict roundtrip_refused)"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/rs-soroban-env/blob/v30.0.0/soroban-env-host/src/budget/limits.rs"
+  ],
+  "notes": "Probe vector 8n99 (evidence/sdk-matrix/vectors/vectors.json; boundary search by evidence/sdk-matrix/depth_bisect.py). stellar-core 30.0.0 print-xdr --filetype scval decodes it (run by hand for this entry); its own bound is 499 nested vectors (evidence/core-print-xdr/out/depth.txt). This is the deepest value the Soroban host converts: the shape-emitter contract's tests measure 99 nested vectors as the deepest argument, return value and event data, and nested_vec(100) fails in simulation with Error(Context, ExceededLimit) (scenarios/s15-shape-emitter-contract.yaml).",
+  "reference": "protocol-rule"
+}

@@ -1,0 +1,546 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/asset-code12-with-five-characters",
+  "title": "Payments of AlphaNum12 `ABCDE` (seven trailing NULs) and AlphaNum4 `ABCD` from one issuer",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "Asset-code rules predate the CAP process; the shape is an encoding rule, not a protocol change.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "asset-code12",
+    "asset-code-padding",
+    "asset-code-prefix-collision",
+    "issued-asset-payment"
+  ],
+  "why": "A five-character code must be an AlphaNum12 padded with seven NULs, and it sits next to a different asset whose four-character code is its prefix. Readers that trim, truncate to four bytes or key assets by code text without the type merge the two.",
+  "fields": {
+    "validated": [
+      "VF-24a",
+      "VF-26"
+    ]
+  },
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 22,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "bc20f47effdd1c271b5332a44d24e962f200c4016f1c6c450ec83cf56d40a145",
+        "bytes": 3312,
+        "path": "blobs/bc/bc20f47effdd1c271b5332a44d24e962f200c4016f1c6c450ec83cf56d40a145.xdr"
+      },
+      "decoded": "decoded/bc/bc20f47effdd1c271b5332a44d24e962f200c4016f1c6c450ec83cf56d40a145.json.zst",
+      "decoded_sha256": "76244e4bfba1dd04e775868e43abf602e994bd7d2538b76903d504305caab198",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s01-classic-muxed-and-amounts.yaml",
+        "scenario_sha256": "ef6675f0e56ae63d5829a0c1f964e01cb8520b91c6796542eec572e87b88988d",
+        "step": "asset-code12-five-characters",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1720000000",
+        "stream_sha256": "29c252f662dca04ab841799f5b5922b2636f21b793fbe2688585fb99524a9ca4",
+        "frame_index": 20,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s01-classic-muxed-and-amounts.yaml --network testnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "468fcb4f0bacc6eedb4d3d78e4e4559314be1cbfcb1f7dc4dc0042d7e9f21016",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "311cd8a830711cd20f6d1782a5e23699364934f409ce9031740d379a74d73c03",
+        "tx_hash": "468fcb4f0bacc6eedb4d3d78e4e4559314be1cbfcb1f7dc4dc0042d7e9f21016",
+        "fee_charged": "200",
+        "tx_hashes": [
+          "468fcb4f0bacc6eedb4d3d78e4e4559314be1cbfcb1f7dc4dc0042d7e9f21016"
+        ],
+        "contracts": {
+          "sac_abcd": "CCTAONK2TGWHUOQH5NK436F3WTPCEV2J6PZTBDAYQDKDUGMZ7G2TI2BE",
+          "sac_abcde": "CCGZ6TBG6J6HPGUFQYVMGUOM23Z3MZLHY2ODNM4VCG63Q76WINYCOHD6",
+          "sac_big": "CCHDKPZHAU4A2K3NRCF5ZPKY2GXREKHU3QYNQLDFKGJXXGM4JF6EERYG",
+          "sac_xlmlc": "CAQ37FNNUBRDOEYC67HW2N5GN35MZQ3GB5I2SJSYEZGEKBMRAIIC2DHW"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "H1": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA",
+          "H2": "GCJTJVUBT6AAONWUMWOFMVYLFWLR3DGTSBUF24KT42KXERTHLWPAGWC6",
+          "I": "GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7",
+          "M": "GAOACNPEYWKXDUGXFFHSRX4B2ON6QMJQBWBRN6HY3GYGFYGZCBRIMGLC",
+          "root": "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 22,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "73f6b91046f3650c90df3bd29df7f4147901b8e5627e4e1c2b46f8441999dd05",
+        "bytes": 3312,
+        "path": "blobs/73/73f6b91046f3650c90df3bd29df7f4147901b8e5627e4e1c2b46f8441999dd05.xdr"
+      },
+      "decoded": "decoded/73/73f6b91046f3650c90df3bd29df7f4147901b8e5627e4e1c2b46f8441999dd05.json.zst",
+      "decoded_sha256": "fb06e47637fca572faf5115f57a595472cd22ec9a2229a05670594693a7b7f4c",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s01-classic-muxed-and-amounts.yaml",
+        "scenario_sha256": "ef6675f0e56ae63d5829a0c1f964e01cb8520b91c6796542eec572e87b88988d",
+        "step": "asset-code12-five-characters",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1720000000",
+        "stream_sha256": "e4687865a6cdb842f1f23aa5bf92cec723844b81d0c094d6373d0a422c388c10",
+        "frame_index": 20,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s01-classic-muxed-and-amounts.yaml --network pubnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "f4ffdd61e97bf00c1f51d5c4ff6d2a82696f8af0ab4a56b393526bdf74e77842",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "4c96d5553f00bb8f063a00ea233ac18a80dc6d3c9dd326a511b2e25336d4f3e2",
+        "tx_hash": "f4ffdd61e97bf00c1f51d5c4ff6d2a82696f8af0ab4a56b393526bdf74e77842",
+        "fee_charged": "200",
+        "tx_hashes": [
+          "f4ffdd61e97bf00c1f51d5c4ff6d2a82696f8af0ab4a56b393526bdf74e77842"
+        ],
+        "contracts": {
+          "sac_abcd": "CA45BVZ22DC2M4SY7CW472DN7JNPAEMQ7GPJ4DYFAD5ID4CUBA5FUY4J",
+          "sac_abcde": "CARRFNWDIXXE43WKHOYUPUB4HVRC744YUV5BCAX2B37XUWK3B55NPXV4",
+          "sac_big": "CCZ4SARQK2KFBAPBOLHWVVM44A7JESQFKMTBOI4CDXUFD22U4CQDPVOD",
+          "sac_xlmlc": "CBBYKTTHVG4BXDLNI2ISL6J62BIOAWWRWDKKQ76CN3YPFOM3DFTJU3IN"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "H1": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA",
+          "H2": "GCJTJVUBT6AAONWUMWOFMVYLFWLR3DGTSBUF24KT42KXERTHLWPAGWC6",
+          "I": "GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7",
+          "M": "GAOACNPEYWKXDUGXFFHSRX4B2ON6QMJQBWBRN6HY3GYGFYGZCBRIMGLC",
+          "root": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 22,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "05b8b0d53e8644a5bad991a7a2e6c11ad09bc401dd40f7856ba110f39335aac7",
+        "bytes": 3304,
+        "path": "blobs/05/05b8b0d53e8644a5bad991a7a2e6c11ad09bc401dd40f7856ba110f39335aac7.xdr"
+      },
+      "decoded": "decoded/05/05b8b0d53e8644a5bad991a7a2e6c11ad09bc401dd40f7856ba110f39335aac7.json.zst",
+      "decoded_sha256": "0443a04bfaa6d3851a1787e98b6ac3823bc4460a5e5caa242e08e029d77bf369",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s01-classic-muxed-and-amounts.yaml",
+        "scenario_sha256": "ef6675f0e56ae63d5829a0c1f964e01cb8520b91c6796542eec572e87b88988d",
+        "step": "asset-code12-five-characters",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1720000000",
+        "stream_sha256": "98cf3f41394ad3c0b15c770b31e6e7603ee1a5ec2dc79e2bc606cc28b68b55ad",
+        "frame_index": 20,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s01-classic-muxed-and-amounts.yaml --network testnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "468fcb4f0bacc6eedb4d3d78e4e4559314be1cbfcb1f7dc4dc0042d7e9f21016",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "1931e0f0a9f50d1fa6031006fd952e7b97221fa050d5fd62cfc2be863db20c28",
+        "tx_hash": "468fcb4f0bacc6eedb4d3d78e4e4559314be1cbfcb1f7dc4dc0042d7e9f21016",
+        "fee_charged": "200",
+        "tx_hashes": [
+          "468fcb4f0bacc6eedb4d3d78e4e4559314be1cbfcb1f7dc4dc0042d7e9f21016"
+        ],
+        "contracts": {
+          "sac_abcd": "CCTAONK2TGWHUOQH5NK436F3WTPCEV2J6PZTBDAYQDKDUGMZ7G2TI2BE",
+          "sac_abcde": "CCGZ6TBG6J6HPGUFQYVMGUOM23Z3MZLHY2ODNM4VCG63Q76WINYCOHD6",
+          "sac_big": "CCHDKPZHAU4A2K3NRCF5ZPKY2GXREKHU3QYNQLDFKGJXXGM4JF6EERYG",
+          "sac_xlmlc": "CAQ37FNNUBRDOEYC67HW2N5GN35MZQ3GB5I2SJSYEZGEKBMRAIIC2DHW"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "H1": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA",
+          "H2": "GCJTJVUBT6AAONWUMWOFMVYLFWLR3DGTSBUF24KT42KXERTHLWPAGWC6",
+          "I": "GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7",
+          "M": "GAOACNPEYWKXDUGXFFHSRX4B2ON6QMJQBWBRN6HY3GYGFYGZCBRIMGLC",
+          "root": "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 22,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "923dbc1396a6ef33dcf970b772a98620826e65453e972bb705f4f79dd4f0e4b8",
+        "bytes": 3304,
+        "path": "blobs/92/923dbc1396a6ef33dcf970b772a98620826e65453e972bb705f4f79dd4f0e4b8.xdr"
+      },
+      "decoded": "decoded/92/923dbc1396a6ef33dcf970b772a98620826e65453e972bb705f4f79dd4f0e4b8.json.zst",
+      "decoded_sha256": "1d5f0bd7dbc3e5ab475597e7fe9a2869f33d4a5b4f257984c6b546f7be2baa3a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s01-classic-muxed-and-amounts.yaml",
+        "scenario_sha256": "ef6675f0e56ae63d5829a0c1f964e01cb8520b91c6796542eec572e87b88988d",
+        "step": "asset-code12-five-characters",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1720000000",
+        "stream_sha256": "889b224539b33317b9b20355973dc7c90012e3e6e3031c5039bbf572b1391093",
+        "frame_index": 20,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s01-classic-muxed-and-amounts.yaml --network pubnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "f4ffdd61e97bf00c1f51d5c4ff6d2a82696f8af0ab4a56b393526bdf74e77842",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "5b430cb2309670d242d786410431d6a6692e5f7f8ecb210a32dff12864d7a328",
+        "tx_hash": "f4ffdd61e97bf00c1f51d5c4ff6d2a82696f8af0ab4a56b393526bdf74e77842",
+        "fee_charged": "200",
+        "tx_hashes": [
+          "f4ffdd61e97bf00c1f51d5c4ff6d2a82696f8af0ab4a56b393526bdf74e77842"
+        ],
+        "contracts": {
+          "sac_abcd": "CA45BVZ22DC2M4SY7CW472DN7JNPAEMQ7GPJ4DYFAD5ID4CUBA5FUY4J",
+          "sac_abcde": "CARRFNWDIXXE43WKHOYUPUB4HVRC744YUV5BCAX2B37XUWK3B55NPXV4",
+          "sac_big": "CCZ4SARQK2KFBAPBOLHWVVM44A7JESQFKMTBOI4CDXUFD22U4CQDPVOD",
+          "sac_xlmlc": "CBBYKTTHVG4BXDLNI2ISL6J62BIOAWWRWDKKQ76CN3YPFOM3DFTJU3IN"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "H1": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA",
+          "H2": "GCJTJVUBT6AAONWUMWOFMVYLFWLR3DGTSBUF24KT42KXERTHLWPAGWC6",
+          "I": "GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7",
+          "M": "GAOACNPEYWKXDUGXFFHSRX4B2ON6QMJQBWBRN6HY3GYGFYGZCBRIMGLC",
+          "root": "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 2,
+      "events": 3,
+      "entry_changes": 12
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "${derived.tx_hash}",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success",
+          "payment.success"
+        ],
+        "fee_charged": "${derived.fee_charged}"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/payment/asset",
+        "equals": {
+          "credit_alphanum12": {
+            "asset_code": "ABCDE",
+            "issuer": "GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7"
+          }
+        },
+        "note": "Five characters in an AlphaNum12 code: the twelve bytes are 41 42 43 44 45 and seven NULs."
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/1/body/payment/asset",
+        "equals": {
+          "credit_alphanum4": {
+            "asset_code": "ABCD",
+            "issuer": "GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7"
+          }
+        },
+        "note": "A different asset of the same issuer, whose code is the first four characters."
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/3",
+        "equals": {
+          "string": "ABCDE:GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/1/events/0/body/v0/topics/3",
+        "equals": {
+          "string": "ABCD:GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7"
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA",
+          "roles": [
+            "source",
+            "fee_payer",
+            "trustline_owner"
+          ]
+        },
+        {
+          "address": "GCJTJVUBT6AAONWUMWOFMVYLFWLR3DGTSBUF24KT42KXERTHLWPAGWC6",
+          "roles": [
+            "trustline_owner"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7",
+          "because": "I only issues the assets; no ledger entry of I changed"
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "asset": "native",
+        "amount": "${derived.fee_charged}",
+        "from": {
+          "address": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA"
+        }
+      },
+      {
+        "kind": "transfer",
+        "op_index": 0,
+        "asset": "ABCDE:GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7",
+        "amount": "100000000",
+        "from": {
+          "address": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA"
+        },
+        "to": {
+          "address": "GCJTJVUBT6AAONWUMWOFMVYLFWLR3DGTSBUF24KT42KXERTHLWPAGWC6"
+        },
+        "routing": {
+          "type": "absent"
+        }
+      },
+      {
+        "kind": "transfer",
+        "op_index": 1,
+        "asset": "ABCD:GCPNGU7432LZXLMD2BTMDI6JPDLKNQTVNCYIMJ2DJFFTB7YPAN2WVWX7",
+        "amount": "100000000",
+        "from": {
+          "address": "GDNXDGGV7SZONQYCKOUFOPVLWBAMVNQMSG4X3OTTGNEKBX6D3MFDZPQA"
+        },
+        "to": {
+          "address": "GCJTJVUBT6AAONWUMWOFMVYLFWLR3DGTSBUF24KT42KXERTHLWPAGWC6"
+        },
+        "routing": {
+          "type": "absent"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s01-classic-muxed-and-amounts.yaml on a local stellar-core, at Protocols 28 and 30 on the testnet and public passphrases (four variants); the accounts are label-derived and equal across variants, hashes are per variant under derived. No reader has been run against these ledgers yet, so the entry lists no known divergence. Replay is by chain; serving the ledger alone has not been tried."
+}

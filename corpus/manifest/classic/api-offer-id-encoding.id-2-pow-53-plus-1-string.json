@@ -1,0 +1,42 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/api-offer-id-encoding.id-2-pow-53-plus-1-string",
+  "title": "Manage-sell-offer with offer ID 2^53+1 passed as a decimal string: encoded exactly",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "offerID has been an int64 since the first protocol; the rule is in the XDR definitions and stellar-core's ManageOffer validation, not in a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "offer-id-builder"
+  ],
+  "why": "The control of the unsafe-number vector: 2^53+1 is a valid offer ID, and passed as a decimal string it is never rounded, so every SDK that takes a string ID must encode exactly 9007199254740993. A refusal or another ID here means the defect is in the string path, not in JavaScript's number type.",
+  "api": {
+    "op": "offer.manage_sell",
+    "input": {
+      "offer_id": {
+        "native": "string",
+        "value": "9007199254740993"
+      }
+    },
+    "expect_value": "9007199254740993",
+    "expect_xdr_hex": "0000000000000003000000000000000155534400000000003f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a000000000098968000000001000000010020000000000001"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x",
+    "https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/transactions/ManageOfferOpFrameBase.cpp#L636-L641",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/classic/api-offer-id-encoding.id-2-pow-53-plus-1-string.json. The expected Operation XDR is the one of classic/api-offer-id-encoding.id-2-pow-53-plus-1-number (no source; MANAGE_SELL_OFFER; selling native; buying USD:GA7QYNF7\u2026; amount 10000000 stroops; price 1/1) with offer ID 9007199254740993 (0x0020000000000001), computed from the XDR definitions with an independent encoder; no SDK output was used. An SDK whose offer-ID parameter is declared as an integer only (Python's stellar-sdk annotates offer_id as int) cannot take a string: its cell is n_a (argument_type_not_accepted, docs/conformance-protocol.md).",
+  "reference": "protocol-rule"
+}

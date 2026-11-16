@@ -1,0 +1,59 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/api-offer-id-encoding.id-2-pow-64",
+  "title": "Manage-sell-offer with offer ID 2^64 (beyond int64) must be refused",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "offerID has been an int64 since the first protocol; the rule is in the XDR definitions and stellar-core's ManageOffer validation, not in a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "value-out-of-range"
+  ],
+  "shapes": [
+    "offer-id-builder",
+    "id-out-of-range",
+    "invalid-input"
+  ],
+  "why": "ManageSellOfferOp.offerID is an int64 that stellar-core requires to be non-negative; a builder that accepts a value outside that range encodes another offer ID, so the operation edits or deletes a different offer, or is refused as malformed.",
+  "api": {
+    "op": "offer.manage_sell",
+    "input": {
+      "offer_id": {
+        "native": "bigint",
+        "value": "18446744073709551616"
+      }
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0 || 17.0.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "ManageSellOffer packs the offer ID modulo 2^64: 2^64 is encoded as 0, which creates a new offer.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1251",
+        "finding": "F-0048",
+        "status": "fixed_unreleased",
+        "observed": "executed"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x",
+    "https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/transactions/ManageOfferOpFrameBase.cpp#L636-L641",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/classic/api-offer-id-encoding.id-2-pow-64.json. Origin: probe vector 2o3 (passed as a big integer here), in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). 2^64 does not fit an int64; a builder that wraps it encodes 0, which means \"create a new offer\". Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

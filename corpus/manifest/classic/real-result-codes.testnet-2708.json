@@ -1,0 +1,173 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/real-result-codes.testnet-2708",
+  "title": "Testnet ledger 2708: real CREATE_ACCOUNT_ALREADY_EXIST",
+  "kind": "ledger",
+  "caps": [],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "why": "A ledger the network actually closed that holds this arm: CreateAccountResult::CREATE_ACCOUNT_ALREADY_EXIST. Generated entries had none of them, so a reader's handling of them was never exercised on bytes stellar-core wrote under real traffic.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 24,
+      "ledger_seq": 2708,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "b6e53c74a09ca818a596776e7f5b98461e7a794f5ea1b7a4d779f96b4f5bdb9a",
+        "bytes": 4080,
+        "path": "blobs/b6/b6e53c74a09ca818a596776e7f5b98461e7a794f5ea1b7a4d779f96b4f5bdb9a.xdr"
+      },
+      "decoded": "decoded/b6/b6e53c74a09ca818a596776e7f5b98461e7a794f5ea1b7a4d779f96b4f5bdb9a.json.zst",
+      "decoded_sha256": "2684e3bcde17f877404a44cac62a8eb90429bbfcaa4bca955473d63a197a9ddf",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFFFFFFF--0-63999/FFFFF56B--2708.xdr.zst",
+        "object_sha256": "be88a1c3049f94b23ebcb943cd06ef587ef3638836fc01c253055a98eed60bca",
+        "object_bytes": 1493,
+        "decompressed_sha256": "0f0de9378647861c55f723757842ffa34eb2d59d1670c43c8e59d257e0c47cf5",
+        "decompressed_bytes": 4092,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-14T03:11:17Z",
+        "written_by": "stellar-core 25.0.0 (e9748b05a70d613437a52c8388dc0d8e68149394); exporter 5ae46e1",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 25.0.0 (e9748b05a70d613437a52c8388dc0d8e68149394)",
+          "end-ledger": "2708",
+          "end-ledger-close-time": "1766005528",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "24",
+          "start-ledger": "2708",
+          "start-ledger-close-time": "1766005528",
+          "version": "5ae46e1"
+        },
+        "refetch": "curl -fsS -o FFFFF56B--2708.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFFFFFFF--0-63999/FFFFF56B--2708.xdr.zst",
+        "perishable": true,
+        "regenerated": false,
+        "object_path": "objects/testnet/2708/FFFFF56B--2708.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "f099e964134f9bae89c2516cb2d7940e06b2543a5192c7001be36be51ae6192f",
+        "tx_hashes": [
+          "4d3e30edb376b621e3c70e0d4a697ef99567b85854ec1674c5b8fbfd251976ce",
+          "97c296643c35eb4de56541146ead5ed0c45addfe7ab119a8ee2bccfe49c59020"
+        ],
+        "tx_hash": "4d3e30edb376b621e3c70e0d4a697ef99567b85854ec1674c5b8fbfd251976ce",
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "4d3e30edb376b621e3c70e0d4a697ef99567b85854ec1674c5b8fbfd251976ce"
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 2,
+      "operations": 4,
+      "events": 3,
+      "entry_changes": 13
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "4d3e30edb376b621e3c70e0d4a697ef99567b85854ec1674c5b8fbfd251976ce",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "create_account.already_exist"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 1,
+        "hash": "97c296643c35eb4de56541146ead5ed0c45addfe7ab119a8ee2bccfe49c59020",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "begin_sponsoring_future_reserves.success",
+          "create_account.success",
+          "end_sponsoring_future_reserves.success"
+        ],
+        "fee_charged": "400",
+        "inner_hash": "7e1335f8e7784aea23860fe060455e1a45df1b3c805888339e979e2188e5da10",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GA6PSHBKPKAOETRABQAQIWT7JV6JQNNNC22XP6HYXWBFTDRXNS22PPRI",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GDRSW4QPCSTTDRBLG7KH72SFNOEHKLSNHNACLWV2F32EPPSZOUYSYCBW",
+          "because": "named in the envelope of a failed transaction; only the fee payer and the source changed (candidate)"
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "sequence_bumped",
+        "tx_index": 0,
+        "account": {
+          "address": "GA6PSHBKPKAOETRABQAQIWT7JV6JQNNNC22XP6HYXWBFTDRXNS22PPRI"
+        },
+        "detail": {
+          "sequence_after": "7279969566724"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GA6PSHBKPKAOETRABQAQIWT7JV6JQNNNC22XP6HYXWBFTDRXNS22PPRI"
+        }
+      }
+    ]
+  },
+  "notes": "Found by xdrcheck-corpus mine (the smallest ledger of the sampled range that shows the arm). Header hash recomputed from the header and every transaction hash recomputed from its envelope at capture; expect is the reference extractor's output. Focus: apply index 0 carries CreateAccountResult::CREATE_ACCOUNT_ALREADY_EXIST.",
+  "caps_note": "Classic shapes found in real traffic; no single CAP",
+  "shapes": [
+    "create-account-already-exist",
+    "real-ledger-arm-coverage"
+  ],
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  }
+}

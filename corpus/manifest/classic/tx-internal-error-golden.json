@@ -1,0 +1,164 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/tx-internal-error-golden",
+  "title": "Ledger with a transaction whose result is txINTERNAL_ERROR next to a successful one (stellar-core golden)",
+  "kind": "ledger",
+  "caps": [],
+  "caps_note": "No CAP: txINTERNAL_ERROR predates the CAP process.",
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "shapes": [
+    "tx-internal-error",
+    "failed-transaction",
+    "parallel-phase",
+    "core-golden"
+  ],
+  "why": "stellar-core sets txINTERNAL_ERROR when applying a transaction throws; the transaction keeps its place in the ledger, pays its fee and has no operation results. A release core does this only on an unexpected fault, so the arm is rare enough that readers never meet it in testing; this golden ledger is from stellar-core's own test, which forces the fault with the memo text txINTERNAL_ERROR.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 23,
+      "ledger_seq": 34,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "11f6fc783a2082c27cf48254d1e7283f451748dda02f302f5bbbaf72210b7442",
+        "bytes": 6928,
+        "path": "blobs/11/11f6fc783a2082c27cf48254d1e7283f451748dda02f302f5bbbaf72210b7442.xdr"
+      },
+      "decoded": "decoded/11/11f6fc783a2082c27cf48254d1e7283f451748dda02f302f5bbbaf72210b7442.json.zst",
+      "decoded_sha256": "035e4a2c2b778cddcb1e984dfa4f54427cd4002f59fdcbfbcf1613dc4eb13b1c",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/e0e11e1fb450f676.xdr",
+        "file_sha256": "52cacfdb950caabe794663ac631058512b83152bad1cbed47d4a903ac8a32a73",
+        "frame_index": 32,
+        "test_name": "parallel txs|internal error",
+        "rng_seed": 12345
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "parallel txs|internal error",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:8477 (TEST_CASE); flag lines 8483; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "250edaef43e6a75014ec11f43bca218a9977e40692a360060877fae5a792177f",
+        "tx_hashes": [
+          "543fd9bd516b85b1841f1fd9024e1a9b65db21ccc2c194eda99ea1217357a3af",
+          "6eefefedaa4b9bea283529805e2a49ece2bb0ecdf223646e360b66a899912bd9"
+        ],
+        "tx_hash": "6eefefedaa4b9bea283529805e2a49ece2bb0ecdf223646e360b66a899912bd9",
+        "fee_charged": "50799",
+        "l1": {
+          "memo_type": "text"
+        }
+      },
+      "focus": {
+        "tx_index": 1,
+        "tx_hash": "6eefefedaa4b9bea283529805e2a49ece2bb0ecdf223646e360b66a899912bd9",
+        "path": "/v2/tx_processing/1"
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 2,
+      "operations": 2,
+      "events": 0,
+      "entry_changes": 16
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "543fd9bd516b85b1841f1fd9024e1a9b65db21ccc2c194eda99ea1217357a3af",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "94355"
+      },
+      {
+        "index": 1,
+        "hash": "6eefefedaa4b9bea283529805e2a49ece2bb0ecdf223646e360b66a899912bd9",
+        "successful": false,
+        "result_code": "tx_internal_error",
+        "operation_result_codes": [],
+        "fee_charged": "50799"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "exact": true
+    },
+    "state_changes": [
+      {
+        "kind": "sequence_bumped",
+        "tx_index": 1,
+        "account": {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I"
+        },
+        "detail": {
+          "sequence_after": "73014444033"
+        }
+      }
+    ],
+    "state_changes_exact": true,
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 1,
+        "asset": "native",
+        "amount": "1050758",
+        "from": {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 1,
+        "asset": "native",
+        "amount": "999959",
+        "to": {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "reference": "network",
+  "notes": "Imported by xdrcheck-corpus import-golden from stellar-core v30.0.0, test-lcm-current/InvokeHostFunctionTests/e0e11e1fb450f676.xdr frame 32 (\"parallel txs|internal error\", a test build of stellar-core that throws on the memo text txINTERNAL_ERROR), on the core-test passphrase at Protocol 23. The focus is the second transaction, the one that failed with txINTERNAL_ERROR. No reader has been run against this ledger yet, so the entry declares no known divergence."
+}

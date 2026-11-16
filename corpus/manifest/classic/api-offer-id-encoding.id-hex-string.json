@@ -1,0 +1,73 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/api-offer-id-encoding.id-hex-string",
+  "title": "Manage-sell-offer with the offer ID string \"0x10\" must be refused",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "offerID has been an int64 since the first protocol; the rule is in the XDR definitions and stellar-core's ManageOffer validation, not in a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "value-out-of-range"
+  ],
+  "shapes": [
+    "offer-id-builder",
+    "non-decimal-id-text",
+    "invalid-input"
+  ],
+  "why": "ManageSellOfferOp.offerID is an int64 that stellar-core requires to be non-negative; a builder that accepts a value outside that range encodes another offer ID, so the operation edits or deletes a different offer, or is refused as malformed.",
+  "api": {
+    "op": "offer.manage_sell",
+    "input": {
+      "offer_id": {
+        "native": "string",
+        "value": "0x10"
+      }
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0 || 17.2.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 17.2.0 and 17.2.1: Operation.manageSellOffer accepts \"0x10\" and encodes offer ID 16; 17.3.0 refuses the value (fix pull request #1780).",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1785",
+        "finding": "F-0017",
+        "fixed_in": "17.3.0",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 2o5 (evidence/sdk-matrix), executed on js 17.2.0 and js 17.2.1; xcc conform run --columns 'js@*' --entries 'classic/api-offer-id-encoding.id-hex-string'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: Operation.manageSellOffer accepts \"0x10\" and encodes offer ID 16. The 17.3.0 fix is not on the 16.x line.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1785",
+        "finding": "F-0017",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 2o5 (evidence/sdk-matrix), executed on js 16.3.0 and js 16.3.1 and js 16.4.1; xcc conform run --columns 'js@*' --entries 'classic/api-offer-id-encoding.id-hex-string'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x",
+    "https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/transactions/ManageOfferOpFrameBase.cpp#L636-L641",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/classic/api-offer-id-encoding.id-hex-string.json. Origin: probe vector 2o5, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). \"0x10\" is not a decimal integer; a builder that parses it as hexadecimal encodes offer 16. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

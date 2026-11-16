@@ -1,0 +1,74 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "classic/api-offer-id-encoding.id-2-pow-53-plus-1-number",
+  "title": "Manage-sell-offer with offer ID 2^53+1 passed as a native number: exact or refused",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "offerID has been an int64 since the first protocol; the rule is in the XDR definitions and stellar-core's ManageOffer validation, not in a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "acceptable",
+  "flags": [
+    "native-number-precision"
+  ],
+  "shapes": [
+    "offer-id-builder",
+    "unsafe-integer-number"
+  ],
+  "why": "2^53+1 is a valid offer ID but not a safe IEEE-754 double: a JavaScript number literal is already 9007199254740992 before the SDK sees it, so an SDK must encode the exact ID or refuse the number.",
+  "api": {
+    "op": "offer.manage_sell",
+    "input": {
+      "offer_id": {
+        "native": "number",
+        "value": "9007199254740993"
+      }
+    },
+    "expect_value": "9007199254740993",
+    "expect_xdr_hex": "0000000000000003000000000000000155534400000000003f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a000000000098968000000001000000010020000000000001",
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0 || 17.2.1",
+        "level": "L4",
+        "outcome": "wrong_value",
+        "detail": "Executed on 17.2.0 and 17.2.1: Operation.manageSellOffer accepts the unsafe integer and encodes offer ID 9007199254740992; 17.3.0 refuses the value (fix pull request #1780).",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1785",
+        "finding": "F-0017",
+        "fixed_in": "17.3.0",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 2o1 (evidence/sdk-matrix), executed on js 17.2.0 and js 17.2.1; xcc conform run --columns 'js@*' --entries 'classic/api-offer-id-encoding.id-2-pow-53-plus-1-number'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "wrong_value",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: Operation.manageSellOffer accepts the unsafe integer and encodes offer ID 9007199254740992. The 17.3.0 fix is not on the 16.x line.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1785",
+        "finding": "F-0017",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 2o1 (evidence/sdk-matrix), executed on js 16.3.0 and js 16.3.1 and js 16.4.1; xcc conform run --columns 'js@*' --entries 'classic/api-offer-id-encoding.id-2-pow-53-plus-1-number'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x",
+    "https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/transactions/ManageOfferOpFrameBase.cpp#L636-L641",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/classic/api-offer-id-encoding.id-2-pow-53-plus-1-number.json. Origin: probe vector 2o1, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). Exact or refuse: either offer ID 9007199254740993 read back and the Operation XDR (no source; MANAGE_SELL_OFFER; selling native; buying USD:GA7QYNF7\u2026; amount 10000000 stroops; price 1/1; the ID), or a refusal. The JavaScript defect (js-stellar-sdk#1785) is the encoding of 9007199254740992 instead. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}
