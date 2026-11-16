@@ -1,0 +1,337 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0003/p10-upgrade-liabilities-50936-changes",
+  "title": "Protocol 10 upgrade: 50,936 upgrade entry changes add liabilities to accounts and trustlines",
+  "kind": "ledger",
+  "caps": [
+    3
+  ],
+  "protocol": {
+    "introduced": 10
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "upgrade-ledger",
+    "ledger-upgrade-version",
+    "header-protocol-differs-from-applied",
+    "large-upgrade-meta",
+    "liabilities-ext-v1",
+    "offers-removed-by-upgrade"
+  ],
+  "why": "The Protocol 10 upgrade (CAP-3 liabilities) rewrites the ledger in one go: 50,936 upgrade changes in a 6.47 MB LedgerCloseMeta, giving 2416 accounts and 3935 trustlines an ext.v1 with buying and selling liabilities, updating 10518 offers and removing 7424. Readers that cap meta size, skip upgrade changes, or treat a liabilities extension as a balance change break or mis-account.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 9,
+      "header_protocol": 10,
+      "ledger_seq": 19967410,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "2b5151a60cf0d779e1711ecb52106854a78cd3465c15681bcbf7fa776607b852",
+        "bytes": 6474220,
+        "path": "blobs/2b/2b5151a60cf0d779e1711ecb52106854a78cd3465c15681bcbf7fa776607b852.xdr"
+      },
+      "decoded": "decoded/2b/2b5151a60cf0d779e1711ecb52106854a78cd3465c15681bcbf7fa776607b852.json.zst",
+      "decoded_sha256": "31cc31eb857bccd69355d01bbed92349db3b4e88f035bf304431c4a932878736",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FED049FF--19904000-19967999/FECF524D--19967410.xdr.zst",
+        "object_sha256": "3f36983eef4fe24bde9cf5605e9dc8f23a0fa517fb048557c5452d8ca927d0d1",
+        "object_bytes": 872048,
+        "decompressed_sha256": "fdf782d2ba0083e169aa4952c08ed2a3ccfb5871b76066d06cd74f7c5fb8a6b1",
+        "decompressed_bytes": 6474232,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:02:05Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "19967410",
+          "end-ledger-close-time": "1536854406",
+          "file-mtime": "1757541813000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "10",
+          "start-ledger": "19967410",
+          "start-ledger-close-time": "1536854406",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FECF524D--19967410.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FED049FF--19904000-19967999/FECF524D--19967410.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/19967410/FECF524D--19967410.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "e0b6745f1da378b5d8f3d2ff72adad75d86930324fb9f920d9377d48ce16aa29",
+        "tx_hashes": [
+          "0fe63ccaa9f59ffb4137ca6671ff6bf083a2f6b45b3b14086c3eeb80163bd912",
+          "6209cb9d0ce567306f9a8c010be1bb5be26f3b744fbd3c17661e2d15211a01cb",
+          "243c55e2d0ce97dab5fdd0d9227dc3d84349287c4b1d1d6436b0a1f40cdf5d42",
+          "36aa8aff2119fba909f856403be1525460aed7f7274c58e0e0033f7c918340a3",
+          "f3bebaf39de9282788ac01e049e012fa74235cc3e73bd0bf1634fec6595a6dbb",
+          "d82a3bbe82ff332a6abbceb2d916c79863c578363e62503359b6a6af822ce907",
+          "f02ebf33b11774060bb3cdb55f46f74e934434de6db5941c0e4dfcf417cc1f3a",
+          "01628e3e0ac8e8459d7b384301b1eba044610d3bb79f5796d970d7ba39e70554",
+          "aee098111ce42c620b43a1c73668e3a8b461d4a90546d57b77aa831471978546",
+          "6e873202e2e23c6f392fdd27ba7b89f77411b028606140348fd0767a16f683da",
+          "a92bd9e8b7b3881a3b73ffa8c1e834c9cebcd6c9448839ae3e4168033b845baf",
+          "a4358ea792e15fbddf60d0399e305df0da93f9acc20a3fc85899bef5557e3e4c",
+          "ee29187eaf455d929acb52eae9cf7645122f5164c933698aba8fe51dcfa5cf2f",
+          "cf6885f980d45fe4235de2ae022b6b53a85dddeb182f25d620c02b6c7830a11d",
+          "4a347ffbdfe859a1e8f1d0a984d3b23fe040706bd6660cb0622b6100abcc2bbc",
+          "f24a9bcba0618beb5f364c68d676d76b54d6aedcbcb25259de28c3f4289d4216",
+          "3b52f8412561cfdc9149b939e1b38b692bd4f3ba4309e03883baf0e4bf860cde",
+          "0daf1d65e3bb063fb35e65a49c2c3c72031a551bfc171b63f888e3f3f18776ef",
+          "78449ca613082e3092e2b81cae57a1d6512bc1bb4343d11ec96896216ce66a93",
+          "b180bd51bec530a0a2a0c300e81983168cc7d474ddf6cb88823f31fa9b6c72bb",
+          "d00723dbda829921921296d075e0d2b2d46d4b1213acdd1b7eb63e49f33f15b6",
+          "28f1b650c6b575401a69574283f23db1461a67d5b6a894c1ccef56a1ff8e33f5",
+          "d1882b036ae6343a5c041d34d7ac1d3854f67ada8de764da0dfad30d7f06e10f",
+          "18bbc0da57e6594ea4591d534a8c0609400f927ea334b074f11ea98985b2a097",
+          "8b3883a7be6e546e98e938f4ec12335fc17af5817b8d3823b0bf50bc9401cc85",
+          "bc0e4e418db6e5846f1cd36d6b2c42b7cf16895d23325386a5f6eb13957da564",
+          "7c084bf6f04d5d9f6356a054b572e259c5f2d14de95fab2af1c10e5fef127301"
+        ]
+      },
+      "focus": {
+        "path": "/v0/upgrades_processing/0"
+      },
+      "notes": "Real pubnet ledger; the lake object is 872,048 bytes and decompresses to 6,474,232."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 27,
+      "operations": 230,
+      "events": 40,
+      "entry_changes": 51664
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "0fe63ccaa9f59ffb4137ca6671ff6bf083a2f6b45b3b14086c3eeb80163bd912",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "6209cb9d0ce567306f9a8c010be1bb5be26f3b744fbd3c17661e2d15211a01cb",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "243c55e2d0ce97dab5fdd0d9227dc3d84349287c4b1d1d6436b0a1f40cdf5d42",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "36aa8aff2119fba909f856403be1525460aed7f7274c58e0e0033f7c918340a3",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 4,
+        "hash": "f3bebaf39de9282788ac01e049e012fa74235cc3e73bd0bf1634fec6595a6dbb",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "d82a3bbe82ff332a6abbceb2d916c79863c578363e62503359b6a6af822ce907",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "f02ebf33b11774060bb3cdb55f46f74e934434de6db5941c0e4dfcf417cc1f3a",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 7,
+        "hash": "01628e3e0ac8e8459d7b384301b1eba044610d3bb79f5796d970d7ba39e70554",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 8,
+        "hash": "aee098111ce42c620b43a1c73668e3a8b461d4a90546d57b77aa831471978546",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 9,
+        "hash": "6e873202e2e23c6f392fdd27ba7b89f77411b028606140348fd0767a16f683da",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 10,
+        "hash": "a92bd9e8b7b3881a3b73ffa8c1e834c9cebcd6c9448839ae3e4168033b845baf",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 11,
+        "hash": "a4358ea792e15fbddf60d0399e305df0da93f9acc20a3fc85899bef5557e3e4c",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 12,
+        "hash": "ee29187eaf455d929acb52eae9cf7645122f5164c933698aba8fe51dcfa5cf2f",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 13,
+        "hash": "cf6885f980d45fe4235de2ae022b6b53a85dddeb182f25d620c02b6c7830a11d",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 14,
+        "hash": "4a347ffbdfe859a1e8f1d0a984d3b23fe040706bd6660cb0622b6100abcc2bbc",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 15,
+        "hash": "f24a9bcba0618beb5f364c68d676d76b54d6aedcbcb25259de28c3f4289d4216",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 16,
+        "hash": "3b52f8412561cfdc9149b939e1b38b692bd4f3ba4309e03883baf0e4bf860cde",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 17,
+        "hash": "0daf1d65e3bb063fb35e65a49c2c3c72031a551bfc171b63f888e3f3f18776ef",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 18,
+        "hash": "78449ca613082e3092e2b81cae57a1d6512bc1bb4343d11ec96896216ce66a93",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 19,
+        "hash": "b180bd51bec530a0a2a0c300e81983168cc7d474ddf6cb88823f31fa9b6c72bb",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 20,
+        "hash": "d00723dbda829921921296d075e0d2b2d46d4b1213acdd1b7eb63e49f33f15b6",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 21,
+        "hash": "28f1b650c6b575401a69574283f23db1461a67d5b6a894c1ccef56a1ff8e33f5",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 22,
+        "hash": "d1882b036ae6343a5c041d34d7ac1d3854f67ada8de764da0dfad30d7f06e10f",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 23,
+        "hash": "18bbc0da57e6594ea4591d534a8c0609400f927ea334b074f11ea98985b2a097",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 24,
+        "hash": "8b3883a7be6e546e98e938f4ec12335fc17af5817b8d3823b0bf50bc9401cc85",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 25,
+        "hash": "bc0e4e418db6e5846f1cd36d6b2c42b7cf16895d23325386a5f6eb13957da564",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 26,
+        "hash": "7c084bf6f04d5d9f6356a054b572e259c5f2d14de95fab2af1c10e5fef127301",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v0/ledger_header/header/ledger_version",
+        "equals": 10
+      },
+      {
+        "path": "/v0/upgrades_processing/0/upgrade",
+        "equals": {
+          "version": 10
+        }
+      },
+      {
+        "path": "/v0/upgrades_processing/0/changes/3380/state/data/account/ext",
+        "equals": "v0",
+        "note": "Before the upgrade the account has no extension."
+      },
+      {
+        "path": "/v0/upgrades_processing/0/changes/3381/updated/data/account/ext",
+        "equals": {
+          "v1": {
+            "liabilities": {
+              "buying": "831065648173",
+              "selling": "200005249406"
+            },
+            "ext": "v0"
+          }
+        },
+        "note": "After it, GD776GYE\u2026 carries its liabilities; its balance is unchanged."
+      },
+      {
+        "path": "/v0/upgrades_processing/0/changes/3381/updated/data/account/balance",
+        "equals": "596651159432"
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0003.md"
+  ],
+  "reference": "network",
+  "notes": "27 transactions applied under Protocol 9. Upgrade changes by type: 3935 trustline pairs (all updated with ext v1), 3591 account pairs (2416 updated with ext v1), 17942 offer states followed by 10518 updated and 7424 removed. The largest classic meta in the corpus; also a memory-test input. The lake object was written by stellar-core 23.0.1 long after the ledger closed (source.regenerated true), so its TransactionMeta is v4 with backfilled classic and fee events, not what a node emitted at the time."
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0027/api-muxed-account-id-encoding.id-2-pow-64-minus-1",
+  "title": "Muxed address from the largest uint64 ID, 2^64-1, encodes exactly",
+  "kind": "api",
+  "caps": [
+    27
+  ],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "muxed-id-builder",
+    "id-max"
+  ],
+  "why": "2^64-1 is the largest valid muxed ID; it exceeds int64 and float precision, so a builder that routes it through a signed or floating type changes it.",
+  "api": {
+    "op": "muxed_account.encode",
+    "input": {
+      "account": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+      "id": {
+        "native": "string",
+        "value": "18446744073709551615"
+      }
+    },
+    "expect_value": "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJV7777777777775ZO4",
+    "expect_xdr_hex": "00000100ffffffffffffffff3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x#L21-L31",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0027/api-muxed-account-id-encoding.id-2-pow-64-minus-1.json. Origin: probe vector 2m2, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). The M-address is the SEP-0023 encoding of key || ffffffffffffffff (the SEP-0023 muxed test vector form); the XDR is KEY_TYPE_MUXED_ED25519, the id, the key. The ID is passed as a decimal string, the form the JavaScript SDK's MuxedAccount takes (from 17.3.0 it refuses any other type); the Python SDK takes only an integer and refuses the string, a typing refusal rather than a defect. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

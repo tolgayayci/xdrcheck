@@ -1,0 +1,550 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0034/tx-too-late-with-fee-charged",
+  "title": "txTOO_LATE in a closed ledger (Protocol 13): fee charged, sequence number not consumed, no operation applied",
+  "kind": "ledger",
+  "caps": [
+    34
+  ],
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "tx-too-late",
+    "failed-tx-fee-charged",
+    "sequence-not-bumped",
+    "time-bounds-max-time",
+    "pre-protocol-15-close-time-race"
+  ],
+  "why": "Before Protocol 15 (CAP-34) a transaction was checked against the previous ledger's close time when it was nominated and against the new close time when it was applied, so one whose max_time fell between the two was included, charged its fee and then failed with txTOO_LATE without consuming its sequence number. Here max_time is one second before the ledger's close time. Readers that assume a failed transaction always bumps the source's sequence number, that expect operation results on every failed transaction, or that treat txTOO_LATE as a submission error that never reaches a ledger get this transaction wrong.",
+  "fields": {
+    "validated": [
+      "VF-04",
+      "VF-14a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 13,
+      "ledger_seq": 30379767,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "ca4576c44e45877919fdfe7fbb3d71846fd62707b6adcbffdfc4353736498d22",
+        "bytes": 178836,
+        "path": "blobs/ca/ca4576c44e45877919fdfe7fbb3d71846fd62707b6adcbffdfc4353736498d22.xdr"
+      },
+      "decoded": "decoded/ca/ca4576c44e45877919fdfe7fbb3d71846fd62707b6adcbffdfc4353736498d22.json.zst",
+      "decoded_sha256": "485955e515bf2ac3a6ba2ff063db8fb64538a14cfd17239ba6e060842e292517",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FE311BFF--30336000-30399999/FE307108--30379767.xdr.zst",
+        "object_sha256": "6b534d9fee557bccda8a5074f51bda2dd74cd656ec4319b599515f3bdd75942e",
+        "object_bytes": 26241,
+        "decompressed_sha256": "c154169721467b522b6daf9ae534bb8f2b7a1691040813bf84525ffc9baedd53",
+        "decompressed_bytes": 178848,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T17:42:48Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "30379767",
+          "end-ledger-close-time": "1593508580",
+          "file-mtime": "1757603098000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "13",
+          "start-ledger": "30379767",
+          "start-ledger-close-time": "1593508580",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FE307108--30379767.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FE311BFF--30336000-30399999/FE307108--30379767.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/30379767/FE307108--30379767.xdr.zst"
+      },
+      "focus": {
+        "tx_index": 45,
+        "tx_hash": "a11c4fccff14e8a67041fbd9d274e8feb06071c415e84a38157e60281ab22cb0",
+        "path": "/v0/tx_processing/45/result"
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "4ac56d1387548eb3943918627c0305a9aef874aad91a2414e27a71aef82ae11d",
+        "tx_hashes": [
+          "6b433bfe1348ba506f1d80deb9275286a7c63b1ce7b529c51aa7a6419ef22e85",
+          "20a5d9b49c463db15c34aedc7edd27d2801d79641e99a38f799def6c40103374",
+          "809d6bccc55e89b3815938533c27842b04e39475b133beeba747476dc930d68f",
+          "9f3441bb5af1097d622cf090783d3bfe7fc15bd4dedf15f4eba6ad72a1c0ba7b",
+          "e81e8930550e339a530e6b9ecbfe29e18f3757d6ca0e070e957620b5642f2014",
+          "eab21fd3340f41d8a9bd99d1e98f698b0d494a6d9a60f65b44f47590a06e2a5b",
+          "6dbe265c870490bdd4e9d26f0d9363b8a6801e9207e3cf2721019995cd8b973e",
+          "2c75d5eb3324a79290f89f03706e71f749aaefa6836a5430f27ff4eb1d6dd58a",
+          "1244784c15404f8377b608f07b8e84e3111a8ff4359e7e0c73b54b1a0624bfce",
+          "559de3fae529c23d8707fc2d424ecfc56cf13861b209c9b66b260545d340c698",
+          "d874c551421243f5e07256105f2719e5917e9bdc91670415900191d9ce8966c4",
+          "a75a64245b1db67dcf9e3c972f9b0eab6628fa80efa6660b45db921c3bd64b57",
+          "62f749caa2ae1ef2f45f39b76552b7dd188293107fe545cefac379497dde4751",
+          "1e1f6139a22fbab5edff992a37bf89efcf7101f63855c2b5c72d430e73592c47",
+          "41c9c70b0df2396bcd4b7e6811ea238273d53dee8ec91543f239f78bfe1b58a6",
+          "e2346ec7da40231369976bcd9ab380251d1f78aefe858179539145008a149ebd",
+          "88b6fbcf0c6fbe64f62b33021ed10381475ceadb98471a563c33fc8cc4b06915",
+          "e9996a1a1027d8593932d2e3e01d87f98f102c8f1283ae49ca33a240a2ce4cea",
+          "762e655044ee082de63a4eb53f7c8e47b045643497f61260fab18b71d968d810",
+          "cafcce10f4a1e3eb58b020e73aca4b3a18857bf961255171313b66b3e3dcf972",
+          "360be8817cdf8ea06e9b095a84d220892c8dac66f0cae94ece41b436be494337",
+          "b5a30519ba3a3138248862a3eb907db76ddd26fbfcbf9a00ca01ff5028afb0b9",
+          "1318d2e5c2354a3c531c3426baae12fc844977e373efc69f762db8d579ebc069",
+          "708689e651ea9f1369618162e96c621400bca4f54d5805a4647987d5b1ef60fe",
+          "49827755de40ea2eca95ed0cd1fa40ab1d8c0c2d2fa0c022e809e7a6e19b3499",
+          "6696c4c5c9e91b377dafa551e861eae20d57fc2d896ccd7f28cf6ede45cc687d",
+          "d60c872e75f88f5513e3e895babf6e0a708f19ec64245501890920ac2ae91e76",
+          "32475365d6be8c0dee90aa395b45f6d16a454e1c06cab856c5634c138201552b",
+          "b87fea0558bd0958484ca92c8d0e6cc3eca4ca1a38b7db16e72a1f43b1eac837",
+          "27cbba615ad29f74c64d7eddadfc5ad0f68581feb998501159b6c0a9a1b91dcc",
+          "ade6b6b3f37f5a1ca1a29e39255b42e9864198ab89bdcf2bdcf599c4f384fa96",
+          "65dd658ba843db85d60b3038095003c9f7c7bdfe8a71025d620f87e7e7f7693d",
+          "596744164d66fd84ef105d06f53593e329abeae236bf76c3643baba1efe01575",
+          "25bbac5ea2e560cb39c4e0ecefdd9970a9df5268f1539b177f88db8a06e58f06",
+          "e95d552063799ac784f24b0045f195fe4af0c384c5f5d9978e367795ba8d17c1",
+          "35d0c97e5a989d212616e3ebea3063ce753d7f87f86fa6445a0194089b2975fd",
+          "dbc6db9360f1a33d72849e55856ec642f844234d0b64e4875e52fd4b8f2dda0b",
+          "0793bd9db71329a108ae0ccfec549d5445fd7a57b492f0093a06d83fafb710d6",
+          "d54eb0de96ff24a27514133be963a6494e9bf5d6cc8a6638b356753c24781867",
+          "df134cd4bc72175d942d6265b1cacd4a449d2029a1df6f8171260a9b5ff1497a",
+          "eef0a8b99a882d1bbcdde8936008f43214c62adeb2a8b4d0c4e39b9924798464",
+          "010d2b622c1f31309307138f7a61c116a12c5b0ec986f06a3e45c1914514c2b8",
+          "f7ebec59d26c7d73818c24088a68930059cc998a5cd42fb02814cd69890e41f8",
+          "dc0f3994db796a763ef41b98c2b0f65db545dd180ee7598f9dedbd990a79d86a",
+          "3e9b62634462ba87d0a749c12ff3a0be2ed73b6cb9690cbbfd99c0c7eee5d52b",
+          "a11c4fccff14e8a67041fbd9d274e8feb06071c415e84a38157e60281ab22cb0",
+          "ce8dd01e34ac401895688cf516eb103306f5354df2e12f0db0965fd72bd43258",
+          "b107c79d326865ba4063df57b71bc4536a8060d2b58d05793183588d1db652e7",
+          "aaf2212984a414f61c388c49a20a906383efafe23017c671553d62fcc81a0b83",
+          "d03bb41bb7df81499316b45d0574a142d3017c21336b99f20ad7c6d6ec1ea445"
+        ],
+        "tx_hash": "a11c4fccff14e8a67041fbd9d274e8feb06071c415e84a38157e60281ab22cb0",
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "notes": "Real pubnet ledger at Protocol 13; the lake object is a regenerated re-emission, captured for this entry."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 50,
+      "operations": 151,
+      "events": 56,
+      "entry_changes": 986
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "6b433bfe1348ba506f1d80deb9275286a7c63b1ce7b529c51aa7a6419ef22e85",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "20a5d9b49c463db15c34aedc7edd27d2801d79641e99a38f799def6c40103374",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "809d6bccc55e89b3815938533c27842b04e39475b133beeba747476dc930d68f",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "9f3441bb5af1097d622cf090783d3bfe7fc15bd4dedf15f4eba6ad72a1c0ba7b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 4,
+        "hash": "e81e8930550e339a530e6b9ecbfe29e18f3757d6ca0e070e957620b5642f2014",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "eab21fd3340f41d8a9bd99d1e98f698b0d494a6d9a60f65b44f47590a06e2a5b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "6dbe265c870490bdd4e9d26f0d9363b8a6801e9207e3cf2721019995cd8b973e",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 7,
+        "hash": "2c75d5eb3324a79290f89f03706e71f749aaefa6836a5430f27ff4eb1d6dd58a",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 8,
+        "hash": "1244784c15404f8377b608f07b8e84e3111a8ff4359e7e0c73b54b1a0624bfce",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 9,
+        "hash": "559de3fae529c23d8707fc2d424ecfc56cf13861b209c9b66b260545d340c698",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 10,
+        "hash": "d874c551421243f5e07256105f2719e5917e9bdc91670415900191d9ce8966c4",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 11,
+        "hash": "a75a64245b1db67dcf9e3c972f9b0eab6628fa80efa6660b45db921c3bd64b57",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 12,
+        "hash": "62f749caa2ae1ef2f45f39b76552b7dd188293107fe545cefac379497dde4751",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 13,
+        "hash": "1e1f6139a22fbab5edff992a37bf89efcf7101f63855c2b5c72d430e73592c47",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 14,
+        "hash": "41c9c70b0df2396bcd4b7e6811ea238273d53dee8ec91543f239f78bfe1b58a6",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 15,
+        "hash": "e2346ec7da40231369976bcd9ab380251d1f78aefe858179539145008a149ebd",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 16,
+        "hash": "88b6fbcf0c6fbe64f62b33021ed10381475ceadb98471a563c33fc8cc4b06915",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 17,
+        "hash": "e9996a1a1027d8593932d2e3e01d87f98f102c8f1283ae49ca33a240a2ce4cea",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 18,
+        "hash": "762e655044ee082de63a4eb53f7c8e47b045643497f61260fab18b71d968d810",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 19,
+        "hash": "cafcce10f4a1e3eb58b020e73aca4b3a18857bf961255171313b66b3e3dcf972",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 20,
+        "hash": "360be8817cdf8ea06e9b095a84d220892c8dac66f0cae94ece41b436be494337",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 21,
+        "hash": "b5a30519ba3a3138248862a3eb907db76ddd26fbfcbf9a00ca01ff5028afb0b9",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 22,
+        "hash": "1318d2e5c2354a3c531c3426baae12fc844977e373efc69f762db8d579ebc069",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 23,
+        "hash": "708689e651ea9f1369618162e96c621400bca4f54d5805a4647987d5b1ef60fe",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 24,
+        "hash": "49827755de40ea2eca95ed0cd1fa40ab1d8c0c2d2fa0c022e809e7a6e19b3499",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 25,
+        "hash": "6696c4c5c9e91b377dafa551e861eae20d57fc2d896ccd7f28cf6ede45cc687d",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 26,
+        "hash": "d60c872e75f88f5513e3e895babf6e0a708f19ec64245501890920ac2ae91e76",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 27,
+        "hash": "32475365d6be8c0dee90aa395b45f6d16a454e1c06cab856c5634c138201552b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 28,
+        "hash": "b87fea0558bd0958484ca92c8d0e6cc3eca4ca1a38b7db16e72a1f43b1eac837",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 29,
+        "hash": "27cbba615ad29f74c64d7eddadfc5ad0f68581feb998501159b6c0a9a1b91dcc",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 30,
+        "hash": "ade6b6b3f37f5a1ca1a29e39255b42e9864198ab89bdcf2bdcf599c4f384fa96",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 31,
+        "hash": "65dd658ba843db85d60b3038095003c9f7c7bdfe8a71025d620f87e7e7f7693d",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 32,
+        "hash": "596744164d66fd84ef105d06f53593e329abeae236bf76c3643baba1efe01575",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 33,
+        "hash": "25bbac5ea2e560cb39c4e0ecefdd9970a9df5268f1539b177f88db8a06e58f06",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 34,
+        "hash": "e95d552063799ac784f24b0045f195fe4af0c384c5f5d9978e367795ba8d17c1",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 35,
+        "hash": "35d0c97e5a989d212616e3ebea3063ce753d7f87f86fa6445a0194089b2975fd",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 36,
+        "hash": "dbc6db9360f1a33d72849e55856ec642f844234d0b64e4875e52fd4b8f2dda0b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 37,
+        "hash": "0793bd9db71329a108ae0ccfec549d5445fd7a57b492f0093a06d83fafb710d6",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 38,
+        "hash": "d54eb0de96ff24a27514133be963a6494e9bf5d6cc8a6638b356753c24781867",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 39,
+        "hash": "df134cd4bc72175d942d6265b1cacd4a449d2029a1df6f8171260a9b5ff1497a",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 40,
+        "hash": "eef0a8b99a882d1bbcdde8936008f43214c62adeb2a8b4d0c4e39b9924798464",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 41,
+        "hash": "010d2b622c1f31309307138f7a61c116a12c5b0ec986f06a3e45c1914514c2b8",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 42,
+        "hash": "f7ebec59d26c7d73818c24088a68930059cc998a5cd42fb02814cd69890e41f8",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 43,
+        "hash": "dc0f3994db796a763ef41b98c2b0f65db545dd180ee7598f9dedbd990a79d86a",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 44,
+        "hash": "3e9b62634462ba87d0a749c12ff3a0be2ed73b6cb9690cbbfd99c0c7eee5d52b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 45,
+        "hash": "a11c4fccff14e8a67041fbd9d274e8feb06071c415e84a38157e60281ab22cb0",
+        "successful": false,
+        "result_code": "tx_too_late",
+        "operation_result_codes": [],
+        "fee_charged": "100"
+      },
+      {
+        "index": 46,
+        "hash": "ce8dd01e34ac401895688cf516eb103306f5354df2e12f0db0965fd72bd43258",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 47,
+        "hash": "b107c79d326865ba4063df57b71bc4536a8060d2b58d05793183588d1db652e7",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 48,
+        "hash": "aaf2212984a414f61c388c49a20a906383efafe23017c671553d62fcc81a0b83",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 49,
+        "hash": "d03bb41bb7df81499316b45d0574a142d3017c21336b99f20ad7c6d6ec1ea445",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v0/tx_processing/45/result/result",
+        "equals": {
+          "fee_charged": "100",
+          "result": "tx_too_late",
+          "ext": "v0"
+        }
+      },
+      {
+        "path": "/v0/tx_set/txs/10/tx/tx/cond",
+        "equals": {
+          "time": {
+            "min_time": "0",
+            "max_time": "1593508579"
+          }
+        }
+      },
+      {
+        "path": "/v0/ledger_header/header/scp_value/close_time",
+        "equals": "1593508580",
+        "note": "One second after the transaction's max_time."
+      },
+      {
+        "path": "/v0/tx_set/txs/10/tx/tx/seq_num",
+        "equals": "101289369087770714"
+      },
+      {
+        "path": "/v0/tx_processing/45/fee_processing/1/updated/data/account/seq_num",
+        "equals": "101289369087770713",
+        "note": "Not consumed: still one below the envelope's sequence number."
+      },
+      {
+        "path": "/v0/tx_processing/45/fee_processing/1/updated/data/account/balance",
+        "equals": "49014687212"
+      },
+      {
+        "path": "/v0/tx_processing/45/tx_apply_processing/v4/tx_changes_before",
+        "equals": []
+      },
+      {
+        "path": "/v0/tx_processing/45/tx_apply_processing/v4/operations",
+        "equals": []
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4XWL3FA4CWBRIODF3DSZBUWUVH3K7HXTP62PMZD6WLKUQGY3SF5GKV",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GBSDKSFI3MCYIDQTURUP3ITXCHHAD5VCKR5IUEEU2M3WPNEYVX37CL24",
+          "because": "the create_account destination of a transaction that failed with txTOO_LATE: no operation ran and the account was not created"
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 45,
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GC4XWL3FA4CWBRIODF3DSZBUWUVH3K7HXTP62PMZD6WLKUQGY3SF5GKV"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0034.md"
+  ],
+  "reference": "network",
+  "notes": "Apply index 45 of 50 (transaction-set position 10). GC4XWL3F\u2026 submitted a create_account of 49004696112 stroops to GBSDKSFI\u2026 with max_time 1593508579; the ledger closed at 1593508580. The result is txTOO_LATE with fee_charged 100 and no operation results: fee processing takes 100 stroops (49014687312 \u2192 49014687212) and leaves the sequence number at 101289369087770713, one below the envelope's 101289369087770714; the meta has no changes before or after and no operations, so GBSDKSFI\u2026 was never created. Found by a read-only scan of 12,786 sampled pubnet lake ledgers between 20000000 and 32747000 (every 997th), which showed txTOO_LATE in ledgers from Protocol 10 to 13. The lake object was written by stellar-core 23.0.1 long after the ledger closed (source.regenerated true), so its TransactionMeta is v4 with backfilled classic and fee events, not what a node emitted at the time."
+}

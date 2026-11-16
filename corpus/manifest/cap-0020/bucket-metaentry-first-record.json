@@ -1,0 +1,78 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0020/bucket-metaentry-first-record",
+  "title": "First record of a live bucket: METAENTRY carrying the bucket's ledger version (28) and list type LIVE",
+  "kind": "xdr",
+  "caps": [
+    20
+  ],
+  "protocol": {
+    "introduced": 11
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "bucket-entry",
+    "bucket-metaentry",
+    "bucket-metadata-ext-v1",
+    "bucket-list-type-live",
+    "history-archive-record"
+  ],
+  "why": "Since Protocol 11 (CAP-20) every bucket starts with a METAENTRY record that states the protocol version the bucket was written under; readers of history-archive buckets must decode it before any ledger entry and use its version to interpret the rest. This one also carries the BucketMetadata ext v1 arm (bucket list type LIVE) that later protocols added for the hot archive. A reader that treats the first record as a ledger entry, or that does not know the ext v1 arm, fails on every live bucket of a current archive.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "xdr_type": "BucketEntry",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "e4234f8c18ffbfff2ac0fbfee8e0a6e6db5296ba9bec75a1010265f65e527ac9",
+        "bytes": 16,
+        "path": "blobs/e4/e4234f8c18ffbfff2ac0fbfee8e0a6e6db5296ba9bec75a1010265f65e527ac9.xdr"
+      },
+      "decoded": "decoded/e4/e4234f8c18ffbfff2ac0fbfee8e0a6e6db5296ba9bec75a1010265f65e527ac9.json.zst",
+      "decoded_sha256": "faf7145b1a326485abb6fa9edee494bc0849d753dbe7aa1ff369cbbd8a0257fb",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history-archive",
+        "store": "https://history.stellar.org/prd/core-testnet/core_testnet_001",
+        "object": "bucket/ab/14/0a/bucket-ab140ae5757d5bef1ff43fe364099d9d55b1477d2f17130e18485308fdada404.xdr.gz",
+        "object_sha256": "fe43c8fe7e75020db4c937f00ba4df0afd1a140c2ab6d5331e1db6819ed87578",
+        "byte_offset": 0,
+        "refetch": "curl -fsS -o bucket-ab140ae5757d5bef1ff43fe364099d9d55b1477d2f17130e18485308fdada404.xdr.gz https://history.stellar.org/prd/core-testnet/core_testnet_001/bucket/ab/14/0a/bucket-ab140ae5757d5bef1ff43fe364099d9d55b1477d2f17130e18485308fdada404.xdr.gz",
+        "perishable": true
+      },
+      "notes": "Record 0 of live bucket level 6 curr at testnet checkpoint 4378879. The archive object is vendored unmodified at objects/testnet/history-archive/4378879/ with the checkpoint's History Archive State and capture.json. byte_offset counts from the start of the gzip-decompressed bucket (whose sha256 is the bucket hash ab140ae5\u2026a404) and points at the record mark; the blob is the record body that follows the 4-byte mark. Testnet is reset on 2026-12-16; its archive may then no longer serve this checkpoint."
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/metaentry/ledger_version",
+        "equals": 28,
+        "note": "The protocol the bucket was written under."
+      },
+      {
+        "path": "/metaentry/ext",
+        "equals": {
+          "v1": "live"
+        },
+        "note": "BucketMetadata ext v1: BucketListType LIVE (0)."
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0020.md"
+  ],
+  "reference": "network",
+  "notes": "The bucket is the level 6 curr bucket of the History Archive State for checkpoint 4378879 (written by stellar-core 28.0.1); it holds 84,927 records. The same object holds the record of cap-0085/bucket-entry-with-executable-tag."
+}

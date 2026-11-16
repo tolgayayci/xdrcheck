@@ -1,0 +1,49 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0027/api-muxed-account-id-encoding.id-2-pow-53-plus-1-number",
+  "title": "Muxed address from ID 2^53+1 passed as a native number: exact or refused",
+  "kind": "api",
+  "caps": [
+    27
+  ],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": true,
+  "validity": "acceptable",
+  "flags": [
+    "native-number-precision"
+  ],
+  "shapes": [
+    "muxed-id-builder",
+    "unsafe-integer-number"
+  ],
+  "why": "2^53+1 is a valid uint64 but not a safe IEEE-754 double: a JavaScript number literal is already 9007199254740992 before the SDK sees it, so an SDK must encode the exact ID or refuse the number.",
+  "api": {
+    "op": "muxed_account.encode",
+    "input": {
+      "account": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+      "id": {
+        "native": "number",
+        "value": "9007199254740993"
+      }
+    },
+    "expect_value": "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUABAAAAAAAAAAFCDM",
+    "expect_xdr_hex": "0000010000200000000000013f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a",
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x#L21-L31",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0027/api-muxed-account-id-encoding.id-2-pow-53-plus-1-number.json. Origin: probe vector 2m1, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). Exact or refuse: either the M-address of ID 9007199254740993 (SEP-0023: key || id) and the MuxedAccount XDR (KEY_TYPE_MUXED_ED25519, id, key), or a refusal. Languages with exact 64-bit integers get the exact value. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

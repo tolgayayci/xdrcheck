@@ -1,0 +1,75 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0027/api-muxed-account-id-encoding.id-empty-string",
+  "title": "Muxed address from an empty ID string must be refused",
+  "kind": "api",
+  "caps": [
+    27
+  ],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "value-out-of-range"
+  ],
+  "shapes": [
+    "muxed-id-builder",
+    "non-decimal-id-text",
+    "invalid-input"
+  ],
+  "why": "MuxedAccount.med25519.id is a uint64; a builder that accepts a value no uint64 equals encodes some other ID, and the muxed address then routes to a different sub-account than the caller meant.",
+  "api": {
+    "op": "muxed_account.encode",
+    "input": {
+      "account": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+      "id": {
+        "native": "string",
+        "value": ""
+      }
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0 || 17.2.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 17.2.0 and 17.2.1: new MuxedAccount accepts an empty ID string and encodes ID 0; 17.3.0 refuses the value (fix pull request #1780).",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1785",
+        "finding": "F-0017",
+        "fixed_in": "17.3.0",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 2m6 (evidence/sdk-matrix), executed on js 17.2.0 and js 17.2.1; xcc conform run --columns 'js@*' --entries 'cap-0027/api-muxed-account-id-encoding.id-empty-string'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: new MuxedAccount accepts an empty ID string and encodes ID 0. The 17.3.0 fix is not on the 16.x line.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1785",
+        "finding": "F-0017",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 2m6 (evidence/sdk-matrix), executed on js 16.3.0 and js 16.3.1 and js 16.4.1; xcc conform run --columns 'js@*' --entries 'cap-0027/api-muxed-account-id-encoding.id-empty-string'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x#L21-L31",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0027/api-muxed-account-id-encoding.id-empty-string.json. Origin: probe vector 2m6, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). An empty string is no uint64. A builder that reads it as 0 encodes ID 0. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

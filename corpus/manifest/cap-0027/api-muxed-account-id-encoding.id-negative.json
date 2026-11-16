@@ -1,0 +1,48 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0027/api-muxed-account-id-encoding.id-negative",
+  "title": "Muxed address from ID -1 must be refused",
+  "kind": "api",
+  "caps": [
+    27
+  ],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "value-out-of-range"
+  ],
+  "shapes": [
+    "muxed-id-builder",
+    "negative-id",
+    "invalid-input"
+  ],
+  "why": "MuxedAccount.med25519.id is a uint64; a builder that accepts a value no uint64 equals encodes some other ID, and the muxed address then routes to a different sub-account than the caller meant.",
+  "api": {
+    "op": "muxed_account.encode",
+    "input": {
+      "account": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+      "id": {
+        "native": "number",
+        "value": "-1"
+      }
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x#L21-L31",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0027/api-muxed-account-id-encoding.id-negative.json. Origin: probe vector 2m4, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). A uint64 has no negative values; a builder that wraps -1 encodes 2^64-1. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

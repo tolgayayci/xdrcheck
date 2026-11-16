@@ -1,0 +1,176 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0030/path-payment-no-issuer-with-payload",
+  "title": "PATH_PAYMENT_STRICT_RECEIVE_NO_ISSUER carrying the path asset whose issuer is missing (pubnet, Protocol 8)",
+  "kind": "ledger",
+  "caps": [
+    30
+  ],
+  "protocol": {
+    "introduced": 1,
+    "removed": 13
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "shapes": [
+    "no-issuer-result",
+    "result-arm-with-asset-payload",
+    "real-ledger-arm-coverage"
+  ],
+  "why": "Before Protocol 13 a path payment through an asset whose issuer account does not exist failed with NO_ISSUER, and that result arm carries the Asset itself, unlike the other failure arms, which are void. A reader that treats every failure arm of PathPaymentStrictReceiveResult as void, or that only knows the codes stellar-core still emits, misreads or rejects the result.",
+  "notes": "Chosen with the locate index of the full pubnet scan (token `T|arm|PathPaymentStrictReceiveResult::PATH_PAYMENT_STRICT_RECEIVE_NO_ISSUER`): among the ledgers that hold the shape, the one with the smallest lake object. Header hash recomputed from the header and every transaction hash recomputed from its envelope at capture. `expect.values` are written by hand from the decoded sidecar; participants, state changes and movements are the reference extractor's output, checked against the sidecar.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 8,
+      "ledger_seq": 11945806,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "d10a06dd9a2965e32302cd55998cfacf854ca71f7b01f13d7fe670bfe0e4f784",
+        "bytes": 1160,
+        "path": "blobs/d1/d10a06dd9a2965e32302cd55998cfacf854ca71f7b01f13d7fe670bfe0e4f784.xdr"
+      },
+      "decoded": "decoded/d1/d10a06dd9a2965e32302cd55998cfacf854ca71f7b01f13d7fe670bfe0e4f784.json.zst",
+      "decoded_sha256": "8944382e5e53d28baa32b2dbf85052386a972eab47ab3cdefd2f066c5b342fe3",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FF4A5BFF--11904000-11967999/FF49B8B1--11945806.xdr.zst",
+        "object_sha256": "a63eb0bca93aaa2421b9052537ad9ab3b258d0b862bd0d6fda351f408710d610",
+        "object_bytes": 803,
+        "decompressed_sha256": "2301e6881988223a4dd23693d17226c53cd14699f892415677d59ca1ffa142dc",
+        "decompressed_bytes": 1172,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-18T09:40:23Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "11945806",
+          "end-ledger-close-time": "1499078419",
+          "file-mtime": "1757537259000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "8",
+          "start-ledger": "11945806",
+          "start-ledger-close-time": "1499078419",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FF49B8B1--11945806.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FF4A5BFF--11904000-11967999/FF49B8B1--11945806.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/11945806/FF49B8B1--11945806.xdr.zst"
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "32091110b5501ff62bfa6fb045fa894eb8f0b298d7f14896b3a6f584b79c9388"
+      },
+      "meta": {
+        "ledger_close_meta_version": 0,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "527d3d7fba5ab52f74f1169b6d02abafd405c6e7af036f8af446fbc52c87b573",
+        "tx_hashes": [
+          "32091110b5501ff62bfa6fb045fa894eb8f0b298d7f14896b3a6f584b79c9388"
+        ],
+        "tx_hash": "32091110b5501ff62bfa6fb045fa894eb8f0b298d7f14896b3a6f584b79c9388",
+        "l1": {
+          "memo_type": "text"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 2
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "32091110b5501ff62bfa6fb045fa894eb8f0b298d7f14896b3a6f584b79c9388",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "path_payment_strict_receive.no_issuer"
+        ],
+        "fee_charged": "100"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v0/tx_processing/0/result/result/result/tx_failed/0/op_inner/path_payment_strict_receive/no_issuer",
+        "equals": {
+          "credit_alphanum4": {
+            "asset_code": "IDR",
+            "issuer": "GB276KYFSIHHXGOLKFYMYYWPPNURRJBWB4SI3P477JNWF4NCIGV3CLCR"
+          }
+        },
+        "note": "The NO_ISSUER arm's payload: the asset whose issuer account was missing."
+      },
+      {
+        "path": "/v0/tx_set/txs/0/tx_v0/tx/operations/0/body/path_payment_strict_receive/path/0",
+        "equals": {
+          "credit_alphanum4": {
+            "asset_code": "IDR",
+            "issuer": "GB276KYFSIHHXGOLKFYMYYWPPNURRJBWB4SI3P477JNWF4NCIGV3CLCR"
+          }
+        },
+        "note": "The payload names the one intermediate asset of the path; the send and destination assets are native."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GABKXBOHFNS3HRT7G3VDDOXOCDG44EDE6FX567KQDGOYG5JSTEHQZDS5",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GB276KYFSIHHXGOLKFYMYYWPPNURRJBWB4SI3P477JNWF4NCIGV3CLCR",
+          "because": "named in the envelope of a failed transaction; only the fee payer and the source changed (candidate)"
+        },
+        {
+          "address": "GB6YPGW5JFMMP2QB2USQ33EUWTXVL4ZT5ITUNCY3YKVWOJPP57CANOF3",
+          "because": "named in the envelope of a failed transaction; only the fee payer and the source changed (candidate)"
+        }
+      ]
+    },
+    "state_changes": [],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GABKXBOHFNS3HRT7G3VDDOXOCDG44EDE6FX567KQDGOYG5JSTEHQZDS5"
+        }
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  }
+}
