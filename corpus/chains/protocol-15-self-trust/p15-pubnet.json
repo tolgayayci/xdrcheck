@@ -1,0 +1,99 @@
+{
+  "schema": "xcc.chain.index/v1",
+  "id": "protocol-15-self-trust/p15-pubnet",
+  "scenario": "scenarios/s26-protocol-15-self-trust.yaml",
+  "scenario_sha256": "11d8ee242f3b7248811137aba6f30e460445a3251647f280a032fb6311b9ea7f",
+  "network": "pubnet",
+  "passphrase": "Public Global Stellar Network ; September 2015",
+  "protocol": 15,
+  "profile": "lake",
+  "core_meta_flags": [
+    "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+    "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+    "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+    "EMIT_LEDGER_CLOSE_META_EXT_V1",
+    "EMIT_CLASSIC_EVENTS",
+    "BACKFILL_STELLAR_ASSET_EVENTS",
+    "BACKFILL_RESTORE_META"
+  ],
+  "core": {
+    "version": "30.0.0",
+    "commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+    "binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+    "package": {
+      "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+      "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+    },
+    "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635"
+  },
+  "settings": {
+    "source": "none: no Soroban settings before Protocol 20",
+    "files": [],
+    "salt_rule": "sha256(\"xcc/settings-upgrade-salt/<file>\")",
+    "note": "Protocol 15 predates Soroban: no settings are applied."
+  },
+  "stream": {
+    "path": "chains/protocol-15-self-trust/p15-pubnet.meta.xdr.zst",
+    "sha256": "4a2511898e8d8562c5c0404cb1b9e370ddef3ad51b4d1fd22e7380eb7a726ed9",
+    "records": 5
+  },
+  "first_ledger": 2,
+  "last_ledger": 6,
+  "ledgers": [
+    {
+      "seq": 2,
+      "blob_sha256": "d18fce19b641aa1166f50cd62ae2cecedd25d746e4ed0d5231701510ae0f45af",
+      "bytes": 564,
+      "header_hash": "9f1e298a71fd00b97543dd4f99cdb5eea7c1683cc18f855ebc0cb1c6acc7a98b",
+      "previous_header_hash": "39c2a3cd4141b2853e70d84601faa44744660334b48f3228e0309342e3f4eb48",
+      "close_time": "1700000000",
+      "ledger_close_meta_version": 0
+    },
+    {
+      "seq": 3,
+      "blob_sha256": "db7a153eeea85a667aca69ec73276989f9de7f392be1b31e42c26938fcd6b907",
+      "bytes": 1820,
+      "header_hash": "5b1542755ba3f420800f8da39224d671ca43d6f7ec29ae41535ca5c50f6a183b",
+      "previous_header_hash": "9f1e298a71fd00b97543dd4f99cdb5eea7c1683cc18f855ebc0cb1c6acc7a98b",
+      "close_time": "1701000000",
+      "ledger_close_meta_version": 0
+    },
+    {
+      "seq": 4,
+      "blob_sha256": "7130d67f1e161e628fef35f400053e9314f8959d44a9bce395cad1fee787bf2d",
+      "bytes": 1528,
+      "header_hash": "05da2f1c9a99ae7081e844fac456335ef3ff3a717935889b73d6747e48a9c3bc",
+      "previous_header_hash": "5b1542755ba3f420800f8da39224d671ca43d6f7ec29ae41535ca5c50f6a183b",
+      "close_time": "1702000000",
+      "ledger_close_meta_version": 0
+    },
+    {
+      "seq": 5,
+      "blob_sha256": "4355b2626ef0e65f24a6e249657f93f1a6ab681fa2e6c3aef6e8cfaa9166b8c8",
+      "bytes": 1336,
+      "header_hash": "6cc709ba8588dabd549dbe88e836de5f7212fa4a226f23ef766e657a1271e4ce",
+      "previous_header_hash": "05da2f1c9a99ae7081e844fac456335ef3ff3a717935889b73d6747e48a9c3bc",
+      "close_time": "1703000000",
+      "ledger_close_meta_version": 0,
+      "step": "change-trust-self",
+      "entries": [
+        "protocol-15/change-trust-self-not-allowed"
+      ]
+    },
+    {
+      "seq": 6,
+      "blob_sha256": "ae43e32e7822b988df48830ef860c33b52e7abb93c9d99ff91a774f44e6b0c8d",
+      "bytes": 1332,
+      "header_hash": "7e00af0e11ffc8c73460ab0a43f435a08d64a4f94c6178b12b50e2b011236638",
+      "previous_header_hash": "6cc709ba8588dabd549dbe88e836de5f7212fa4a226f23ef766e657a1271e4ce",
+      "close_time": "1704000000",
+      "ledger_close_meta_version": 0,
+      "step": "allow-trust-self",
+      "entries": [
+        "protocol-15/allow-trust-self-not-allowed"
+      ]
+    }
+  ],
+  "regenerate": "xdrcheck-corpus gen scenarios/s26-protocol-15-self-trust.yaml --network pubnet --protocol 15",
+  "reproducibility": "normalised-identical"
+}

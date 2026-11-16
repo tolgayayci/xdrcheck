@@ -1,0 +1,99 @@
+{
+  "schema": "xcc.chain.index/v1",
+  "id": "protocol-15-self-trust/p15-testnet",
+  "scenario": "scenarios/s26-protocol-15-self-trust.yaml",
+  "scenario_sha256": "11d8ee242f3b7248811137aba6f30e460445a3251647f280a032fb6311b9ea7f",
+  "network": "testnet",
+  "passphrase": "Test SDF Network ; September 2015",
+  "protocol": 15,
+  "profile": "lake",
+  "core_meta_flags": [
+    "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+    "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+    "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+    "EMIT_LEDGER_CLOSE_META_EXT_V1",
+    "EMIT_CLASSIC_EVENTS",
+    "BACKFILL_STELLAR_ASSET_EVENTS",
+    "BACKFILL_RESTORE_META"
+  ],
+  "core": {
+    "version": "30.0.0",
+    "commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+    "binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+    "package": {
+      "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+      "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+    },
+    "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e"
+  },
+  "settings": {
+    "source": "none: no Soroban settings before Protocol 20",
+    "files": [],
+    "salt_rule": "sha256(\"xcc/settings-upgrade-salt/<file>\")",
+    "note": "Protocol 15 predates Soroban: no settings are applied."
+  },
+  "stream": {
+    "path": "chains/protocol-15-self-trust/p15-testnet.meta.xdr.zst",
+    "sha256": "96fdcae559b9242152ebed09c24d6ad30e9973c0b357fef23fa3773207535374",
+    "records": 5
+  },
+  "first_ledger": 2,
+  "last_ledger": 6,
+  "ledgers": [
+    {
+      "seq": 2,
+      "blob_sha256": "062b047348a759899ada3f71cccb8340487001837bf1b63e4555b3e4632e6f37",
+      "bytes": 564,
+      "header_hash": "a1e7cb35962fadf8218685a192e0a8ef33034d38b98996bba51f20af8e042d8f",
+      "previous_header_hash": "63d98f536ee68d1b27b5b89f23af5311b7569a24faf1403ad0b52b633b07be99",
+      "close_time": "1700000000",
+      "ledger_close_meta_version": 0
+    },
+    {
+      "seq": 3,
+      "blob_sha256": "39fdd84cb15e2ea951fd87ec5663b360aabbf8d0436472c73454686b7e3dfeb2",
+      "bytes": 1820,
+      "header_hash": "45b60245a20abf0a9ed0133a437043392f0fdd646b1dd000cdd8daa5f10b0f0c",
+      "previous_header_hash": "a1e7cb35962fadf8218685a192e0a8ef33034d38b98996bba51f20af8e042d8f",
+      "close_time": "1701000000",
+      "ledger_close_meta_version": 0
+    },
+    {
+      "seq": 4,
+      "blob_sha256": "53e1e3bbf8ee487d1f9ac3e250be88f2950879ec681af1a92f5fc4746b66ef36",
+      "bytes": 1528,
+      "header_hash": "d75adc04bf3a23c81b846ad6b775084145b5e63f0e9e14173bd0a68aa8c68678",
+      "previous_header_hash": "45b60245a20abf0a9ed0133a437043392f0fdd646b1dd000cdd8daa5f10b0f0c",
+      "close_time": "1702000000",
+      "ledger_close_meta_version": 0
+    },
+    {
+      "seq": 5,
+      "blob_sha256": "0a4fc4fc56d0bf585af9e9a33ad180086a72a4c77217fd8854bd38589bd58267",
+      "bytes": 1336,
+      "header_hash": "9d064b2114175a8db4af5cf5b44b7d6f74a34d5bbb2d40a184686e98f6ee09d4",
+      "previous_header_hash": "d75adc04bf3a23c81b846ad6b775084145b5e63f0e9e14173bd0a68aa8c68678",
+      "close_time": "1703000000",
+      "ledger_close_meta_version": 0,
+      "step": "change-trust-self",
+      "entries": [
+        "protocol-15/change-trust-self-not-allowed"
+      ]
+    },
+    {
+      "seq": 6,
+      "blob_sha256": "7c74804764a6b17d585248d7a6746985b1dcda74700a5a53e3a84e6c571ab3ba",
+      "bytes": 1332,
+      "header_hash": "6a76f1090e7faa7e2f9b901b7cb1e993502bcd57ed9edc7bb8a855ff513b6fb8",
+      "previous_header_hash": "9d064b2114175a8db4af5cf5b44b7d6f74a34d5bbb2d40a184686e98f6ee09d4",
+      "close_time": "1704000000",
+      "ledger_close_meta_version": 0,
+      "step": "allow-trust-self",
+      "entries": [
+        "protocol-15/allow-trust-self-not-allowed"
+      ]
+    }
+  ],
+  "regenerate": "xdrcheck-corpus gen scenarios/s26-protocol-15-self-trust.yaml --network testnet --protocol 15",
+  "reproducibility": "normalised-identical"
+}
