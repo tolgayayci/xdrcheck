@@ -1,0 +1,212 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0058/create-contract-v2-constructor-golden.c2190f875f6f59fd",
+  "title": "CreateContractV2 with constructor arguments and a constructor that requires authorization",
+  "kind": "ledger",
+  "caps": [
+    58
+  ],
+  "protocol": {
+    "introduced": 22
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "create-contract-v2",
+    "constructor-with-arguments",
+    "constructor-auth"
+  ],
+  "why": "Protocol 22's CREATE_CONTRACT_V2 host function carries constructor arguments, and the constructor itself can call require_auth, so the authorization tree has a CREATE_CONTRACT_V2_HOST_FN root with a __constructor sub-invocation. Readers that only know CREATE_CONTRACT cannot decode it.",
+  "fields": {
+    "validated": [
+      "VF-46a"
+    ],
+    "passed_through": [
+      "VF-46b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 10,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "56f6b01b7ee282448f631cfd5b1af57f480d154f0938f0f7ccc280c5ce6a4881",
+        "bytes": 5440,
+        "path": "blobs/56/56f6b01b7ee282448f631cfd5b1af57f480d154f0938f0f7ccc280c5ce6a4881.xdr"
+      },
+      "decoded": "decoded/56/56f6b01b7ee282448f631cfd5b1af57f480d154f0938f0f7ccc280c5ce6a4881.json.zst",
+      "decoded_sha256": "7480e39bd7417f8baef3329cdb19e2569a53e9fce59aa3a98ff7beb862837e1a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/c2190f875f6f59fd.xdr",
+        "file_sha256": "5843fad166d62655fba4c617e1d2adf8713035d4a7d47f2b793243f62158ae10",
+        "frame_index": 8,
+        "test_name": "contract constructor support|constructor with arguments and auth",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "98e1d041bea11dcbbddbd7191a6bba6b75a7d98f28553f8acc070228d3c00710",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "contract constructor support|constructor with arguments and auth",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:7473 (TEST_CASE); flag lines 7476; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "668d03085870054674588c9e44737b8c79adee6d6e66a215b9712f952dac9c65",
+        "tx_hashes": [
+          "98e1d041bea11dcbbddbd7191a6bba6b75a7d98f28553f8acc070228d3c00710"
+        ],
+        "tx_hash": "98e1d041bea11dcbbddbd7191a6bba6b75a7d98f28553f8acc070228d3c00710",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 12
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "98e1d041bea11dcbbddbd7191a6bba6b75a7d98f28553f8acc070228d3c00710",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "185392"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/create_contract_v2/constructor_args",
+        "equals": [
+          {
+            "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+          },
+          {
+            "symbol": "key"
+          },
+          {
+            "u32": 100
+          },
+          {
+            "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+          }
+        ]
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/root_invocation/function",
+        "equals": {
+          "create_contract_v2_host_fn": {
+            "contract_id_preimage": {
+              "address": {
+                "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+                "salt": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b"
+              }
+            },
+            "executable": {
+              "wasm": "9c37f7306b6640b2d11af63bf878628b88cb48d36cb8e8f455e2f608d020ef98"
+            },
+            "constructor_args": [
+              {
+                "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+              },
+              {
+                "symbol": "key"
+              },
+              {
+                "u32": 100
+              },
+              {
+                "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CDFECZ6L3ASVMM5FEKHFFK4ZEIDOZ5H3WNPVXOMC4OCRHNJ2MO32WCKX",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1124466",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "939074",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 8 of the golden."
+}

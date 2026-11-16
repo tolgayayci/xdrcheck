@@ -1,0 +1,185 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0058/create-contract-v2-constructor-golden.bf1c69a28fed2564",
+  "title": "Contract with a no-argument constructor deployed with the v2 host function and v1 authorization",
+  "kind": "ledger",
+  "caps": [
+    58
+  ],
+  "protocol": {
+    "introduced": 22
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "create-contract-v2",
+    "constructor-no-arguments",
+    "host-function-v2",
+    "auth-v1"
+  ],
+  "why": "A contract with a constructor can be deployed with the old CREATE_CONTRACT host function or the new CREATE_CONTRACT_V2, and authorized with either authorization form; all four combinations run the constructor, which writes storage in the same operation. Readers keyed on one host-function arm miss the others.",
+  "fields": {
+    "validated": [
+      "VF-46a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 8,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "c06be7cd4b5992f0fe02845db3fdba8a475bb9b2f52ca5d0b414557ae2c0b376",
+        "bytes": 4460,
+        "path": "blobs/c0/c06be7cd4b5992f0fe02845db3fdba8a475bb9b2f52ca5d0b414557ae2c0b376.xdr"
+      },
+      "decoded": "decoded/c0/c06be7cd4b5992f0fe02845db3fdba8a475bb9b2f52ca5d0b414557ae2c0b376.json.zst",
+      "decoded_sha256": "3053a5bc53b820cf8eda43584cd4cd26c8c94d3f71ca97b5e9324f112846c818",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/bf1c69a28fed2564.xdr",
+        "file_sha256": "5f20f34f682f68d1981305b178297d904b3f9814b9d4e3b57de5fbbbc175e2f1",
+        "frame_index": 6,
+        "test_name": "contract constructor support|constructor with no arguments|v2 host function, v1 auth",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "bfc888b582128810e3a82537a257b4030cf9ec6758b753d4fe98cd319ffa53f9",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "contract constructor support|constructor with no arguments|v2 host function, v1 auth",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:7473 (TEST_CASE); flag lines 7476; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "d1326f096f4f47cae91a823c8fef66e7e9e5f7820519632233bda1f9f04e24aa",
+        "tx_hashes": [
+          "bfc888b582128810e3a82537a257b4030cf9ec6758b753d4fe98cd319ffa53f9"
+        ],
+        "tx_hash": "bfc888b582128810e3a82537a257b4030cf9ec6758b753d4fe98cd319ffa53f9",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 12
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "bfc888b582128810e3a82537a257b4030cf9ec6758b753d4fe98cd319ffa53f9",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "176961"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/create_contract_v2",
+        "equals": {
+          "contract_id_preimage": {
+            "address": {
+              "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+              "salt": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+            }
+          },
+          "executable": {
+            "wasm": "a1d46599d59cced383aca447d2633d9747b457fa3fc720f6b515e9910f6cda28"
+          },
+          "constructor_args": []
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/contract_data/val",
+        "equals": {
+          "u32": 1
+        },
+        "note": "Written by the constructor."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1117225",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "940264",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 6 of the golden."
+}

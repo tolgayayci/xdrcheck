@@ -1,0 +1,185 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0066/restore-evicted-versus-expired-golden.cbaf8979e8727636",
+  "title": "Manual RestoreFootprint of an entry that expired but was not evicted",
+  "kind": "ledger",
+  "caps": [
+    66
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "restore-footprint",
+    "ledger-entry-restored",
+    "expired-not-evicted"
+  ],
+  "why": "RestoreFootprint emits the same 'restored' changes whether the entry was evicted to the hot archive or only expired in the live state; only the ledger history tells the two apart. Readers that infer eviction from the restore, or require a preceding eviction, get the entry's history wrong.",
+  "fields": {
+    "validated": [
+      "VF-52"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 31,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "fea81bad9899446ab1544045eb27c8288b825626d5197e0c0dba8b4fd61bad27",
+        "bytes": 1976,
+        "path": "blobs/fe/fea81bad9899446ab1544045eb27c8288b825626d5197e0c0dba8b4fd61bad27.xdr"
+      },
+      "decoded": "decoded/fe/fea81bad9899446ab1544045eb27c8288b825626d5197e0c0dba8b4fd61bad27.json.zst",
+      "decoded_sha256": "384c33825cad8f6cbb727e8e0896c2c79cb65a733604f76ac6f063f1fb9e2665",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/cbaf8979e8727636.xdr",
+        "file_sha256": "73b13588a6244862ac9d0556fd83bf580a38621bee4713c238c3416519d243e6",
+        "frame_index": 29,
+        "test_name": "archival meta|protocol version 30|persistent entry meta|restore expired but not evicted|manual restore",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "ff0b9ddbf974fd413552ee202024c9bc3cfabef2c23d7faccc4b31a1d1b9fe4a",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "archival meta|protocol version 30|persistent entry meta|restore expired but not evicted|manual restore",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:3787 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "0ec94e053aef8a38f1d7e20943fc50cfbc389d643105596d942e2a26dfb11437",
+        "tx_hashes": [
+          "ff0b9ddbf974fd413552ee202024c9bc3cfabef2c23d7faccc4b31a1d1b9fe4a"
+        ],
+        "tx_hash": "ff0b9ddbf974fd413552ee202024c9bc3cfabef2c23d7faccc4b31a1d1b9fe4a",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "restore_footprint"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 8
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "ff0b9ddbf974fd413552ee202024c9bc3cfabef2c23d7faccc4b31a1d1b9fe4a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "restore_footprint.success"
+        ],
+        "fee_charged": "89744"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/restored/data/ttl/live_until_ledger_seq",
+        "equals": 46
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/restored/data/contract_data/val",
+        "equals": {
+          "u64": "123"
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "entry_restored",
+        "op_index": 0,
+        "account": {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+        },
+        "detail": {
+          "entry_type": "contract_data"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "340100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "250356",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 29 of the golden."
+}

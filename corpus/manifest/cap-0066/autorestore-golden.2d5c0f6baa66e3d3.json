@@ -1,0 +1,179 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0066/autorestore-golden.2d5c0f6baa66e3d3",
+  "title": "Auto-restore of an expired but not yet evicted entry during a read",
+  "kind": "ledger",
+  "caps": [
+    66
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "autorestore",
+    "ledger-entry-restored",
+    "archived-soroban-entries"
+  ],
+  "why": "A read-only call touches an expired, not yet evicted persistent entry; the host restores it automatically and the meta shows 'restored' changes although the contract only read. Readers that assume a read changes nothing miss the restoration.",
+  "fields": {
+    "validated": [
+      "VF-45a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 31,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "bff340e54c04df3fe74b8a4b1972d38b06977bd0fd527af1f5822f7ecb61a32d",
+        "bytes": 3912,
+        "path": "blobs/bf/bff340e54c04df3fe74b8a4b1972d38b06977bd0fd527af1f5822f7ecb61a32d.xdr"
+      },
+      "decoded": "decoded/bf/bff340e54c04df3fe74b8a4b1972d38b06977bd0fd527af1f5822f7ecb61a32d.json.zst",
+      "decoded_sha256": "214518f7094c6d26a605a50e72c582aa2dbac6fc632a991ac180a9b31476f027",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/2d5c0f6baa66e3d3.xdr",
+        "file_sha256": "cc9ef0af4a5930853259cc3f851142fe94d37eb57eb0edcd1959a095b2a0850a",
+        "frame_index": 29,
+        "test_name": "archival meta|protocol version 30|persistent entry meta|restore expired but not evicted|autorestore",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "165c650db53d1d869edeeffcfe536fe8808f3fba31852c9f28e9e8c8c0dda7c5",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "archival meta|protocol version 30|persistent entry meta|restore expired but not evicted|autorestore",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:3787 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "054406251034d599c0270c47d034f69cfb1c171458f8042b61262c1a80a41b79",
+        "tx_hashes": [
+          "165c650db53d1d869edeeffcfe536fe8808f3fba31852c9f28e9e8c8c0dda7c5"
+        ],
+        "tx_hash": "165c650db53d1d869edeeffcfe536fe8808f3fba31852c9f28e9e8c8c0dda7c5",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 8
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "165c650db53d1d869edeeffcfe536fe8808f3fba31852c9f28e9e8c8c0dda7c5",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "108117"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "has_persistent"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "entry_restored",
+        "op_index": 0,
+        "account": {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+        },
+        "detail": {
+          "entry_type": "contract_data"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1087948",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "979831",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 29 of the golden."
+}

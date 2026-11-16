@@ -1,0 +1,166 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0063/post-tx-apply-fee-refund-golden",
+  "title": "Soroban fee refund applied after all transactions, in post-apply fee processing",
+  "kind": "ledger",
+  "caps": [
+    63
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "post-tx-apply-fee-processing",
+    "soroban-fee-refund",
+    "transaction-result-meta-v1"
+  ],
+  "why": "Since Protocol 23 the Soroban resource-fee refund is applied after the whole transaction set, in TransactionResultMetaV1.postTxApplyFeeProcessing, not inside the transaction's meta. Readers that only read tx meta miss the refund and overstate the fee.",
+  "fields": {
+    "validated": [
+      "VF-44"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 11,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "fdaa3355a054885167c46abb8e57735423f0100af510b34137f24f14c98a3b1f",
+        "bytes": 4836,
+        "path": "blobs/fd/fdaa3355a054885167c46abb8e57735423f0100af510b34137f24f14c98a3b1f.xdr"
+      },
+      "decoded": "decoded/fd/fdaa3355a054885167c46abb8e57735423f0100af510b34137f24f14c98a3b1f.json.zst",
+      "decoded_sha256": "c88d06e5e563dfa2a25c6f4a5411e7f7001b750ea642b0413dd41558f8705d31",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/37aac579b64d7756.xdr",
+        "file_sha256": "0a9547bb321ecc344a237dab4e199a86282c2cc6720544523bfd6a7fe06f4def",
+        "frame_index": 9,
+        "test_name": "refund test with closeLedger|protocol version 30",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "1a608eceab9e85788fd8c88fc3407d208d9b7618d586293257d9f81b5c2d18f1",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "EMIT_CLASSIC_EVENTS",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "refund test with closeLedger|protocol version 30",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:2106 (TEST_CASE); flag lines 2109,2110; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "d4d04a28d0b87880a25129b434744ef2184ed10f1dc60c4460513125c4854b0b",
+        "tx_hashes": [
+          "1a608eceab9e85788fd8c88fc3407d208d9b7618d586293257d9f81b5c2d18f1"
+        ],
+        "tx_hash": "1a608eceab9e85788fd8c88fc3407d208d9b7618d586293257d9f81b5c2d18f1",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 2,
+      "entry_changes": 8
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "1a608eceab9e85788fd8c88fc3407d208d9b7618d586293257d9f81b5c2d18f1",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "79830"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/0/post_tx_apply_fee_processing/1/updated/data/account/account_id",
+        "equals": "GBW5HOHGBZV32TE6SYWOMRSY27JDD754PEBMIQNA5OBWLCUBTXO56ZFV"
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/fee_charged",
+        "equals": "79830"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBW5HOHGBZV32TE6SYWOMRSY27JDD754PEBMIQNA5OBWLCUBTXO56ZFV",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1061072",
+        "from": {
+          "address": "GBW5HOHGBZV32TE6SYWOMRSY27JDD754PEBMIQNA5OBWLCUBTXO56ZFV"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "981242",
+        "to": {
+          "address": "GBW5HOHGBZV32TE6SYWOMRSY27JDD754PEBMIQNA5OBWLCUBTXO56ZFV"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 9 of 'refund test with closeLedger|protocol version 30'. The test turns on classic and fee events, so the refund also appears as an after_all_txs fee event."
+}

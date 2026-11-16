@@ -1,0 +1,330 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0063/parallel-phase-stages-and-clusters-golden.178a274b5da955f4",
+  "title": "Persistent entry deleted in one stage and re-created with a lower TTL in another",
+  "kind": "ledger",
+  "caps": [
+    63
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "parallel-soroban-phase",
+    "delete-and-recreate",
+    "across-stages"
+  ],
+  "why": "One transaction deletes a persistent entry and another, in a later stage of the same ledger, re-creates it with a lower TTL. Readers that process changes in set order instead of apply order end with the entry deleted or with the wrong TTL.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 23,
+      "ledger_seq": 39,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "4ac38b0e7342358792a710182884a50acc95868e1e011dc8b0cf632d03ab059c",
+        "bytes": 7072,
+        "path": "blobs/4a/4ac38b0e7342358792a710182884a50acc95868e1e011dc8b0cf632d03ab059c.xdr"
+      },
+      "decoded": "decoded/4a/4ac38b0e7342358792a710182884a50acc95868e1e011dc8b0cf632d03ab059c.json.zst",
+      "decoded_sha256": "25cf5b80c1264c54837cf26ade20032ed2d0d7d6ed249844663fe8d81073b703",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/178a274b5da955f4.xdr",
+        "file_sha256": "a642ab0e3a9bf59dfecda357c534bacf27ec86ed15a388cba73c80ee6abfa629",
+        "frame_index": 37,
+        "test_name": "parallel txs|delete and re-create persistent entry with lower TTL|across stages",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "4158364276342f2e59895a64175bbf451eac5a56e40bfeb48a12d457a95d015a",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "parallel txs|delete and re-create persistent entry with lower TTL|across stages",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:8477 (TEST_CASE); flag lines 8483; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "2687d1ff7aa968cb55a531877f6001b5960c8bafa59027d2ce432a3e85f4c153",
+        "tx_hashes": [
+          "4158364276342f2e59895a64175bbf451eac5a56e40bfeb48a12d457a95d015a",
+          "b235a469265425626695f8cc211e41b683d9616a42b608d2ee1cedcf8a118e50"
+        ],
+        "tx_hash": "4158364276342f2e59895a64175bbf451eac5a56e40bfeb48a12d457a95d015a",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 2,
+      "operations": 2,
+      "events": 0,
+      "entry_changes": 18
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "4158364276342f2e59895a64175bbf451eac5a56e40bfeb48a12d457a95d015a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "74160"
+      },
+      {
+        "index": 1,
+        "hash": "b235a469265425626695f8cc211e41b683d9616a42b608d2ee1cedcf8a118e50",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages",
+        "equals": [
+          [
+            [
+              {
+                "tx": {
+                  "tx": {
+                    "source_account": "GBSLX6APHR3PEISL6FWOBSQOSVS4W7XIY64IAQ3DZZAGJFMKIR74EZYX",
+                    "fee": 1074184,
+                    "seq_num": "77309411329",
+                    "cond": "none",
+                    "memo": "none",
+                    "operations": [
+                      {
+                        "source_account": null,
+                        "body": {
+                          "invoke_host_function": {
+                            "host_function": {
+                              "invoke_contract": {
+                                "contract_address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                "function_name": "put_persistent",
+                                "args": [
+                                  {
+                                    "symbol": "recreate"
+                                  },
+                                  {
+                                    "u64": "5"
+                                  }
+                                ]
+                              }
+                            },
+                            "auth": []
+                          }
+                        }
+                      }
+                    ],
+                    "ext": {
+                      "v1": {
+                        "ext": "v0",
+                        "resources": {
+                          "footprint": {
+                            "read_only": [
+                              {
+                                "contract_code": {
+                                  "hash": "fc644715caaead746e6145f4331ff75c427c965c20d2995a9942b01247515962"
+                                }
+                              },
+                              {
+                                "contract_data": {
+                                  "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                  "key": "ledger_key_contract_instance",
+                                  "durability": "persistent"
+                                }
+                              }
+                            ],
+                            "read_write": [
+                              {
+                                "contract_data": {
+                                  "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                  "key": {
+                                    "symbol": "recreate"
+                                  },
+                                  "durability": "persistent"
+                                }
+                              }
+                            ]
+                          },
+                          "instructions": 4000000,
+                          "disk_read_bytes": 10000,
+                          "write_bytes": 1000
+                        },
+                        "resource_fee": "1074084"
+                      }
+                    }
+                  },
+                  "signatures": [
+                    {
+                      "hint": "8a447fc2",
+                      "signature": "587428276c7b09b92e3d110958a9e0c1fccfb3413aa9bacf0bdd8b27dc9587e71a7fdcc1c384392eff728ffbc4494ce5f3cc0b8ee6a24d2d1dda3cc038c13f08"
+                    }
+                  ]
+                }
+              }
+            ]
+          ],
+          [
+            [
+              {
+                "tx": {
+                  "tx": {
+                    "source_account": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I",
+                    "fee": 1074160,
+                    "seq_num": "73014444033",
+                    "cond": "none",
+                    "memo": "none",
+                    "operations": [
+                      {
+                        "source_account": null,
+                        "body": {
+                          "invoke_host_function": {
+                            "host_function": {
+                              "invoke_contract": {
+                                "contract_address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                "function_name": "del_persistent",
+                                "args": [
+                                  {
+                                    "symbol": "recreate"
+                                  }
+                                ]
+                              }
+                            },
+                            "auth": []
+                          }
+                        }
+                      }
+                    ],
+                    "ext": {
+                      "v1": {
+                        "ext": "v0",
+                        "resources": {
+                          "footprint": {
+                            "read_only": [
+                              {
+                                "contract_code": {
+                                  "hash": "fc644715caaead746e6145f4331ff75c427c965c20d2995a9942b01247515962"
+                                }
+                              },
+                              {
+                                "contract_data": {
+                                  "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                  "key": "ledger_key_contract_instance",
+                                  "durability": "persistent"
+                                }
+                              }
+                            ],
+                            "read_write": [
+                              {
+                                "contract_data": {
+                                  "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                  "key": {
+                                    "symbol": "recreate"
+                                  },
+                                  "durability": "persistent"
+                                }
+                              }
+                            ]
+                          },
+                          "instructions": 4000000,
+                          "disk_read_bytes": 10000,
+                          "write_bytes": 1000
+                        },
+                        "resource_fee": "1074059"
+                      }
+                    }
+                  },
+                  "signatures": [
+                    {
+                      "hint": "8bfab2a4",
+                      "signature": "df39654b8d65d780cf735e119d7c2b4f79f70d3b9b0b58c70b11cd7a3b778c7531c5df166ca8aff89080a5e99652aa1aa37eb3e56272c4b7c749d1a5d96a8a0d"
+                    }
+                  ]
+                }
+              }
+            ]
+          ]
+        ]
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1074159",
+        "from": {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "999999",
+        "to": {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 37 of the golden (the test is pinned to Protocol 23)."
+}

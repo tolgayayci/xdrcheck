@@ -1,0 +1,187 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0062/eviction-golden.05d0e7942b0729fc",
+  "title": "Temporary entry re-created with the same key on the ledger where its expired predecessor is evicted",
+  "kind": "ledger",
+  "caps": [
+    62
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "eviction",
+    "temporary-entry-recreated",
+    "same-key-recreate"
+  ],
+  "why": "A temporary entry that expired is re-created under the same key in the ledger that evicts the old one. The meta shows a plain 'created' change. Readers that key state by entry key and process eviction after transactions delete the new entry.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 33,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "351402f3ab8b264cc950c229bd254de647f20c8fd2dd4ce0a72fcaef9de7176c",
+        "bytes": 3932,
+        "path": "blobs/35/351402f3ab8b264cc950c229bd254de647f20c8fd2dd4ce0a72fcaef9de7176c.xdr"
+      },
+      "decoded": "decoded/35/351402f3ab8b264cc950c229bd254de647f20c8fd2dd4ce0a72fcaef9de7176c.json.zst",
+      "decoded_sha256": "622601c8f8934a7a52dfe5b7081706dec6df42ec9a32314c92c6a2bd8d537009",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/05d0e7942b0729fc.xdr",
+        "file_sha256": "95da701f257045675a29041bbfb9e73b3af28d7156a0c94b0dfde0246802e7e4",
+        "frame_index": 31,
+        "test_name": "archival meta|protocol version 30|Create temp entry with same key as an expired entry on eviction ledger",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "88c65b3c712e4422c715f1787706c0129a2976c29d021211ff711f0048b91efe",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "archival meta|protocol version 30|Create temp entry with same key as an expired entry on eviction ledger",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:3787 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "0a137705b7174f87569660c1cad4aeaa15e5f4513f268e106040ef50e0a05e20",
+        "tx_hashes": [
+          "88c65b3c712e4422c715f1787706c0129a2976c29d021211ff711f0048b91efe"
+        ],
+        "tx_hash": "88c65b3c712e4422c715f1787706c0129a2976c29d021211ff711f0048b91efe",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 8
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "88c65b3c712e4422c715f1787706c0129a2976c29d021211ff711f0048b91efe",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "94334"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "put_temporary"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/durability",
+        "equals": "temporary"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/val",
+        "equals": {
+          "u64": "234"
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "contract_data_changed",
+        "op_index": 0,
+        "account": {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+        },
+        "cause": "contract-call",
+        "detail": {
+          "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "durability": "temporary",
+          "change": "created"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1074167",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "979833",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 31 of 'archival meta|protocol version 30|Create temp entry with same key as an expired entry on eviction ledger'."
+}

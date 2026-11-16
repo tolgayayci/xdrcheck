@@ -1,0 +1,229 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0067/address-types-in-sac-events-golden.938fb779c48ac3af",
+  "title": "SAC transfer (native asset) to a muxed account argument: event to is the G address, data carries to_muxed_id",
+  "kind": "ledger",
+  "caps": [
+    67
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sac-transfer",
+    "sac-transfer-to-muxed-account",
+    "to-muxed-id-u64"
+  ],
+  "why": "The transfer's destination argument is an M address (ScAddress::MuxedAccount). The event's to topic is the base G address and the muxed ID moves into the data map as to_muxed_id. Readers that keep the envelope's M form, or expect bare i128 data, get the recipient or the amount wrong.",
+  "fields": {
+    "validated": [
+      "VF-41"
+    ],
+    "passed_through": [
+      "VF-21"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 16,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "5343e4dfb5f11498c868fda596e63a27d43f788bcb7cf438cd014d21849c8029",
+        "bytes": 5316,
+        "path": "blobs/53/5343e4dfb5f11498c868fda596e63a27d43f788bcb7cf438cd014d21849c8029.xdr"
+      },
+      "decoded": "decoded/53/5343e4dfb5f11498c868fda596e63a27d43f788bcb7cf438cd014d21849c8029.json.zst",
+      "decoded_sha256": "5de52eac8d3e1f9b33544384148bfe0092bb9373e9e8fc675efde610a927b99a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/938fb779c48ac3af.xdr",
+        "file_sha256": "deb530d0f10e8c3ec9b71d35a144334fddea393b8c5d937cf47122d754706eba",
+        "frame_index": 14,
+        "test_name": "Stellar asset contract transfer with CAP-67 address types|native asset",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "618a8164adffe859d81a5422bb8d15169253400e4af3a6eea5086f3d8d7019a2",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Stellar asset contract transfer with CAP-67 address types|native asset",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:630 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "285f935cc9516f0680f4ae1109653df05ed2736b5ad6050e79897f61b42a4f1b",
+        "tx_hashes": [
+          "618a8164adffe859d81a5422bb8d15169253400e4af3a6eea5086f3d8d7019a2"
+        ],
+        "tx_hash": "618a8164adffe859d81a5422bb8d15169253400e4af3a6eea5086f3d8d7019a2",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 12
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "618a8164adffe859d81a5422bb8d15169253400e4af3a6eea5086f3d8d7019a2",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "124597"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/1",
+        "equals": {
+          "address": "MBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIAAAAAAAOW6NCVC2S"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/2",
+        "equals": {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data",
+        "equals": {
+          "map": [
+            {
+              "key": {
+                "symbol": "amount"
+              },
+              "val": {
+                "i128": "100000000"
+              }
+            },
+            {
+              "key": {
+                "symbol": "to_muxed_id"
+              },
+              "val": {
+                "u64": "123456789"
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GCE4HENKZ3ZIHQY4VEYCVX5ZE5LNDIN3FH4MHZCWFKXQZGQIOGAO77CN",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I",
+          "roles": [
+            "counterparty"
+          ],
+          "muxed_id": "123456789",
+          "on_chain_form": "MBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIAAAAAAAOW6NCVC2S"
+        }
+      ]
+    },
+    "addresses": [
+      {
+        "strkey": "MBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIAAAAAAAOW6NCVC2S",
+        "type": "muxed_account",
+        "xdr_bytes": 44,
+        "chars": 69
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GCE4HENKZ3ZIHQY4VEYCVX5ZE5LNDIN3FH4MHZCWFKXQZGQIOGAO77CN"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1875503",
+        "to": {
+          "address": "GCE4HENKZ3ZIHQY4VEYCVX5ZE5LNDIN3FH4MHZCWFKXQZGQIOGAO77CN"
+        }
+      },
+      {
+        "kind": "transfer",
+        "tx_index": 0,
+        "op_index": 0,
+        "asset": "native",
+        "amount": "100000000",
+        "from": {
+          "address": "GCE4HENKZ3ZIHQY4VEYCVX5ZE5LNDIN3FH4MHZCWFKXQZGQIOGAO77CN"
+        },
+        "to": {
+          "address": "GBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIF5I",
+          "muxed_id": "123456789",
+          "on_chain_form": "MBUSVINSYSCZ2U3IVAEDO6HJ3U3T7XKJMP2XAGPALOWOGHEL7KZKIAAAAAAAOW6NCVC2S"
+        },
+        "routing": {
+          "type": "u64",
+          "value": "123456789"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 14 of the golden (the first transfer of the test, to an M address)."
+}

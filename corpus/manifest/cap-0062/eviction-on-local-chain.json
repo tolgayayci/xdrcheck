@@ -1,0 +1,454 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0062/eviction-on-local-chain",
+  "title": "Ledger evicting a temporary and a persistent contract entry past their TTL",
+  "kind": "ledger",
+  "caps": [
+    62
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "evicted-keys",
+    "temporary-entry-deleted",
+    "persistent-entry-archived",
+    "no-transactions",
+    "config-upgrade-state-archival"
+  ],
+  "why": "Eviction happens at ledger close with no transaction: the keys of the evicted entries and their TTL entries appear only in LedgerCloseMeta's evicted_keys, temporary entries are deleted and persistent ones move to the hot archive. Readers that track contract state from transaction meta alone keep entries that no longer exist.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 37,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "fabec8ff2c3079c571fc1ed3f6da279ef1251aebe08c25013c1492f78fa2b2f3",
+        "bytes": 760,
+        "path": "blobs/fa/fabec8ff2c3079c571fc1ed3f6da279ef1251aebe08c25013c1492f78fa2b2f3.xdr"
+      },
+      "decoded": "decoded/fa/fabec8ff2c3079c571fc1ed3f6da279ef1251aebe08c25013c1492f78fa2b2f3.json.zst",
+      "decoded_sha256": "5aea98035e61ed8baa9f31e44f753ed8ab92fa8ffec71521ebbcb043915c7b06",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s19-upgrades-archival-and-config.yaml",
+        "scenario_sha256": "ee7865a0f95ff0df794d3521c13b1cab218f1a90eb326f8f5c3e4558071640ce",
+        "step": "eviction",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1735000000",
+        "stream_sha256": "7da0a2adda0ae4e10dc2aca10f1a7c8db924726ae252b6bf9303f3d709d0deb4",
+        "frame_index": 35,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "upgrades-archival-and-config/setup-2.xdr",
+            "sha256": "93bbf5233ac6bf44d73f396fc91350f5c7583014c4f98570b90a5617c7c5c873",
+            "origin": "ConfigUpgradeSet of the scenario's setup[2] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s19-upgrades-archival-and-config.yaml --network testnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "1885905d585cdf0c197c27f51ef561416e95f0c808cdd3c1793f3e712085024b",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27494673",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "contracts": {
+          "emitter": "CAHVXUMD3VJVOY66UCDJT2JQJO6RNFICI4W3JNRSQF4VQLXTUCXCUEH5"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "F": "GDP5UI6FN5SNFWA3DA6PAT4AH5THIUPABCADRHDZBXSIQLRT4SILKVQR"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 37,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "5970282d18a6499bdf2c40c7f041b453fa3518a0837222bbeee36afeb9823b33",
+        "bytes": 760,
+        "path": "blobs/59/5970282d18a6499bdf2c40c7f041b453fa3518a0837222bbeee36afeb9823b33.xdr"
+      },
+      "decoded": "decoded/59/5970282d18a6499bdf2c40c7f041b453fa3518a0837222bbeee36afeb9823b33.json.zst",
+      "decoded_sha256": "6802c3a401fa7deddf4d1e81d3f59457f561a1678a12a62f7f75df85d7d1ab4b",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s19-upgrades-archival-and-config.yaml",
+        "scenario_sha256": "ee7865a0f95ff0df794d3521c13b1cab218f1a90eb326f8f5c3e4558071640ce",
+        "step": "eviction",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1735000000",
+        "stream_sha256": "e446ad448310b0efdaadf1c439e6d4d93498c3e729805dd8b8f4f0149d2feaee",
+        "frame_index": 35,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "upgrades-archival-and-config/setup-2.xdr",
+            "sha256": "93bbf5233ac6bf44d73f396fc91350f5c7583014c4f98570b90a5617c7c5c873",
+            "origin": "ConfigUpgradeSet of the scenario's setup[2] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s19-upgrades-archival-and-config.yaml --network pubnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "a08e3ab6ce9aba05add3fd12e18b67241fb6c31b9f54e18220c8ab48a8da2de4",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27494673",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "contracts": {
+          "emitter": "CBWROIDBXYZDL524BTKESH6VQG3K76WVUS2ZRNWIX36XYKZ2OH6FK2DL"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "F": "GDP5UI6FN5SNFWA3DA6PAT4AH5THIUPABCADRHDZBXSIQLRT4SILKVQR"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    },
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 29,
+      "ledger_seq": 37,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "dfd45475c10ae39eaff67b91541ca36dae31eb8896b6e87a4260b7870a156507",
+        "bytes": 752,
+        "path": "blobs/df/dfd45475c10ae39eaff67b91541ca36dae31eb8896b6e87a4260b7870a156507.xdr"
+      },
+      "decoded": "decoded/df/dfd45475c10ae39eaff67b91541ca36dae31eb8896b6e87a4260b7870a156507.json.zst",
+      "decoded_sha256": "34129819f09f44847dfd77846bbd7c0c97f2210699a1a712c2aa4872da469857",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s19-upgrades-archival-and-config.yaml",
+        "scenario_sha256": "ee7865a0f95ff0df794d3521c13b1cab218f1a90eb326f8f5c3e4558071640ce",
+        "step": "eviction",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1735000000",
+        "stream_sha256": "028603a0dd814c7fa240bd3042e631f9724e93a38806ec7bc4be1f9fd6cf0107",
+        "frame_index": 35,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p29-testnet.xdr",
+            "sha256": "de76bb4a69837aa9defb3b7c3ac4f7eba4c403155f9b859b3a444a61c180bdb6",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p29/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "upgrades-archival-and-config/setup-2.xdr",
+            "sha256": "93bbf5233ac6bf44d73f396fc91350f5c7583014c4f98570b90a5617c7c5c873",
+            "origin": "ConfigUpgradeSet of the scenario's setup[2] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s19-upgrades-archival-and-config.yaml --network testnet --protocol 29",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "ff5e21e426bc567f81e1de750fbd88b301d24b4f1eec7afe916750fb32bd983b",
+        "header": {
+          "ledger_version": "29",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27342705",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "contracts": {
+          "emitter": "CAHVXUMD3VJVOY66UCDJT2JQJO6RNFICI4W3JNRSQF4VQLXTUCXCUEH5"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "F": "GDP5UI6FN5SNFWA3DA6PAT4AH5THIUPABCADRHDZBXSIQLRT4SILKVQR"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 29,
+      "ledger_seq": 37,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "79a34691e7c7bad856a5b59910b6b8fc7b98ff2e860f19afefb9ebb89240c128",
+        "bytes": 752,
+        "path": "blobs/79/79a34691e7c7bad856a5b59910b6b8fc7b98ff2e860f19afefb9ebb89240c128.xdr"
+      },
+      "decoded": "decoded/79/79a34691e7c7bad856a5b59910b6b8fc7b98ff2e860f19afefb9ebb89240c128.json.zst",
+      "decoded_sha256": "cc2e110cf78be1e4c59a28afdf84d4ab09580fe20672deb6733b8adc6e35bfd6",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s19-upgrades-archival-and-config.yaml",
+        "scenario_sha256": "ee7865a0f95ff0df794d3521c13b1cab218f1a90eb326f8f5c3e4558071640ce",
+        "step": "eviction",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1735000000",
+        "stream_sha256": "b6cbace47546fae6bab2a0eb0580c8d2c7e62e394f9ebc8855b50a9342abc223",
+        "frame_index": 35,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p29-testnet.xdr",
+            "sha256": "de76bb4a69837aa9defb3b7c3ac4f7eba4c403155f9b859b3a444a61c180bdb6",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p29/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "upgrades-archival-and-config/setup-2.xdr",
+            "sha256": "93bbf5233ac6bf44d73f396fc91350f5c7583014c4f98570b90a5617c7c5c873",
+            "origin": "ConfigUpgradeSet of the scenario's setup[2] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s19-upgrades-archival-and-config.yaml --network pubnet --protocol 29",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "derived": {
+        "ledger_hash": "be2c223fe0e6a2eff563971ea9963c6d63be45042351bfcdd9ae7b861480ff45",
+        "header": {
+          "ledger_version": "29",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27342705",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hashes": [],
+        "contracts": {
+          "emitter": "CBWROIDBXYZDL524BTKESH6VQG3K76WVUS2ZRNWIX36XYKZ2OH6FK2DL"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "F": "GDP5UI6FN5SNFWA3DA6PAT4AH5THIUPABCADRHDZBXSIQLRT4SILKVQR"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake"
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 0,
+      "operations": 0,
+      "events": 0,
+      "entry_changes": 0
+    },
+    "values": [
+      {
+        "path": "/v2/tx_processing",
+        "equals": [],
+        "note": "No transaction: the eviction scan runs at the close of every ledger, whatever it applies."
+      },
+      {
+        "select": {
+          "in": "/v2/evicted_keys",
+          "key": {
+            "contract_data": {
+              "contract": "${derived.contracts.emitter}",
+              "key": {
+                "symbol": "tmp"
+              },
+              "durability": "temporary"
+            }
+          }
+        },
+        "path": "/contract_data/durability",
+        "equals": "temporary",
+        "note": "The temporary entry, live until ledger 36, is deleted: its key is in evicted_keys, and no ledger-entry change records it."
+      },
+      {
+        "select": {
+          "in": "/v2/evicted_keys",
+          "key": {
+            "contract_data": {
+              "contract": "${derived.contracts.emitter}",
+              "key": {
+                "symbol": "per"
+              },
+              "durability": "persistent"
+            }
+          }
+        },
+        "path": "/contract_data/durability",
+        "equals": "persistent",
+        "note": "The persistent entry, also live until ledger 36, is archived (CAP-0062 moves it to the hot archive); its key is listed the same way."
+      },
+      {
+        "path": "/v2/upgrades_processing",
+        "equals": []
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0062.md"
+  ],
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s19-upgrades-archival-and-config.yaml on a local stellar-core, at Protocols 29 and 30 on the testnet and public passphrases (4 variants); the accounts are label-derived and equal across variants, hashes, contract IDs and fees are per variant under derived. Lifetimes were shortened (10 ledgers persistent, 16 temporary) and the eviction scan started at level 1 through a configuration upgrade in setup (which also freezes an account key; a transaction from that account is refused at submission with txFROZEN_KEY_ACCESSED); the temporary and the persistent entry of the shape-emitter contract both live until ledger 36 and are evicted in ledger 37. Keys are selected from evicted_keys by value, since their position follows the bucket list. No reader has been run against these ledgers yet, so the entry declares no known divergence."
+}

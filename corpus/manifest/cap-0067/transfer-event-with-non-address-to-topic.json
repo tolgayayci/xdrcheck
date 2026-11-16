@@ -1,0 +1,303 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0067/transfer-event-with-non-address-to-topic",
+  "title": "Transfer event in the token-event layout whose to topic is a symbol, not an address",
+  "kind": "ledger",
+  "caps": [
+    67
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "non-address-in-address-topic",
+    "contract-event"
+  ],
+  "why": "A contract can publish any topics. Here the third topic of a `[transfer, from, to]` event is the symbol `not_an_address`. A reader that converts the `to` topic into an address or muxed address must return an error and keep reading; one that panics, halts or books a transfer to some address is wrong. Nothing moves and only the source account changes.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 16,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "b0bd296c528e92fd8780634e8a60a222a9ac3e38d5fee54a49cf8c5a2806160e",
+        "bytes": 4352,
+        "path": "blobs/b0/b0bd296c528e92fd8780634e8a60a222a9ac3e38d5fee54a49cf8c5a2806160e.xdr"
+      },
+      "decoded": "decoded/b0/b0bd296c528e92fd8780634e8a60a222a9ac3e38d5fee54a49cf8c5a2806160e.json.zst",
+      "decoded_sha256": "9176cd8f77a35f74503ae566ad7b95202f39c9b31e7230784faa7ddbd1472832",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s28-non-address-in-address-topic.yaml",
+        "scenario_sha256": "5d25bc9cc890e189aa2203c7fa6ab5c6c249c073ac67b1b6aea4bdbc02946063",
+        "step": "symbol-as-to",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1714000000",
+        "stream_sha256": "0c6eb9eb4babd7e5f587273f4babdc5d8f5f01260353fa728a153f8846cfb421",
+        "frame_index": 14,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "simulated",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s28-non-address-in-address-topic.yaml --network testnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "9e9bc0268a28dd7c6b3ba76fb40f99ec8ef2949273a7c4d5f566924ced4557d7",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "b0dc8265ee0e3cffec1a44bbbdb781c170487d0c69a8286e15e09b862ab26330",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27277144",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "9e9bc0268a28dd7c6b3ba76fb40f99ec8ef2949273a7c4d5f566924ced4557d7",
+        "fee_charged": "2224",
+        "tx_hashes": [
+          "9e9bc0268a28dd7c6b3ba76fb40f99ec8ef2949273a7c4d5f566924ced4557d7"
+        ],
+        "contracts": {
+          "emitter": "CAHVXUMD3VJVOY66UCDJT2JQJO6RNFICI4W3JNRSQF4VQLXTUCXCUEH5"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "MARK": "GBTHATIGO56BZEIRFUNTBRMMNSRTF62UPNFBL5P4TQIULLVNU6AI5ARR"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 16,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "16aa1dafcebb49fb03f28af33747fd6e37546b321eb9b4a3c99878dfaf476795",
+        "bytes": 4352,
+        "path": "blobs/16/16aa1dafcebb49fb03f28af33747fd6e37546b321eb9b4a3c99878dfaf476795.xdr"
+      },
+      "decoded": "decoded/16/16aa1dafcebb49fb03f28af33747fd6e37546b321eb9b4a3c99878dfaf476795.json.zst",
+      "decoded_sha256": "b921d233547707813a27ee47b97e7fa9bcd72ad07c2f298b4d51c24045193f8c",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s28-non-address-in-address-topic.yaml",
+        "scenario_sha256": "5d25bc9cc890e189aa2203c7fa6ab5c6c249c073ac67b1b6aea4bdbc02946063",
+        "step": "symbol-as-to",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1714000000",
+        "stream_sha256": "1a052a8f0d34ff9dae0361e137a008e29f3e6ef07ab37b0754938daf75040446",
+        "frame_index": 14,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "simulated",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s28-non-address-in-address-topic.yaml --network pubnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "724ec718b78bfaaca7e32b89eedd8b4a4464fdee321ac77d4d8353614cfab0a2",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "b2c230340bdc9dbf727dfdaf11ae1987af151ddb578bf9e0d98e9cfb46cd459d",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27277144",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "724ec718b78bfaaca7e32b89eedd8b4a4464fdee321ac77d4d8353614cfab0a2",
+        "fee_charged": "2224",
+        "tx_hashes": [
+          "724ec718b78bfaaca7e32b89eedd8b4a4464fdee321ac77d4d8353614cfab0a2"
+        ],
+        "contracts": {
+          "emitter": "CBWROIDBXYZDL524BTKESH6VQG3K76WVUS2ZRNWIX36XYKZ2OH6FK2DL"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "MARK": "GBTHATIGO56BZEIRFUNTBRMMNSRTF62UPNFBL5P4TQIULLVNU6AI5ARR"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 3,
+      "entry_changes": 6
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "${derived.tx_hash}",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "${derived.fee_charged}"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id",
+        "equals": "${derived.contracts.emitter}"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0",
+        "equals": {
+          "topics": [
+            {
+              "symbol": "transfer"
+            },
+            {
+              "address": "GBTHATIGO56BZEIRFUNTBRMMNSRTF62UPNFBL5P4TQIULLVNU6AI5ARR"
+            },
+            {
+              "symbol": "not_an_address"
+            }
+          ],
+          "data": {
+            "i128": "1000000000"
+          }
+        },
+        "note": "The token-event layout with a symbol where `to` (an address, or a muxed address since CAP-67) belongs."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GBTHATIGO56BZEIRFUNTBRMMNSRTF62UPNFBL5P4TQIULLVNU6AI5ARR",
+          "because": "named only as the from of a transfer-shaped event whose to is not an address; no entry of it exists or changed"
+        }
+      ],
+      "exact": true
+    },
+    "state_changes": [],
+    "state_changes_exact": true,
+    "movements": [],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md",
+    "https://github.com/stellar/rs-soroban-sdk/pull/2099"
+  ],
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s28-non-address-in-address-topic.yaml on a local stellar-core, at Protocol 30 on the testnet and public passphrases (2 variants); the accounts are label-derived and equal across variants, hashes, contract IDs and fees are per variant under derived. The ledger form of the input behind rs-soroban-sdk#2099 (MuxedAddress::try_from_val panicked on a non-address ScVal instead of returning ConversionError); the kit has no soroban-sdk column, so that conversion itself is not run here."
+}

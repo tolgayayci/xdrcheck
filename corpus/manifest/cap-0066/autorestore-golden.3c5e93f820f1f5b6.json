@@ -1,0 +1,196 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0066/autorestore-golden.3c5e93f820f1f5b6",
+  "title": "Auto-restore then delete of an evicted entry in one operation",
+  "kind": "ledger",
+  "caps": [
+    66
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "autorestore",
+    "ledger-entry-restored",
+    "archived-soroban-entries"
+  ],
+  "why": "An evicted entry is restored and deleted in the same operation: the meta shows 'restored' then 'removed' for both the entry and its TTL. Readers that apply changes by key without order lose one of the two.",
+  "fields": {
+    "validated": [
+      "VF-45a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 34,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "93a6362f671ff6272c394f3aaa2f6bd3f600af000dc9e55ffff8126ae03883fc",
+        "bytes": 7208,
+        "path": "blobs/93/93a6362f671ff6272c394f3aaa2f6bd3f600af000dc9e55ffff8126ae03883fc.xdr"
+      },
+      "decoded": "decoded/93/93a6362f671ff6272c394f3aaa2f6bd3f600af000dc9e55ffff8126ae03883fc.json.zst",
+      "decoded_sha256": "f974b214d65f35fb6a00b49b524c93e6dcf34ae57272325accce6f12906d6fe1",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/3c5e93f820f1f5b6.xdr",
+        "file_sha256": "606eaecd61162a11feac2b5f7bc63700b9be9ce00b89e80cf77221a4a5d9a591",
+        "frame_index": 32,
+        "test_name": "archival meta|protocol version 30|persistent entry meta|entry evicted|eviction meta|autorestore with deleted, then recreate with new TX|same stage",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "b804e8e3730b6d0097d24c222fb0763a11ba813e37ae27e72cb27f982943b941",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/1/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "archival meta|protocol version 30|persistent entry meta|entry evicted|eviction meta|autorestore with deleted, then recreate with new TX|same stage",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:3787 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "d9422045b983de3c2c4d5a649e4f2d89eb5f328f6bbe1a518868ad4bcbb3a88a",
+        "tx_hashes": [
+          "b804e8e3730b6d0097d24c222fb0763a11ba813e37ae27e72cb27f982943b941",
+          "0bfad33734ac201b961ec5d6a51fb217e6542cc64d909c3c6e46c414ab6890b1"
+        ],
+        "tx_hash": "b804e8e3730b6d0097d24c222fb0763a11ba813e37ae27e72cb27f982943b941",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 2,
+      "operations": 2,
+      "events": 0,
+      "entry_changes": 18
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "b804e8e3730b6d0097d24c222fb0763a11ba813e37ae27e72cb27f982943b941",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "87949"
+      },
+      {
+        "index": 1,
+        "hash": "0bfad33734ac201b961ec5d6a51fb217e6542cc64d909c3c6e46c414ab6890b1",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/1/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "del_persistent"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1",
+        "equals": {
+          "removed": {
+            "ttl": {
+              "key_hash": "764f4e59e20ac1a357f9f26ab0eaf46d196ab74822db44f039353a6f114864aa"
+            }
+          }
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "entry_restored",
+        "op_index": 0,
+        "account": {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+        },
+        "detail": {
+          "entry_type": "contract_data"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "912151",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 32 of the golden; the focus is the first of its two transactions in apply order."
+}

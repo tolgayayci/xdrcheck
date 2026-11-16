@@ -1,0 +1,310 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0067/custom-contract-events-next-to-fee-events",
+  "title": "Custom contract events (exposure_synced) next to the native contract's fee events in the same transactions",
+  "kind": "ledger",
+  "caps": [
+    67
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "custom-contract-event",
+    "fee-events",
+    "fee-event-before-all-txs",
+    "fee-event-after-all-txs",
+    "negative-fee-event",
+    "non-token-event"
+  ],
+  "why": "A transaction's events mix the native asset contract's transaction-level fee events with a protocol contract's own event (exposure_synced, two symbol topics and a vector of i128). Readers that treat every contract event as a token movement, or every event of a fee-paying transaction as a fee, invent movements from the custom event; readers that only keep token-shaped events must still keep the fee events.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 4627410,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "3b55999294033bb1ac918367bee9e82939c70495ba7a9bb397d81a664de84f00",
+        "bytes": 30608,
+        "path": "blobs/3b/3b55999294033bb1ac918367bee9e82939c70495ba7a9bb397d81a664de84f00.xdr"
+      },
+      "decoded": "decoded/3b/3b55999294033bb1ac918367bee9e82939c70495ba7a9bb397d81a664de84f00.json.zst",
+      "decoded_sha256": "0ec66bd8459b1cbe4c7310d2243496547a72f30804de5843127bf5ce7f59ac56",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFB9AFFF--4608000-4671999/FFB9642D--4627410.xdr.zst",
+        "object_sha256": "24480c4b794801d22c57ecf59856b22d2cdaa1491ab466adfc647e4fb9310d88",
+        "object_bytes": 5326,
+        "decompressed_sha256": "c9ba69abf969af805c0537d6ab7e3e425001ab9ffd45e36bfefe394386b83642",
+        "decompressed_bytes": 30620,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:01:47Z",
+        "written_by": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021); exporter 72ee2a9",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021)",
+          "end-ledger": "4627410",
+          "end-ledger-close-time": "1789160637",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "28",
+          "start-ledger": "4627410",
+          "start-ledger-close-time": "1789160637",
+          "version": "72ee2a9"
+        },
+        "refetch": "curl -fsS -o FFB9642D--4627410.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFB9AFFF--4608000-4671999/FFB9642D--4627410.xdr.zst",
+        "perishable": true,
+        "regenerated": false,
+        "object_path": "objects/testnet/4627410/FFB9642D--4627410.xdr.zst"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "6cfa9d4a4d962c5243cf8be2f72d840880a30b650ab0a7b43130eb255e97a39f",
+        "tx_hashes": [
+          "8434b9db0d30267b09150b8ba359babc68e78adef1677c3ec7ca78da93afe501",
+          "327f82495026c817969662ddc935ae8eada5db7ecd59f53e2ab96af72b769aa9",
+          "a8f126dc9971a8b96a9f06b943975fd3571061bde9bb61cbe26fd867945158c7",
+          "8addc008dd779aa6e84332b4d18bfac5e6abbe72c67b72c5831b0ca69844d2b4",
+          "26996b87b281b5555525a5bb15195f6e190aeab29a8f59dc953df44e6424e07f",
+          "b9a8f8858eb17269198e1861e7aa6337ced9a16bbbf45bb17f789f467ec685c8"
+        ],
+        "tx_hash": "8434b9db0d30267b09150b8ba359babc68e78adef1677c3ec7ca78da93afe501",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "8434b9db0d30267b09150b8ba359babc68e78adef1677c3ec7ca78da93afe501",
+        "op_index": 0,
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0"
+      },
+      "notes": "Real testnet ledger at Protocol 28, written live by stellar-core 28.0.1; perishable."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 6,
+      "operations": 6,
+      "events": 14,
+      "entry_changes": 60
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "8434b9db0d30267b09150b8ba359babc68e78adef1677c3ec7ca78da93afe501",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "327f82495026c817969662ddc935ae8eada5db7ecd59f53e2ab96af72b769aa9",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "a8f126dc9971a8b96a9f06b943975fd3571061bde9bb61cbe26fd867945158c7",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "8addc008dd779aa6e84332b4d18bfac5e6abbe72c67b72c5831b0ca69844d2b4",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 4,
+        "hash": "26996b87b281b5555525a5bb15195f6e190aeab29a8f59dc953df44e6424e07f",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "b9a8f8858eb17269198e1861e7aa6337ced9a16bbbf45bb17f789f467ec685c8",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id",
+        "equals": "CBSWA5P75NGV2LP5KOY7A7LOAX2CENI5OYBSJ5IVLHENKQJF2I3ZBSYE"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics",
+        "equals": [
+          {
+            "symbol": "exposure_synced"
+          },
+          {
+            "symbol": "HYPE"
+          }
+        ]
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data",
+        "equals": {
+          "vec": [
+            {
+              "i128": "0"
+            },
+            {
+              "i128": "162757399591"
+            },
+            {
+              "i128": "0"
+            }
+          ]
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/events/0/event/body/v0/data",
+        "equals": {
+          "i128": "26925"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/events/1/event/body/v0/data",
+        "equals": {
+          "i128": "-9741"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/2/tx_apply_processing/v4/operations/0/events/0/body/v0/topics",
+        "equals": [
+          {
+            "symbol": "exposure_synced"
+          },
+          {
+            "symbol": "PAXG"
+          }
+        ],
+        "note": "The second custom event of the ledger."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GCDGUVMCSH74BF5DZL4KNFOFOCUF3INDNAIMKGKK436CNIXXTJRJ3SSO",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        },
+        {
+          "address": "CBSWA5P75NGV2LP5KOY7A7LOAX2CENI5OYBSJ5IVLHENKQJF2I3ZBSYE",
+          "roles": [
+            "contract"
+          ]
+        },
+        {
+          "address": "CBHHWFAYLB3SXJCE232DC6WNSK74IBEOROAGCI2AFBA2H5NQOH2KYKNN",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "contract_data_changed",
+        "tx_index": 0,
+        "op_index": 0,
+        "account": {
+          "address": "CBSWA5P75NGV2LP5KOY7A7LOAX2CENI5OYBSJ5IVLHENKQJF2I3ZBSYE"
+        },
+        "cause": "invoke_host_function",
+        "detail": {
+          "contract": "CBSWA5P75NGV2LP5KOY7A7LOAX2CENI5OYBSJ5IVLHENKQJF2I3ZBSYE",
+          "key_xdr_hex": "0000001000000001000000020000000f000000124173736574556e7265616c697a6564506e6c00000000000f0000000448595045",
+          "durability": "persistent",
+          "change": "updated"
+        }
+      },
+      {
+        "kind": "contract_data_changed",
+        "tx_index": 0,
+        "op_index": 0,
+        "account": {
+          "address": "CBSWA5P75NGV2LP5KOY7A7LOAX2CENI5OYBSJ5IVLHENKQJF2I3ZBSYE"
+        },
+        "cause": "invoke_host_function",
+        "detail": {
+          "contract": "CBSWA5P75NGV2LP5KOY7A7LOAX2CENI5OYBSJ5IVLHENKQJF2I3ZBSYE",
+          "key_xdr_hex": "0000001000000001000000010000000f0000000d556e7265616c697a6564506e6c000000",
+          "durability": "persistent",
+          "change": "updated"
+        }
+      },
+      {
+        "kind": "contract_data_changed",
+        "tx_index": 0,
+        "op_index": 0,
+        "account": {
+          "address": "CBHHWFAYLB3SXJCE232DC6WNSK74IBEOROAGCI2AFBA2H5NQOH2KYKNN"
+        },
+        "cause": "invoke_host_function",
+        "detail": {
+          "contract": "CBHHWFAYLB3SXJCE232DC6WNSK74IBEOROAGCI2AFBA2H5NQOH2KYKNN",
+          "key_xdr_hex": "0000001000000001000000020000000f0000000d4c617374476f6f6450726963650000000000000f0000000448595045",
+          "durability": "persistent",
+          "change": "updated"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "26925",
+        "from": {
+          "address": "GCDGUVMCSH74BF5DZL4KNFOFOCUF3INDNAIMKGKK436CNIXXTJRJ3SSO"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "9741",
+        "to": {
+          "address": "GCDGUVMCSH74BF5DZL4KNFOFOCUF3INDNAIMKGKK436CNIXXTJRJ3SSO"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md"
+  ],
+  "reference": "network",
+  "notes": "6 transactions, each with a before_all_txs fee event and an after_all_txs refund. Two carry a custom exposure_synced event: apply index 0 (the focus, from CBSWA5P7\u2026, topic HYPE) and apply index 2 (from CBMLLYBH\u2026, topic PAXG). In the focus GCDGUVMC\u2026 calls sync_asset_pnl(HYPE) on CBHHWFAY\u2026, which updates one of its own entries and two of CBSWA5P7\u2026; the fee events charge 26925 and refund -9741 (fee_charged 17184). The custom event names no account and moves no value. Written live by stellar-core 28.0.1. Testnet is reset on 2026-12-16; the vendored object will then be the only copy."
+}

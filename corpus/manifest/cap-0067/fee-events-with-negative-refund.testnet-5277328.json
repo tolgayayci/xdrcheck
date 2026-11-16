@@ -1,0 +1,383 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0067/fee-events-with-negative-refund.testnet-5277328",
+  "title": "Fee events: charge before all transactions, negative refund after them; native approve to the native contract itself",
+  "kind": "ledger",
+  "caps": [
+    67
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "fee-events",
+    "fee-event-before-all-txs",
+    "fee-event-after-all-txs",
+    "negative-fee-event",
+    "sac-approve",
+    "allowance-created",
+    "temporary-contract-data"
+  ],
+  "why": "Since Protocol 23 (CAP-67) the native asset contract emits transaction-level fee events: one with stage BEFORE_ALL_TXS that charges the full fee, and for a Soroban transaction one with stage AFTER_ALL_TXS whose amount is negative, the refund. Readers that treat every fee event as a charge, that take the absolute value, or that read only operation events, report the wrong fee or none. The focus is a native-asset approve, which moves no value and leaves the fee events as the only movements.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 29,
+      "ledger_seq": 5277328,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "85515bcb053c95f67cf984f1d394d5882c7e804d305a0579ee4961b7a061ce09",
+        "bytes": 218496,
+        "path": "blobs/85/85515bcb053c95f67cf984f1d394d5882c7e804d305a0579ee4961b7a061ce09.xdr"
+      },
+      "decoded": "decoded/85/85515bcb053c95f67cf984f1d394d5882c7e804d305a0579ee4961b7a061ce09.json.zst",
+      "decoded_sha256": "eaee9a0f4f5304baeec69974391e0c340a94db55d36440391b7f8d4b6f17f6a5",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFAFEBFF--5248000-5311999/FFAF796F--5277328.xdr.zst",
+        "object_sha256": "88d91b67540dee072ed858d03c3ec0eea6c3e4c592864d55205d93b311e97bf0",
+        "object_bytes": 25771,
+        "decompressed_sha256": "6f18741e466b9c07164287f7d3e876e9ae88fa9333875240f92b41bb4e269b2c",
+        "decompressed_bytes": 218508,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:01:47Z",
+        "written_by": "stellar-core 29.0.0 (4eb83337380a29ad0907f4e32196ce97b8dc7649); exporter c927ffc",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 29.0.0 (4eb83337380a29ad0907f4e32196ce97b8dc7649)",
+          "end-ledger": "5277328",
+          "end-ledger-close-time": "1792410227",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "29",
+          "start-ledger": "5277328",
+          "start-ledger-close-time": "1792410227",
+          "version": "c927ffc"
+        },
+        "refetch": "curl -fsS -o FFAF796F--5277328.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFAFEBFF--5248000-5311999/FFAF796F--5277328.xdr.zst",
+        "perishable": true,
+        "regenerated": false,
+        "object_path": "objects/testnet/5277328/FFAF796F--5277328.xdr.zst"
+      },
+      "focus": {
+        "tx_index": 9,
+        "tx_hash": "e85eafc0670290ff8d6b7f0cf1087df8e504a07f1b8b6a1c6614c6a7a28583cb",
+        "op_index": 0,
+        "path": "/v2/tx_processing/9/tx_apply_processing/v4/events"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "1bdfbcc3d9f1ef3f0eeaa19355c1f90dbef2b742d4fb54beab09040131451951",
+        "tx_hashes": [
+          "e3c3f7b59fd75a8bf5b238cd5a3849ba0c3070e57b739b8e309fe7f3d993d91b",
+          "026c689bc0ddcad870ce722c426514c7408162d05ead4249fb9730e097186684",
+          "244360a27aa4e6576c0012b5bef95945ac2f1d4da1e3fce6dbb5f00734e01cae",
+          "f0988c345a5ba74d01edec641f49fa70b5933ad016668b557bafa1cb46846d78",
+          "f90c91257decb1ce6f5f0a830d5f8d380827a3ce9cc23ea5397493880f970666",
+          "2f079e32292165064c8b92e37be8037e7b174efff0e27bd8c07591848d00818b",
+          "390af5e1b6eaaac463a47f40558202fabfa3a10380a5ccd7a1ffff70ae57174c",
+          "8477c166c6aeba4cc517f3263632474dc484a84933c947bf338f2cc04de51a69",
+          "a5f30f3d9dacd1b46d612935137ab6d8e064930198818b4b8db59dad76e888c8",
+          "e85eafc0670290ff8d6b7f0cf1087df8e504a07f1b8b6a1c6614c6a7a28583cb",
+          "cc37b4c3a873f0c96befcab99ad9017642272fc23d13baf120e62ed0dd72903c",
+          "a05426bdf54a16033d1aad1936902a5c5404686da1df52f8b7035d6cf683b627",
+          "df8c838591f8c2f1e497901cf15be9055e7794c0a88d495971b225cc6da2d94d",
+          "24aeb13a785101175e028b90f9dd6686bd9633fa9046391ff85641f8d81c4856",
+          "527250818f2c261479db46377ac8cda038c878d899a0891f9fdce909d5054f52",
+          "f0e48479d2b77c59c520d2b999d634133f58ceaf9da89d0439a8f73bdedd7772",
+          "191975be9a938cb1463509a4f50069959d083541b746c6bdbe786d1d567fceb1",
+          "a581b9f10e386efaad0b4c41aa80aed739bea15366836d8d0fec69affd1e62ee",
+          "fdfbb9c6065940c4f5027e9af85c487da8ff7c40ddc2ca47406e5ca58381bd11",
+          "8f40bae3965e54a2ed18859c649a7634c139be45338e2b84422aa64a15e02558",
+          "b4c2b74413c7ba51c64d8d0275b7d837eceb7b2cd5863a39c70cc9e3e0d439d9",
+          "1653ca1076ce405b9ca0b32e4aa4ed2f9cd365f641b22949110544dddfb574a3"
+        ],
+        "tx_hash": "e85eafc0670290ff8d6b7f0cf1087df8e504a07f1b8b6a1c6614c6a7a28583cb",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      },
+      "notes": "Real testnet ledger at Protocol 29, written live by stellar-core 29.0.0; perishable."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 22,
+      "operations": 22,
+      "events": 80,
+      "entry_changes": 379
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "e3c3f7b59fd75a8bf5b238cd5a3849ba0c3070e57b739b8e309fe7f3d993d91b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "026c689bc0ddcad870ce722c426514c7408162d05ead4249fb9730e097186684",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "244360a27aa4e6576c0012b5bef95945ac2f1d4da1e3fce6dbb5f00734e01cae",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "f0988c345a5ba74d01edec641f49fa70b5933ad016668b557bafa1cb46846d78",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 4,
+        "hash": "f90c91257decb1ce6f5f0a830d5f8d380827a3ce9cc23ea5397493880f970666",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "2f079e32292165064c8b92e37be8037e7b174efff0e27bd8c07591848d00818b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "390af5e1b6eaaac463a47f40558202fabfa3a10380a5ccd7a1ffff70ae57174c",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 7,
+        "hash": "8477c166c6aeba4cc517f3263632474dc484a84933c947bf338f2cc04de51a69",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success"
+      },
+      {
+        "index": 8,
+        "hash": "a5f30f3d9dacd1b46d612935137ab6d8e064930198818b4b8db59dad76e888c8",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success"
+      },
+      {
+        "index": 9,
+        "hash": "e85eafc0670290ff8d6b7f0cf1087df8e504a07f1b8b6a1c6614c6a7a28583cb",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "104721"
+      },
+      {
+        "index": 10,
+        "hash": "cc37b4c3a873f0c96befcab99ad9017642272fc23d13baf120e62ed0dd72903c",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 11,
+        "hash": "a05426bdf54a16033d1aad1936902a5c5404686da1df52f8b7035d6cf683b627",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 12,
+        "hash": "df8c838591f8c2f1e497901cf15be9055e7794c0a88d495971b225cc6da2d94d",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 13,
+        "hash": "24aeb13a785101175e028b90f9dd6686bd9633fa9046391ff85641f8d81c4856",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 14,
+        "hash": "527250818f2c261479db46377ac8cda038c878d899a0891f9fdce909d5054f52",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 15,
+        "hash": "f0e48479d2b77c59c520d2b999d634133f58ceaf9da89d0439a8f73bdedd7772",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 16,
+        "hash": "191975be9a938cb1463509a4f50069959d083541b746c6bdbe786d1d567fceb1",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 17,
+        "hash": "a581b9f10e386efaad0b4c41aa80aed739bea15366836d8d0fec69affd1e62ee",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 18,
+        "hash": "fdfbb9c6065940c4f5027e9af85c487da8ff7c40ddc2ca47406e5ca58381bd11",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 19,
+        "hash": "8f40bae3965e54a2ed18859c649a7634c139be45338e2b84422aa64a15e02558",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 20,
+        "hash": "b4c2b74413c7ba51c64d8d0275b7d837eceb7b2cd5863a39c70cc9e3e0d439d9",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 21,
+        "hash": "1653ca1076ce405b9ca0b32e4aa4ed2f9cd365f641b22949110544dddfb574a3",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/9/tx_apply_processing/v4/events/0/stage",
+        "equals": "before_all_txs"
+      },
+      {
+        "path": "/v2/tx_processing/9/tx_apply_processing/v4/events/0/event/body/v0/data",
+        "equals": {
+          "i128": "124652"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/9/tx_apply_processing/v4/events/1/stage",
+        "equals": "after_all_txs"
+      },
+      {
+        "path": "/v2/tx_processing/9/tx_apply_processing/v4/events/1/event/body/v0/data",
+        "equals": {
+          "i128": "-19931"
+        },
+        "note": "A negative amount: the refund, not a charge."
+      },
+      {
+        "path": "/v2/tx_processing/9/tx_apply_processing/v4/events/1/event/contract_id",
+        "equals": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+      },
+      {
+        "path": "/v2/tx_processing/9/result/result/fee_charged",
+        "equals": "104721",
+        "note": "124652 - 19931."
+      },
+      {
+        "path": "/v2/tx_processing/9/tx_apply_processing/v4/operations/0/events/0/body/v0/topics",
+        "equals": [
+          {
+            "symbol": "approve"
+          },
+          {
+            "address": "GALHQGPVVKWHE5AUIUYXR7WCPIXJWMQ7CSCS6SWIHRUOLR7F35JHPJCG"
+          },
+          {
+            "address": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+          },
+          {
+            "string": "native"
+          }
+        ]
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GALHQGPVVKWHE5AUIUYXR7WCPIXJWMQ7CSCS6SWIHRUOLR7F35JHPJCG",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        },
+        {
+          "address": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "contract_data_changed",
+        "tx_index": 9,
+        "op_index": 0,
+        "account": {
+          "address": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+        },
+        "cause": "invoke_host_function",
+        "detail": {
+          "contract": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+          "key_xdr_hex": "0000001000000001000000020000000f00000009416c6c6f77616e63650000000000001100000001000000020000000f0000000466726f6d000000120000000000000000167819f5aaac727414453178fec27a2e9b321f14852f4ac83c68e5c7e5df52770000000f000000077370656e646572000000001200000001d7928b72c2703ccfeaf7eb9ff4ef4d504a55a8b979fc9b450ea2c842b4d1ce61",
+          "durability": "temporary",
+          "change": "created"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 9,
+        "asset": "native",
+        "amount": "124652",
+        "from": {
+          "address": "GALHQGPVVKWHE5AUIUYXR7WCPIXJWMQ7CSCS6SWIHRUOLR7F35JHPJCG"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 9,
+        "asset": "native",
+        "amount": "19931",
+        "to": {
+          "address": "GALHQGPVVKWHE5AUIUYXR7WCPIXJWMQ7CSCS6SWIHRUOLR7F35JHPJCG"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md"
+  ],
+  "reference": "network",
+  "notes": "Apply index 9 of the ledger. GALHQGPV\u2026 calls approve on the testnet native asset contract CDLZFC3S\u2026 for 12345678 stroops until ledger 5377326; the contract creates a temporary Allowance entry keyed by from and spender, and emits one approve event. The spender is the native asset contract itself (CDLZFC3S\u2026), so the contract both stores the allowance and is named in it. The fee events charge 124652 (stage before_all_txs) and refund -19931 (stage after_all_txs): fee_charged 104721. Written live by stellar-core 29.0.0. Testnet is reset on 2026-12-16; the vendored object will then be the only copy."
+}

@@ -1,0 +1,337 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0063/parallel-phase-stages-and-clusters-golden.08c1db1e55f101df",
+  "title": "Three read-only TTL extensions of the same entry in one parallel stage",
+  "kind": "ledger",
+  "caps": [
+    63
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "parallel-soroban-phase",
+    "readonly-ttl-bumps",
+    "same-key-in-one-stage"
+  ],
+  "why": "Three transactions extend the TTL of the same read-only entry within one stage of the parallel phase. Readers that apply TTL changes by transaction order in the set, or assume one change per key per ledger, record the wrong final TTL.",
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 17,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "106744779b30809cad98d7850cbfdf739a3e7ec0a5aa225afc31b39309f4b757",
+        "bytes": 4216,
+        "path": "blobs/10/106744779b30809cad98d7850cbfdf739a3e7ec0a5aa225afc31b39309f4b757.xdr"
+      },
+      "decoded": "decoded/10/106744779b30809cad98d7850cbfdf739a3e7ec0a5aa225afc31b39309f4b757.json.zst",
+      "decoded_sha256": "e3aa609afcfa9539cf31ad873aedefa05a50463c5b375354e9004ad14fb1530a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/08c1db1e55f101df.xdr",
+        "file_sha256": "0baa31a4f64fa3beec996af6586d1ec533cc7d5e64c0607775e3b6171c722b4d",
+        "frame_index": 15,
+        "test_name": "readonly ttl bumps across threads and stages|multiple readonly ttl bumps same stage",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "5fa62590fe3dc8dece1001c4948e001bc08b5ecf986848d3a7c08017038ad954",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "readonly ttl bumps across threads and stages|multiple readonly ttl bumps same stage",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:10222 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "37f8650ad0650452b6c6bf148b3cf1812d95feea115e66c633920baf71d018e6",
+        "tx_hashes": [
+          "5fa62590fe3dc8dece1001c4948e001bc08b5ecf986848d3a7c08017038ad954",
+          "2c26a6be6fec04a8125eefe1fe683354dfe49e631718aab4d44fa4e9938be01b",
+          "8a4406e69a258e0380ceb9335df4308792efba34e09486ced6b0a1d70bec3691"
+        ],
+        "tx_hash": "5fa62590fe3dc8dece1001c4948e001bc08b5ecf986848d3a7c08017038ad954",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "extend_footprint_ttl"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 3,
+      "operations": 3,
+      "events": 0,
+      "entry_changes": 24
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "5fa62590fe3dc8dece1001c4948e001bc08b5ecf986848d3a7c08017038ad954",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "extend_footprint_ttl.success"
+        ],
+        "fee_charged": "21808"
+      },
+      {
+        "index": 1,
+        "hash": "2c26a6be6fec04a8125eefe1fe683354dfe49e631718aab4d44fa4e9938be01b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "8a4406e69a258e0380ceb9335df4308792efba34e09486ced6b0a1d70bec3691",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages",
+        "equals": [
+          [
+            [
+              {
+                "tx": {
+                  "tx": {
+                    "source_account": "GA6AJUUEA4KXCA6CQ3XPBF3MHFG2L26U3CSEZXEE4PAMWYCRJHQHLQG7",
+                    "fee": 51000,
+                    "seq_num": "60129542145",
+                    "cond": "none",
+                    "memo": "none",
+                    "operations": [
+                      {
+                        "source_account": null,
+                        "body": {
+                          "extend_footprint_ttl": {
+                            "ext": "v0",
+                            "extend_to": 500
+                          }
+                        }
+                      }
+                    ],
+                    "ext": {
+                      "v1": {
+                        "ext": "v0",
+                        "resources": {
+                          "footprint": {
+                            "read_only": [
+                              {
+                                "contract_data": {
+                                  "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                  "key": {
+                                    "symbol": "key"
+                                  },
+                                  "durability": "persistent"
+                                }
+                              }
+                            ],
+                            "read_write": []
+                          },
+                          "instructions": 0,
+                          "disk_read_bytes": 1000,
+                          "write_bytes": 0
+                        },
+                        "resource_fee": "50000"
+                      }
+                    }
+                  },
+                  "signatures": [
+                    {
+                      "hint": "5149e075",
+                      "signature": "3eada38239e1e7a773e2a48d7ab8a7028cb83037e65c4f9e62549493dee6b68f43ea18e16ef540b9e9a2e3c7320856f1a26afd5fb5c8d23caa771ec27fb35a05"
+                    }
+                  ]
+                }
+              },
+              {
+                "tx": {
+                  "tx": {
+                    "source_account": "GBBSIC7EYG3H63XCA7Z3ECVDCTCNOOFGDYBPRRROLKDRMU3OEVHSAMEH",
+                    "fee": 51000,
+                    "seq_num": "68719476737",
+                    "cond": "none",
+                    "memo": "none",
+                    "operations": [
+                      {
+                        "source_account": null,
+                        "body": {
+                          "extend_footprint_ttl": {
+                            "ext": "v0",
+                            "extend_to": 700
+                          }
+                        }
+                      }
+                    ],
+                    "ext": {
+                      "v1": {
+                        "ext": "v0",
+                        "resources": {
+                          "footprint": {
+                            "read_only": [
+                              {
+                                "contract_data": {
+                                  "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                  "key": {
+                                    "symbol": "key"
+                                  },
+                                  "durability": "persistent"
+                                }
+                              }
+                            ],
+                            "read_write": []
+                          },
+                          "instructions": 0,
+                          "disk_read_bytes": 1000,
+                          "write_bytes": 0
+                        },
+                        "resource_fee": "50000"
+                      }
+                    }
+                  },
+                  "signatures": [
+                    {
+                      "hint": "6e254f20",
+                      "signature": "0946df90d1171f0f1626271085c08ac21a7e7c31657f63b2f0c036a919bd4c1394d37b5cb7c6469b89370eeee1e0748d5f2177a0c3ba813e117d24ff705f6609"
+                    }
+                  ]
+                }
+              },
+              {
+                "tx": {
+                  "tx": {
+                    "source_account": "GAAMRYCR2TYRQTXG5EBFCBQN45NAP5FL62HNK3QFCBC23NJCZGCMACUT",
+                    "fee": 51000,
+                    "seq_num": "64424509441",
+                    "cond": "none",
+                    "memo": "none",
+                    "operations": [
+                      {
+                        "source_account": null,
+                        "body": {
+                          "extend_footprint_ttl": {
+                            "ext": "v0",
+                            "extend_to": 600
+                          }
+                        }
+                      }
+                    ],
+                    "ext": {
+                      "v1": {
+                        "ext": "v0",
+                        "resources": {
+                          "footprint": {
+                            "read_only": [
+                              {
+                                "contract_data": {
+                                  "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+                                  "key": {
+                                    "symbol": "key"
+                                  },
+                                  "durability": "persistent"
+                                }
+                              }
+                            ],
+                            "read_write": []
+                          },
+                          "instructions": 0,
+                          "disk_read_bytes": 1000,
+                          "write_bytes": 0
+                        },
+                        "resource_fee": "50000"
+                      }
+                    }
+                  },
+                  "signatures": [
+                    {
+                      "hint": "22c984c0",
+                      "signature": "0edf63cba952ff73cb3ed23bc6d01aed402665838f8a59a9e9d8faa468c488346d338937052ec7822135e631cf4cca1408a4484c4fda5175563940babbbc030c"
+                    }
+                  ]
+                }
+              }
+            ]
+          ]
+        ]
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/ttl/live_until_ledger_seq",
+        "equals": 517
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GA6AJUUEA4KXCA6CQ3XPBF3MHFG2L26U3CSEZXEE4PAMWYCRJHQHLQG7",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "50100",
+        "from": {
+          "address": "GA6AJUUEA4KXCA6CQ3XPBF3MHFG2L26U3CSEZXEE4PAMWYCRJHQHLQG7"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "28292",
+        "to": {
+          "address": "GA6AJUUEA4KXCA6CQ3XPBF3MHFG2L26U3CSEZXEE4PAMWYCRJHQHLQG7"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 15 of the golden."
+}

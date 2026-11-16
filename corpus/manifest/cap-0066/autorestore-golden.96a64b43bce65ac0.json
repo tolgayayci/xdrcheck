@@ -1,0 +1,185 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0066/autorestore-golden.96a64b43bce65ac0",
+  "title": "Auto-restore of an evicted entry in the same operation that updates it",
+  "kind": "ledger",
+  "caps": [
+    66
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "autorestore",
+    "ledger-entry-restored",
+    "archived-soroban-entries"
+  ],
+  "why": "An InvokeHostFunction call writes to an evicted persistent entry listed in archivedSorobanEntries: the meta shows the entry and its TTL 'restored', then the entry 'updated' to the new value, all in one operation. Readers that expect restore to be a separate operation, or apply only the last change per key, lose the restoration.",
+  "fields": {
+    "validated": [
+      "VF-45a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 34,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "f844db0c44d2e541fd98e2127bf9a3a605a86f00c9d2926e08b7d8df4bb2f15a",
+        "bytes": 4024,
+        "path": "blobs/f8/f844db0c44d2e541fd98e2127bf9a3a605a86f00c9d2926e08b7d8df4bb2f15a.xdr"
+      },
+      "decoded": "decoded/f8/f844db0c44d2e541fd98e2127bf9a3a605a86f00c9d2926e08b7d8df4bb2f15a.json.zst",
+      "decoded_sha256": "6272ac88b9cc0d923e26f38c3886e6d1087f29b9829b9ca2dd837d4b942f7973",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/96a64b43bce65ac0.xdr",
+        "file_sha256": "30f06d66aa7c980946b8b1f64b62730a2273b229a16a48893f4fb4bf1c920e10",
+        "frame_index": 32,
+        "test_name": "archival meta|protocol version 30|persistent entry meta|entry evicted|eviction meta|autorestore with updated value",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "1f2883ead19f508567f8f4e734b30f9c6745cc1ba39442d6192f7c6c57b2c155",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "archival meta|protocol version 30|persistent entry meta|entry evicted|eviction meta|autorestore with updated value",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:3787 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "671d56bfad3cac5bb30e7db97c2a7cf82121aced8ab1e7ec371ca62a7be958d5",
+        "tx_hashes": [
+          "1f2883ead19f508567f8f4e734b30f9c6745cc1ba39442d6192f7c6c57b2c155"
+        ],
+        "tx_hash": "1f2883ead19f508567f8f4e734b30f9c6745cc1ba39442d6192f7c6c57b2c155",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 9
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "1f2883ead19f508567f8f4e734b30f9c6745cc1ba39442d6192f7c6c57b2c155",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "108141"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "put_persistent"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/updated/data/contract_data/val",
+        "equals": {
+          "u64": "999"
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "entry_restored",
+        "op_index": 0,
+        "account": {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+        },
+        "detail": {
+          "entry_type": "contract_data"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1087973",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "979832",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 32 of the golden."
+}

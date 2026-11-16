@@ -1,0 +1,343 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0067/sac-transfer-to-muxed-account",
+  "title": "Stellar Asset Contract transfer to a muxed account: event names the G address and carries the ID",
+  "kind": "ledger",
+  "caps": [
+    67
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sac-transfer-event",
+    "sac-transfer-to-muxed-account",
+    "to-muxed-id-u64",
+    "muxed-id-above-2-pow-53",
+    "event-data-map"
+  ],
+  "why": "The contract call's destination argument is a muxed M address, but the transfer event's to topic is the base G address and the muxed ID moves into the data map as to_muxed_id. Readers that expect a bare i128 drop or zero the amount, and readers that take the destination from the envelope keep an M address the ledger never stores.",
+  "fields": {
+    "validated": [
+      "VF-05",
+      "VF-41",
+      "VF-46a"
+    ],
+    "passed_through": [
+      "VF-21",
+      "VF-46b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 5562500,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "2b3e56f2f790b76db9c65e62cd0371cf17981aa1c0f6400805084b076686e004",
+        "bytes": 116036,
+        "path": "blobs/2b/2b3e56f2f790b76db9c65e62cd0371cf17981aa1c0f6400805084b076686e004.xdr"
+      },
+      "decoded": "decoded/2b/2b3e56f2f790b76db9c65e62cd0371cf17981aa1c0f6400805084b076686e004.json.zst",
+      "decoded_sha256": "a3992ab7890d4d30e8c5dd59bc158edf33ea5c9ea364a3356b7743fb84bec8d6",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFAC03FF--5504000-5567999/FFAB1F7B--5562500.xdr.zst",
+        "object_sha256": "8b9d338d9dceee229dfe77eb456bbaf05b84463cb8a6bdce822d1fe7302bea85",
+        "object_bytes": 13392,
+        "decompressed_sha256": "b8a33a4e51708ed5ca9ecb035f53552a34993a591769f5dccb1dc918f8856962",
+        "decompressed_bytes": 116048,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:13:01Z",
+        "written_by": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1); exporter 4d89b44",
+        "object_metadata": {
+          "core-version": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1)",
+          "compression-type": "zst",
+          "start-ledger": "5562500",
+          "version": "4d89b44",
+          "end-ledger-close-time": "1793836140",
+          "start-ledger-close-time": "1793836140",
+          "end-ledger": "5562500",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "30"
+        },
+        "refetch": "aws s3 cp --no-sign-request s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18/FFAC03FF--5504000-5567999/FFAB1F7B--5562500.xdr.zst .",
+        "object_path": "objects/testnet/5562500/FFAB1F7B--5562500.xdr.zst",
+        "perishable": true,
+        "regenerated": false
+      },
+      "focus": {
+        "tx_index": 6,
+        "tx_hash": "696c4a01a8c2999681ab5b319e316d477347ee70406bbeae945e8303cc18ed1e",
+        "op_index": 0,
+        "path": "/v2/tx_processing/6/tx_apply_processing/v4/operations/0/events/0/body/v0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "21e6777d1c3d7b33ec558829eb3f7f9f7b18125ea9d216ec8b6d36593a153b3a",
+        "tx_hash": "696c4a01a8c2999681ab5b319e316d477347ee70406bbeae945e8303cc18ed1e",
+        "tx_hashes": [
+          "5921f755ac25f00e1c8fb8a2dc8609e460545deeda9eb9f920f729b42b033f44",
+          "8d0af6b2824e210299d35c79b3e60f2f1923cc66d54eb365a659b37ad969dac6",
+          "65b9f0af48106615dab1ca658d91517ee13d4b38fe37465eef6d97a3bd6b08f1",
+          "0391e1365fa9dff6818a232d02a3c7ca8df1ad5e646f44c96cb79ef3c31d4439",
+          "517cd47a2faa1680553d0ce63d66bf73aa32ad218677bb835738cf076138bd41",
+          "baac5503950b99c97929df00774add36f977d6bf2a4c91faa27958f8d4b4f534",
+          "696c4a01a8c2999681ab5b319e316d477347ee70406bbeae945e8303cc18ed1e",
+          "606869fe0cec8765d06cbb90679f70a516f075cac0d8a8a62557c1479c3f8cc1",
+          "046720a9b92a04fc14d7fca735d1382c168915ed6c455b2e48a9a8cb52112649"
+        ],
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function",
+          "operation_source": "GDJLBYYKMCXNVVNABOE66NYXQGIA5AC5D223Z2KF6ZEYK4UBCA7FKLTG"
+        }
+      },
+      "notes": "Real testnet ledger with 9 transactions; this entry's pattern is transaction 6 in apply order (Soroban phase, cluster 0, position 1). Written live by stellar-core 30.0.0 at Protocol 30. Testnet resets on 2026-12-16, after which the vendored bytes are the only copy."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 9,
+      "operations": 11,
+      "events": 36,
+      "entry_changes": 194
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "5921f755ac25f00e1c8fb8a2dc8609e460545deeda9eb9f920f729b42b033f44",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 1,
+        "hash": "8d0af6b2824e210299d35c79b3e60f2f1923cc66d54eb365a659b37ad969dac6",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "65b9f0af48106615dab1ca658d91517ee13d4b38fe37465eef6d97a3bd6b08f1",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "0391e1365fa9dff6818a232d02a3c7ca8df1ad5e646f44c96cb79ef3c31d4439",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 4,
+        "hash": "517cd47a2faa1680553d0ce63d66bf73aa32ad218677bb835738cf076138bd41",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "baac5503950b99c97929df00774add36f977d6bf2a4c91faa27958f8d4b4f534",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "696c4a01a8c2999681ab5b319e316d477347ee70406bbeae945e8303cc18ed1e",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "7490"
+      },
+      {
+        "index": 7,
+        "hash": "606869fe0cec8765d06cbb90679f70a516f075cac0d8a8a62557c1479c3f8cc1",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success"
+      },
+      {
+        "index": 8,
+        "hash": "046720a9b92a04fc14d7fca735d1382c168915ed6c455b2e48a9a8cb52112649",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/1/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/1",
+        "equals": {
+          "address": "MBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BW6IDIL4BACB7X4DXM"
+        },
+        "note": "ScAddress::MuxedAccount: key 5bc6b443... with muxed ID 8719886936707710911 (above 2^53)."
+      },
+      {
+        "path": "/v2/tx_processing/6/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/2",
+        "equals": {
+          "address": "GBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BXVQF"
+        },
+        "note": "The event's to topic is the base account."
+      },
+      {
+        "path": "/v2/tx_processing/6/tx_apply_processing/v4/operations/0/events/0/body/v0/data",
+        "equals": {
+          "map": [
+            {
+              "key": {
+                "symbol": "amount"
+              },
+              "val": {
+                "i128": "10000000"
+              }
+            },
+            {
+              "key": {
+                "symbol": "to_muxed_id"
+              },
+              "val": {
+                "u64": "8719886936707710911"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "path": "/v2/tx_processing/6/tx_apply_processing/v4/operations/0/changes/3/updated/data/trustline/account_id",
+        "equals": "GBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BXVQF",
+        "note": "The credited trustline belongs to the base account."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GDJLBYYKMCXNVVNABOE66NYXQGIA5AC5D223Z2KF6ZEYK4UBCA7FKLTG",
+          "roles": [
+            "source",
+            "fee_payer",
+            "trustline_owner"
+          ]
+        },
+        {
+          "address": "GBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BXVQF",
+          "muxed_id": "8719886936707710911",
+          "on_chain_form": "MBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BW6IDIL4BACB7X4DXM",
+          "roles": [
+            "destination",
+            "trustline_owner"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "balance_changed",
+        "tx_index": 6,
+        "op_index": 0,
+        "account": {
+          "address": "GDJLBYYKMCXNVVNABOE66NYXQGIA5AC5D223Z2KF6ZEYK4UBCA7FKLTG"
+        },
+        "asset": "USDC:GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP",
+        "cause": "contract-call",
+        "detail": {
+          "delta": "-10000000",
+          "balance_after": "194982000000"
+        }
+      },
+      {
+        "kind": "balance_changed",
+        "tx_index": 6,
+        "op_index": 0,
+        "account": {
+          "address": "GBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BXVQF"
+        },
+        "asset": "USDC:GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP",
+        "cause": "contract-call",
+        "detail": {
+          "delta": "10000000",
+          "balance_after": "191027000000"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 6,
+        "asset": "native",
+        "amount": "12330",
+        "from": {
+          "address": "GDJLBYYKMCXNVVNABOE66NYXQGIA5AC5D223Z2KF6ZEYK4UBCA7FKLTG"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 6,
+        "asset": "native",
+        "amount": "4840",
+        "to": {
+          "address": "GDJLBYYKMCXNVVNABOE66NYXQGIA5AC5D223Z2KF6ZEYK4UBCA7FKLTG"
+        }
+      },
+      {
+        "kind": "transfer",
+        "tx_index": 6,
+        "op_index": 0,
+        "asset": "USDC:GDQOE23CFSUMSVQK4Y5JHPPYK73VYCNHZHA7ENKCV37P6SUEO6XQBKPP",
+        "amount": "10000000",
+        "from": {
+          "address": "GDJLBYYKMCXNVVNABOE66NYXQGIA5AC5D223Z2KF6ZEYK4UBCA7FKLTG"
+        },
+        "to": {
+          "address": "GBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BXVQF",
+          "muxed_id": "8719886936707710911",
+          "on_chain_form": "MBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BW6IDIL4BACB7X4DXM"
+        },
+        "routing": {
+          "type": "u64",
+          "value": "8719886936707710911"
+        }
+      }
+    ],
+    "movements_exact": true,
+    "addresses": [
+      {
+        "strkey": "MBN4NNCDGJO4XW4KQU3CBIESUJWFVBUZPOKUZHT7W7WRB7CWOA7BW6IDIL4BACB7X4DXM",
+        "type": "muxed_account",
+        "xdr_bytes": 44,
+        "chars": 69
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/stellar-etl/issues/460",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md"
+  ],
+  "notes": "Only the history variant is here; local twins on both passphrases are cap-0067/sac-transfer-to-muxed-account-local-twins, a ledger with different whole-ledger counts. The emitter CDTY3P6O... was checked to be the Stellar Asset Contract of the USDC asset under the testnet passphrase. The stellar-etl#460 and go-stellar-sdk support/contractevents pins have not been executed against this ledger, so they are not known divergences."
+}
