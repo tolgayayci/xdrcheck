@@ -1,0 +1,18 @@
+{
+  "entry": "classic/api-offer-id-encoding.id-2-pow-64-minus-1",
+  "kind": "api",
+  "construction": {
+    "api": {
+      "op": "offer.manage_sell",
+      "input": {
+        "offer_id": {
+          "native": "bigint",
+          "value": "18446744073709551615"
+        }
+      },
+      "expect_reject": true
+    }
+  },
+  "reason": "An SDK-neutral call with an expected result, not bytes: stellar-core emits ledgers, not SDK calls, so the vector is written by hand from the rule it tests.",
+  "origin": "probe vector 2o2 (passed as a big integer here)"
+}

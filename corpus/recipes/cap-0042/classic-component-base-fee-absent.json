@@ -1,0 +1,35 @@
+{
+  "entry": "cap-0042/classic-component-base-fee-absent",
+  "kind": "xdr",
+  "xdr_type": "LedgerCloseMeta",
+  "construction": {
+    "edit": {
+      "base_entry": "ledger/inclusion-bids-equal-base-fee",
+      "base_variant": "testnet@30",
+      "ops": [
+        {
+          "at": 547,
+          "op": "delete",
+          "length": 9
+        },
+        {
+          "at": 547,
+          "op": "insert",
+          "hex": "00"
+        },
+        {
+          "at": 88,
+          "op": "replace",
+          "hex": "7f43c84033e00a62d3ae6c33b9790c6ca44eb413eafda64dc5e9d3904ab88daf"
+        },
+        {
+          "at": 20,
+          "op": "replace",
+          "hex": "fcefc84c61425bd6eb1e54051078f3b8d4c2076a5b313bbabd446d45427d601b"
+        }
+      ]
+    }
+  },
+  "reason": "stellar-core's transaction-set builder always writes a base fee into a non-empty component (sequentialPhaseToXdr and parallelPhaseToXdr in src/herder/TxSetFrame.cpp take every lane's base fee from the surge-pricing computation, an int64), while its validation accepts a component without one and then charges each transaction its own bid (TxSetFrame.cpp, the inclusion-fee map built from an absent baseFee). So only a validator running a modified builder can put this into a consensus ledger; a standalone node cannot. The base ledger's transactions each bid exactly the base fee, so the fees core charged equal what a ledger without the base fee charges. The edit recomputes scpValue.txSetHash and the header hash; the scpValue signature still signs the old set hash, which no reader checks",
+  "origin": "ledger/inclusion-bids-equal-base-fee (testnet protocol 30 ledger 14): base fee left out of the transaction set's components, then scpValue.txSetHash set to the sha256 of the new GeneralizedTransactionSet (7f43c84033e00a62d3ae6c33b9790c6ca44eb413eafda64dc5e9d3904ab88daf) and the ledger header hash to the sha256 of the new header (fcefc84c61425bd6eb1e54051078f3b8d4c2076a5b313bbabd446d45427d601b)"
+}

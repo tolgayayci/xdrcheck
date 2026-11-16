@@ -1,0 +1,53 @@
+{
+  "entry": "contract-spec/two-spec-sections",
+  "kind": "spec",
+  "construction": {
+    "spec": {
+      "container": "wasm",
+      "sections": [
+        {
+          "entries": [
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "first",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "a",
+                    "type": "u32"
+                  }
+                ],
+                "outputs": [
+                  "u32"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "entries": [
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "second",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "b",
+                    "type": "address"
+                  }
+                ],
+                "outputs": [
+                  "i128"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reason": "SEP-48 stores the interface in one contractspecv0 section; the network does not check custom sections, so an uploader can add a second one and readers that take the first, the last or both disagree.",
+  "origin": "js-stellar-sdk#1827"
+}

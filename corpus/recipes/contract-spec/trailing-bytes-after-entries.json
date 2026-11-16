@@ -1,0 +1,55 @@
+{
+  "entry": "contract-spec/trailing-bytes-after-entries",
+  "kind": "spec",
+  "construction": {
+    "spec": {
+      "container": "wasm",
+      "sections": [
+        {
+          "entries": [
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "first",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "a",
+                    "type": "u32"
+                  }
+                ],
+                "outputs": [
+                  "u32"
+                ]
+              }
+            },
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "second",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "b",
+                    "type": "address"
+                  }
+                ],
+                "outputs": [
+                  "i128"
+                ]
+              }
+            }
+          ],
+          "ops": [
+            {
+              "at": 96,
+              "op": "append",
+              "hex": "000000"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reason": "A spec section whose whole entries are followed by three bytes that start no entry; stellar-core does not read custom sections."
+}

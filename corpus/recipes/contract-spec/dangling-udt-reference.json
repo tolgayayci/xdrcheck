@@ -1,0 +1,40 @@
+{
+  "entry": "contract-spec/dangling-udt-reference",
+  "kind": "spec",
+  "construction": {
+    "spec": {
+      "container": "wasm",
+      "sections": [
+        {
+          "entries": [
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "take",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "x",
+                    "type": {
+                      "udt": {
+                        "name": "Missing"
+                      }
+                    }
+                  }
+                ],
+                "outputs": [
+                  {
+                    "udt": {
+                      "name": "AlsoMissing"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reason": "A spec whose function names user-defined types the spec does not define (spec shaking can drop them); stellar-core does not read custom sections."
+}

@@ -1,0 +1,45 @@
+{
+  "entry": "cap-0063/both-phases-base-fee-absent",
+  "kind": "xdr",
+  "xdr_type": "LedgerCloseMeta",
+  "construction": {
+    "edit": {
+      "base_entry": "ledger/inclusion-bids-equal-base-fee",
+      "base_variant": "testnet@30",
+      "ops": [
+        {
+          "at": 1039,
+          "op": "delete",
+          "length": 9
+        },
+        {
+          "at": 1039,
+          "op": "insert",
+          "hex": "00"
+        },
+        {
+          "at": 547,
+          "op": "delete",
+          "length": 9
+        },
+        {
+          "at": 547,
+          "op": "insert",
+          "hex": "00"
+        },
+        {
+          "at": 88,
+          "op": "replace",
+          "hex": "3d682679e0fc027711c688e8142b9f353c7ad7296e7db4e40dcdfd6691e439d4"
+        },
+        {
+          "at": 20,
+          "op": "replace",
+          "hex": "0f9d05129275a5a670a8e6265660c51c188c3136462758d43471e083344fff98"
+        }
+      ]
+    }
+  },
+  "reason": "stellar-core's transaction-set builder always writes a base fee into a non-empty component (sequentialPhaseToXdr and parallelPhaseToXdr in src/herder/TxSetFrame.cpp take every lane's base fee from the surge-pricing computation, an int64), while its validation accepts a component without one and then charges each transaction its own bid (TxSetFrame.cpp, the inclusion-fee map built from an absent baseFee). So only a validator running a modified builder can put this into a consensus ledger; a standalone node cannot. The base ledger's transactions each bid exactly the base fee, so the fees core charged equal what a ledger without the base fee charges. The edit recomputes scpValue.txSetHash and the header hash; the scpValue signature still signs the old set hash, which no reader checks",
+  "origin": "ledger/inclusion-bids-equal-base-fee (testnet protocol 30 ledger 14): base fee left out of the transaction set's components, then scpValue.txSetHash set to the sha256 of the new GeneralizedTransactionSet (3d682679e0fc027711c688e8142b9f353c7ad7296e7db4e40dcdfd6691e439d4) and the ledger header hash to the sha256 of the new header (0f9d05129275a5a670a8e6265660c51c188c3136462758d43471e083344fff98)"
+}

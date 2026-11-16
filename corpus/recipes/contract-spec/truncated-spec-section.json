@@ -1,0 +1,55 @@
+{
+  "entry": "contract-spec/truncated-spec-section",
+  "kind": "spec",
+  "construction": {
+    "spec": {
+      "container": "wasm",
+      "sections": [
+        {
+          "entries": [
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "first",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "a",
+                    "type": "u32"
+                  }
+                ],
+                "outputs": [
+                  "u32"
+                ]
+              }
+            },
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "second",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "b",
+                    "type": "address"
+                  }
+                ],
+                "outputs": [
+                  "i128"
+                ]
+              }
+            }
+          ],
+          "ops": [
+            {
+              "at": 92,
+              "op": "delete",
+              "length": 4
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reason": "A spec section cut 4 bytes short inside its last entry; stellar-core does not read custom sections, so such code uploads and runs."
+}

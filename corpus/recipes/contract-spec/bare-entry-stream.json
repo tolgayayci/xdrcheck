@@ -1,0 +1,303 @@
+{
+  "entry": "contract-spec/bare-entry-stream",
+  "kind": "spec",
+  "construction": {
+    "spec": {
+      "container": "xdr-stream",
+      "sections": [
+        {
+          "entries": [
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "all_types",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "a_val",
+                    "type": "val"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_bool",
+                    "type": "bool"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_void",
+                    "type": "void"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_error",
+                    "type": "error"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_u32",
+                    "type": "u32"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_i32",
+                    "type": "i32"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_u64",
+                    "type": "u64"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_i64",
+                    "type": "i64"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_timepoint",
+                    "type": "timepoint"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_duration",
+                    "type": "duration"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_u128",
+                    "type": "u128"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_i128",
+                    "type": "i128"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_u256",
+                    "type": "u256"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_i256",
+                    "type": "i256"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_bytes",
+                    "type": "bytes"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_string",
+                    "type": "string"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_symbol",
+                    "type": "symbol"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_address",
+                    "type": "address"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_muxed",
+                    "type": "muxed_address"
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_option",
+                    "type": {
+                      "option": {
+                        "value_type": "u32"
+                      }
+                    }
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_result",
+                    "type": {
+                      "result": {
+                        "ok_type": "u32",
+                        "error_type": "error"
+                      }
+                    }
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_vec",
+                    "type": {
+                      "vec": {
+                        "element_type": "i128"
+                      }
+                    }
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_map",
+                    "type": {
+                      "map": {
+                        "key_type": "symbol",
+                        "value_type": "address"
+                      }
+                    }
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_tuple",
+                    "type": {
+                      "tuple": {
+                        "value_types": [
+                          "u32",
+                          "bool"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_bytes_n",
+                    "type": {
+                      "bytes_n": {
+                        "n": 32
+                      }
+                    }
+                  },
+                  {
+                    "doc": "",
+                    "name": "a_udt",
+                    "type": {
+                      "udt": {
+                        "name": "Point"
+                      }
+                    }
+                  }
+                ],
+                "outputs": [
+                  {
+                    "udt": {
+                      "name": "Shape"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "udt_struct_v0": {
+                "doc": "",
+                "lib": "",
+                "name": "Point",
+                "fields": [
+                  {
+                    "doc": "",
+                    "name": "x",
+                    "type": "i64"
+                  },
+                  {
+                    "doc": "",
+                    "name": "y",
+                    "type": "i64"
+                  }
+                ]
+              }
+            },
+            {
+              "udt_union_v0": {
+                "doc": "",
+                "lib": "",
+                "name": "Shape",
+                "cases": [
+                  {
+                    "void_v0": {
+                      "doc": "",
+                      "name": "Empty"
+                    }
+                  },
+                  {
+                    "tuple_v0": {
+                      "doc": "",
+                      "name": "At",
+                      "type": [
+                        {
+                          "udt": {
+                            "name": "Point"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "udt_enum_v0": {
+                "doc": "",
+                "lib": "",
+                "name": "Color",
+                "cases": [
+                  {
+                    "doc": "",
+                    "name": "Red",
+                    "value": 0
+                  },
+                  {
+                    "doc": "",
+                    "name": "Green",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            {
+              "udt_error_enum_v0": {
+                "doc": "",
+                "lib": "",
+                "name": "Failure",
+                "cases": [
+                  {
+                    "doc": "",
+                    "name": "Bad",
+                    "value": 1
+                  }
+                ]
+              }
+            },
+            {
+              "event_v0": {
+                "doc": "",
+                "lib": "",
+                "name": "Moved",
+                "prefix_topics": [
+                  "moved"
+                ],
+                "params": [
+                  {
+                    "doc": "",
+                    "name": "who",
+                    "type": "address",
+                    "location": "topic_list"
+                  },
+                  {
+                    "doc": "",
+                    "name": "to",
+                    "type": {
+                      "udt": {
+                        "name": "Point"
+                      }
+                    },
+                    "location": "data"
+                  }
+                ],
+                "data_format": "single_value"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reason": "The same interface as a bare SCSpecEntry stream (the section payload alone), as tools that store or pass a spec without its Wasm hold it."
+}

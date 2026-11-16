@@ -1,0 +1,28 @@
+{
+  "entry": "xdr-strict/api-float-union-discriminant-custom-schema",
+  "kind": "api",
+  "construction": {
+    "api": {
+      "op": "xdr.custom_union_encode",
+      "input": {
+        "switch_on": "float",
+        "cases": [
+          {
+            "discriminant": {
+              "native": "number",
+              "value": "0.1"
+            },
+            "arm": "void"
+          }
+        ],
+        "discriminant": {
+          "native": "number",
+          "value": "0.1"
+        }
+      },
+      "expect_reject": true
+    }
+  },
+  "reason": "An SDK-neutral call with an expected result, not bytes: stellar-core emits ledgers, not SDK calls, so the vector is written by hand from the rule it tests.",
+  "origin": "js-xdr#162"
+}

@@ -1,0 +1,45 @@
+{
+  "entry": "cap-0042/classic-components-absent-and-discounted-base-fee",
+  "kind": "xdr",
+  "xdr_type": "LedgerCloseMeta",
+  "construction": {
+    "edit": {
+      "base_entry": "ledger/inclusion-bids-equal-base-fee",
+      "base_variant": "testnet@30",
+      "ops": [
+        {
+          "at": 560,
+          "op": "replace",
+          "hex": "0000000200000000968e8432de7f1910c056a4a51095f84f785f82ed8f7371f8cc0b7f9a8cc56411000000640000000d000000010000000000000000000000010000000000000001000000008c3842ea73335586d83f27dc9e7afb6e4c0aad8ba99d36c9e11ab1d2310e0ef400000000000000000098968000000000000000018cc5641100000040c33405a47fa299f6996d8c66ffb47efe72ed3bf28149a287f87443ef0fcd37fa60195252ac3daf8888ac218ff7e49e732fd3f9300a812334031d41d13bf99e0f0000000200000000e0b6230a71526de704ad8330bee62132740ae271d81e4f6d1e4a71fedc5a063e000000c80000000d00000001000000010000000000000000000000000000000000000000000000020000000000000001000000008c3842ea73335586d83f27dc9e7afb6e4c0aad8ba99d36c9e11ab1d2310e0ef4000000000000000000989680000000000000000100000000968e8432de7f1910c056a4a51095f84f785f82ed8f7371f8cc0b7f9a8cc564110000000000000000009896800000000000000001dc5a063e000000400bac85d58d3265175fb4a22c379224039cd5409c2ed44f76b2ebeea941a42883dc841c1739cd687ffcf0a8bf4fe782fce7f5e45c645804041546d909b8f0420a"
+        },
+        {
+          "at": 760,
+          "op": "insert",
+          "hex": "0000000000000001000000000000006400000001"
+        },
+        {
+          "at": 539,
+          "op": "delete",
+          "length": 21
+        },
+        {
+          "at": 539,
+          "op": "insert",
+          "hex": "02000000000000000000000001"
+        },
+        {
+          "at": 88,
+          "op": "replace",
+          "hex": "ef25f11b44ea8c574527034f6147b9e5832b15a94f94674a49e9081691d096d5"
+        },
+        {
+          "at": 20,
+          "op": "replace",
+          "hex": "13231299bc7140f10aee9e8ab2709e967c9236c9097bc0ec046833823bcd0454"
+        }
+      ]
+    }
+  },
+  "reason": "stellar-core's transaction-set builder always writes a base fee into a non-empty component (sequentialPhaseToXdr and parallelPhaseToXdr in src/herder/TxSetFrame.cpp take every lane's base fee from the surge-pricing computation, an int64), while its validation accepts a component without one and then charges each transaction its own bid (TxSetFrame.cpp, the inclusion-fee map built from an absent baseFee). So only a validator running a modified builder can put this into a consensus ledger; a standalone node cannot. The base ledger's transactions each bid exactly the base fee, so the fees core charged equal what a ledger without the base fee charges. The edit recomputes scpValue.txSetHash and the header hash; the scpValue signature still signs the old set hash, which no reader checks",
+  "origin": "ledger/inclusion-bids-equal-base-fee (testnet protocol 30 ledger 14): base fee left out of the transaction set's components, then scpValue.txSetHash set to the sha256 of the new GeneralizedTransactionSet (ef25f11b44ea8c574527034f6147b9e5832b15a94f94674a49e9081691d096d5) and the ledger header hash to the sha256 of the new header (13231299bc7140f10aee9e8ab2709e967c9236c9097bc0ec046833823bcd0454)"
+}

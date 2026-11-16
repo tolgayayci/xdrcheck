@@ -1,0 +1,95 @@
+{
+  "entry": "contract-spec/recursive-udt",
+  "kind": "spec",
+  "construction": {
+    "spec": {
+      "container": "wasm",
+      "sections": [
+        {
+          "entries": [
+            {
+              "udt_struct_v0": {
+                "doc": "",
+                "lib": "",
+                "name": "Node",
+                "fields": [
+                  {
+                    "doc": "",
+                    "name": "value",
+                    "type": "u32"
+                  },
+                  {
+                    "doc": "",
+                    "name": "next",
+                    "type": {
+                      "option": {
+                        "value_type": {
+                          "udt": {
+                            "name": "Node"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "udt_union_v0": {
+                "doc": "",
+                "lib": "",
+                "name": "Tree",
+                "cases": [
+                  {
+                    "void_v0": {
+                      "doc": "",
+                      "name": "Leaf"
+                    }
+                  },
+                  {
+                    "tuple_v0": {
+                      "doc": "",
+                      "name": "Branch",
+                      "type": [
+                        {
+                          "vec": {
+                            "element_type": {
+                              "udt": {
+                                "name": "Tree"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "function_v0": {
+                "doc": "",
+                "name": "depth",
+                "inputs": [
+                  {
+                    "doc": "",
+                    "name": "t",
+                    "type": {
+                      "udt": {
+                        "name": "Tree"
+                      }
+                    }
+                  }
+                ],
+                "outputs": [
+                  "u32"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "reason": "A contract interface built from SEP-51 JSON by the oracle and wrapped in a header-only Wasm module; stellar-core never builds contract code, it stores the uploaded bytes unchanged."
+}
