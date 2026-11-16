@@ -1,0 +1,178 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/auth-void-signature-custom-account-golden.44917775c201b758",
+  "title": "Custom-account authorization whose signature is an absent vector; the call traps",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "soroban-authorization",
+    "custom-account",
+    "arbitrary-signature-scval",
+    "failed-soroban-transaction"
+  ],
+  "why": "A custom account's signature is an arbitrary ScVal chosen by the submitter. Here it is an ScVal vector with no value (null); the account contract rejects it and the transaction fails. Readers that expect a signature to be bytes or a map of public keys fail to decode the envelope.",
+  "fields": {
+    "passed_through": [
+      "VF-48b",
+      "VF-50b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 12,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "9e16de252a77034a0c753be785eeb42d5f6fc52fac528a23f929fcb13b2c7db3",
+        "bytes": 4016,
+        "path": "blobs/9e/9e16de252a77034a0c753be785eeb42d5f6fc52fac528a23f929fcb13b2c7db3.xdr"
+      },
+      "decoded": "decoded/9e/9e16de252a77034a0c753be785eeb42d5f6fc52fac528a23f929fcb13b2c7db3.json.zst",
+      "decoded_sha256": "2e4cd62651ffb3308865da7513b978244234aa4fa8117a030894be4530736feb",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/44917775c201b758.xdr",
+        "file_sha256": "e2f2029d5d811080d2ee45b22b2bc7c54d082fe3a2c8e09b330602601572fa9e",
+        "frame_index": 10,
+        "test_name": "Soroban custom account authentication|uninitialized vector signature",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "eddafbebc995ec3a0720a1a116a17e4ab3db5c099836a80405e566ca93230ce4",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Soroban custom account authentication|uninitialized vector signature",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:6600 (TEST_CASE); flag lines 6603; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "99513e9e1d71abf9f3738f76268bad6d611b37a778bca1558dfe7778482605e1",
+        "tx_hashes": [
+          "eddafbebc995ec3a0720a1a116a17e4ab3db5c099836a80405e566ca93230ce4"
+        ],
+        "tx_hash": "eddafbebc995ec3a0720a1a116a17e4ab3db5c099836a80405e566ca93230ce4",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 6
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "eddafbebc995ec3a0720a1a116a17e4ab3db5c099836a80405e566ca93230ce4",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "invoke_host_function.trapped"
+        ],
+        "fee_charged": "1391919"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "tree_fn"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials/address/signature",
+        "equals": {
+          "vec": null
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/invoke_host_function",
+        "equals": "trapped"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "because": "The custom account named in the authorization entry of a failed transaction; no nonce was created and none of its entries changed."
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "608181",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 10 of the golden."
+}

@@ -1,0 +1,180 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/auth-deep-tree-golden.017d69627da0cec8",
+  "title": "Matched four-level authorization tree signed by a custom account contract",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "soroban-authorization",
+    "deep-tree",
+    "address-credentials-v2"
+  ],
+  "why": "Every node of a four-level authorization tree (seven invocations) is matched by a require_auth call and the signer's nonce is consumed. Readers that flatten or depth-limit the tree, or that only read the root invocation, lose who authorized the nested calls.",
+  "fields": {
+    "validated": [
+      "VF-48a",
+      "VF-49a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 19,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "9e55f9263c35ef72e1f7202e73fa2d27b02b39869d30e7e45027d8e7d5ec9839",
+        "bytes": 12056,
+        "path": "blobs/9e/9e55f9263c35ef72e1f7202e73fa2d27b02b39869d30e7e45027d8e7d5ec9839.xdr"
+      },
+      "decoded": "decoded/9e/9e55f9263c35ef72e1f7202e73fa2d27b02b39869d30e7e45027d8e7d5ec9839.json.zst",
+      "decoded_sha256": "e3f9d6e2790c93c68213f5a545fb33e7b38eab7d24b93744c0c69048990518f7",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/017d69627da0cec8.xdr",
+        "file_sha256": "afc1faed93ed241f73f38195a79378719aa33290421bbcc3907b4700c83564fe",
+        "frame_index": 17,
+        "test_name": "Soroban authorization|custom account|deep tree|success",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "72adb7f1efe5bf02e553793cb54267c9d645c22a45844eb48f920aa703a75a3a",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Soroban authorization|custom account|deep tree|success",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:7004 (TEST_CASE); flag lines 7007; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "0b36ad7e56c8c5da18a65e16a0f112f0e458a454a103896db24d27cafd670cc3",
+        "tx_hashes": [
+          "72adb7f1efe5bf02e553793cb54267c9d645c22a45844eb48f920aa703a75a3a"
+        ],
+        "tx_hash": "72adb7f1efe5bf02e553793cb54267c9d645c22a45844eb48f920aa703a75a3a",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "72adb7f1efe5bf02e553793cb54267c9d645c22a45844eb48f920aa703a75a3a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1615508"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "tree_fn"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials/address_v2/address",
+        "equals": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/key",
+        "equals": {
+          "ledger_key_nonce": {
+            "nonce": "1590172575761748177"
+          }
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "authorizer",
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "384592",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 17 of the golden (the successful call)."
+}

@@ -1,0 +1,193 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/contract-data-complex-key-golden",
+  "title": "Contract instance storage holding an entry whose key is a 30-by-30 nested map",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "instance-storage",
+    "composite-storage-key",
+    "contract-data-updated"
+  ],
+  "why": "The contract writes into its instance storage under a key that is itself a large nested value, so the instance entry's storage map has a composite key, not a symbol. Readers that assume storage keys are symbols or short scalars mis-render or reject the instance.",
+  "fields": {
+    "validated": [
+      "VF-46a"
+    ],
+    "passed_through": [
+      "VF-46b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 9,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "bdeeb1fb25e8c7d03c4d81311759dd406b3ecc51b793583b5e1abc0a9de7c2f9",
+        "bytes": 15780,
+        "path": "blobs/bd/bdeeb1fb25e8c7d03c4d81311759dd406b3ecc51b793583b5e1abc0a9de7c2f9.xdr"
+      },
+      "decoded": "decoded/bd/bdeeb1fb25e8c7d03c4d81311759dd406b3ecc51b793583b5e1abc0a9de7c2f9.json.zst",
+      "decoded_sha256": "eb42582822a0575df89e2a8cafb988ebb89d62f45646dbda6976c92d572ff1a0",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/520d259a858748c4.xdr",
+        "file_sha256": "6de08195453ca6b517eaa3a201f6ce97ce5cdda357d7b51aa5c75627a24fb21e",
+        "frame_index": 7,
+        "test_name": "overly large soroban values are handled gracefully|store in instance storage key",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "bc830b957c607906db4c344425efd9ef7c48120eb2fec0d0469fa1b11e0c2a37",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "overly large soroban values are handled gracefully|store in instance storage key",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:6225 (TEST_CASE); flag lines 6228; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "2c1c8bd5008ddb450c850e907db99acc28ba7c41106e1979ff9b5d1fff4bc1d9",
+        "tx_hashes": [
+          "bc830b957c607906db4c344425efd9ef7c48120eb2fec0d0469fa1b11e0c2a37"
+        ],
+        "tx_hash": "bc830b957c607906db4c344425efd9ef7c48120eb2fec0d0469fa1b11e0c2a37",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "bc830b957c607906db4c344425efd9ef7c48120eb2fec0d0469fa1b11e0c2a37",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1611092"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "store_instance_key"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/contract_data/key",
+        "equals": "ledger_key_contract_instance"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/contract_data/durability",
+        "equals": "persistent"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "contract_data_changed",
+        "op_index": 0,
+        "account": {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+        },
+        "cause": "contract-call",
+        "detail": {
+          "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "durability": "persistent",
+          "change": "updated"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "201000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "199389008",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 7 of 'overly large soroban values are handled gracefully|store in instance storage key': the successful width-30, depth-2 case."
+}

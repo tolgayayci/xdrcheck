@@ -1,0 +1,540 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/scval-map-absent-in-invocation-argument",
+  "title": "InvokeHostFunction whose argument is SCV_MAP with the map absent; the host traps while applying",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "scval-map-none",
+    "invoke-host-function-trapped",
+    "declared-footprint",
+    "failed-transaction"
+  ],
+  "why": "SCVal's map arm is an optional SCMap, and its absent state is valid XDR that no contract can produce. stellar-core admits the transaction and the host refuses the argument while applying (INVOKE_HOST_FUNCTION_TRAPPED), so the absent map sits in a ledger's envelope. Readers that assume SCV_MAP always holds a map dereference nothing.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 35,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "97183762a4fe67d4ad5a95a7411b645c6bdfe74cd723f2e719b4bb6fec73c5c5",
+        "bytes": 3732,
+        "path": "blobs/97/97183762a4fe67d4ad5a95a7411b645c6bdfe74cd723f2e719b4bb6fec73c5c5.xdr"
+      },
+      "decoded": "decoded/97/97183762a4fe67d4ad5a95a7411b645c6bdfe74cd723f2e719b4bb6fec73c5c5.json.zst",
+      "decoded_sha256": "643125d2e29eda8ea86b23d194f0d2791135c0585e8219f511cf603d32360dec",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s25-soroban-apply-time-failures.yaml",
+        "scenario_sha256": "fed4a30aa6fe87fb6c1fe54534dc8413695ddb703611058e1e698b83d050ae9a",
+        "step": "scv-map-none-argument",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1733000000",
+        "stream_sha256": "511f69348359478f9c071ef3f24bbd753cab9d598d1755b3d6babc73882b2d46",
+        "frame_index": 33,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "soroban-apply-time-failures/setup-3.xdr",
+            "sha256": "732a09be3a6f7932302b3d9a7e52c8d56c0f69ceb6d0d2f540ccf4d8c1c8f8a5",
+            "origin": "ConfigUpgradeSet of the scenario's setup[3] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s25-soroban-apply-time-failures.yaml --network testnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "418e21f3e75fabedd1d937038340075ccbbe1e46aead2eb892d6e3ca9114bcec",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "250f5618327e07af48c9bc6973753b8debcf6c7a5a8ab127fdf11c2b60e57f49",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27726309",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "418e21f3e75fabedd1d937038340075ccbbe1e46aead2eb892d6e3ca9114bcec",
+        "fee_charged": "4419",
+        "tx_hashes": [
+          "418e21f3e75fabedd1d937038340075ccbbe1e46aead2eb892d6e3ca9114bcec"
+        ],
+        "contracts": {
+          "emitter": "CAHVXUMD3VJVOY66UCDJT2JQJO6RNFICI4W3JNRSQF4VQLXTUCXCUEH5"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "D": "GA3LW24Y6IJPYBE3H7NQ2HCWE2DX3EKR56Y4DHKTGWGQAIFRXAAAA34Q",
+          "E": "GDZDG3GQLVCWJLLIJBVWM4UTOQUQWHVKOZF7ERMXVWHAOSZZOEFEUZ2H"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 35,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "13bf79201326a5f37a5a853795236716e3f6e3af2ff91be1168f14db7b4855d0",
+        "bytes": 3732,
+        "path": "blobs/13/13bf79201326a5f37a5a853795236716e3f6e3af2ff91be1168f14db7b4855d0.xdr"
+      },
+      "decoded": "decoded/13/13bf79201326a5f37a5a853795236716e3f6e3af2ff91be1168f14db7b4855d0.json.zst",
+      "decoded_sha256": "8ee75eb5f63e1bded82c18e8a27b533b61f10910031182ab6debdf592f9b6991",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s25-soroban-apply-time-failures.yaml",
+        "scenario_sha256": "fed4a30aa6fe87fb6c1fe54534dc8413695ddb703611058e1e698b83d050ae9a",
+        "step": "scv-map-none-argument",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1733000000",
+        "stream_sha256": "35ff196ab72b26e69af014d65ebc675d067537e7e7aade9c9fd2a588f602c5c6",
+        "frame_index": 33,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "soroban-apply-time-failures/setup-3.xdr",
+            "sha256": "732a09be3a6f7932302b3d9a7e52c8d56c0f69ceb6d0d2f540ccf4d8c1c8f8a5",
+            "origin": "ConfigUpgradeSet of the scenario's setup[3] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s25-soroban-apply-time-failures.yaml --network pubnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "6cb7643d7817e1f60fb274350e9114e011948d270ab2def2672eb500027e105b",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "9f23c48ed1185814351c66f5b7bab824f6a5a61380455990ed544810fff6abc7",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27726309",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "6cb7643d7817e1f60fb274350e9114e011948d270ab2def2672eb500027e105b",
+        "fee_charged": "4419",
+        "tx_hashes": [
+          "6cb7643d7817e1f60fb274350e9114e011948d270ab2def2672eb500027e105b"
+        ],
+        "contracts": {
+          "emitter": "CBWROIDBXYZDL524BTKESH6VQG3K76WVUS2ZRNWIX36XYKZ2OH6FK2DL"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "D": "GA3LW24Y6IJPYBE3H7NQ2HCWE2DX3EKR56Y4DHKTGWGQAIFRXAAAA34Q",
+          "E": "GDZDG3GQLVCWJLLIJBVWM4UTOQUQWHVKOZF7ERMXVWHAOSZZOEFEUZ2H"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 29,
+      "ledger_seq": 35,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "a46662bdcda3f949c1aba58fb31d4dcccef1d513fabd5decf90c827e38a3f505",
+        "bytes": 3724,
+        "path": "blobs/a4/a46662bdcda3f949c1aba58fb31d4dcccef1d513fabd5decf90c827e38a3f505.xdr"
+      },
+      "decoded": "decoded/a4/a46662bdcda3f949c1aba58fb31d4dcccef1d513fabd5decf90c827e38a3f505.json.zst",
+      "decoded_sha256": "7d33d1b8455e172ddf25372eb0fdda0053755f5a860836bec88ee44ad0ca9d86",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s25-soroban-apply-time-failures.yaml",
+        "scenario_sha256": "fed4a30aa6fe87fb6c1fe54534dc8413695ddb703611058e1e698b83d050ae9a",
+        "step": "scv-map-none-argument",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1733000000",
+        "stream_sha256": "47592f60488a6dc6f8b51319ceabe75d1c2789152bdc7a64363010062477e51a",
+        "frame_index": 33,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p29-testnet.xdr",
+            "sha256": "de76bb4a69837aa9defb3b7c3ac4f7eba4c403155f9b859b3a444a61c180bdb6",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p29/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "soroban-apply-time-failures/setup-3.xdr",
+            "sha256": "732a09be3a6f7932302b3d9a7e52c8d56c0f69ceb6d0d2f540ccf4d8c1c8f8a5",
+            "origin": "ConfigUpgradeSet of the scenario's setup[3] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s25-soroban-apply-time-failures.yaml --network testnet --protocol 29",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "418e21f3e75fabedd1d937038340075ccbbe1e46aead2eb892d6e3ca9114bcec",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "1c37b3d80858cf0f30b02b4e28cb45a4bcda93143db309c8122cc4eb044d849a",
+        "header": {
+          "ledger_version": "29",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27574341",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "418e21f3e75fabedd1d937038340075ccbbe1e46aead2eb892d6e3ca9114bcec",
+        "fee_charged": "4419",
+        "tx_hashes": [
+          "418e21f3e75fabedd1d937038340075ccbbe1e46aead2eb892d6e3ca9114bcec"
+        ],
+        "contracts": {
+          "emitter": "CAHVXUMD3VJVOY66UCDJT2JQJO6RNFICI4W3JNRSQF4VQLXTUCXCUEH5"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "D": "GA3LW24Y6IJPYBE3H7NQ2HCWE2DX3EKR56Y4DHKTGWGQAIFRXAAAA34Q",
+          "E": "GDZDG3GQLVCWJLLIJBVWM4UTOQUQWHVKOZF7ERMXVWHAOSZZOEFEUZ2H"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 29,
+      "ledger_seq": 35,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "68fa983f36b4ec21000e05aee8beb790d5c20745b2fb4a71483e74a516fe1140",
+        "bytes": 3724,
+        "path": "blobs/68/68fa983f36b4ec21000e05aee8beb790d5c20745b2fb4a71483e74a516fe1140.xdr"
+      },
+      "decoded": "decoded/68/68fa983f36b4ec21000e05aee8beb790d5c20745b2fb4a71483e74a516fe1140.json.zst",
+      "decoded_sha256": "5b7e587f7b2c42e20eb5dcea3fdab90b6bc71c51fc267b2af00fc4d38ceac0d0",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s25-soroban-apply-time-failures.yaml",
+        "scenario_sha256": "fed4a30aa6fe87fb6c1fe54534dc8413695ddb703611058e1e698b83d050ae9a",
+        "step": "scv-map-none-argument",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1733000000",
+        "stream_sha256": "5c524a2c70dc630b410dc1c2d9d5a3ed4201c36bcf139ab9ae4058fa35d3933e",
+        "frame_index": 33,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "declared",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p29-testnet.xdr",
+            "sha256": "de76bb4a69837aa9defb3b7c3ac4f7eba4c403155f9b859b3a444a61c180bdb6",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p29/testnet.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "soroban-apply-time-failures/setup-3.xdr",
+            "sha256": "732a09be3a6f7932302b3d9a7e52c8d56c0f69ceb6d0d2f540ccf4d8c1c8f8a5",
+            "origin": "ConfigUpgradeSet of the scenario's setup[3] config_upgrade, from the settings the node held and the fields it changes"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s25-soroban-apply-time-failures.yaml --network pubnet --protocol 29",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "6cb7643d7817e1f60fb274350e9114e011948d270ab2def2672eb500027e105b",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "50e85e1ba5c0977e4012a5829068a86539fbbce4038a0ed3107f8c0d65d69264",
+        "header": {
+          "ledger_version": "29",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "27574341",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "6cb7643d7817e1f60fb274350e9114e011948d270ab2def2672eb500027e105b",
+        "fee_charged": "4419",
+        "tx_hashes": [
+          "6cb7643d7817e1f60fb274350e9114e011948d270ab2def2672eb500027e105b"
+        ],
+        "contracts": {
+          "emitter": "CBWROIDBXYZDL524BTKESH6VQG3K76WVUS2ZRNWIX36XYKZ2OH6FK2DL"
+        },
+        "accounts": {
+          "A": "GAZ2HQB7GBW5KKURD7LMCBY4YU4BKCN6I3H2UL2BTZ3E5I6PCPKTJ2LW",
+          "B": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "D": "GA3LW24Y6IJPYBE3H7NQ2HCWE2DX3EKR56Y4DHKTGWGQAIFRXAAAA34Q",
+          "E": "GDZDG3GQLVCWJLLIJBVWM4UTOQUQWHVKOZF7ERMXVWHAOSZZOEFEUZ2H"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 2,
+      "entry_changes": 6
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "${derived.tx_hash}",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "invoke_host_function.trapped"
+        ],
+        "fee_charged": "${derived.fee_charged}"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args",
+        "equals": [
+          {
+            "map": null
+          }
+        ],
+        "note": "SCV_MAP (17) with SCMap* absent."
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/invoke_host_function",
+        "equals": "trapped"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "${derived.contracts.emitter}",
+          "because": "the invoked contract; the call trapped on its argument and none of the contract's entries changed"
+        }
+      ],
+      "exact": true
+    },
+    "state_changes": [
+      {
+        "kind": "sequence_bumped",
+        "tx_index": 0,
+        "account": {
+          "address": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM"
+        },
+        "detail": {
+          "sequence_after": "55834574849"
+        }
+      }
+    ],
+    "state_changes_exact": true,
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "20000100",
+        "from": {
+          "address": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "19995681",
+        "to": {
+          "address": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s25-soroban-apply-time-failures.yaml on a local stellar-core, at Protocols 29 and 30 on the testnet and public passphrases (4 variants); the accounts are label-derived and equal across variants, hashes and fees are per variant under derived. No reader has been run against these ledgers yet, so the entry declares no known divergence."
+}

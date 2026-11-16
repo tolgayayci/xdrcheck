@@ -1,0 +1,210 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/overly-large-values-golden.32edfd3edbfad317",
+  "title": "Contract stores a 30-by-30 nested value in persistent contract data",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "large-contract-data-value",
+    "nested-scval",
+    "contract-data-written"
+  ],
+  "why": "A successful call stores a value that is a vector of 30 vectors of 30 values in one contract-data entry. Readers that store contract-data values in small columns, or flatten nested values, truncate or reject the entry.",
+  "fields": {
+    "validated": [
+      "VF-46a"
+    ],
+    "passed_through": [
+      "VF-46b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 9,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "63827d13294dba66fcae92f32d4d36322434b8105f99fcd6b24aee41d08f74c3",
+        "bytes": 15852,
+        "path": "blobs/63/63827d13294dba66fcae92f32d4d36322434b8105f99fcd6b24aee41d08f74c3.xdr"
+      },
+      "decoded": "decoded/63/63827d13294dba66fcae92f32d4d36322434b8105f99fcd6b24aee41d08f74c3.json.zst",
+      "decoded_sha256": "3176a4383ef1fb3cfa9f54d38c9d326e7629605f11e215ae4e0132cb63e320cc",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/32edfd3edbfad317.xdr",
+        "file_sha256": "58ff6e70a5de04f6902e50479d4005d0d0dc5fb57f32a34ac6a9f4be635a2e6b",
+        "frame_index": 7,
+        "test_name": "overly large soroban values are handled gracefully|store value",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "8bcb4a421777d4e008f0ccc211113b3c84694ede5d267abef3d1e47a7e808647",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "overly large soroban values are handled gracefully|store value",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:6225 (TEST_CASE); flag lines 6228; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "7f7e01fbd4d7ce3fcaab40f01585cc73345dbb3a96907a7d49130c211fcc04a2",
+        "tx_hashes": [
+          "8bcb4a421777d4e008f0ccc211113b3c84694ede5d267abef3d1e47a7e808647"
+        ],
+        "tx_hash": "8bcb4a421777d4e008f0ccc211113b3c84694ede5d267abef3d1e47a7e808647",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 12
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "8bcb4a421777d4e008f0ccc211113b3c84694ede5d267abef3d1e47a7e808647",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1631240"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "store"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args",
+        "equals": [
+          {
+            "u32": 30
+          },
+          {
+            "u32": 2
+          }
+        ],
+        "note": "Width 30, depth 2: 30 x 30 entries."
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/key",
+        "equals": {
+          "symbol": "val"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/val/vec/29/vec/29",
+        "equals": {
+          "u32": 123
+        },
+        "note": "The last of 30 x 30 leaves."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "contract_data_changed",
+        "op_index": 0,
+        "account": {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+        },
+        "cause": "contract-call",
+        "detail": {
+          "contract": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "durability": "persistent",
+          "change": "created"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "201000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "199368860",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 7 of the golden: the successful case of the 'store value' section. Frames 8 and 10 of this file are the failing cases (resource limit exceeded, depth limit); frame 8 is 2,627,152 bytes, almost all diagnostic events, and renders to an 80 MB uncompressed sidecar, so it is not imported until sidecars are stored compressed."
+}

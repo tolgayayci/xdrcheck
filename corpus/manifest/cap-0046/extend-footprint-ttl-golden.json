@@ -1,0 +1,167 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/extend-footprint-ttl-golden",
+  "title": "ExtendFootprintTTL operation whose meta changes only TTL entries",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "extend-footprint-ttl",
+    "ttl-only-changes"
+  ],
+  "why": "Extending a footprint's time to live changes only TTL entries, keyed by a hash of the data key, with no contract-data change. Readers that expect every Soroban operation to change contract data, or that cannot map a TTL key hash back to its entry, drop or misattribute the change.",
+  "fields": {
+    "validated": [
+      "VF-51"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 11,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "c38b347099d25588c22cfed3ba482a3dcf2936d98e1070b3fb6e975cd52cbc08",
+        "bytes": 2108,
+        "path": "blobs/c3/c38b347099d25588c22cfed3ba482a3dcf2936d98e1070b3fb6e975cd52cbc08.xdr"
+      },
+      "decoded": "decoded/c3/c38b347099d25588c22cfed3ba482a3dcf2936d98e1070b3fb6e975cd52cbc08.json.zst",
+      "decoded_sha256": "44a46a5d7a6b652fd1c2fe8e4e789fe0dc283789133b82d4e87a548dbd0216eb",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/205308413aa66dad.xdr",
+        "file_sha256": "f38c51bd49cae591c3b43ef53703986ba1e8f51e45c2787aed2d494a2c5c1983",
+        "frame_index": 9,
+        "test_name": "state archival operation errors|protocol version 30|extend operation|success",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "92414979ebb5d1aba86984b3404f82d9518dda730e19617b52131edd8934d3ed",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "state archival operation errors|protocol version 30|extend operation|success",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:4680 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "73108e8cdeca7e5bd206343d4334fbeeca8353a8612ab84bca6e9ead36bce3f6",
+        "tx_hashes": [
+          "92414979ebb5d1aba86984b3404f82d9518dda730e19617b52131edd8934d3ed"
+        ],
+        "tx_hash": "92414979ebb5d1aba86984b3404f82d9518dda730e19617b52131edd8934d3ed",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "extend_footprint_ttl"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "92414979ebb5d1aba86984b3404f82d9518dda730e19617b52131edd8934d3ed",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "extend_footprint_ttl.success"
+        ],
+        "fee_charged": "116822"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/extend_footprint_ttl/extend_to",
+        "equals": 10000
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/ttl/live_until_ledger_seq",
+        "equals": 10011
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/3/updated/data/ttl/live_until_ledger_seq",
+        "equals": 10011
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "883278",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 9 of the golden."
+}

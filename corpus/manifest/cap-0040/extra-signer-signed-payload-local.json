@@ -1,0 +1,456 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0040/extra-signer-signed-payload-local",
+  "title": "PRECOND_V2 with a signed-payload extra signer and its signature",
+  "kind": "ledger",
+  "caps": [
+    40,
+    21
+  ],
+  "protocol": {
+    "introduced": 19
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "precond-v2",
+    "extra-signers",
+    "signed-payload-signature",
+    "signature-hint-xor"
+  ],
+  "why": "An extra signer is a precondition, not a signer of any account: its key appears only in the envelope and the matching signature carries a XORed hint. Readers that record it as an account signer or as a participant invent a relation that no ledger entry shows.",
+  "fields": {
+    "validated": [
+      "VF-13",
+      "VF-18"
+    ]
+  },
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 18,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "68c4874b82bbb6c37f861cab0084d046f2c0d96b1f70e10229ee9182c822a2d3",
+        "bytes": 2352,
+        "path": "blobs/68/68c4874b82bbb6c37f861cab0084d046f2c0d96b1f70e10229ee9182c822a2d3.xdr"
+      },
+      "decoded": "decoded/68/68c4874b82bbb6c37f861cab0084d046f2c0d96b1f70e10229ee9182c822a2d3.json.zst",
+      "decoded_sha256": "19651c8ecca71bf71e4664eb9d2ca9eb376ba44ef13c1fb0ada89371c2e6d085",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s02-signed-payload-and-signers.yaml",
+        "scenario_sha256": "e290cf24c61549182885fda93632b8b3dc8185fa0cdff15997e1c922af116bd4",
+        "step": "extra-signer-in-preconditions",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1716000000",
+        "stream_sha256": "5efe70c76b9658c82c03fb3114efe17d1b7b161a95c8508a2a832d6058fdc263",
+        "frame_index": 16,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s02-signed-payload-and-signers.yaml --network testnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "187165045b94ff9a7ca7a7e82e173fa5449940aaab4422e384adc05c46133476",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "14cdcb115ee3363f5281944432b0f78fc25d327d5dcfd807554778b5c716f31d",
+        "tx_hash": "187165045b94ff9a7ca7a7e82e173fa5449940aaab4422e384adc05c46133476",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "187165045b94ff9a7ca7a7e82e173fa5449940aaab4422e384adc05c46133476"
+        ],
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 18,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "991bf801ea2cad771d8af9219498fb721bcc54522cfb0218c94fb997ff0b25f6",
+        "bytes": 2352,
+        "path": "blobs/99/991bf801ea2cad771d8af9219498fb721bcc54522cfb0218c94fb997ff0b25f6.xdr"
+      },
+      "decoded": "decoded/99/991bf801ea2cad771d8af9219498fb721bcc54522cfb0218c94fb997ff0b25f6.json.zst",
+      "decoded_sha256": "7f1491fa391f5d481ec5a4e9106a36dfdf0b95a5b8e9b34f0a782ded92b5ca9a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s02-signed-payload-and-signers.yaml",
+        "scenario_sha256": "e290cf24c61549182885fda93632b8b3dc8185fa0cdff15997e1c922af116bd4",
+        "step": "extra-signer-in-preconditions",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1716000000",
+        "stream_sha256": "481b699ded855a17a92de26eadf77bdf7ea4f30baf393ae5d8718741d12ebfd4",
+        "frame_index": 16,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s02-signed-payload-and-signers.yaml --network pubnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "4bb15c5e2d2894e87fa07c72f3e0786997543b0a6292225915227af595d5df82",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "a3f9d3b5044b7ff5256111baa7ebb975ef80173ba3300739ed2f7db6025d8da4",
+        "tx_hash": "4bb15c5e2d2894e87fa07c72f3e0786997543b0a6292225915227af595d5df82",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "4bb15c5e2d2894e87fa07c72f3e0786997543b0a6292225915227af595d5df82"
+        ],
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 18,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "0b57c09675f49b15c7efc2cff60bad0eb2664e2ec3780ca1e3ad6a7bd6911d14",
+        "bytes": 2344,
+        "path": "blobs/0b/0b57c09675f49b15c7efc2cff60bad0eb2664e2ec3780ca1e3ad6a7bd6911d14.xdr"
+      },
+      "decoded": "decoded/0b/0b57c09675f49b15c7efc2cff60bad0eb2664e2ec3780ca1e3ad6a7bd6911d14.json.zst",
+      "decoded_sha256": "492b0a4f1a791b2c288afc991d4ae9492533df69486a476ad787f7f3757df140",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s02-signed-payload-and-signers.yaml",
+        "scenario_sha256": "e290cf24c61549182885fda93632b8b3dc8185fa0cdff15997e1c922af116bd4",
+        "step": "extra-signer-in-preconditions",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1716000000",
+        "stream_sha256": "95a4a1d9ab37b44d1adfc8a72eb0101f5eace20342fb213fc3de4a64009f8fa3",
+        "frame_index": 16,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s02-signed-payload-and-signers.yaml --network testnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "187165045b94ff9a7ca7a7e82e173fa5449940aaab4422e384adc05c46133476",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "6465d85d6f52108a8ca3e6b8bddb1b08b30af8d8a46e25334fc3a99b993d0e7e",
+        "tx_hash": "187165045b94ff9a7ca7a7e82e173fa5449940aaab4422e384adc05c46133476",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "187165045b94ff9a7ca7a7e82e173fa5449940aaab4422e384adc05c46133476"
+        ],
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 18,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "09fac188950344f3e940dac30cf18e129d8b9353a270a40053b5c786d86b04d1",
+        "bytes": 2344,
+        "path": "blobs/09/09fac188950344f3e940dac30cf18e129d8b9353a270a40053b5c786d86b04d1.xdr"
+      },
+      "decoded": "decoded/09/09fac188950344f3e940dac30cf18e129d8b9353a270a40053b5c786d86b04d1.json.zst",
+      "decoded_sha256": "596ff43e0c26d90f0ab1890b669888adabf2833d606de4c331b8f71307c578f3",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s02-signed-payload-and-signers.yaml",
+        "scenario_sha256": "e290cf24c61549182885fda93632b8b3dc8185fa0cdff15997e1c922af116bd4",
+        "step": "extra-signer-in-preconditions",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1716000000",
+        "stream_sha256": "9667f258a495153ab2cb112c98310332410cbc14f1eedf7638f7441d7a14354d",
+        "frame_index": 16,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s02-signed-payload-and-signers.yaml --network pubnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "4bb15c5e2d2894e87fa07c72f3e0786997543b0a6292225915227af595d5df82",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "8b12978c7fd02f45d11eb0be8bff35eefcbd387ee36a985751c8e13be9b10aa7",
+        "tx_hash": "4bb15c5e2d2894e87fa07c72f3e0786997543b0a6292225915227af595d5df82",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "4bb15c5e2d2894e87fa07c72f3e0786997543b0a6292225915227af595d5df82"
+        ],
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 2,
+      "entry_changes": 8
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "${derived.tx_hash}",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "${derived.fee_charged}"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/cond/v2/extra_signers",
+        "equals": [
+          "PA3LW24Y6IJPYBE3H7NQ2HCWE2DX3EKR56Y4DHKTGWGQAIFRXAAAAAAAAAQFZINLDYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAW4"
+        ],
+        "note": "A signed-payload extra signer with a 32-byte payload; it is a precondition, not a signer of any account."
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures/1/hint",
+        "equals": "b1b80001",
+        "note": "Last 4 bytes of D's key (b1 b8 00 00) XOR the last 4 bytes of the payload (00 00 00 01)."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP",
+          "roles": [
+            "source",
+            "fee_payer"
+          ]
+        },
+        {
+          "address": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "roles": [
+            "destination"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GA3LW24Y6IJPYBE3H7NQ2HCWE2DX3EKR56Y4DHKTGWGQAIFRXAAAA34Q",
+          "because": "D is named only as an extra signer; no ledger entry of D changed"
+        }
+      ],
+      "exact": true
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "asset": "native",
+        "amount": "${derived.fee_charged}",
+        "from": {
+          "address": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP"
+        }
+      },
+      {
+        "kind": "transfer",
+        "op_index": 0,
+        "asset": "native",
+        "amount": "10000000",
+        "from": {
+          "address": "GC3SWPJ2WESFIOR7X74URJEOATTLLLIBNHAQAZYGH2SIIICU76GZCPPP"
+        },
+        "to": {
+          "address": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM"
+        },
+        "routing": {
+          "type": "absent"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0021.md"
+  ],
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s02-signed-payload-and-signers.yaml on a local stellar-core, at Protocols 28 and 30 on the testnet and public passphrases (four variants); the accounts are label-derived and equal across variants, hashes are per variant under derived. The probe run executed the same transaction (evidence/local-core/, ledger 17). No reader has been run against these ledgers yet, so the entry lists no known divergence. Replay is by chain; serving the ledger alone has not been tried."
+}

@@ -1,0 +1,190 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/overly-large-values-golden.a1774bbe0c32cf40",
+  "title": "Contract event whose topic is a 30-by-30 nested value, emitted by a successful call",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "large-event-topic",
+    "contract-event",
+    "nested-scval"
+  ],
+  "why": "A successful invocation emits a contract event whose first topic is a nested vector of 30 vectors of 30 values. Readers that index topics as short scalars, or cap topic size, truncate or reject the event.",
+  "fields": {
+    "validated": [
+      "VF-46a",
+      "VF-53a"
+    ],
+    "passed_through": [
+      "VF-46b",
+      "VF-53b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 9,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "8a7e69abc7b58b4ebfadc99b5fb5ad037e7cd3133481cbefb41cbc67878fbf79",
+        "bytes": 23436,
+        "path": "blobs/8a/8a7e69abc7b58b4ebfadc99b5fb5ad037e7cd3133481cbefb41cbc67878fbf79.xdr"
+      },
+      "decoded": "decoded/8a/8a7e69abc7b58b4ebfadc99b5fb5ad037e7cd3133481cbefb41cbc67878fbf79.json.zst",
+      "decoded_sha256": "93f956529ea8d79f46a48bbde32f2e5c203bf6db2e3174137e9dae5a7682c39a",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/a1774bbe0c32cf40.xdr",
+        "file_sha256": "0973df5eabee1e83d41253fd3d7b5bd1bc25c5ab3e1650d8140047b6c8c7a7b4",
+        "frame_index": 7,
+        "test_name": "overly large soroban values are handled gracefully|event topic",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "916928762c2768354ea7317439e0a6a58724a27ded743e505136569970251806",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "overly large soroban values are handled gracefully|event topic",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:6225 (TEST_CASE); flag lines 6228; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "f7f89b1343abbddd4b50b87c6ae2347bace2cf08fb4ea731b67e2ce5da6d8e47",
+        "tx_hashes": [
+          "916928762c2768354ea7317439e0a6a58724a27ded743e505136569970251806"
+        ],
+        "tx_hash": "916928762c2768354ea7317439e0a6a58724a27ded743e505136569970251806",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "916928762c2768354ea7317439e0a6a58724a27ded743e505136569970251806",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1612451"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "event_topic"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args",
+        "equals": [
+          {
+            "u32": 30
+          },
+          {
+            "u32": 2
+          }
+        ]
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_success/0/op_inner/invoke_host_function/success",
+        "equals": "545ab993f5eb0ab6ba602b9684196981d2ffffa01cdaa7bfb2155d54eb06b1b7"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id",
+        "equals": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "201000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "199387649",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 7 of the golden: the successful case of the 'event topic' section (the failing cases emit no consensus event)."
+}

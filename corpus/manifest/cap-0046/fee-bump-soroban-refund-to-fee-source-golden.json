@@ -1,0 +1,187 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/fee-bump-soroban-refund-to-fee-source-golden",
+  "title": "Fee-bumped Soroban transaction: the resource-fee refund goes to the fee-bump source",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "fee-bump",
+    "soroban-fee-refund",
+    "refund-to-fee-source"
+  ],
+  "why": "In a fee-bumped Soroban transaction the outer fee source pays and is refunded; the inner source pays nothing (inner fee_charged 0) and only its sequence number moves. Readers that credit the refund, or debit the fee, to the inner source get balances wrong.",
+  "fields": {
+    "validated": [
+      "VF-10",
+      "VF-44"
+    ],
+    "passed_through": [
+      "VF-12"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 12,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "9e9c3e0f29e0d85c6deae0e558848c1eb0312f2db911aec1e018ac3fbac52121",
+        "bytes": 5100,
+        "path": "blobs/9e/9e9c3e0f29e0d85c6deae0e558848c1eb0312f2db911aec1e018ac3fbac52121.xdr"
+      },
+      "decoded": "decoded/9e/9e9c3e0f29e0d85c6deae0e558848c1eb0312f2db911aec1e018ac3fbac52121.json.zst",
+      "decoded_sha256": "5a7e03c4a7c7e64f667ef7b044f91d963f291b72c072d2f129c0119846504951",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/7c532d35ee5a2024.xdr",
+        "file_sha256": "6533e01bdb592ef5ec8727437a0a5aead5066e1cd847453f56513a4641b794cb",
+        "frame_index": 10,
+        "test_name": "refund is sent to fee-bump source|protocol version 30",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "59c7478b8dc706d2f1b68503843da89d60d0fa1f707495313bf7e5bac8b315a4",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx_fee_bump/tx/inner_tx/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "EMIT_CLASSIC_EVENTS",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "refund is sent to fee-bump source|protocol version 30",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:2162 (TEST_CASE); flag lines 2166,2167; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "a194828b253e8499ded0e7088fe1f59e65fb7487e98e8dd15370e72e9a547816",
+        "tx_hashes": [
+          "59c7478b8dc706d2f1b68503843da89d60d0fa1f707495313bf7e5bac8b315a4"
+        ],
+        "tx_hash": "59c7478b8dc706d2f1b68503843da89d60d0fa1f707495313bf7e5bac8b315a4",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 2,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "59c7478b8dc706d2f1b68503843da89d60d0fa1f707495313bf7e5bac8b315a4",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "79930",
+        "inner_hash": "1a608eceab9e85788fd8c88fc3407d208d9b7618d586293257d9f81b5c2d18f1",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx_fee_bump/tx/fee_source",
+        "equals": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx_fee_bump/tx/inner_tx/tx/tx/source_account",
+        "equals": "GBW5HOHGBZV32TE6SYWOMRSY27JDD754PEBMIQNA5OBWLCUBTXO56ZFV"
+      },
+      {
+        "path": "/v2/tx_processing/0/post_tx_apply_fee_processing/1/updated/data/account/account_id",
+        "equals": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO",
+        "note": "The refund is credited to the fee-bump source."
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_fee_bump_inner_success/result/fee_charged",
+        "equals": "0"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO",
+          "roles": [
+            "fee_payer"
+          ]
+        },
+        {
+          "address": "GBW5HOHGBZV32TE6SYWOMRSY27JDD754PEBMIQNA5OBWLCUBTXO56ZFV",
+          "roles": [
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1061172",
+        "from": {
+          "address": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "981242",
+        "to": {
+          "address": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 10 of the golden. The test turns on classic and fee events, so the charge and the refund also appear as tx-level fee events."
+}

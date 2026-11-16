@@ -1,0 +1,101 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order",
+  "title": "Pool ID of the Go SDK test pair given in reverse byte order must be refused",
+  "kind": "api",
+  "caps": [
+    38
+  ],
+  "protocol": {
+    "introduced": 18
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "ordering"
+  ],
+  "shapes": [
+    "pool-asset-order",
+    "issuer-byte-order-differs-from-strkey",
+    "invalid-input"
+  ],
+  "why": "The pair is in the reverse of stellar-core's XDR byte order; a builder that orders issuers by strkey text accepts it and returns the ID of a pool that cannot exist on the network.",
+  "api": {
+    "op": "liquidity_pool.id",
+    "input": {
+      "asset_a": "USD:GC3BT2M7I2M5PJWE4VWYRVSOHSE6YBD2QKWVJH4TX7GSA3UHYCDH2YCD",
+      "asset_b": "USD:GCXHWP6ILITHEZWVNCCTPJCT7ZIQ2JGKJH7XXR4VYI7PMAGOIHBMHHHM"
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 17.2.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0 and 17.2.0: getLiquidityPoolId accepts the reversed pair and returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306, the ID of a pool stellar-core cannot create; 16.3.1 and 17.2.1 refuse it.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "finding": "F-0016",
+        "fixed_in": "17.2.1 (16.3.1 on the 16.x line)",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 1e (evidence/sdk-matrix), executed on js 16.3.0 and js 17.2.0; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order'"
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": "0.7.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306; v0.7.2 refuses the pair.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5974",
+        "finding": "F-0023",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 1e (evidence/sdk-matrix), executed on go v0.7.1; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order'"
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 17.0.0: returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306; 17.0.1 refuses the pair.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1246",
+        "finding": "F-0027",
+        "fixed_in": "17.0.1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 1e (evidence/sdk-matrix), executed on python 17.0.0; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order'"
+      },
+      {
+        "target": "network.lightsail:stellar-sdk (Maven)",
+        "versions": "6.0.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 6.0.0: returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306. The fix is merged on the default branch (95bca0b5) and not released.",
+        "reference": "https://github.com/lightsail-network/java-stellar-sdk/pull/832",
+        "finding": "F-0028",
+        "fixed_in": "95bca0b5 (default branch, unreleased)",
+        "status": "fixed_unreleased",
+        "observed": "executed",
+        "evidence": "probe vector 1e (evidence/sdk-matrix), executed on java 6.0.0; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md",
+    "https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/util/types.cpp#L143",
+    "https://github.com/stellar/js-stellar-sdk/pull/1766",
+    "https://github.com/stellar/go-stellar-sdk/pull/5974",
+    "https://github.com/StellarCN/py-stellar-base/issues/1246",
+    "https://github.com/lightsail-network/java-stellar-sdk/pull/832"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order.json. Origin: probe vector 1e, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). Issuer keys b619\u2026 then ae7b\u2026: assetA > assetB. A builder that accepts it returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

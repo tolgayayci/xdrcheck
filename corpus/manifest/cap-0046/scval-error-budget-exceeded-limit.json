@@ -1,0 +1,114 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/scval-error-budget-exceeded-limit",
+  "title": "ScVal Error(Budget, ExceededLimit) from a diagnostic event of a failed Soroban transaction (pubnet history ledger 64558277)",
+  "kind": "xdr",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "scval-error",
+    "sc-error-non-contract",
+    "scval-bare-value"
+  ],
+  "why": "stellar-core writes Error(Budget, ExceededLimit) into the diagnostic events of a failed Soroban transaction (topic 1 of the \"error\" event). Error(Storage, ExceededLimit) has the same ScErrorCode and another ScErrorType: a native conversion that keeps only the code cannot tell which host subsystem failed.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 64558277,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "e4977d7ef1e7f6e816863fdd582220c592558bf5879f332b22b0842ca281e15d",
+        "bytes": 12,
+        "path": "blobs/e4/e4977d7ef1e7f6e816863fdd582220c592558bf5879f332b22b0842ca281e15d.xdr"
+      },
+      "decoded": "decoded/e4/e4977d7ef1e7f6e816863fdd582220c592558bf5879f332b22b0842ca281e15d.json.zst",
+      "decoded_sha256": "35512019d40906da80ed5bde4d93b5e565d9a404e195af578f3e9885762d8424",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "slice_of": {
+        "entry": "cap-0067/to-muxed-id-text-from-memo.pubnet-64558277",
+        "path": "/v2/tx_processing/263/tx_apply_processing/v4/diagnostic_events/105/event/body/v0/topics/1",
+        "byte_offset": 1125132
+      },
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FC279FFF--64512000-64575999/FC26EB3A--64558277.xdr.zst",
+        "object_sha256": "ec9d2e73dc9754e1d65492f55e6563ff52181f0fcf83e0ed746f8d507a031d82",
+        "object_bytes": 222779,
+        "decompressed_sha256": "bf291103c85185bf74959320980953211a7f5f70f6a61f36459089937568fb49",
+        "decompressed_bytes": 2177420,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:02:05Z",
+        "written_by": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021); exporter 72ee2a9",
+        "object_metadata": {
+          "core-version": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021)",
+          "compression-type": "zst",
+          "start-ledger": "64558277",
+          "version": "72ee2a9",
+          "end-ledger-close-time": "1790077163",
+          "start-ledger-close-time": "1790077163",
+          "end-ledger": "64558277",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "file-mtime": "1790077165000",
+          "protocol-version": "28"
+        },
+        "refetch": "aws s3 cp --no-sign-request s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet/FC279FFF--64512000-64575999/FC26EB3A--64558277.xdr.zst .",
+        "object_path": "objects/pubnet/64558277/FC26EB3A--64558277.xdr.zst",
+        "regenerated": false
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/error",
+        "equals": {
+          "budget": "exceeded_limit"
+        }
+      }
+    ],
+    "native": {
+      "error": {
+        "type": "budget",
+        "code": "exceeded_limit"
+      }
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2",
+      "L3"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": ">=16.3.0 <=17.4.0",
+        "level": "L3",
+        "outcome": "wrong_value",
+        "detail": "scValToNative turns every non-contract scvError into {type: \"system\", code, value} with only the ScErrorCode: the native value of Error(Budget, ExceededLimit) carries no error type and equals that of Error(Storage, ExceededLimit).",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1905",
+        "finding": "F-0061",
+        "status": "open",
+        "observed": "executed"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-01.md"
+  ],
+  "reference": "network",
+  "notes": "A 12-byte slice (xdrcheck-corpus slice) of cap-0067/to-muxed-id-text-from-memo.pubnet-64558277 (pubnet history ledger 64558277): topic 1 of a diagnostic event of a failed Soroban transaction, byte-identical to that range of the parent ledger. Its twin cap-0046/scval-error-storage-exceeded-limit has the same code and another type."
+}

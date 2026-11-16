@@ -1,0 +1,106 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/scval-map-keys-collide-u32-symbol",
+  "title": "ScVal map whose keys U32(1) and Symbol(\"1\") collide when converted to native keys (js-stellar-sdk#1789)",
+  "kind": "xdr",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "scmap-colliding-native-keys",
+    "scval-bare-value"
+  ],
+  "why": "The two keys are distinct ScVals in host order, so a contract can return or emit this map. Converting it to a native object keyed by text makes both keys \"1\": a converter that does not refuse silently drops one entry.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "90e0fb9b8958a1596f9efd2b25c51cefc96b3c67fdae20fb8df2bcfe8e9cd19e",
+        "bytes": 48,
+        "path": "blobs/90/90e0fb9b8958a1596f9efd2b25c51cefc96b3c67fdae20fb8df2bcfe8e9cd19e.xdr"
+      },
+      "decoded": "decoded/90/90e0fb9b8958a1596f9efd2b25c51cefc96b3c67fdae20fb8df2bcfe8e9cd19e.json.zst",
+      "decoded_sha256": "a203c4740c535b7fa89d028ac206cd0ac034d701f87053baa097355e9b37b608",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/cap-0046/scval-map-keys-collide-u32-symbol.json",
+        "reason": "A bare ScVal built by hand from the XDR definitions (the js-stellar-sdk#1789 value); a contract can return or emit it, but these bytes were not taken from core output"
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/map/0/key/u32",
+        "equals": 1
+      },
+      {
+        "path": "/map/0/val/u32",
+        "equals": 10
+      },
+      {
+        "path": "/map/1/key/symbol",
+        "equals": "1"
+      },
+      {
+        "path": "/map/1/val/u32",
+        "equals": 20
+      }
+    ],
+    "native": {
+      "map_entries": 2,
+      "on_lossy_conversion": "error"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2",
+      "L3"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0 || 17.2.1",
+        "level": "L3",
+        "outcome": "wrong_value",
+        "detail": "Executed on 17.2.0 and 17.2.1: scValToNative returns an object with 1 key(s) and no error. 17.3.0 and later throw 'scvMap has more than one key that converts to \u2026'. Earlier 17.x versions were not run.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1789",
+        "finding": "F-0018",
+        "fixed_in": "17.3.0",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "evidence/js-1789/transcript-prefix.txt (17.2.1) and transcript-fixed.txt (17.3.0); xcc conform run --columns 'js@17.2.*' --entries 'cap-0046/scval-map-keys-collide-u32-symbol'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L3",
+        "outcome": "wrong_value",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: scValToNative returns an object with 1 key(s) and no error; the fix of the v17 line was not backported to v16.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1789",
+        "finding": "F-0018",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "xcc conform run --columns 'js@16.*' --entries 'cap-0046/scval-map-keys-collide-u32-symbol' (L3 ok, native.map_entries 1 of 2 on each version)"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/issues/1789",
+    "https://github.com/stellar/js-stellar-sdk/pull/1778"
+  ],
+  "notes": "The value of js-stellar-sdk#1789, hand-encoded from the XDR definitions (evidence/js-1789/). stellar-core 30.0.0 print-xdr --filetype scval decodes it to the same two entries (run by hand for this entry).",
+  "reference": "protocol-rule"
+}

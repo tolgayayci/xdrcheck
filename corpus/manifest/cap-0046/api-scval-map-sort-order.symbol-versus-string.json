@@ -1,0 +1,73 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/api-scval-map-sort-order.symbol-versus-string",
+  "title": "Map with a symbol key \"a\" and a string key \"b\" sorts the string first",
+  "kind": "api",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "scmap-key-order",
+    "mixed-key-types"
+  ],
+  "why": "The Soroban host accepts an SCMap only with its keys in ascending host order (discriminant first, then the value: numbers by value, bytes, strings and symbols as byte strings); a map built in another order is refused when it reaches a contract or the host.",
+  "api": {
+    "op": "scval.sort_map",
+    "input": {
+      "keys": [
+        "symbol:a",
+        "string:b"
+      ]
+    },
+    "expect_value": [
+      "string:b",
+      "symbol:a"
+    ],
+    "expect_xdr_hex": "0000001100000001000000020000000e0000000162000000000000010000000f000000016100000000000001"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0",
+        "level": "L4",
+        "outcome": "wrong_value",
+        "detail": "Executed on 17.2.0: scvSortedMap orders the keys symbol a, string b, not in host order; 17.2.1 sorts them as the host does.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "finding": "F-0016",
+        "fixed_in": "17.2.1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 5c (evidence/sdk-matrix), executed on js 17.2.0; xcc conform run --columns 'js@*' --entries 'cap-0046/api-scval-map-sort-order.symbol-versus-string'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "wrong_value",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: scvSortedMap orders the keys symbol a, string b. The map-ordering half of the 17.2.1 fix is not on the 16.x line (the 16.3.1 backport covers asset order only).",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "finding": "F-0016",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 5c (evidence/sdk-matrix), executed on js 16.3.0 and js 16.3.1 and js 16.4.1; xcc conform run --columns 'js@*' --entries 'cap-0046/api-scval-map-sort-order.symbol-versus-string'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/rs-soroban-env/blob/0c99950e96128beba3319aa96b116646ce974e69/soroban-env-host/src/host/comparison.rs",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-contract.x",
+    "https://github.com/stellar/js-stellar-sdk/pull/1766"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0046/api-scval-map-sort-order.symbol-versus-string.json. Origin: probe vector 5c, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). The discriminant decides first: SCV_STRING (14) < SCV_SYMBOL (15), so string \"b\" precedes symbol \"a\" although \"a\" < \"b\" as text. Values are void. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

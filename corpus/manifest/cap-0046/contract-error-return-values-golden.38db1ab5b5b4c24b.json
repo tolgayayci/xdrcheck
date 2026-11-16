@@ -1,0 +1,174 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/contract-error-return-values-golden.38db1ab5b5b4c24b",
+  "title": "Contract function 'err_err' returns an error value and the transaction fails as trapped",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "contract-error",
+    "invoke-host-function-trapped",
+    "failed-soroban-transaction"
+  ],
+  "why": "A contract that returns an error makes the whole transaction fail with INVOKE_HOST_FUNCTION_TRAPPED; the error value itself appears only in diagnostic events. Readers that treat a successful-looking call as applied, or look for the error in the result, get it wrong.",
+  "fields": {
+    "validated": [
+      "VF-46a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 9,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "8730a6f5d7194c57adbfbed6ffc38b93c22e9e81dfa9d4000180f526959af0c5",
+        "bytes": 3720,
+        "path": "blobs/87/8730a6f5d7194c57adbfbed6ffc38b93c22e9e81dfa9d4000180f526959af0c5.xdr"
+      },
+      "decoded": "decoded/87/8730a6f5d7194c57adbfbed6ffc38b93c22e9e81dfa9d4000180f526959af0c5.json.zst",
+      "decoded_sha256": "43cb83fdb1f6948f756c67705bbd48ce84f5545e1f39c9b301ced1670c0f3ea3",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/38db1ab5b5b4c24b.xdr",
+        "file_sha256": "69262498ce93b4fcd762e56b633f880c71e2759ea550407287fb5da044347d0f",
+        "frame_index": 7,
+        "test_name": "contract errors cause transaction to fail|err_err",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "bf0c92634ac0658b6994d5662016b3f51094acf61b013dbe35c6aeba74291758",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "contract errors cause transaction to fail|err_err",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:2576 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "a97f88bbace86076177594c6c36a7f1949de4e90b49ce94a0991831c8a2171b8",
+        "tx_hashes": [
+          "bf0c92634ac0658b6994d5662016b3f51094acf61b013dbe35c6aeba74291758"
+        ],
+        "tx_hash": "bf0c92634ac0658b6994d5662016b3f51094acf61b013dbe35c6aeba74291758",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 6
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "bf0c92634ac0658b6994d5662016b3f51094acf61b013dbe35c6aeba74291758",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "invoke_host_function.trapped"
+        ],
+        "fee_charged": "33733"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "err_err"
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/invoke_host_function",
+        "equals": "trapped"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations",
+        "equals": []
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "because": "The called contract of a failed transaction; none of its ledger entries changed."
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1966367",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 7 of the golden. Diagnostic events carry the contract's error and are never read by the reference extractor."
+}

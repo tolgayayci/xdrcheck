@@ -1,0 +1,113 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/scval-error-storage-exceeded-limit",
+  "title": "ScVal Error(Storage, ExceededLimit) from a diagnostic event of a failed Soroban transaction (testnet history ledger 5521432)",
+  "kind": "xdr",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "scval-error",
+    "sc-error-non-contract",
+    "scval-bare-value"
+  ],
+  "why": "stellar-core writes Error(Storage, ExceededLimit) into the diagnostic events of a failed Soroban transaction (topic 1 of the \"error\" event). Error(Budget, ExceededLimit) has the same ScErrorCode and another ScErrorType: a native conversion that keeps only the code cannot tell which host subsystem failed.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 29,
+      "ledger_seq": 5521432,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "a4e5e1038fd9b1e4d94701e9a71c348a5cbc4f6a56127ae15d0d7309c207b0de",
+        "bytes": 12,
+        "path": "blobs/a4/a4e5e1038fd9b1e4d94701e9a71c348a5cbc4f6a56127ae15d0d7309c207b0de.xdr"
+      },
+      "decoded": "decoded/a4/a4e5e1038fd9b1e4d94701e9a71c348a5cbc4f6a56127ae15d0d7309c207b0de.json.zst",
+      "decoded_sha256": "9447197b5f92869e40e886e7ba88d76a67f82969404785cd25bfd09843006e93",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "slice_of": {
+        "entry": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+        "path": "/v2/tx_processing/17/tx_apply_processing/v4/diagnostic_events/2/event/body/v0/topics/1",
+        "byte_offset": 124524
+      },
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFAC03FF--5504000-5567999/FFABBFE7--5521432.xdr.zst",
+        "object_sha256": "9aa845398f6ae4aa478ceb19cc24be0b3d9a0d06fc1cd889422311f3fbe7926a",
+        "object_bytes": 17905,
+        "decompressed_sha256": "ef639c7c3f30f48419851c25f1f42eff68b9a6236643485325a54f18439c40d3",
+        "decompressed_bytes": 131640,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:01:47Z",
+        "written_by": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1); exporter 4d89b44",
+        "object_metadata": {
+          "core-version": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1)",
+          "compression-type": "zst",
+          "start-ledger": "5521432",
+          "version": "4d89b44",
+          "end-ledger-close-time": "1793630800",
+          "start-ledger-close-time": "1793630800",
+          "end-ledger": "5521432",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "29"
+        },
+        "refetch": "aws s3 cp --no-sign-request s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18/FFAC03FF--5504000-5567999/FFABBFE7--5521432.xdr.zst .",
+        "perishable": true,
+        "regenerated": false
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/error",
+        "equals": {
+          "storage": "exceeded_limit"
+        }
+      }
+    ],
+    "native": {
+      "error": {
+        "type": "storage",
+        "code": "exceeded_limit"
+      }
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2",
+      "L3"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": ">=16.3.0 <=17.4.0",
+        "level": "L3",
+        "outcome": "wrong_value",
+        "detail": "scValToNative turns every non-contract scvError into {type: \"system\", code, value} with only the ScErrorCode: the native value of Error(Storage, ExceededLimit) carries no error type and equals that of Error(Budget, ExceededLimit).",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1905",
+        "finding": "F-0061",
+        "status": "open",
+        "observed": "executed"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0046-01.md"
+  ],
+  "reference": "network",
+  "notes": "A 12-byte slice (xdrcheck-corpus slice) of cap-0038/pool-issuers-order-by-bytes-not-strkey (testnet history ledger 5521432): topic 1 of a diagnostic event of a failed Soroban transaction, byte-identical to that range of the parent ledger. Its twin cap-0046/scval-error-budget-exceeded-limit has the same code and another type."
+}

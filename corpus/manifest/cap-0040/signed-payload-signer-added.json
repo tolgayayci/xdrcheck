@@ -1,0 +1,316 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0040/signed-payload-signer-added",
+  "title": "SetOptions adds an ed25519 signed-payload signer to an account",
+  "kind": "ledger",
+  "caps": [
+    40
+  ],
+  "protocol": {
+    "introduced": 19
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "signed-payload-signer",
+    "set-options-add-signer",
+    "signer-key-wider-than-32-bytes"
+  ],
+  "why": "A signed-payload signer key is a 32-byte ed25519 key plus a 1 to 64 byte payload, so it does not fit a 32-byte key column or a 56-character address column. Readers that assume every signer is a G address truncate it or halt.",
+  "fields": {
+    "validated": [
+      "VF-29"
+    ]
+  },
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 4437357,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "582e694b96bf69f894763909a1b058c1a2523d5634f2e0947393cee9765f4e0e",
+        "bytes": 58256,
+        "path": "blobs/58/582e694b96bf69f894763909a1b058c1a2523d5634f2e0947393cee9765f4e0e.xdr"
+      },
+      "decoded": "decoded/58/582e694b96bf69f894763909a1b058c1a2523d5634f2e0947393cee9765f4e0e.json.zst",
+      "decoded_sha256": "761b6e055e2b36a480ae64464985e0ace0c94a2eeb857fa44dc9b5eabfe23cc7",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+        "key": "FFBC9DFF--4416000-4479999/FFBC4A92--4437357.xdr.zst",
+        "object_sha256": "24fc6077579e6058512e35401c728288898e6c4fd550b8f26e0a5079aae4001b",
+        "object_bytes": 9816,
+        "decompressed_sha256": "e9fe329be8a0c0a035db0dcbf0a5a01fdb99b9b14237cdc1a9fddae8a56c1846",
+        "decompressed_bytes": 58268,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-12T10:01:47Z",
+        "written_by": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021); exporter 72ee2a9",
+        "object_metadata": {
+          "core-version": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021)",
+          "compression-type": "zst",
+          "start-ledger": "4437357",
+          "version": "72ee2a9",
+          "end-ledger-close-time": "1788210372",
+          "start-ledger-close-time": "1788210372",
+          "end-ledger": "4437357",
+          "network-passphrase": "Test SDF Network ; September 2015",
+          "protocol-version": "28"
+        },
+        "refetch": "aws s3 cp --no-sign-request s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18/FFBC9DFF--4416000-4479999/FFBC4A92--4437357.xdr.zst .",
+        "perishable": true,
+        "regenerated": false
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed",
+        "op_index": 0,
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/signers/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "0984e28878f8b074c3710f52630f5b6bc5a369bf61a15e7364b6123edf1881b6",
+        "tx_hash": "d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed",
+        "tx_hashes": [
+          "d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed",
+          "cdee5a65246884ee27a29851e31a25344831c85249aa9926701f31638eff66c0",
+          "3189bcf9069271f08202585b71b64c041fe196c8041f2eeb1881e1463a5a3d2b",
+          "cf901e9339e07d2d783210c288516f51a86f09dbbc51f5778521ad67392c49cc",
+          "c628a2b6148bd726ee32c5e191c4cd54dabe64d9c1d93bc399bbf7f7024042a6",
+          "92fffbbd9d8d085aebdaa2a6bb1423b78344a427e27981c14b651ef493b854a2",
+          "98ae9b462b1824bcd0dcbae73b019122817eed1f6380d407a3c5ea77e66a02e5",
+          "a4d9ed7162ee3f7d0a1ed784d0d4adbf8efadd5aea2235fd38ebd1b218e547ca",
+          "64afbe49539c600a570fc71bc89342d18c92c9606ba70eb61434afea8556d6e3",
+          "3b009059e2edc0fc120053de38c319cf3258d27cc0cd96ade029e72163a433a0",
+          "0dee433cd134a286461b6c8786569c163f80549d51a03528a73f0f7e72fd0880",
+          "80584b602c3d79c3b7974f503570d2823fde26911aedee92f332683dfa55c8a7"
+        ],
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "set_options"
+        }
+      },
+      "notes": "Real testnet ledger with 12 transactions; this entry's pattern is transaction 0. Testnet resets on 2026-12-16, after which the public source is gone and the vendored bytes are the only copy."
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 12,
+      "operations": 12,
+      "events": 27,
+      "entry_changes": 108
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "set_options.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 1,
+        "hash": "cdee5a65246884ee27a29851e31a25344831c85249aa9926701f31638eff66c0",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 2,
+        "hash": "3189bcf9069271f08202585b71b64c041fe196c8041f2eeb1881e1463a5a3d2b",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 3,
+        "hash": "cf901e9339e07d2d783210c288516f51a86f09dbbc51f5778521ad67392c49cc",
+        "successful": false,
+        "result_code": "tx_failed"
+      },
+      {
+        "index": 4,
+        "hash": "c628a2b6148bd726ee32c5e191c4cd54dabe64d9c1d93bc399bbf7f7024042a6",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 5,
+        "hash": "92fffbbd9d8d085aebdaa2a6bb1423b78344a427e27981c14b651ef493b854a2",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 6,
+        "hash": "98ae9b462b1824bcd0dcbae73b019122817eed1f6380d407a3c5ea77e66a02e5",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 7,
+        "hash": "a4d9ed7162ee3f7d0a1ed784d0d4adbf8efadd5aea2235fd38ebd1b218e547ca",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 8,
+        "hash": "64afbe49539c600a570fc71bc89342d18c92c9606ba70eb61434afea8556d6e3",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 9,
+        "hash": "3b009059e2edc0fc120053de38c319cf3258d27cc0cd96ade029e72163a433a0",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 10,
+        "hash": "0dee433cd134a286461b6c8786569c163f80549d51a03528a73f0f7e72fd0880",
+        "successful": true,
+        "result_code": "tx_success"
+      },
+      {
+        "index": 11,
+        "hash": "80584b602c3d79c3b7974f503570d2823fde26911aedee92f332683dfa55c8a7",
+        "successful": true,
+        "result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/signers/0/key",
+        "equals": "PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS",
+        "note": "The signer in the updated account entry, rendered as a P strkey."
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/signers/0/weight",
+        "equals": 1
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/num_sub_entries",
+        "equals": 1
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/ext/v1/ext/v2/signer_sponsoring_i_ds",
+        "equals": [
+          null
+        ],
+        "note": "One unsponsored signer: the sponsoring-ID list has a null entry."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B",
+          "roles": [
+            "source",
+            "fee_payer",
+            "signer_owner"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "kind": "signer_added",
+        "tx_index": 0,
+        "op_index": 0,
+        "account": {
+          "address": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B"
+        },
+        "signer": {
+          "type": "ed25519_signed_payload",
+          "key": "PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS",
+          "payload_hex": "deadbe",
+          "weight": 1
+        },
+        "detail": {
+          "signer_ed25519_key": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B",
+          "payload_bytes": 3,
+          "signer_key_xdr_hex": "0000000344ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b2000000003deadbe00"
+        }
+      }
+    ],
+    "state_changes_exact": true,
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B"
+        }
+      }
+    ],
+    "movements_exact": true,
+    "addresses": [
+      {
+        "strkey": "PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS",
+        "type": "signed_payload",
+        "xdr_bytes": 44,
+        "chars": 69
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "6e5a59101158dc2996295450190142366062cd05..2a0a84ea12523b6c92e278c0c84b443041240095",
+        "level": "replay",
+        "outcome": "halt",
+        "detail": "Executed at 2a0a84ea: five persist attempts over about 15.4 s, then exit code 2; ingest cursor stays at 4437356; no rows written for the ledger; a restart fails the same way. The lower bound of the range (the commit that introduced the strict encoder) is from source reading.",
+        "reference": "https://github.com/stellar/wallet-backend/pull/729",
+        "finding": "F-0012",
+        "fixed_in": "2c873353c1f0f3c9b145e25a7d009023ad104a1c",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "reproduction in evidence/wallet-backend-replay/; evidence/wallet-backend-replay/transcript-prefix-datastore.txt, transcript-fixed-datastore.txt (and the -rpc pair)",
+        "qualifier": "halt"
+      },
+      {
+        "target": "stellar/wallet-backend",
+        "versions": "..79ea2acd1dc65a07166133cc04b12e76db314db0",
+        "level": "replay",
+        "outcome": "wrong_value",
+        "detail": "Executed at 79ea2acd: ingestion completes with no error and stores the signer as 33 bytes, dropping the payload; the stored value does not round-trip to the P strkey. The fixed commits store 41 bytes.",
+        "reference": "https://github.com/stellar/wallet-backend/issues/716",
+        "finding": "F-0013",
+        "fixed_in": "bb0b162b072583c7dabffbdee664d1c117e5ba56",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "reproduction in evidence/wallet-backend-replay/; evidence/wallet-backend-replay/transcript-716-prefix-datastore.txt, transcript-716-fixed-datastore.txt (and the -rpc pair)",
+        "qualifier": "wrong_value"
+      }
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "related": [
+    "https://github.com/stellar/wallet-backend/pull/729",
+    "https://github.com/stellar/wallet-backend/issues/716",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md"
+  ],
+  "notes": "Sample entry. The signer's ed25519 key equals the account's own key; the payload is the three bytes de ad be."
+}

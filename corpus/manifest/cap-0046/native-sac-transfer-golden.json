@@ -1,0 +1,233 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/native-sac-transfer-golden",
+  "title": "Native Stellar Asset Contract transfer from an account to a contract address",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "sac-transfer",
+    "native-sac",
+    "transfer-to-contract",
+    "sac-balance-entry-created"
+  ],
+  "why": "The native SAC moves lumens from a G account to a C contract: the account entry's balance drops and a Balance contract-data entry is created in the SAC's storage for the contract. Readers that look for a trustline or account change on the receiving side miss the credit.",
+  "fields": {
+    "validated": [
+      "VF-41"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 10,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "4843137eddf0da0e3f14d3d925d26ff8b61daf7d793fe7bcb3cb5a6449294efe",
+        "bytes": 5524,
+        "path": "blobs/48/4843137eddf0da0e3f14d3d925d26ff8b61daf7d793fe7bcb3cb5a6449294efe.xdr"
+      },
+      "decoded": "decoded/48/4843137eddf0da0e3f14d3d925d26ff8b61daf7d793fe7bcb3cb5a6449294efe.json.zst",
+      "decoded_sha256": "e0a8161420ad1044c690fd8f4313e7c88017e2d2686a69835d32df5fad5c1b1b",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/692fdd0e57531ce4.xdr",
+        "file_sha256": "fa160c143bf9e60307ab1d2d184068def65b14e9f5e85baad7709e8dcb3027a2",
+        "frame_index": 8,
+        "test_name": "Native stellar asset contract",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "4a13ab625af298360319c1eda34ffdb8b0edb7a2f4d162d0ed3ed95e5fccc6cb",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Native stellar asset contract",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:396 (TEST_CASE); src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "bbbd5296bfb4f68243a935ba844cff4a08fa7460d6a8529ba66d4edb4f21c84e",
+        "tx_hashes": [
+          "4a13ab625af298360319c1eda34ffdb8b0edb7a2f4d162d0ed3ed95e5fccc6cb"
+        ],
+        "tx_hash": "4a13ab625af298360319c1eda34ffdb8b0edb7a2f4d162d0ed3ed95e5fccc6cb",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 12
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "4a13ab625af298360319c1eda34ffdb8b0edb7a2f4d162d0ed3ed95e5fccc6cb",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "233198"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/contract_address",
+        "equals": "CC5KHEYQLX3VS2JQD3M45AXMZH7DRVAGH6L2YCSB2B5HWUC5R2OUHQDP",
+        "note": "The native SAC under the core-test passphrase."
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/3",
+        "equals": {
+          "string": "native"
+        }
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/key",
+        "equals": {
+          "vec": [
+            {
+              "symbol": "Balance"
+            },
+            {
+              "address": "CDGIGIOWG5OESTIEH7OQEYHSDPAOYUO2ZSPWVO37SCONZUYEDN4L7FVM"
+            }
+          ]
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CC5KHEYQLX3VS2JQD3M45AXMZH7DRVAGH6L2YCSB2B5HWUC5R2OUHQDP",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "state_changes": [
+      {
+        "tx_index": 0,
+        "kind": "balance_changed",
+        "op_index": 0,
+        "account": {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF"
+        },
+        "asset": "native",
+        "cause": "contract-call",
+        "detail": {
+          "delta": "-10",
+          "balance_after": "1197999890"
+        }
+      },
+      {
+        "tx_index": 0,
+        "kind": "contract_data_changed",
+        "op_index": 0,
+        "account": {
+          "address": "CC5KHEYQLX3VS2JQD3M45AXMZH7DRVAGH6L2YCSB2B5HWUC5R2OUHQDP"
+        },
+        "cause": "contract-call",
+        "detail": {
+          "contract": "CC5KHEYQLX3VS2JQD3M45AXMZH7DRVAGH6L2YCSB2B5HWUC5R2OUHQDP",
+          "durability": "persistent",
+          "change": "created"
+        }
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "1766902",
+        "to": {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF"
+        }
+      },
+      {
+        "kind": "transfer",
+        "tx_index": 0,
+        "op_index": 0,
+        "asset": "native",
+        "amount": "10",
+        "from": {
+          "address": "GDYNRPVBGCK7JG7763OCCS7ZX3GRGZNOKSD67HMEZONGDC2CIL4QXWNF"
+        },
+        "to": {
+          "address": "CDGIGIOWG5OESTIEH7OQEYHSDPAOYUO2ZSPWVO37SCONZUYEDN4L7FVM"
+        },
+        "routing": {
+          "type": "absent"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 8 of 'Native stellar asset contract'. The same golden file's frame 17 is cap-0073/native-sac-transfer-creates-account."
+}

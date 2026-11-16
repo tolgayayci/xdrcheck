@@ -1,0 +1,109 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0038/api-liquidity-pool-issuer-ordering.network-order",
+  "title": "Pool ID of the testnet USD pair given in XDR byte order (issuer keys e305\u2026 < f7a4\u2026)",
+  "kind": "api",
+  "caps": [
+    38
+  ],
+  "protocol": {
+    "introduced": 18
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "pool-asset-order",
+    "issuer-byte-order-differs-from-strkey"
+  ],
+  "why": "stellar-core accepts a constant-product pool only with assetA < assetB in XDR byte order (type, code bytes, then the issuer's raw key); readers that order issuers by their strkey text refuse this valid pair, because the two orders disagree here.",
+  "api": {
+    "op": "liquidity_pool.id",
+    "input": {
+      "asset_a": "USD:GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL",
+      "asset_b": "USD:GD32JQHFWLIROCNQ564GLCB2M7T4GMQAP5UKHMVT64OQISWL2LHYK2HO"
+    },
+    "expect_value": "c2a730127d006897b021d6fcb279da68b4f65f9b6a408c74eb2cdd85ea862d5e"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 17.2.0",
+        "level": "L4",
+        "outcome": "reject",
+        "detail": "Executed on 16.3.0 and 17.2.0: getLiquidityPoolId throws 'Assets are not in lexicographic order' for a pair that is in XDR byte order (issuers compared as strkey text); 16.3.1 and 17.2.1 return the ID.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "finding": "F-0016",
+        "fixed_in": "17.2.1 (16.3.1 on the 16.x line)",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 1a (evidence/sdk-matrix), executed on js 16.3.0 and js 17.2.0; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.network-order'",
+        "match": {
+          "reason": "ordering"
+        }
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": "0.7.1",
+        "level": "L4",
+        "outcome": "reject",
+        "detail": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId fails with 'AssetA must be <= AssetB'; v0.7.2 returns the ID.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5974",
+        "finding": "F-0023",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 1a (evidence/sdk-matrix), executed on go v0.7.1; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.network-order'",
+        "match": {
+          "reason": "ordering"
+        }
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0",
+        "level": "L4",
+        "outcome": "reject",
+        "detail": "Executed on 17.0.0: LiquidityPoolAsset refuses the pair with 'Assets are not in lexicographic order'; 17.0.1 returns the ID.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1246",
+        "finding": "F-0027",
+        "fixed_in": "17.0.1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 1a (evidence/sdk-matrix), executed on python 17.0.0; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.network-order'",
+        "match": {
+          "reason": "ordering"
+        }
+      },
+      {
+        "target": "network.lightsail:stellar-sdk (Maven)",
+        "versions": "6.0.0",
+        "level": "L4",
+        "outcome": "reject",
+        "detail": "Executed on 6.0.0: LiquidityPool refuses the pair with 'Assets are not in lexicographic order'. The fix is merged on the default branch (95bca0b5) and not released.",
+        "reference": "https://github.com/lightsail-network/java-stellar-sdk/pull/832",
+        "finding": "F-0028",
+        "fixed_in": "95bca0b5 (default branch, unreleased)",
+        "status": "fixed_unreleased",
+        "observed": "executed",
+        "evidence": "probe vector 1a (evidence/sdk-matrix), executed on java 6.0.0; xcc conform run --columns 'js@*,go@*,python@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.network-order'",
+        "match": {
+          "reason": "ordering"
+        }
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md",
+    "https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/util/types.cpp#L143",
+    "https://github.com/stellar/js-stellar-sdk/pull/1766",
+    "https://github.com/stellar/go-stellar-sdk/pull/5974",
+    "https://github.com/StellarCN/py-stellar-base/issues/1246",
+    "https://github.com/lightsail-network/java-stellar-sdk/pull/832"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0038/api-liquidity-pool-issuer-ordering.network-order.json. Origin: probe vector 1a, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). The expected ID is sha256 of LiquidityPoolParameters{constant product, USD:GDRQL6EF\u2026, USD:GD32JQHF\u2026, fee 30}, computed from the XDR definitions (CAP-0038); it is the pool of the change-trust that stellar-core accepted in testnet ledger 5521432 (entry cap-0038/pool-issuers-order-by-bytes-not-strkey, derived.l1.pool_id). Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

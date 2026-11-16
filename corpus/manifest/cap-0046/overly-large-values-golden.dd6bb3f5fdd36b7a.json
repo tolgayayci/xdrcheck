@@ -1,0 +1,186 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/overly-large-values-golden.dd6bb3f5fdd36b7a",
+  "title": "Invocation whose return value is a 30-by-30 nested value",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "large-return-value",
+    "nested-scval"
+  ],
+  "why": "A successful call returns a vector of 30 vectors of 30 values; the return value sits in the transaction's Soroban meta. Readers that store return values as short scalars, or cap their size, truncate or drop it.",
+  "fields": {
+    "validated": [
+      "VF-46a"
+    ],
+    "passed_through": [
+      "VF-46b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 9,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "bfffa781b8836a05d436c232a029c56bf4ba9461cd04ed6aa4ff01a15b03d883",
+        "bytes": 23304,
+        "path": "blobs/bf/bfffa781b8836a05d436c232a029c56bf4ba9461cd04ed6aa4ff01a15b03d883.xdr"
+      },
+      "decoded": "decoded/bf/bfffa781b8836a05d436c232a029c56bf4ba9461cd04ed6aa4ff01a15b03d883.json.zst",
+      "decoded_sha256": "e618b63d7dcc4e08f1dcbb26977c6dc41febf03770bb1d0cbdf0f3bb3559fdcc",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/dd6bb3f5fdd36b7a.xdr",
+        "file_sha256": "c4e0cdbf2787e18e0c38d94fa90e3aa9529ff4d8819c34fe5611056b7d6fd704",
+        "frame_index": 7,
+        "test_name": "overly large soroban values are handled gracefully|return value",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "882e3f5988a4df7945c1b181d540c838d143f3293b38d905ea7b5e91a5701ebe",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "overly large soroban values are handled gracefully|return value",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:6225 (TEST_CASE); flag lines 6228; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "d574852ffd370c5d4bbfd4e258e3dc2d7613361a99b2752247790ffae7e0e61f",
+        "tx_hashes": [
+          "882e3f5988a4df7945c1b181d540c838d143f3293b38d905ea7b5e91a5701ebe"
+        ],
+        "tx_hash": "882e3f5988a4df7945c1b181d540c838d143f3293b38d905ea7b5e91a5701ebe",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "882e3f5988a4df7945c1b181d540c838d143f3293b38d905ea7b5e91a5701ebe",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1612438"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "return_value"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args",
+        "equals": [
+          {
+            "u32": 30
+          },
+          {
+            "u32": 2
+          }
+        ]
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value/vec/29/vec/29",
+        "equals": {
+          "u32": 123
+        },
+        "note": "The last of 30 x 30 leaves of the return value."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "201000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "199387662",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 7 of the golden: the successful case of the 'return value' section. Frame 10 (trapped at the host depth limit) is 2,626,676 bytes of diagnostic events and renders to an 80 MB uncompressed sidecar, so it is not imported until sidecars are stored compressed."
+}

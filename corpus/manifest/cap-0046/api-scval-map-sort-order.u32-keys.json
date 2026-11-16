@@ -1,0 +1,89 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/api-scval-map-sort-order.u32-keys",
+  "title": "Native map with u32 keys {10, 9} converts to an SCMap with keys in host order 9, 10",
+  "kind": "api",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "scmap-key-order",
+    "native-to-scval"
+  ],
+  "why": "The Soroban host accepts an SCMap only with its keys in ascending host order (discriminant first, then the value: numbers by value, bytes, strings and symbols as byte strings); a map built in another order is refused when it reaches a contract or the host.",
+  "api": {
+    "op": "scval.from_native",
+    "input": {
+      "value": {
+        "10": {
+          "native": "number",
+          "value": "1"
+        },
+        "9": {
+          "native": "number",
+          "value": "2"
+        }
+      },
+      "type": {
+        "10": [
+          "u32",
+          "u32"
+        ],
+        "9": [
+          "u32",
+          "u32"
+        ]
+      }
+    },
+    "expect_value": [
+      "u32:9",
+      "u32:10"
+    ],
+    "expect_xdr_hex": "00000011000000010000000200000003000000090000000300000002000000030000000a0000000300000001"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0",
+        "level": "L4",
+        "outcome": "wrong_value",
+        "detail": "Executed on 17.2.0: nativeToScVal orders the keys 10, 9, not in host order; 17.2.1 sorts them as the host does.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "finding": "F-0016",
+        "fixed_in": "17.2.1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 5a (evidence/sdk-matrix), executed on js 17.2.0; xcc conform run --columns 'js@*' --entries 'cap-0046/api-scval-map-sort-order.u32-keys'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "wrong_value",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: nativeToScVal orders the keys 10, 9. The map-ordering half of the 17.2.1 fix is not on the 16.x line (the 16.3.1 backport covers asset order only).",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "finding": "F-0016",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 5a (evidence/sdk-matrix), executed on js 16.3.0 and js 16.3.1 and js 16.4.1; xcc conform run --columns 'js@*' --entries 'cap-0046/api-scval-map-sort-order.u32-keys'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/rs-soroban-env/blob/0c99950e96128beba3319aa96b116646ce974e69/soroban-env-host/src/host/comparison.rs",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-contract.x",
+    "https://github.com/stellar/js-stellar-sdk/pull/1766"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0046/api-scval-map-sort-order.u32-keys.json. Origin: probe vector 5a, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). Keys are u32 values: 9 < 10 by value, although \"10\" < \"9\" as text. The expected XDR is SCV_MAP with entries (9 \u2192 u32 2), (10 \u2192 u32 1). Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

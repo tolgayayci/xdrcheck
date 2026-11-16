@@ -1,0 +1,190 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/auth-unused-entries-golden",
+  "title": "Authorized call carrying a second, unused authorization entry for the same address",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "soroban-authorization",
+    "unused-auth-entry",
+    "wide-tree"
+  ],
+  "why": "The transaction carries two address credentials for the same account; the host consumes only the first, whose nonce is created. The second entry is decoded but never authenticated. Readers that treat every authorization entry as an authenticated signer overstate who authorized what.",
+  "fields": {
+    "passed_through": [
+      "VF-48b",
+      "VF-49b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 19,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "9e3991adce62a36ea875d4d5ddafa4e79814fc396e2fd83e53105be8930b26e4",
+        "bytes": 8124,
+        "path": "blobs/9e/9e3991adce62a36ea875d4d5ddafa4e79814fc396e2fd83e53105be8930b26e4.xdr"
+      },
+      "decoded": "decoded/9e/9e3991adce62a36ea875d4d5ddafa4e79814fc396e2fd83e53105be8930b26e4.json.zst",
+      "decoded_sha256": "21e2205de6a34785741c46fe2abe9a3d13b0224fbe4e2cee6ecc92758e2906e9",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/08892c12cfbd6c32.xdr",
+        "file_sha256": "8365a7b45f691608b98d1bfb2feb171fa8cc8617cd0930eb168697c898296437",
+        "frame_index": 17,
+        "test_name": "Soroban authorization|default classic account|wide tree|unused auth entries|success with arbitrary valid function",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "32f686998d14bd3e19edf6017476f0feaf85166307b35f1019a9426e9441b144",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Soroban authorization|default classic account|wide tree|unused auth entries|success with arbitrary valid function",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:7004 (TEST_CASE); flag lines 7007; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "654bd17eb46918b49d9073ec7fb4f7951a0a9d6179d3814cc780f9a13f3975dc",
+        "tx_hashes": [
+          "32f686998d14bd3e19edf6017476f0feaf85166307b35f1019a9426e9441b144"
+        ],
+        "tx_hash": "32f686998d14bd3e19edf6017476f0feaf85166307b35f1019a9426e9441b144",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "32f686998d14bd3e19edf6017476f0feaf85166307b35f1019a9426e9441b144",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1640410"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "tree_fn"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials/address_v2/nonce",
+        "equals": "1590172575761748177"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/1/credentials/address_v2/nonce",
+        "equals": "7888352770842994855"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/key",
+        "equals": {
+          "ledger_key_nonce": {
+            "nonce": "1590172575761748177"
+          }
+        },
+        "note": "Only the first entry's nonce is consumed."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "GCE4HENKZ3ZIHQY4VEYCVX5ZE5LNDIN3FH4MHZCWFKXQZGQIOGAO77CN",
+          "roles": [
+            "authorizer"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "359690",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 17 of the golden. The second entry's nonce 7888352770842994855 is never created in this ledger."
+}

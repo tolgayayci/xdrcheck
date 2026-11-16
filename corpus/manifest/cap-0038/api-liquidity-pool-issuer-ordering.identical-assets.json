@@ -1,0 +1,62 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0038/api-liquidity-pool-issuer-ordering.identical-assets",
+  "title": "Pool ID of a pool whose two assets are the same must be refused",
+  "kind": "api",
+  "caps": [
+    38
+  ],
+  "protocol": {
+    "introduced": 18
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "ordering"
+  ],
+  "shapes": [
+    "pool-asset-order",
+    "identical-pool-assets",
+    "invalid-input"
+  ],
+  "why": "stellar-core's check is a strict assetA < assetB, so a pool of an asset with itself is invalid; a builder that tests <= accepts it and returns the ID of a pool that cannot exist.",
+  "api": {
+    "op": "liquidity_pool.id",
+    "input": {
+      "asset_a": "USD:GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL",
+      "asset_b": "USD:GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL"
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": "0.7.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId checks AssetA <= AssetB and returns an ID for a pool of an asset with itself; v0.7.2 requires AssetA < AssetB.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5974",
+        "finding": "F-0023",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 1f (evidence/sdk-matrix), executed on go v0.7.1; xcc conform run --columns 'go@*' --entries 'cap-0038/api-liquidity-pool-issuer-ordering.identical-assets'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md",
+    "https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/util/types.cpp#L143",
+    "https://github.com/stellar/js-stellar-sdk/pull/1766",
+    "https://github.com/stellar/go-stellar-sdk/pull/5974",
+    "https://github.com/StellarCN/py-stellar-base/issues/1246",
+    "https://github.com/lightsail-network/java-stellar-sdk/pull/832"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/cap-0038/api-liquidity-pool-issuer-ordering.identical-assets.json. Origin: probe vector 1f, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). Both assets USD:GDRQL6EF\u2026; stellar-core requires assetA < assetB (strict). Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0042/classic-component-base-fee-absent",
+  "title": "LedgerCloseMeta whose classic transaction-set component holds two transactions and no base fee",
+  "kind": "xdr",
+  "caps": [
+    42
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "generalized-tx-set",
+    "tx-set-component-base-fee-absent",
+    "base-fee-none-non-empty",
+    "synthetic-ledger"
+  ],
+  "why": "TxSetComponentTxsMaybeDiscountedFee.baseFee is optional, and a component without it is consensus-valid: each transaction then pays its own bid. stellar-core's builder always writes one, so no ledger holds the absent state on a non-empty component; readers that unwrap the optional, or derive charged fees from the component instead of the results, are untested against it.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "01e7e9570826f8d53019d14bed009555c1bf705756baaf883dea8487e531cbb9",
+        "bytes": 5964,
+        "path": "blobs/01/01e7e9570826f8d53019d14bed009555c1bf705756baaf883dea8487e531cbb9.xdr"
+      },
+      "decoded": "decoded/01/01e7e9570826f8d53019d14bed009555c1bf705756baaf883dea8487e531cbb9.json.zst",
+      "decoded_sha256": "53b3538dc97eba02e20e9b79ad99014c860044357da1524d32bcc50d07a05c3d",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/cap-0042/classic-component-base-fee-absent.json",
+        "reason": "stellar-core's transaction-set builder always writes a base fee into a non-empty component (sequentialPhaseToXdr and parallelPhaseToXdr in src/herder/TxSetFrame.cpp take every lane's base fee from the surge-pricing computation, an int64), while its validation accepts a component without one and then charges each transaction its own bid (TxSetFrame.cpp, the inclusion-fee map built from an absent baseFee). So only a validator running a modified builder can put this into a consensus ledger; a standalone node cannot. The base ledger's transactions each bid exactly the base fee, so the fees core charged equal what a ledger without the base fee charges. The edit recomputes scpValue.txSetHash and the header hash; the scpValue signature still signs the old set hash, which no reader checks",
+        "base_entry": "ledger/inclusion-bids-equal-base-fee"
+      }
+    }
+  ],
+  "expect": {
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/base_fee",
+        "equals": null,
+        "note": "The optional base fee is absent on a component that holds transactions."
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/1/tx/tx/fee",
+        "equals": 100,
+        "note": "P's one-operation bid (the component lists its transactions by hash, so Q's two-operation transaction, bid 200, comes first); P applies first and is charged it."
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/fee_charged",
+        "equals": "100",
+        "note": "Charged its bid, as stellar-core charges a transaction of a component without a base fee."
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/base_fee",
+        "equals": "100",
+        "note": "The Soroban phase keeps its base fee."
+      },
+      {
+        "path": "/v2/ledger_header/header/scp_value/tx_set_hash",
+        "equals": "7f43c84033e00a62d3ae6c33b9790c6ca44eb413eafda64dc5e9d3904ab88daf",
+        "note": "sha256 of the edited GeneralizedTransactionSet."
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L2"
+    ]
+  },
+  "reference": "network",
+  "notes": "Built by xdrcheck-corpus synth from the recipe: an edit of ledger/inclusion-bids-equal-base-fee (testnet, Protocol 30) that leaves the base fee out, with scpValue.txSetHash and the header hash recomputed (a control re-encode of the base is byte-identical). The fee meta is the base ledger's: every transaction there bid exactly the base fee, so what stellar-core charged equals what it charges when the base fee is absent. The scpValue signature still signs the old set hash. Real readers were run on similar mutants of pubnet and testnet ledgers (Go SDK views and ingest, stellar-etl, Horizon, RPC, wallet-backend) and none failed; the entry is a regression guard."
+}

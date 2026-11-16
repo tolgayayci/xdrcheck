@@ -1,0 +1,742 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins",
+  "title": "Pool-share ChangeTrust whose assets are in raw-key order, the reverse of their strkey order, on both passphrases",
+  "kind": "ledger",
+  "caps": [
+    38
+  ],
+  "protocol": {
+    "introduced": 18
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "liquidity-pool-share-trustline",
+    "issuers-sort-differently-by-strkey-and-bytes",
+    "pool-created"
+  ],
+  "why": "stellar-core orders a pool's two assets by their XDR bytes, so of two same-code assets the one whose issuer key is lower comes first even when its strkey sorts later. SDKs that validate the order by comparing strkeys reject a valid operation, and with it the transaction or the whole ledger.",
+  "fields": {
+    "validated": [
+      "VF-32"
+    ]
+  },
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 36,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "b0eb85144e260639983750029d514628e4348a8c52fabb604665c3880644d9b2",
+        "bytes": 2820,
+        "path": "blobs/b0/b0eb85144e260639983750029d514628e4348a8c52fabb604665c3880644d9b2.xdr"
+      },
+      "decoded": "decoded/b0/b0eb85144e260639983750029d514628e4348a8c52fabb604665c3880644d9b2.json.zst",
+      "decoded_sha256": "f1a63a06aff5027187090b8cb58cd39b7361460b130f37ec9f99a2f030ee3923",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s04-liquidity-pools.yaml",
+        "scenario_sha256": "daacd71e8d0e75b38597f12d505ce004f69bb461ffe65bfc0ebe747d191bc006",
+        "step": "pool-issuers-in-key-order",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1734000000",
+        "stream_sha256": "5a342bcaa78107a38b868ca6768c8fe2b99b31165d33f6e64f4dde12cfc8a38f",
+        "frame_index": 34,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s04-liquidity-pools.yaml --network testnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "097f9385fb10e5f1fb955af47385adfe2801fa47ca5073adcf259dfdbd5586c5",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "11bf15b3dc065593a3847183b0dbd9922b334428a532b0dfcc1a3e9d10de8642",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "10603380",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "097f9385fb10e5f1fb955af47385adfe2801fa47ca5073adcf259dfdbd5586c5",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "097f9385fb10e5f1fb955af47385adfe2801fa47ca5073adcf259dfdbd5586c5"
+        ],
+        "contracts": {
+          "sac_oa": "CB5MCQ6RDTJUQOXECPUHSQCNPWT7OVA7SSNS76AMWDEYWS2B34VGL4CN",
+          "sac_ob": "CCWY5KW5JIUJIVF3WSYUBKXUWE5TO63LRL6IPKZM5M35VPQLBRRAUJ6T",
+          "sac_oc": "CCCJ6MYKNQPAHUYCQKZ5TGXFDHCY3QAQIJ5NFDUPL7KLTAH2R53HAUWU",
+          "sac_r": "CDUUZRGAHUJSDCXCMJMKCE7KMRHGLRSW7UMUOWX2PLU4MLXHNDLCMMRF",
+          "sac_usd3": "CC4XVKJ2AVDXDJ34COFHXW6QF7LBK5QFCCHMQ5REP3OHNMHCP6A2C2YZ",
+          "sac_usd9": "CDHPS3CH547R3DOMNMVAI4BHZJWWPLCPH4VZK3IKHGXAVGFLW5J7HWKF",
+          "sac_x": "CD6YH5HMWU2QOUD6SX3KU5A3AUJDNSODN3M2MIOHAM5ZMEKJQFFHCXN3",
+          "sac_y": "CBQM3VVNLISIDT7EH532PULNMPPHMLWW7EJ6VV5BCXBPYVK7KYRX2QIU"
+        },
+        "accounts": {
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "H": "GAJVVXML7JD5XMRIHUINYWIH4SMD5W3WEJ2DLW3IU6LA3N6ZSNZBULV7",
+          "H3": "GAIXNEYG55CKB62VF4PQSA5L5KU2BE2FDGE62ZHMD5RUCCXOJOGLNAHC",
+          "H4": "GBCALRQ2OWA7GMATFVW6S4GKGPDDNB5LF46HU6KRJ6W64J57LI5WKMYW",
+          "I1": "GCWZUH7YIZTBZCRKQYSNESWHOVLB7LL5AK5H5ZVZE5DI4AF666BTJXNN",
+          "I2": "GDD2SP4CEJPC23SZD6K724T4VFOZE3SW5U2PFIUIZN6DY6ORMDG6OFMJ",
+          "I3": "GAGAY3VK26VYQX4JRVM2ZAS2MLRYEG3OVUU6VX6BCQIW7VXALW6EQBVQ",
+          "I5": "GB5XYCPU35GJC3YB5MGWI327C4I7J53Z24TCF2JQ7G4RVPPLGEBFFIVO",
+          "LPP": "GC722MXFGZ264LYYZCJGW3IWUYWBRWPNZBWNU3MYWSPBFUX6G2GGWM2D",
+          "MM1": "GDVY6GEQGKUXE2ELCQBVHPALVEJ3CP3OVL6JC4X54YGU24TJMC2DQIOU",
+          "MM2": "GCKE5BCVIY4AC5B2BUFVSLUJGXEJK2AD65IVIBPBAONKOLX64SVZM5HA",
+          "PI3": "GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ",
+          "PI9": "GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5",
+          "PT": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO",
+          "S": "GB3PGRSTW2YJEDWXCYERMJP3OUT43OYOZYFTKDRGMD6QA47AH3ZVNFQH",
+          "SD": "GA6SQVRFMQNZRTTDINE4V7H6LBFTTIAR4KPVCL27UPCFGUKGW5OTCFT4"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 30,
+      "ledger_seq": 36,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "ad665e40bd22ec20701ed5213480bd357c9ed80f1253ec4bfcb993603fad2cce",
+        "bytes": 2820,
+        "path": "blobs/ad/ad665e40bd22ec20701ed5213480bd357c9ed80f1253ec4bfcb993603fad2cce.xdr"
+      },
+      "decoded": "decoded/ad/ad665e40bd22ec20701ed5213480bd357c9ed80f1253ec4bfcb993603fad2cce.json.zst",
+      "decoded_sha256": "8171fe3428ffc94270848f35a6ede43f4c74930aacbee50d268488de511382b1",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s04-liquidity-pools.yaml",
+        "scenario_sha256": "daacd71e8d0e75b38597f12d505ce004f69bb461ffe65bfc0ebe747d191bc006",
+        "step": "pool-issuers-in-key-order",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1734000000",
+        "stream_sha256": "85a412bd38f8402f878ec6306707dd7dca3d28c5792ca1dc59faafd46314c215",
+        "frame_index": 34,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p30-testnet.xdr",
+            "sha256": "89133c343b878e1921c795886b7f4cd01b2fe1212c96f8dfe301ee4e599847c8",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p30/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s04-liquidity-pools.yaml --network pubnet --protocol 30",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "7193d9653e0f3010db124955e2077e1a42e6a61cbadc534f388828891981e2d3",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "9e61aa870d9c16494f0bb3891a0b7a54f5f7e5be5f7eb14401014df0443221e9",
+        "header": {
+          "ledger_version": "30",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "10603380",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "7193d9653e0f3010db124955e2077e1a42e6a61cbadc534f388828891981e2d3",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "7193d9653e0f3010db124955e2077e1a42e6a61cbadc534f388828891981e2d3"
+        ],
+        "contracts": {
+          "sac_oa": "CA4AU6VGNIF3VLYWTVHOSTOKIPBYSEDC6C47SDF5WAVVT6XRTLTPD4YO",
+          "sac_ob": "CAMZJF36M453DYBLVUMSIEFOP4ZSLSRVUHTENSIVRTGBSCC2TG4WVGVE",
+          "sac_oc": "CAAYSZYI4TV7ALAL4Q2PARETQ2OOVT4LVM7WKPGHQSUNEOUWGA4Q37I2",
+          "sac_r": "CC54MPA6Y4RUCFL6LDFYQQKTVOPPACZVANESFM7YBR4VDDWUBR2SEAO5",
+          "sac_usd3": "CDPJJGJQ5KCNFKDXUYIEGQR2ZWUEQU4TDNG4NBGUGFBTQZL6QKOMNPOW",
+          "sac_usd9": "CCP4STQ6LVRZ62IKPWU5CEOSITGGPI7UN37XLZN74NTFNO7L5ERU4DS4",
+          "sac_x": "CAIRWBU6MMEVVSFGCUCZGEYNLYKTOGKRAGBOLLNV3BAF7OGXF5DTAY6N",
+          "sac_y": "CDMH2IVBK6EY5KLRCSUBAXKXGVFLVI5TDT2IQ6CVL53JGNMDNEFCFGPG"
+        },
+        "accounts": {
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "H": "GAJVVXML7JD5XMRIHUINYWIH4SMD5W3WEJ2DLW3IU6LA3N6ZSNZBULV7",
+          "H3": "GAIXNEYG55CKB62VF4PQSA5L5KU2BE2FDGE62ZHMD5RUCCXOJOGLNAHC",
+          "H4": "GBCALRQ2OWA7GMATFVW6S4GKGPDDNB5LF46HU6KRJ6W64J57LI5WKMYW",
+          "I1": "GCWZUH7YIZTBZCRKQYSNESWHOVLB7LL5AK5H5ZVZE5DI4AF666BTJXNN",
+          "I2": "GDD2SP4CEJPC23SZD6K724T4VFOZE3SW5U2PFIUIZN6DY6ORMDG6OFMJ",
+          "I3": "GAGAY3VK26VYQX4JRVM2ZAS2MLRYEG3OVUU6VX6BCQIW7VXALW6EQBVQ",
+          "I5": "GB5XYCPU35GJC3YB5MGWI327C4I7J53Z24TCF2JQ7G4RVPPLGEBFFIVO",
+          "LPP": "GC722MXFGZ264LYYZCJGW3IWUYWBRWPNZBWNU3MYWSPBFUX6G2GGWM2D",
+          "MM1": "GDVY6GEQGKUXE2ELCQBVHPALVEJ3CP3OVL6JC4X54YGU24TJMC2DQIOU",
+          "MM2": "GCKE5BCVIY4AC5B2BUFVSLUJGXEJK2AD65IVIBPBAONKOLX64SVZM5HA",
+          "PI3": "GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ",
+          "PI9": "GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5",
+          "PT": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO",
+          "S": "GB3PGRSTW2YJEDWXCYERMJP3OUT43OYOZYFTKDRGMD6QA47AH3ZVNFQH",
+          "SD": "GA6SQVRFMQNZRTTDINE4V7H6LBFTTIAR4KPVCL27UPCFGUKGW5OTCFT4"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 35,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "8f11dc0d0a655f633d70a535bd7b0c357fee00630358ce750f57bd0d698bd650",
+        "bytes": 2812,
+        "path": "blobs/8f/8f11dc0d0a655f633d70a535bd7b0c357fee00630358ce750f57bd0d698bd650.xdr"
+      },
+      "decoded": "decoded/8f/8f11dc0d0a655f633d70a535bd7b0c357fee00630358ce750f57bd0d698bd650.json.zst",
+      "decoded_sha256": "1b0c1752ab563f1341943c07ba473bcd8f1498fbd91795d922c6bded0561f5fe",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s04-liquidity-pools.yaml",
+        "scenario_sha256": "daacd71e8d0e75b38597f12d505ce004f69bb461ffe65bfc0ebe747d191bc006",
+        "step": "pool-issuers-in-key-order",
+        "config_sha256": "07638b9ce9de54903cf6528b67cbc88d28765655929746671bc1813e71ad0e1e",
+        "close_time": "1733000000",
+        "stream_sha256": "939ee75c951c7bb7c08cddbe4978e24bc131ff01ebb21def9cb71a48e0abb3c6",
+        "frame_index": 33,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s04-liquidity-pools.yaml --network testnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "097f9385fb10e5f1fb955af47385adfe2801fa47ca5073adcf259dfdbd5586c5",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "6e41a645d4921cc24277b7db280af018dcc5f1bb3ab2292bec777c31fb8513c1",
+        "header": {
+          "ledger_version": "28",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "10141310",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "097f9385fb10e5f1fb955af47385adfe2801fa47ca5073adcf259dfdbd5586c5",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "097f9385fb10e5f1fb955af47385adfe2801fa47ca5073adcf259dfdbd5586c5"
+        ],
+        "contracts": {
+          "sac_oa": "CB5MCQ6RDTJUQOXECPUHSQCNPWT7OVA7SSNS76AMWDEYWS2B34VGL4CN",
+          "sac_ob": "CCWY5KW5JIUJIVF3WSYUBKXUWE5TO63LRL6IPKZM5M35VPQLBRRAUJ6T",
+          "sac_oc": "CCCJ6MYKNQPAHUYCQKZ5TGXFDHCY3QAQIJ5NFDUPL7KLTAH2R53HAUWU",
+          "sac_r": "CDUUZRGAHUJSDCXCMJMKCE7KMRHGLRSW7UMUOWX2PLU4MLXHNDLCMMRF",
+          "sac_usd3": "CC4XVKJ2AVDXDJ34COFHXW6QF7LBK5QFCCHMQ5REP3OHNMHCP6A2C2YZ",
+          "sac_usd9": "CDHPS3CH547R3DOMNMVAI4BHZJWWPLCPH4VZK3IKHGXAVGFLW5J7HWKF",
+          "sac_x": "CD6YH5HMWU2QOUD6SX3KU5A3AUJDNSODN3M2MIOHAM5ZMEKJQFFHCXN3",
+          "sac_y": "CBQM3VVNLISIDT7EH532PULNMPPHMLWW7EJ6VV5BCXBPYVK7KYRX2QIU"
+        },
+        "accounts": {
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "H": "GAJVVXML7JD5XMRIHUINYWIH4SMD5W3WEJ2DLW3IU6LA3N6ZSNZBULV7",
+          "H3": "GAIXNEYG55CKB62VF4PQSA5L5KU2BE2FDGE62ZHMD5RUCCXOJOGLNAHC",
+          "H4": "GBCALRQ2OWA7GMATFVW6S4GKGPDDNB5LF46HU6KRJ6W64J57LI5WKMYW",
+          "I1": "GCWZUH7YIZTBZCRKQYSNESWHOVLB7LL5AK5H5ZVZE5DI4AF666BTJXNN",
+          "I2": "GDD2SP4CEJPC23SZD6K724T4VFOZE3SW5U2PFIUIZN6DY6ORMDG6OFMJ",
+          "I3": "GAGAY3VK26VYQX4JRVM2ZAS2MLRYEG3OVUU6VX6BCQIW7VXALW6EQBVQ",
+          "I5": "GB5XYCPU35GJC3YB5MGWI327C4I7J53Z24TCF2JQ7G4RVPPLGEBFFIVO",
+          "LPP": "GC722MXFGZ264LYYZCJGW3IWUYWBRWPNZBWNU3MYWSPBFUX6G2GGWM2D",
+          "MM1": "GDVY6GEQGKUXE2ELCQBVHPALVEJ3CP3OVL6JC4X54YGU24TJMC2DQIOU",
+          "MM2": "GCKE5BCVIY4AC5B2BUFVSLUJGXEJK2AD65IVIBPBAONKOLX64SVZM5HA",
+          "PI3": "GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ",
+          "PI9": "GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5",
+          "PT": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO",
+          "S": "GB3PGRSTW2YJEDWXCYERMJP3OUT43OYOZYFTKDRGMD6QA47AH3ZVNFQH",
+          "SD": "GA6SQVRFMQNZRTTDINE4V7H6LBFTTIAR4KPVCL27UPCFGUKGW5OTCFT4"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    },
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 28,
+      "ledger_seq": 35,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "8000e518042112cab79c0e99e890285892ad6da62973a5a77e4863c58ce70047",
+        "bytes": 2812,
+        "path": "blobs/80/8000e518042112cab79c0e99e890285892ad6da62973a5a77e4863c58ce70047.xdr"
+      },
+      "decoded": "decoded/80/8000e518042112cab79c0e99e890285892ad6da62973a5a77e4863c58ce70047.json.zst",
+      "decoded_sha256": "412e76783fdadcb0077f166d4f280e7526a6ef5b813d5687af422b66d96d04de",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "local-core",
+        "core_version": "30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "core_binary_sha256": "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac",
+        "scenario": "scenarios/s04-liquidity-pools.yaml",
+        "scenario_sha256": "daacd71e8d0e75b38597f12d505ce004f69bb461ffe65bfc0ebe747d191bc006",
+        "step": "pool-issuers-in-key-order",
+        "config_sha256": "2a2b6abc416e710c1ba5a37eb4c812176d7dd5514832b3bdeac971a8b947c635",
+        "close_time": "1733000000",
+        "stream_sha256": "65a737c2e017aa66ca5ec9fd52405db6aa92d6d7b37682a6059874c1747110c8",
+        "frame_index": 33,
+        "generated_by": "xdrcheck-corpus gen 0.1.0",
+        "soroban_resources": "not-applicable",
+        "inputs": [
+          {
+            "name": "enable.xdr",
+            "sha256": "7a6eed3eddf0ef2549e8da6ca74543933981a685eee694270d676b895b8fde51",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/settings_enable_upgrades.json, encoded with stellar-xdr 30.0.0"
+          },
+          {
+            "name": "p27-testnet.xdr",
+            "sha256": "4ca965f4c6375520a5e65f09a19b9b8d5cd5bc75222866c93ac6f1c2c895b6f1",
+            "origin": "quickstart 35a3f46e9957b42e4228f6c1b4d9f5e32ef754b8 local/core/etc/config-settings/p27/testnet.json, encoded with stellar-xdr 30.0.0"
+          }
+        ],
+        "regenerate": "xdrcheck-corpus gen scenarios/s04-liquidity-pools.yaml --network pubnet --protocol 28",
+        "reproducibility": "normalised-identical",
+        "core_package": {
+          "url": "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb",
+          "sha256": "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+        }
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "7193d9653e0f3010db124955e2077e1a42e6a61cbadc534f388828891981e2d3",
+        "path": "/v2/tx_processing/0"
+      },
+      "derived": {
+        "ledger_hash": "19134dd853fb28a1baa698dc4afebeeb4cf69ce5bfce8d7933d6c5871e2ba54a",
+        "header": {
+          "ledger_version": "28",
+          "total_coins": "1000000000000000000",
+          "fee_pool": "10141310",
+          "base_fee": "100",
+          "base_reserve": "5000000",
+          "max_tx_set_size": "100"
+        },
+        "tx_hash": "7193d9653e0f3010db124955e2077e1a42e6a61cbadc534f388828891981e2d3",
+        "fee_charged": "100",
+        "tx_hashes": [
+          "7193d9653e0f3010db124955e2077e1a42e6a61cbadc534f388828891981e2d3"
+        ],
+        "contracts": {
+          "sac_oa": "CA4AU6VGNIF3VLYWTVHOSTOKIPBYSEDC6C47SDF5WAVVT6XRTLTPD4YO",
+          "sac_ob": "CAMZJF36M453DYBLVUMSIEFOP4ZSLSRVUHTENSIVRTGBSCC2TG4WVGVE",
+          "sac_oc": "CAAYSZYI4TV7ALAL4Q2PARETQ2OOVT4LVM7WKPGHQSUNEOUWGA4Q37I2",
+          "sac_r": "CC54MPA6Y4RUCFL6LDFYQQKTVOPPACZVANESFM7YBR4VDDWUBR2SEAO5",
+          "sac_usd3": "CDPJJGJQ5KCNFKDXUYIEGQR2ZWUEQU4TDNG4NBGUGFBTQZL6QKOMNPOW",
+          "sac_usd9": "CCP4STQ6LVRZ62IKPWU5CEOSITGGPI7UN37XLZN74NTFNO7L5ERU4DS4",
+          "sac_x": "CAIRWBU6MMEVVSFGCUCZGEYNLYKTOGKRAGBOLLNV3BAF7OGXF5DTAY6N",
+          "sac_y": "CDMH2IVBK6EY5KLRCSUBAXKXGVFLVI5TDT2IQ6CVL53JGNMDNEFCFGPG"
+        },
+        "accounts": {
+          "C": "GCY5DNH2FH4F7CCCIUMJTPIP3DPAOT6OLHN4ZVVV5Z7TJODMZNSBZFXM",
+          "H": "GAJVVXML7JD5XMRIHUINYWIH4SMD5W3WEJ2DLW3IU6LA3N6ZSNZBULV7",
+          "H3": "GAIXNEYG55CKB62VF4PQSA5L5KU2BE2FDGE62ZHMD5RUCCXOJOGLNAHC",
+          "H4": "GBCALRQ2OWA7GMATFVW6S4GKGPDDNB5LF46HU6KRJ6W64J57LI5WKMYW",
+          "I1": "GCWZUH7YIZTBZCRKQYSNESWHOVLB7LL5AK5H5ZVZE5DI4AF666BTJXNN",
+          "I2": "GDD2SP4CEJPC23SZD6K724T4VFOZE3SW5U2PFIUIZN6DY6ORMDG6OFMJ",
+          "I3": "GAGAY3VK26VYQX4JRVM2ZAS2MLRYEG3OVUU6VX6BCQIW7VXALW6EQBVQ",
+          "I5": "GB5XYCPU35GJC3YB5MGWI327C4I7J53Z24TCF2JQ7G4RVPPLGEBFFIVO",
+          "LPP": "GC722MXFGZ264LYYZCJGW3IWUYWBRWPNZBWNU3MYWSPBFUX6G2GGWM2D",
+          "MM1": "GDVY6GEQGKUXE2ELCQBVHPALVEJ3CP3OVL6JC4X54YGU24TJMC2DQIOU",
+          "MM2": "GCKE5BCVIY4AC5B2BUFVSLUJGXEJK2AD65IVIBPBAONKOLX64SVZM5HA",
+          "PI3": "GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ",
+          "PI9": "GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5",
+          "PT": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO",
+          "S": "GB3PGRSTW2YJEDWXCYERMJP3OUT43OYOZYFTKDRGMD6QA47AH3ZVNFQH",
+          "SD": "GA6SQVRFMQNZRTTDINE4V7H6LBFTTIAR4KPVCL27UPCFGUKGW5OTCFT4"
+        },
+        "l1": {
+          "memo_type": "none"
+        }
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "core_meta_flags": [
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS",
+          "ENABLE_DIAGNOSTICS_FOR_TX_SUBMISSION",
+          "EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+          "EMIT_LEDGER_CLOSE_META_EXT_V1",
+          "EMIT_CLASSIC_EVENTS",
+          "BACKFILL_STELLAR_ASSET_EVENTS",
+          "BACKFILL_RESTORE_META"
+        ],
+        "profile": "lake",
+        "transaction_meta_version": 4
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 1,
+      "entry_changes": 12
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "${derived.tx_hash}",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "change_trust.success"
+        ],
+        "fee_charged": "100"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/change_trust/line/pool_share/liquidity_pool_constant_product",
+        "equals": {
+          "asset_a": {
+            "credit_alphanum4": {
+              "asset_code": "USD",
+              "issuer": "GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ"
+            }
+          },
+          "asset_b": {
+            "credit_alphanum4": {
+              "asset_code": "USD",
+              "issuer": "GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5"
+            }
+          },
+          "fee": 30
+        },
+        "note": "Asset A's issuer has the lower raw key (70ca71d5\u2026 < 7989ebe5\u2026), so stellar-core accepts this order; its strkey GBYM\u2026 sorts after GB4Y\u2026 ('Y' 0x59 > '4' 0x34 at the third character), so a reader that orders by strkey rejects the operation."
+      },
+      {
+        "select": {
+          "in": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes",
+          "key": {
+            "liquidity_pool": {
+              "liquidity_pool_id": "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT"
+            }
+          },
+          "change": "created"
+        },
+        "path": "/created/data/liquidity_pool/body/liquidity_pool_constant_product/params",
+        "equals": {
+          "asset_a": {
+            "credit_alphanum4": {
+              "asset_code": "USD",
+              "issuer": "GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ"
+            }
+          },
+          "asset_b": {
+            "credit_alphanum4": {
+              "asset_code": "USD",
+              "issuer": "GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5"
+            }
+          },
+          "fee": 30
+        },
+        "note": "The pool is created with the assets in the same raw-key order."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO",
+          "roles": [
+            "source",
+            "fee_payer",
+            "trustline_owner"
+          ]
+        },
+        {
+          "address": "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT",
+          "roles": [
+            "liquidity_pool"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ",
+          "because": "PI3 only issues asset A; no ledger entry of PI3 changed"
+        },
+        {
+          "address": "GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5",
+          "because": "PI9 only issues asset B; no ledger entry of PI9 changed"
+        }
+      ],
+      "exact": true
+    },
+    "state_changes": [
+      {
+        "kind": "trustline_created",
+        "op_index": 0,
+        "account": {
+          "address": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO"
+        },
+        "asset": "liquidity_pool:41ca328897f7273543665a0c61d241fad41591ac8951bbf8858ccacf52a4257e",
+        "detail": {
+          "pool_strkey": "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT"
+        }
+      },
+      {
+        "kind": "trustline_flags_changed",
+        "only_if": "initial_authorization_separate",
+        "op_index": 0,
+        "account": {
+          "address": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO"
+        },
+        "asset": "liquidity_pool:41ca328897f7273543665a0c61d241fad41591ac8951bbf8858ccacf52a4257e"
+      },
+      {
+        "kind": "liquidity_pool_created",
+        "op_index": 0,
+        "account": {
+          "address": "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT"
+        },
+        "detail": {
+          "asset_a": "USD:GBYMU4OVLUSEJFWBZTNDIH7EATZXP7EHXMG2M52K5H3SMHH62NUMYTTZ",
+          "asset_b": "USD:GB4YT27F4U5WQQ6HR2RNIYLNWMG25IYQ33CEUGNAMFXBDQLC7QM5H7P5",
+          "fee_bp": 30,
+          "asset_a_issuer_key_hex": "70ca71d55d244496c1ccda341fe404f377fc87bb0da6774ae9f7261cfed368cc",
+          "asset_b_issuer_key_hex": "7989ebe5e53b6843c78ea2d4616db30daea310dec44a19a0616e11c162fc19d3",
+          "pool_id": "41ca328897f7273543665a0c61d241fad41591ac8951bbf8858ccacf52a4257e"
+        }
+      }
+    ],
+    "state_changes_exact": true,
+    "movements": [
+      {
+        "kind": "fee",
+        "asset": "native",
+        "amount": "100",
+        "from": {
+          "address": "GBUJQBHI3OCTFDOP425KN7MFXDRDOBLKY6RFGIN6WGN7YJGINNP6ACKO"
+        }
+      }
+    ],
+    "movements_exact": true,
+    "addresses": [
+      {
+        "strkey": "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT",
+        "type": "liquidity_pool",
+        "xdr_bytes": 32,
+        "chars": 56
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "<16.3.1 || >=17.0.0 <17.2.1",
+        "level": "L1",
+        "outcome": "reject",
+        "match": {
+          "reason": "ordering",
+          "envelopes_parsed": 0,
+          "rejected_tx_index": 0
+        },
+        "detail": "Executed: 17.2.0 and 16.3.0 throw 'Assets are not in lexicographic order' from TransactionBuilder.fromXdr on the one transaction of the Protocol 28 variants (the Protocol 30 variants are beyond their schema); 17.2.1, 16.3.1 and later parse it.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+        "finding": "F-0016",
+        "fixed_in": "17.2.1 (16.3.1 on the 16.x line)",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "xcc conform run --set all --entries 'cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins'"
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": ">=0.7.0 <0.7.2",
+        "level": "L1",
+        "outcome": "reject",
+        "match": {
+          "reason": "ordering",
+          "envelopes_parsed": 0,
+          "rejected_tx_index": 0
+        },
+        "detail": "Executed: v0.7.1 fails with 'AssetA must be <= AssetB' (txnbuild) on the Protocol 28 variants; v0.7.2 and later parse it.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5974",
+        "finding": "F-0023",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "xcc conform run --set all --entries 'cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins'"
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0",
+        "level": "L1",
+        "outcome": "reject",
+        "match": {
+          "reason": "ordering",
+          "envelopes_parsed": 0,
+          "rejected_tx_index": 0
+        },
+        "detail": "Executed: 17.0.0 rejects the transaction with 'Assets are not in lexicographic order' on all four variants; 17.0.1 parses it.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1246",
+        "finding": "F-0027",
+        "fixed_in": "17.0.1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "xcc conform run --set all --entries 'cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins'"
+      },
+      {
+        "target": "network.lightsail:stellar-sdk (Maven)",
+        "versions": "<=6.0.0",
+        "level": "L1",
+        "outcome": "reject",
+        "match": {
+          "reason": "ordering",
+          "envelopes_parsed": 0,
+          "rejected_tx_index": 0
+        },
+        "detail": "Executed: 6.0.0 rejects the transaction with 'Assets are not in lexicographic order' (AbstractTransaction.fromEnvelopeXdr) on all four variants. A fix is merged on master and not released.",
+        "reference": "https://github.com/lightsail-network/java-stellar-sdk/pull/832",
+        "finding": "F-0028",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "xcc conform run --set all --entries 'cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins'"
+      }
+    ]
+  },
+  "replay": {
+    "unit": "chain",
+    "indexer_scope": "all"
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md",
+    "https://github.com/stellar/js-stellar-sdk/pull/1766",
+    "https://github.com/stellar/go-stellar-sdk/pull/5974"
+  ],
+  "reference": "network",
+  "notes": "Generated by xdrcheck-corpus gen from scenarios/s04-liquidity-pools.yaml on a local stellar-core, at Protocols 28 and 30 on the testnet and public passphrases (4 variants); the accounts are label-derived and equal across variants, hashes, contract IDs and fees are per variant under derived. Local twins of cap-0038/pool-issuers-order-by-bytes-not-strkey (a testnet history ledger of 19 transactions, whose receipts a one-transaction ledger cannot share). The issuers are the labels PI3 and PI9, chosen because their keys and strkeys sort in opposite orders. Executed against every conformance column: the SDK versions that refuse the testnet history ledger refuse these too, and the entry declares the same divergences."
+}

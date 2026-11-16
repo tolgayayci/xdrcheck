@@ -1,0 +1,171 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/resource-fee-exceeds-uint32-golden",
+  "title": "Self fee bump whose outer fee (15,705,635,118 stroops) exceeds the uint32 range",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 23
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "fee-bump",
+    "self-fee-bump",
+    "fee-above-uint32"
+  ],
+  "why": "Since Protocol 23 a fee bump may carry an inclusion fee and resource fee above 2^32-1. The outer fee is an int64 of 15,705,635,118 and the fee charged is 8,705,635,318. Readers that store fees as 32-bit integers overflow.",
+  "fields": {
+    "validated": [
+      "VF-10",
+      "VF-44"
+    ],
+    "passed_through": [
+      "VF-12"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 12,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "7b3c6b6fef6c7c1ce3e99495884078524e62132013e864a44b9be6b9682b2135",
+        "bytes": 4644,
+        "path": "blobs/7b/7b3c6b6fef6c7c1ce3e99495884078524e62132013e864a44b9be6b9682b2135.xdr"
+      },
+      "decoded": "decoded/7b/7b3c6b6fef6c7c1ce3e99495884078524e62132013e864a44b9be6b9682b2135.json.zst",
+      "decoded_sha256": "938fec5c3b0a48cd6b66190b77b06fbeeb2261cb78f03f36d301e69b0dff9d96",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/2d703a71e70327b7.xdr",
+        "file_sha256": "dec7dc3ef6ce3d2047594ff4c3b596ee963f7e696850400441703d0f4ffd8fc0",
+        "frame_index": 10,
+        "test_name": "resource fee exceeds uint32|self fee bump|success|inclusion fee exceeds uint32",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "7362b2c9dbd175063544856923e8c74dc41c0a7eca490688b44ecc39607a78c0",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx_fee_bump/tx/inner_tx/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "resource fee exceeds uint32|self fee bump|success|inclusion fee exceeds uint32",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:2269 (TEST_CASE); flag lines 2272,2273; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0); the test sets EMIT_CLASSIC_EVENTS and BACKFILL_STELLAR_ASSET_EVENTS on a config it does not use (line 2277 passes a fresh getTestConfig() to SorobanTest), and the ledger has no fee events, so both are off"
+        }
+      },
+      "derived": {
+        "ledger_hash": "f8681096dfd7df4dbc4e970a430c22839db006b3d01ae87fd7753339bf867dd0",
+        "tx_hashes": [
+          "7362b2c9dbd175063544856923e8c74dc41c0a7eca490688b44ecc39607a78c0"
+        ],
+        "tx_hash": "7362b2c9dbd175063544856923e8c74dc41c0a7eca490688b44ecc39607a78c0",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 8
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "7362b2c9dbd175063544856923e8c74dc41c0a7eca490688b44ecc39607a78c0",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "8705635318",
+        "inner_hash": "0fd62d52f70306fd2ff6e4bd2f81e33c304b4da98b217c87eb4e6d87858ee749",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx_fee_bump/tx/fee",
+        "equals": "15705635118"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx_fee_bump/tx/fee_source",
+        "equals": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx_fee_bump/tx/inner_tx/tx/tx/source_account",
+        "equals": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO",
+        "note": "Self fee bump: the inner source is the fee source."
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/fee_charged",
+        "equals": "8705635318"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "8705635318",
+        "from": {
+          "address": "GBFS3DCQ2JPYEBFSR6QJYAIVMKLAFP4JBBF4YFBJNEYAE7QFY7I4T5CO"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 10 of 'resource fee exceeds uint32|self fee bump|success|inclusion fee exceeds uint32'."
+}

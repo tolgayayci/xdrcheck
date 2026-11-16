@@ -1,0 +1,185 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/auth-deep-tree-golden.6253e5d06cf58bd3",
+  "title": "Matched four-level authorization tree signed by a classic account",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "soroban-authorization",
+    "deep-tree",
+    "address-credentials-v2"
+  ],
+  "why": "Every node of a four-level authorization tree (seven invocations) is matched by a require_auth call and the signer's nonce is consumed. Readers that flatten or depth-limit the tree, or that only read the root invocation, lose who authorized the nested calls.",
+  "fields": {
+    "validated": [
+      "VF-48a",
+      "VF-49a"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 19,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "97408c03d5a989dca8f06b2d138fe1405ad27d209ecbace98c4f7a49ba29f52e",
+        "bytes": 10728,
+        "path": "blobs/97/97408c03d5a989dca8f06b2d138fe1405ad27d209ecbace98c4f7a49ba29f52e.xdr"
+      },
+      "decoded": "decoded/97/97408c03d5a989dca8f06b2d138fe1405ad27d209ecbace98c4f7a49ba29f52e.json.zst",
+      "decoded_sha256": "4b4ad6402f896552e96152a44bc3d048c6aec5d809ab1ccaec577cb2019f7d87",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/6253e5d06cf58bd3.xdr",
+        "file_sha256": "2c1092484038f13c855fd9128ffa4c28b17abd46f8d4cbe840c1c5d76e6282d1",
+        "frame_index": 17,
+        "test_name": "Soroban authorization|default classic account|deep tree|success",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "a973dbaf416bea221a183d9d591f48d0e7f54c5890533d40abfc4ab8c77a4a14",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Soroban authorization|default classic account|deep tree|success",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:7004 (TEST_CASE); flag lines 7007; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "69c45e50b81077d5f8815ca29609df6f52cfcef338b4cfa0e2c9c52084494b64",
+        "tx_hashes": [
+          "a973dbaf416bea221a183d9d591f48d0e7f54c5890533d40abfc4ab8c77a4a14"
+        ],
+        "tx_hash": "a973dbaf416bea221a183d9d591f48d0e7f54c5890533d40abfc4ab8c77a4a14",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 10
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "a973dbaf416bea221a183d9d591f48d0e7f54c5890533d40abfc4ab8c77a4a14",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "1620672"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "tree_fn"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials/address_v2/address",
+        "equals": "GCE4HENKZ3ZIHQY4VEYCVX5ZE5LNDIN3FH4MHZCWFKXQZGQIOGAO77CN"
+      },
+      {
+        "path": "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/key",
+        "equals": {
+          "ledger_key_nonce": {
+            "nonce": "1590172575761748177"
+          }
+        }
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "GCE4HENKZ3ZIHQY4VEYCVX5ZE5LNDIN3FH4MHZCWFKXQZGQIOGAO77CN",
+          "roles": [
+            "authorizer"
+          ]
+        },
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "roles": [
+            "contract"
+          ]
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "379428",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 17 of the golden (the successful call)."
+}

@@ -1,0 +1,2167 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/return-value-u256",
+  "title": "Pubnet Soroban call whose return value is an SCV_U256 above 2^128",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "shapes": [
+    "return-value-u256",
+    "amount-above-2-pow-128"
+  ],
+  "why": "An SCV_U256 is four 64-bit limbs; SEP-51 renders it as a decimal string. This return value needs all 255 bits, so a reader that narrows 256-bit integers to 128 bits, or to a float, loses it.",
+  "notes": "Chosen with the locate index of the full pubnet scan (token `S|site|meta.v4.sorobanMeta.returnValue:SCVal{SCV_U256}d=1n=1`): among the ledgers that hold the shape, the one with the smallest lake object. Header hash recomputed from the header and every transaction hash recomputed from its envelope at capture. `expect.values` are written by hand from the decoded sidecar; participants, state changes and movements are the reference extractor's output, checked against the sidecar.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 22,
+      "ledger_seq": 58194211,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "a87334a66652c1bf02868fb3d950ea2c7aeb88c9a1299b54a1c4a56ae1e97d12",
+        "bytes": 821428,
+        "path": "blobs/a8/a87334a66652c1bf02868fb3d950ea2c7aeb88c9a1299b54a1c4a56ae1e97d12.xdr"
+      },
+      "decoded": "decoded/a8/a87334a66652c1bf02868fb3d950ea2c7aeb88c9a1299b54a1c4a56ae1e97d12.json.zst",
+      "decoded_sha256": "fc50c7fcafae06168ef8d677975a35c76f64a8a9ed009c872ca4bf0abb77bcae",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "history",
+        "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+        "key": "FC884DFF--58176000-58239999/FC8806DC--58194211.xdr.zst",
+        "object_sha256": "f5bf946e2ce4977de8dd5dfadc8477e80a7f67303c2931c915673ef877e0c187",
+        "object_bytes": 88870,
+        "decompressed_sha256": "8fa208630030761e33d8b027ff02e981aec83d3c1e593ae884219dc169343c3e",
+        "decompressed_bytes": 821440,
+        "batch_index": 0,
+        "blob_offset": 12,
+        "captured_at": "2026-11-18T09:49:29Z",
+        "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+        "object_metadata": {
+          "compression-type": "zst",
+          "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+          "end-ledger": "58194211",
+          "end-ledger-close-time": "1753622562",
+          "file-mtime": "1757642899000",
+          "network-passphrase": "Public Global Stellar Network ; September 2015",
+          "protocol-version": "22",
+          "start-ledger": "58194211",
+          "start-ledger-close-time": "1753622562",
+          "version": "develop"
+        },
+        "refetch": "curl -fsS -o FC8806DC--58194211.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FC884DFF--58176000-58239999/FC8806DC--58194211.xdr.zst",
+        "perishable": false,
+        "regenerated": true,
+        "object_path": "objects/pubnet/58194211/FC8806DC--58194211.xdr.zst"
+      },
+      "focus": {
+        "tx_index": 116,
+        "tx_hash": "e4c9a50db27c62cebc95b1728a7d8fa0e6ae98bc2ed5814c201de34b57c4c012"
+      },
+      "meta": {
+        "ledger_close_meta_version": 1,
+        "transaction_meta_version": 4,
+        "profile": "lake"
+      },
+      "derived": {
+        "ledger_hash": "6e2068f47d65d94a90fe7947e3527514d62b90709f5670112587cf5724523d85",
+        "tx_hashes": [
+          "c68ca1e4e0e30539d1a810408c095a9c165943ae30fa3e3816927f33c7cdbd26",
+          "6b849e22510288b87b204c80484fd5665caf58662996b5bf33531e0d98806238",
+          "dc52344d16654f63e888538becff4b785e6c7d70cde54e5c2d2f0371ba4fbff2",
+          "6d844ecc06b86c711d0f86c4048b19627e1cff5c469ececf2c13fef6f9bd065c",
+          "957220e52e119adedc64a501bce3fd7b4bc803c791d6b5935144de676396a909",
+          "629d1fb1ba1efdec991337cdb3dbfc25bcda5adb6f32066d5bedb58531c8e3e4",
+          "a5c0450959cd5d442f28166c9422a0123a6446a670759bf794aeda67d5d5c5a0",
+          "c23daeaec4804ac1c74b3b546bf989bb7788b0005fd8061f495696d0172c4933",
+          "c8e8664f9ff216de101d85a4aede30ff8ab7a8e4b36eeb62a77b6cb984582b22",
+          "69045bd7b7b52e944e3f4de89cee900e4c8d35505091e0702b12aa1fe02ee8c0",
+          "f48fd8129754d04a816c5d16c6dec428da5df1216d4a6f1783e9cca2627d3740",
+          "c8b948bf33507582f2b9a5e9f49cae50e88b0b1c1e71e00164ec98a9ae7f2aef",
+          "08157a2e720014bac600e57ab1af6f3391af2faf8e6cfcebc7b29a3b8d793238",
+          "9c703239c028680fdb102fe9dc6991a5589a2a2f23535f5f9c3e3f8fc8577c8e",
+          "73d3b9582d1b02523a2bce425f679838ec49eee9c0d61afd13aa94318d8d2498",
+          "36b1f0a05f73f1eeb9f2229317f6f261639518f982475308b0cfe7d9c2e7bc02",
+          "172c49952b2652937c9e598959a672b5072b38bfaa9612529f3633a4384fc628",
+          "942f2c87ae04d9df69e9e4c25bffda0ec574b8099a4fea1688cfb14b64167445",
+          "39cb912c2e31099858ca36d11e98fe9a8183697dd56cfef9abcaed21c99153d8",
+          "abc5439b4092bc29490d6c85b7f5f3518f2b72578a5366e3c738af49bc7eddb9",
+          "5e5483a3270f5c737dee9088090a7a091e70bda566238c521fd5964ab76cdb39",
+          "8392ab8e7567b2a2ea6438739104cd0cc1743d96d0ca376fa97e9b283cf3fb13",
+          "793c18e503bf43a19c17b2f4c5c64ad2b9048065ea454085baf627806fd50220",
+          "a02c524c9485db75bbad0c7ee1aab57f8711cb46996d61b79ef965ea15cf6ea0",
+          "078d84ca5f987a3c955f8ca025e55e83b3b6b877f646a313bbbf2ca6cf4c4cac",
+          "9ed38c170c17759e3d06b77f1475b3001b1b64713ca6029db5a40ed74b96674a",
+          "a6277b103e5ade7d9b5b3f696c72069ab583680e15ced99877d7121a51643be6",
+          "258a8d4c316b20d0fd9f11bc764e560421dd079b53b647216f725a336bd70ad3",
+          "51ececfa3e3a80cb11bbe994ca94455bb33262cb2d044b234854635277cc172a",
+          "f7b2e4ddf937bc3d9fe25cdcf4212cf0d0ef65ac3cf4adcfa405fcf39bbc3d47",
+          "c5384c66f80b75929e0fe02631935f3e5c6f11178f51a8e1b2b4821543c15fad",
+          "09fa1c17203c83a9772f88d538796f5c015a71af105c89c538639ec7c9fc59f2",
+          "d80a641743d78f7a028947b4ebc41dddfe8c38635143a8300c3983fb6b1811b8",
+          "b8f3db86423d320c988f74e5a7cc46b127a57457ed132a4057e470ea8ba7c7c6",
+          "81c3d6e8ec12cdd6bc866b86c84943aefcecb16efdc19410e8e1906d685241fe",
+          "5d336f6ff5d95e9bede6f1e1b9bb98d97501a474e2af89679bcddc1abece1177",
+          "beba29311af1da230179fdf4e177144442a0c2e9643e760eff60657b7a99ea1d",
+          "8e32e4367e16b24839119841d11700a8e0170e99e050efec50520c5b9dd1d10c",
+          "168f5bb311e74cfab6db1f90c46ebad4f66adc566d1ca0cdf4a2ff19dcc9ecf1",
+          "a6de6641be886fa3efa0559d31213c674cebf4bde12d1220f16c969868b36540",
+          "594a218f3424e5443b8e7713ef398a6d76ed96408ed71780d48b136b9ac2f330",
+          "d03d1718a0797eb25de6d13796ff7c86dc16920a1c1c7cfe058b0cad7de4c2f3",
+          "5b5db53827dc4830c4f8957306019d6f0929698190243c6e1c485dbdd3e7e9dd",
+          "0313ba5a783e2556741e58397cd5b63a51da3416d5833b67e11ceeab67fd7048",
+          "762eac1fac172898449eb24ade80881775202ef923261cb365ea95dcc9c2559e",
+          "67d8163ee523ec0470c07928aac73f36498b9477797cff318d876c915f0f1824",
+          "ae5715d65101553f41739eb07d82e317d2b962228b031ea129623595aa04eeaf",
+          "c5ff191ad18ebbe34e5edd90dc5ecb8bd931b7b4c9f0f8293251aa9888e399f5",
+          "068186bbbcf9c0f65de83d162607356b126addad62972878222207e73e4db678",
+          "6211d0ed0311236e1030eae9a98aa3d1b880f96b0e1696bc97611d23742800e6",
+          "0ec765a16eab71de85382d3ee4d12596e82a0245b30b05c7998818af6c1a6d5d",
+          "c794e04e81a73ab3db289c9ebec3c6a00bb500354a3b16da622db1167ba20110",
+          "46d5013869a9af3b259101315661cbfa1aa4abc526efc3c5694a6695a39184f7",
+          "f38516fbae7b219a8c70bbc9a40603b495d49e1c8c19fec684c74cf96bc30ab2",
+          "8b67ad30c97d10750dc2fd3eef02baac645b9e5c48ba663923c317b9ad26fe8f",
+          "5f696b43d49bb9c8401259679f9c54a761f4b032d69a6bde64ebce80a609c037",
+          "d198de0032283be32d98ee1799d98602cd1748d01cde44c34a14c5e26acd37d4",
+          "e876751ea76038f9f19982b1a13407039d95a377fd3fd5f89eb21279c924e238",
+          "1c8181a28aacc1b42480f4f826b5079cd58c781c5f647db3f53d463d1a94d604",
+          "0ab29adb8fd444ab5c041bbc0af8d9f39b9973b4ccdd460c551c4c56a7fd5a2d",
+          "c0c835f4eea4e5b8ff965c708a4a126487eebf8d0ea5361300298961c1c31604",
+          "1347d4ee0784326cf6d40f2ea4c22a76289b7a83a498395fdd55ef086389e46e",
+          "7d2582a9c26519eda297385d7de215f712e95c1817562c1d1a5c87808634fda1",
+          "1b25b3ff886742a1adf5d536f116eeef73929b9ae7a636cd8b6dc2fc50f45507",
+          "182e3660ef4f88135d07c6ac9ebb5a7bbea4568bf2ed2c267cb9b77ec609c9a9",
+          "61aa53ad231e34e8b888781ae05e08492852e4a7975ed69a345cc659a9fcfb21",
+          "bdc9aa3a3df12ed462ed7b174caf2c469fd7c8b6f582121396604c921a8663f9",
+          "7106b1372e38804d3e14ca30cedaeb4798f253bc58fc4b973956546ecc1b2c4c",
+          "6b3fe38340fa10553b7804ab86718f728e8e68e7f8b33daf1205435b5f841118",
+          "ccdb4170e1478047c94979986acd8905e8dc50f240a940eaebae6db5dee08cf7",
+          "977126bffac43278ddc78681242b88a9b02fbebe2c823ec1977ce97a28cff8d8",
+          "cbb09efaeaf9e4f874f5d79cde0f65fa84cd27d885c664edda4761e95599c3f0",
+          "05126f094d68ecd24b410554f15ded63ed40f84c5765535fbb4043afe4594616",
+          "bfff75e01c44ce2c49f6b44c74981742dc89c7566679be6eed20df2d6e56386c",
+          "127d0bb4573c3c388a5d52c96e2e8bea6b2e50174c031cc907f80980acc8243a",
+          "b94dc0415ff0b909f971a2855effd58e57f0c76964e09fe7007ca1d1b0e65405",
+          "aaaf17cfd70be55b5aa024edc8676eafa91648fc52821a972f506b8deec896f7",
+          "5f30a9187f0493428f168ccd95abdbc9cf2901a33de8c8818368a6adc0a0f25a",
+          "5d6729d4f36e7b74ca8be1a6b9f22414ddb4b961764bdebd1389e46e5dbbe831",
+          "c06eb7f529fa3ec560875d09b1c495f22cf36ce2b36eda07ff4bd68decab830e",
+          "6362ec980b38f1f0bfa2f4d14990491d93c33e5b06f97ac49264c10214e1e0e2",
+          "e5d168f8b1cd44ffff1aa069abf88a9188f9db1a5d809a1f47fd33537bebf00b",
+          "ce39ba5786e318d7b5b67ebb89bf48b5e9f6fc9ddff1301a931d878fa83fe7f4",
+          "c6b6502ef25612d4757d78167dd1a103164b5fcb3766fc89053b216c1cd730e7",
+          "062e50f286682da484486ca630b7dcdaa21712f26953a57d680eae732e34069c",
+          "7d40b2140aaf8a1fd5ca1c72d6a8cbfc295a75ea3044f06529bcc5885bcc31ed",
+          "f600acb434a90f99cac7070bedf2f25dbbe671479626774f010bcfb077fc1f1a",
+          "b94494c13f663074742a04c97bfd067f4f81ec28e18a7acf69750645eb885b83",
+          "01fa7cde029da193e88aaf7537610faae99993c7cce43e02c5b479e71600b10f",
+          "9e16f1e1d65f78a35c2f9b30e5ddf21288da7537a888b915b2ab4789bf27fef9",
+          "ee9137454c9a932917dcf3b21d0c85bfbd29c1841c9fb3c6a1fc9e0e8dcc4bf4",
+          "32a71777720f7ead00ea125cec229987758aaf4564668ce88c4ba71159b151f9",
+          "b84a73691115f30b1ad0d2f01bb13dab2e0a67745887c946a8de85d065dc5c93",
+          "0ff022f1504a26acc5b816fb92d9db6e967b7aab6aaf500c8b915cf6b107ede4",
+          "ba9efebace9667b0a6e2410d93d66329d7cad362d26c007947e6f773cec24149",
+          "45b4f80dc17ed9f0e0249c59323e2eb93a849d67c709f01ff4089abb51df5157",
+          "9ed73462bdb201c46427ac6cde02fe82b30f4d2ae8cbd11eb8a7fbdb14de72ae",
+          "01f01a91a980e4c0a5365051e8e4fe73d87802c82a5e03b63af506a2940bf0a3",
+          "6822f42706ba160130e665a8f7679015ded6da2abf80436bf843ed459c1145b7",
+          "48ff0c0fdf9621e41eb095379f4f1550ad467cfd1871072eba9fab8017978ebf",
+          "cfbee1a9a3a8acb7572e98abc05501502a998f3981784fc5557963877d19d2e9",
+          "08f77c849a8502896cdc84bc86ad4dbbe07f2cbee1177ee2fc5df9d9bb562e84",
+          "b0be5747aeaabafe1d161019674f34d0c7d93849b82eaf8b26606a8d5b0e6425",
+          "085c470f1e9ad307c3ad24e2b37af76c6444c4a11ed527cb000e54c3074bf72a",
+          "2d7e5b8a028682ace108fdf62fac2bddd09218d6caddfa8c9098c32842b79b04",
+          "ab37f8206cf47dac3fcde6baf7c3af2bddbe09c9a1971baff5b5e491a8c74a27",
+          "99c8a894961e901efb2f2c7ebed206855dba425acc11892b222011c8ce2a4e86",
+          "af81efcf734cc7cac732633b28cf6901c093dfca507f7ea3f9c2ec0b1f710828",
+          "c1a8b1623215d52d5f1f7ebcdedceeefe1d203aea6390dd1173d65a1701c8ca5",
+          "249782d52eeddc4e44c4bd90575563b6a859d72bd8ef54e4f74a4083834a4917",
+          "5de8f64d3f1483a55b8059105af0145ea1d9b673ff31f7adb6c5441f898373fa",
+          "ab316eabc71bbe1bb248b502af37df46af92a63cdd9e067c6db44b18d97f1449",
+          "f6ad73551eedb8bfee9cef4bbb2aded878f6d97be7e4d224b1c998ba429d8005",
+          "e8eabbb2fb803b4411b0053532235831cb1e2d30549670e8d482718115649bd9",
+          "7a40ec6c8dac7ece0ec9b68046e2b4bd051fd4ce8b5f402e5288be587e37d815",
+          "853991ded0e4feafa4dda62bd51b6b2a72d2049b432732a26be5fbbfc0a59131",
+          "e4c9a50db27c62cebc95b1728a7d8fa0e6ae98bc2ed5814c201de34b57c4c012",
+          "cb8ca287511bd3cb1b9124af1f51f025ff8eafcb1ed003396c73912dc272d61d",
+          "b2387455e2085474c74f2d809420179a3a48ede547e2afb01a357bfff6f905eb",
+          "d860cb481c15aafbd1d0fbe3515208485990c1663be25f5bc62cbe8d114e079d",
+          "13b4fb0c47e363cc95d72dc5c109799b65570665a323a6d6a1517695bc144491",
+          "7579cca559f33972c0adec2933f4d41564f382cfa033b5121047e83453de2cb4",
+          "20674767a3f18e61f71040f2c290b3219f7f6b357f0ccc2a3d1613d323ab577d",
+          "c9ede8269fa4d768091fb8954c83810c073628b4c00f627d66dc24de30fc683b",
+          "802e0dcd198ef750c89120865ac9307fc8441554e3ad2fdcc7c1e9146acebe7b",
+          "34de9f5caa8f1e4fb86282141b8c14b86ddd2d5f5c0814a8dd1014fbdda274c3",
+          "fac1b365b09c0ff08659fd11bd2eafaa0d986b4423c75e9c65873b6e1a773cb5"
+        ],
+        "tx_hash": "e4c9a50db27c62cebc95b1728a7d8fa0e6ae98bc2ed5814c201de34b57c4c012",
+        "l1": {
+          "memo_type": "none"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 127,
+      "operations": 582,
+      "events": 478,
+      "entry_changes": 2868
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "c68ca1e4e0e30539d1a810408c095a9c165943ae30fa3e3816927f33c7cdbd26",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 1,
+        "hash": "6b849e22510288b87b204c80484fd5665caf58662996b5bf33531e0d98806238",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 2,
+        "hash": "dc52344d16654f63e888538becff4b785e6c7d70cde54e5c2d2f0371ba4fbff2",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 3,
+        "hash": "6d844ecc06b86c711d0f86c4048b19627e1cff5c469ececf2c13fef6f9bd065c",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 4,
+        "hash": "957220e52e119adedc64a501bce3fd7b4bc803c791d6b5935144de676396a909",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 5,
+        "hash": "629d1fb1ba1efdec991337cdb3dbfc25bcda5adb6f32066d5bedb58531c8e3e4",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 6,
+        "hash": "a5c0450959cd5d442f28166c9422a0123a6446a670759bf794aeda67d5d5c5a0",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.no_trust",
+          "payment.success",
+          "payment.no_trust",
+          "payment.no_trust",
+          "payment.success",
+          "payment.success",
+          "payment.no_trust",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.no_trust",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.no_trust",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success"
+        ],
+        "fee_charged": "10000"
+      },
+      {
+        "index": 7,
+        "hash": "c23daeaec4804ac1c74b3b546bf989bb7788b0005fd8061f495696d0172c4933",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "path_payment_strict_send.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 8,
+        "hash": "c8e8664f9ff216de101d85a4aede30ff8ab7a8e4b36eeb62a77b6cb984582b22",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 9,
+        "hash": "69045bd7b7b52e944e3f4de89cee900e4c8d35505091e0702b12aa1fe02ee8c0",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 10,
+        "hash": "f48fd8129754d04a816c5d16c6dec428da5df1216d4a6f1783e9cca2627d3740",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 11,
+        "hash": "c8b948bf33507582f2b9a5e9f49cae50e88b0b1c1e71e00164ec98a9ae7f2aef",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 12,
+        "hash": "08157a2e720014bac600e57ab1af6f3391af2faf8e6cfcebc7b29a3b8d793238",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 13,
+        "hash": "9c703239c028680fdb102fe9dc6991a5589a2a2f23535f5f9c3e3f8fc8577c8e",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "path_payment_strict_send.under_destmin"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 14,
+        "hash": "73d3b9582d1b02523a2bce425f679838ec49eee9c0d61afd13aa94318d8d2498",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 15,
+        "hash": "36b1f0a05f73f1eeb9f2229317f6f261639518f982475308b0cfe7d9c2e7bc02",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "200",
+        "inner_hash": "c7dfa8f35d533d7c6c31c4c039668626eec8d99f9ff72603f02a7de25c328d4b",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 16,
+        "hash": "172c49952b2652937c9e598959a672b5072b38bfaa9612529f3633a4384fc628",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 17,
+        "hash": "942f2c87ae04d9df69e9e4c25bffda0ec574b8099a4fea1688cfb14b64167445",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 18,
+        "hash": "39cb912c2e31099858ca36d11e98fe9a8183697dd56cfef9abcaed21c99153d8",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "manage_buy_offer.underfunded"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 19,
+        "hash": "abc5439b4092bc29490d6c85b7f5f3518f2b72578a5366e3c738af49bc7eddb9",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "400"
+      },
+      {
+        "index": 20,
+        "hash": "5e5483a3270f5c737dee9088090a7a091e70bda566238c521fd5964ab76cdb39",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 21,
+        "hash": "8392ab8e7567b2a2ea6438739104cd0cc1743d96d0ca376fa97e9b283cf3fb13",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 22,
+        "hash": "793c18e503bf43a19c17b2f4c5c64ad2b9048065ea454085baf627806fd50220",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "400"
+      },
+      {
+        "index": 23,
+        "hash": "a02c524c9485db75bbad0c7ee1aab57f8711cb46996d61b79ef965ea15cf6ea0",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 24,
+        "hash": "078d84ca5f987a3c955f8ca025e55e83b3b6b877f646a313bbbf2ca6cf4c4cac",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "set_trust_line_flags.success",
+          "claim_claimable_balance.success",
+          "set_trust_line_flags.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 25,
+        "hash": "9ed38c170c17759e3d06b77f1475b3001b1b64713ca6029db5a40ed74b96674a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 26,
+        "hash": "a6277b103e5ade7d9b5b3f696c72069ab583680e15ced99877d7121a51643be6",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 27,
+        "hash": "258a8d4c316b20d0fd9f11bc764e560421dd079b53b647216f725a336bd70ad3",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "path_payment_strict_send.under_destmin"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 28,
+        "hash": "51ececfa3e3a80cb11bbe994ca94455bb33262cb2d044b234854635277cc172a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 29,
+        "hash": "f7b2e4ddf937bc3d9fe25cdcf4212cf0d0ef65ac3cf4adcfa405fcf39bbc3d47",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "800"
+      },
+      {
+        "index": 30,
+        "hash": "c5384c66f80b75929e0fe02631935f3e5c6f11178f51a8e1b2b4821543c15fad",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 31,
+        "hash": "09fa1c17203c83a9772f88d538796f5c015a71af105c89c538639ec7c9fc59f2",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 32,
+        "hash": "d80a641743d78f7a028947b4ebc41dddfe8c38635143a8300c3983fb6b1811b8",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 33,
+        "hash": "b8f3db86423d320c988f74e5a7cc46b127a57457ed132a4057e470ea8ba7c7c6",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "200",
+        "inner_hash": "56e3b54942918654c74cc782cdcdee4b46c07ddbba87a9caf704f7d5555ef134",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 34,
+        "hash": "81c3d6e8ec12cdd6bc866b86c84943aefcecb16efdc19410e8e1906d685241fe",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 35,
+        "hash": "5d336f6ff5d95e9bede6f1e1b9bb98d97501a474e2af89679bcddc1abece1177",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 36,
+        "hash": "beba29311af1da230179fdf4e177144442a0c2e9643e760eff60657b7a99ea1d",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 37,
+        "hash": "8e32e4367e16b24839119841d11700a8e0170e99e050efec50520c5b9dd1d10c",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 38,
+        "hash": "168f5bb311e74cfab6db1f90c46ebad4f66adc566d1ca0cdf4a2ff19dcc9ecf1",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 39,
+        "hash": "a6de6641be886fa3efa0559d31213c674cebf4bde12d1220f16c969868b36540",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 40,
+        "hash": "594a218f3424e5443b8e7713ef398a6d76ed96408ed71780d48b136b9ac2f330",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 41,
+        "hash": "d03d1718a0797eb25de6d13796ff7c86dc16920a1c1c7cfe058b0cad7de4c2f3",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 42,
+        "hash": "5b5db53827dc4830c4f8957306019d6f0929698190243c6e1c485dbdd3e7e9dd",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 43,
+        "hash": "0313ba5a783e2556741e58397cd5b63a51da3416d5833b67e11ceeab67fd7048",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 44,
+        "hash": "762eac1fac172898449eb24ade80881775202ef923261cb365ea95dcc9c2559e",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 45,
+        "hash": "67d8163ee523ec0470c07928aac73f36498b9477797cff318d876c915f0f1824",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success",
+          "create_claimable_balance.success"
+        ],
+        "fee_charged": "10000"
+      },
+      {
+        "index": 46,
+        "hash": "ae5715d65101553f41739eb07d82e317d2b962228b031ea129623595aa04eeaf",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 47,
+        "hash": "c5ff191ad18ebbe34e5edd90dc5ecb8bd931b7b4c9f0f8293251aa9888e399f5",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 48,
+        "hash": "068186bbbcf9c0f65de83d162607356b126addad62972878222207e73e4db678",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 49,
+        "hash": "6211d0ed0311236e1030eae9a98aa3d1b880f96b0e1696bc97611d23742800e6",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "600"
+      },
+      {
+        "index": 50,
+        "hash": "0ec765a16eab71de85382d3ee4d12596e82a0245b30b05c7998818af6c1a6d5d",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 51,
+        "hash": "c794e04e81a73ab3db289c9ebec3c6a00bb500354a3b16da622db1167ba20110",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 52,
+        "hash": "46d5013869a9af3b259101315661cbfa1aa4abc526efc3c5694a6695a39184f7",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 53,
+        "hash": "f38516fbae7b219a8c70bbc9a40603b495d49e1c8c19fec684c74cf96bc30ab2",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 54,
+        "hash": "8b67ad30c97d10750dc2fd3eef02baac645b9e5c48ba663923c317b9ad26fe8f",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 55,
+        "hash": "5f696b43d49bb9c8401259679f9c54a761f4b032d69a6bde64ebce80a609c037",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 56,
+        "hash": "d198de0032283be32d98ee1799d98602cd1748d01cde44c34a14c5e26acd37d4",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 57,
+        "hash": "e876751ea76038f9f19982b1a13407039d95a377fd3fd5f89eb21279c924e238",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "claim_claimable_balance.does_not_exist"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 58,
+        "hash": "1c8181a28aacc1b42480f4f826b5079cd58c781c5f647db3f53d463d1a94d604",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 59,
+        "hash": "0ab29adb8fd444ab5c041bbc0af8d9f39b9973b4ccdd460c551c4c56a7fd5a2d",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 60,
+        "hash": "c0c835f4eea4e5b8ff965c708a4a126487eebf8d0ea5361300298961c1c31604",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "900"
+      },
+      {
+        "index": 61,
+        "hash": "1347d4ee0784326cf6d40f2ea4c22a76289b7a83a498395fdd55ef086389e46e",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 62,
+        "hash": "7d2582a9c26519eda297385d7de215f712e95c1817562c1d1a5c87808634fda1",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 63,
+        "hash": "1b25b3ff886742a1adf5d536f116eeef73929b9ae7a636cd8b6dc2fc50f45507",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "600"
+      },
+      {
+        "index": 64,
+        "hash": "182e3660ef4f88135d07c6ac9ebb5a7bbea4568bf2ed2c267cb9b77ec609c9a9",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 65,
+        "hash": "61aa53ad231e34e8b888781ae05e08492852e4a7975ed69a345cc659a9fcfb21",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "change_trust.success",
+          "path_payment_strict_receive.success",
+          "path_payment_strict_send.under_destmin",
+          "change_trust.invalid_limit"
+        ],
+        "fee_charged": "400"
+      },
+      {
+        "index": 66,
+        "hash": "bdc9aa3a3df12ed462ed7b174caf2c469fd7c8b6f582121396604c921a8663f9",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "change_trust.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 67,
+        "hash": "7106b1372e38804d3e14ca30cedaeb4798f253bc58fc4b973956546ecc1b2c4c",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 68,
+        "hash": "6b3fe38340fa10553b7804ab86718f728e8e68e7f8b33daf1205435b5f841118",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "path_payment_strict_send.underfunded"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 69,
+        "hash": "ccdb4170e1478047c94979986acd8905e8dc50f240a940eaebae6db5dee08cf7",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success"
+        ],
+        "fee_charged": "400"
+      },
+      {
+        "index": 70,
+        "hash": "977126bffac43278ddc78681242b88a9b02fbebe2c823ec1977ce97a28cff8d8",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "200",
+        "inner_hash": "6c26bc5c82f4488a1b96e70bb59142c2cd00349566dc0617f88c4ef0bc47f3c9",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 71,
+        "hash": "cbb09efaeaf9e4f874f5d79cde0f65fa84cd27d885c664edda4761e95599c3f0",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "payment.success"
+        ],
+        "fee_charged": "200",
+        "inner_hash": "a759e8a8de1b9ed84943a9e0bede4076aa37a269732d112e76b6ebbd03eff1b9",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 72,
+        "hash": "05126f094d68ecd24b410554f15ded63ed40f84c5765535fbb4043afe4594616",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "manage_buy_offer.buy_not_authorized"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 73,
+        "hash": "bfff75e01c44ce2c49f6b44c74981742dc89c7566679be6eed20df2d6e56386c",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "1100"
+      },
+      {
+        "index": 74,
+        "hash": "127d0bb4573c3c388a5d52c96e2e8bea6b2e50174c031cc907f80980acc8243a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "path_payment_strict_send.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 75,
+        "hash": "b94dc0415ff0b909f971a2855effd58e57f0c76964e09fe7007ca1d1b0e65405",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 76,
+        "hash": "aaaf17cfd70be55b5aa024edc8676eafa91648fc52821a972f506b8deec896f7",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 77,
+        "hash": "5f30a9187f0493428f168ccd95abdbc9cf2901a33de8c8818368a6adc0a0f25a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "path_payment_strict_send.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 78,
+        "hash": "5d6729d4f36e7b74ca8be1a6b9f22414ddb4b961764bdebd1389e46e5dbbe831",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 79,
+        "hash": "c06eb7f529fa3ec560875d09b1c495f22cf36ce2b36eda07ff4bd68decab830e",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success"
+        ],
+        "fee_charged": "7500"
+      },
+      {
+        "index": 80,
+        "hash": "6362ec980b38f1f0bfa2f4d14990491d93c33e5b06f97ac49264c10214e1e0e2",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "300"
+      },
+      {
+        "index": 81,
+        "hash": "e5d168f8b1cd44ffff1aa069abf88a9188f9db1a5d809a1f47fd33537bebf00b",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 82,
+        "hash": "ce39ba5786e318d7b5b67ebb89bf48b5e9f6fc9ddff1301a931d878fa83fe7f4",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 83,
+        "hash": "c6b6502ef25612d4757d78167dd1a103164b5fcb3766fc89053b216c1cd730e7",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 84,
+        "hash": "062e50f286682da484486ca630b7dcdaa21712f26953a57d680eae732e34069c",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 85,
+        "hash": "7d40b2140aaf8a1fd5ca1c72d6a8cbfc295a75ea3044f06529bcc5885bcc31ed",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 86,
+        "hash": "f600acb434a90f99cac7070bedf2f25dbbe671479626774f010bcfb077fc1f1a",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 87,
+        "hash": "b94494c13f663074742a04c97bfd067f4f81ec28e18a7acf69750645eb885b83",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 88,
+        "hash": "01fa7cde029da193e88aaf7537610faae99993c7cce43e02c5b479e71600b10f",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_buy_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "400"
+      },
+      {
+        "index": 89,
+        "hash": "9e16f1e1d65f78a35c2f9b30e5ddf21288da7537a888b915b2ab4789bf27fef9",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success",
+          "payment.success"
+        ],
+        "fee_charged": "10000"
+      },
+      {
+        "index": 90,
+        "hash": "ee9137454c9a932917dcf3b21d0c85bfbd29c1841c9fb3c6a1fc9e0e8dcc4bf4",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 91,
+        "hash": "32a71777720f7ead00ea125cec229987758aaf4564668ce88c4ba71159b151f9",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "100"
+      },
+      {
+        "index": 92,
+        "hash": "b84a73691115f30b1ad0d2f01bb13dab2e0a67745887c946a8de85d065dc5c93",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "manage_buy_offer.success",
+          "manage_sell_offer.success"
+        ],
+        "fee_charged": "200"
+      },
+      {
+        "index": 93,
+        "hash": "0ff022f1504a26acc5b816fb92d9db6e967b7aab6aaf500c8b915cf6b107ede4",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "f97f5a21389ed43c2739bf648fd651b54df173eb24bc4d73665f36b161ca9333",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 94,
+        "hash": "ba9efebace9667b0a6e2410d93d66329d7cad362d26c007947e6f773cec24149",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "8d34e84c543e0ec7dc57a3d074035edd6ca0712443b3f52b404364d5d1813363",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 95,
+        "hash": "45b4f80dc17ed9f0e0249c59323e2eb93a849d67c709f01ff4089abb51df5157",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "282c94fcc93df2b692fdb487a7ee95d616ebcc562c78a4c5b3bd15f68fe3f29a",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 96,
+        "hash": "9ed73462bdb201c46427ac6cde02fe82b30f4d2ae8cbd11eb8a7fbdb14de72ae",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "5bca0639a0394f8c5881b814a13884db32e937488d5391d793d058563c33bf2e",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 97,
+        "hash": "01f01a91a980e4c0a5365051e8e4fe73d87802c82a5e03b63af506a2940bf0a3",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "a1f4e6dfdde43bba4dae92dd78ad7b8a1966e128f89441ab4fe47d0584703e2d",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 98,
+        "hash": "6822f42706ba160130e665a8f7679015ded6da2abf80436bf843ed459c1145b7",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "e259f8d1a6523ed297045e8ef754423e8623366cd56cd881a76ee24ea76422b0",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 99,
+        "hash": "48ff0c0fdf9621e41eb095379f4f1550ad467cfd1871072eba9fab8017978ebf",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135073",
+        "inner_hash": "7698b9816186175d93be65bccf5d755d1eb9d0c428f83a9bec78eabfd80e9199",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 100,
+        "hash": "cfbee1a9a3a8acb7572e98abc05501502a998f3981784fc5557963877d19d2e9",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135058",
+        "inner_hash": "d57136c3240adc2407f12ff3ce1c791a2f2067c73da11c1396156e2c67d2d77f",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 101,
+        "hash": "08f77c849a8502896cdc84bc86ad4dbbe07f2cbee1177ee2fc5df9d9bb562e84",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "95a7c2e06fad0d0d0aa8628cefa3dd05ef850dc72d2dde17dffe7b809f98994e",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 102,
+        "hash": "b0be5747aeaabafe1d161019674f34d0c7d93849b82eaf8b26606a8d5b0e6425",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "0f8a84d6ed189e8e68ef6b69befe5b63ea4fefd86206f456c80490c49559d443",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 103,
+        "hash": "085c470f1e9ad307c3ad24e2b37af76c6444c4a11ed527cb000e54c3074bf72a",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "13f5ade3dca0505ac119875360ee5dfc09298087e47f11424f58e7f3f34ca9ff",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 104,
+        "hash": "2d7e5b8a028682ace108fdf62fac2bddd09218d6caddfa8c9098c32842b79b04",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135058",
+        "inner_hash": "9b9d9adf72922bdc1190e3a200d122a7b4076edebcf8e389bd5678a876a1bc3b",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 105,
+        "hash": "ab37f8206cf47dac3fcde6baf7c3af2bddbe09c9a1971baff5b5e491a8c74a27",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "216109e95649beda79e1d880d950788e0a2aed8790f3a886eda482faab38664e",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 106,
+        "hash": "99c8a894961e901efb2f2c7ebed206855dba425acc11892b222011c8ce2a4e86",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "ea0d70121d14d0e0761df23f2e7805f5b1490486eefd482ee90939f4fa15b1ec",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 107,
+        "hash": "af81efcf734cc7cac732633b28cf6901c093dfca507f7ea3f9c2ec0b1f710828",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "6def4eb9dbbafdc831cab214e1a077f896a67b35316f9af0a9fa1130c63f1a15",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 108,
+        "hash": "c1a8b1623215d52d5f1f7ebcdedceeefe1d203aea6390dd1173d65a1701c8ca5",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135828",
+        "inner_hash": "fc26de7be15db6f14e87c18e4d4ffdff360b0b1727956460ebcbe1da6ace9990",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 109,
+        "hash": "249782d52eeddc4e44c4bd90575563b6a859d72bd8ef54e4f74a4083834a4917",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "df6f9c591a57f250281285eb91988fe65b82992fdc325054833abd65967df10f",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 110,
+        "hash": "5de8f64d3f1483a55b8059105af0145ea1d9b673ff31f7adb6c5441f898373fa",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "1ba9c897e3b7c2c60a98d4b32c78e867bf713df3fa6a5ba3d1a9b5c17e525363",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 111,
+        "hash": "ab316eabc71bbe1bb248b502af37df46af92a63cdd9e067c6db44b18d97f1449",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135073",
+        "inner_hash": "9cd46a6e07f1e8a55cce3c59b0ec56cbe063f7d65b8aa64db241c026590318b1",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 112,
+        "hash": "f6ad73551eedb8bfee9cef4bbb2aded878f6d97be7e4d224b1c998ba429d8005",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "88ad0e4ae8d1d7e20f071a24a231355a13d1d257fd1d848e879d4edfd96b094a",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 113,
+        "hash": "e8eabbb2fb803b4411b0053532235831cb1e2d30549670e8d482718115649bd9",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "7873f7d3326fdc0e068f1a397d3447a1c8468cf609b2881152768e477ce5ecbe",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 114,
+        "hash": "7a40ec6c8dac7ece0ec9b68046e2b4bd051fd4ce8b5f402e5288be587e37d815",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135058",
+        "inner_hash": "da5633f69e750b5b8a2a8051e7b155457dbdfe61ee720da934043a830f65c1ba",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 115,
+        "hash": "853991ded0e4feafa4dda62bd51b6b2a72d2049b432732a26be5fbbfc0a59131",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "bba7ed09e5359c085170ccdff7cf3c2de0109879d1f9645aaf79f68e04568918",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 116,
+        "hash": "e4c9a50db27c62cebc95b1728a7d8fa0e6ae98bc2ed5814c201de34b57c4c012",
+        "successful": true,
+        "result_code": "tx_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "13521235"
+      },
+      {
+        "index": 117,
+        "hash": "cb8ca287511bd3cb1b9124af1f51f025ff8eafcb1ed003396c73912dc272d61d",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "001d860ef104791721f614e60abc02c6f019055f6aad02d7fe0bb0db48159bbb",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 118,
+        "hash": "b2387455e2085474c74f2d809420179a3a48ede547e2afb01a357bfff6f905eb",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "a6737f8b448b08273775527a99149e65c8370d3635648cc6757abd1790ca34f4",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 119,
+        "hash": "d860cb481c15aafbd1d0fbe3515208485990c1663be25f5bc62cbe8d114e079d",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "dc8f13dcd5881783e660717459a4bbeb80086212cbf0332d96ecdc921c9aa3d0",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 120,
+        "hash": "13b4fb0c47e363cc95d72dc5c109799b65570665a323a6d6a1517695bc144491",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "d683adb8b3bfca3cc2127f9862a60583de6e209642104a331922b2418cfdd019",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 121,
+        "hash": "7579cca559f33972c0adec2933f4d41564f382cfa033b5121047e83453de2cb4",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "8cba9c697e29994ee7eb78befc8fae25ab11b6369c75e2e431f6092d3726ece1",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 122,
+        "hash": "20674767a3f18e61f71040f2c290b3219f7f6b357f0ccc2a3d1613d323ab577d",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "c16c300f962ca92389066ca7b1e654c75f755ecabd913358682fb3b7a99d8ff8",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 123,
+        "hash": "c9ede8269fa4d768091fb8954c83810c073628b4c00f627d66dc24de30fc683b",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "e217a50747b2f305d03acc5cec13a1b873257bd257ccc2ebb63178069356fba3",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 124,
+        "hash": "802e0dcd198ef750c89120865ac9307fc8441554e3ad2fdcc7c1e9146acebe7b",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "0912f756d0d7b9dfad85a38a49af499f98a365ff566bbb380ce5ff2f57d292e1",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 125,
+        "hash": "34de9f5caa8f1e4fb86282141b8c14b86ddd2d5f5c0814a8dd1014fbdda274c3",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "165640f07dd66bc621b47913460d7bf006fc072272cccb31b7e78137d64fa64a",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      },
+      {
+        "index": 126,
+        "hash": "fac1b365b09c0ff08659fd11bd2eafaa0d986b4423c75e9c65873b6e1a773cb5",
+        "successful": true,
+        "result_code": "tx_fee_bump_inner_success",
+        "operation_result_codes": [
+          "invoke_host_function.success"
+        ],
+        "fee_charged": "135060",
+        "inner_hash": "647c3a22c28052d7635d9851c1234bb68964392402f4f54cc9f79adf24e17474",
+        "inner_successful": true,
+        "inner_result_code": "tx_success"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v1/tx_processing/116/tx_apply_processing/v4/soroban_meta/return_value",
+        "equals": {
+          "u256": "27840738057209477411969235097404468920811494845164760352296617373948172590324"
+        },
+        "note": "About 2^254: the top limb is nonzero."
+      },
+      {
+        "path": "/v1/tx_processing/116/tx_apply_processing/v4/operations/0/events/0/body/v0/data",
+        "equals": {
+          "u256": "27840738057209477411969235097404468920811494845164760352296617373948172590324"
+        },
+        "note": "The call's event carries the same value as data."
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GAQHMNDG5WTCHWHCZR3E7ALAAJ3XJM3WMPDTPATSTM4XFMO4AEGP3AZE",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        },
+        {
+          "address": "CCNTHEVSWNDOQAMXXHFOLQIXWUINUPTJIM6AXFSKODNVXWA4N7XV3AI5",
+          "roles": [
+            "contract"
+          ]
+        }
+      ],
+      "must_not_include": []
+    },
+    "state_changes": [
+      {
+        "kind": "sequence_bumped",
+        "tx_index": 116,
+        "account": {
+          "address": "GAQHMNDG5WTCHWHCZR3E7ALAAJ3XJM3WMPDTPATSTM4XFMO4AEGP3AZE"
+        },
+        "detail": {
+          "sequence_after": "244795749844385798"
+        }
+      },
+      {
+        "kind": "contract_data_changed",
+        "tx_index": 116,
+        "op_index": 0,
+        "account": {
+          "address": "CCNTHEVSWNDOQAMXXHFOLQIXWUINUPTJIM6AXFSKODNVXWA4N7XV3AI5"
+        },
+        "detail": {
+          "contract": "CCNTHEVSWNDOQAMXXHFOLQIXWUINUPTJIM6AXFSKODNVXWA4N7XV3AI5",
+          "key_xdr_hex": "0000001000000001000000020000000f0000000553425449440000000000000b3d8d4ca06a2f85dcbd1e1adeed13ea3ba22825eb4bc090b405db21cd3a085cf4",
+          "durability": "persistent",
+          "change": "created"
+        },
+        "cause": "invoke_host_function"
+      },
+      {
+        "kind": "contract_data_changed",
+        "tx_index": 116,
+        "op_index": 0,
+        "account": {
+          "address": "CCNTHEVSWNDOQAMXXHFOLQIXWUINUPTJIM6AXFSKODNVXWA4N7XV3AI5"
+        },
+        "detail": {
+          "contract": "CCNTHEVSWNDOQAMXXHFOLQIXWUINUPTJIM6AXFSKODNVXWA4N7XV3AI5",
+          "key_xdr_hex": "0000001000000001000000020000000f000000094e756c6c69666965720000000000000b2985584f4bbee4d1f63e17fa5f6b8ff13de485fb7b7c64db9e5fd3e678f997e2",
+          "durability": "persistent",
+          "change": "created"
+        },
+        "cause": "invoke_host_function"
+      }
+    ],
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 116,
+        "asset": "native",
+        "amount": "15585406",
+        "from": {
+          "address": "GAQHMNDG5WTCHWHCZR3E7ALAAJ3XJM3WMPDTPATSTM4XFMO4AEGP3AZE"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 116,
+        "asset": "native",
+        "amount": "2064171",
+        "to": {
+          "address": "GAQHMNDG5WTCHWHCZR3E7ALAAJ3XJM3WMPDTPATSTM4XFMO4AEGP3AZE"
+        }
+      }
+    ]
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  }
+}

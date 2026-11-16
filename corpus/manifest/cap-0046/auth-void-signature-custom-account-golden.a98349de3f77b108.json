@@ -1,0 +1,176 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "cap-0046/auth-void-signature-custom-account-golden.a98349de3f77b108",
+  "title": "Custom-account authorization whose signature is Void; the call traps",
+  "kind": "ledger",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "negative": false,
+  "validity": "valid",
+  "shapes": [
+    "soroban-authorization",
+    "custom-account",
+    "arbitrary-signature-scval",
+    "failed-soroban-transaction"
+  ],
+  "why": "A custom account's signature is an arbitrary ScVal chosen by the submitter. Here it is Void; the account contract rejects it and the transaction fails. Readers that expect a signature to be bytes or a map of public keys fail to decode the envelope.",
+  "fields": {
+    "passed_through": [
+      "VF-48b",
+      "VF-50b"
+    ]
+  },
+  "variants": [
+    {
+      "network": "core-test",
+      "passphrase": "(V) (;,,;) (V)",
+      "protocol": 30,
+      "ledger_seq": 12,
+      "xdr_type": "LedgerCloseMeta",
+      "requires": [
+        "stellar_value_signed_ms"
+      ],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "2a29ed77a2fb7cd86adbc9b8fdb86ce78810a10055432816e6e55a561204a8c8",
+        "bytes": 5368,
+        "path": "blobs/2a/2a29ed77a2fb7cd86adbc9b8fdb86ce78810a10055432816e6e55a561204a8c8.xdr"
+      },
+      "decoded": "decoded/2a/2a29ed77a2fb7cd86adbc9b8fdb86ce78810a10055432816e6e55a561204a8c8.json.zst",
+      "decoded_sha256": "5e8d7a603303b5691c01b694ce583913e5bb14bfefd7d8a84c437a5e3c5b9f86",
+      "decoded_by": "rs-stellar-xdr 30.0.0 (3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2), xdrcheck-corpus render 0.1.0, XDR definitions 4f524bbac80c781c06e4fb5fc93a2d0d331d6705",
+      "source": {
+        "kind": "core-golden",
+        "core_tag": "v30.0.0",
+        "core_commit": "0e49751aa9ddf892302cca02cea7f3f5d97df9f1",
+        "tier": "current",
+        "file": "test-lcm-current/InvokeHostFunctionTests/a98349de3f77b108.xdr",
+        "file_sha256": "441b368320962f9e03ce6e60c668d1fc2c6144ac37210416df3e5ad2b463a05c",
+        "frame_index": 10,
+        "test_name": "Soroban custom account authentication|void signature",
+        "rng_seed": 12345
+      },
+      "focus": {
+        "tx_index": 0,
+        "tx_hash": "40ed9ea5afd3597c7d5e58239ce9cd98a945370d12893e0a62a14809d21a1350",
+        "op_index": 0,
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0"
+      },
+      "meta": {
+        "ledger_close_meta_version": 2,
+        "transaction_meta_version": 4,
+        "core_meta_flags": [
+          "BACKFILL_RESTORE_META",
+          "ENABLE_SOROBAN_DIAGNOSTIC_EVENTS"
+        ],
+        "profile": "golden-test",
+        "golden_test": {
+          "core_tag": "v30.0.0",
+          "test_name": "Soroban custom account authentication|void signature",
+          "flags_source": "src/transactions/test/InvokeHostFunctionTests.cpp:6600 (TEST_CASE); flag lines 6603; src/test/test.cpp:885,893-897 (BACKFILL_RESTORE_META; diagnostic events when LCM capture is on) (stellar-core v30.0.0)"
+        }
+      },
+      "derived": {
+        "ledger_hash": "afe9f7e25eb5ecbf2fc17da1b5d589a04818719e00546ce6278c7cc6aec7723b",
+        "tx_hashes": [
+          "40ed9ea5afd3597c7d5e58239ce9cd98a945370d12893e0a62a14809d21a1350"
+        ],
+        "tx_hash": "40ed9ea5afd3597c7d5e58239ce9cd98a945370d12893e0a62a14809d21a1350",
+        "l1": {
+          "memo_type": "none",
+          "operation_type": "invoke_host_function"
+        }
+      }
+    }
+  ],
+  "expect": {
+    "ledger": {
+      "transactions": 1,
+      "operations": 1,
+      "events": 0,
+      "entry_changes": 6
+    },
+    "transactions": [
+      {
+        "index": 0,
+        "hash": "40ed9ea5afd3597c7d5e58239ce9cd98a945370d12893e0a62a14809d21a1350",
+        "successful": false,
+        "result_code": "tx_failed",
+        "operation_result_codes": [
+          "invoke_host_function.trapped"
+        ],
+        "fee_charged": "1391911"
+      }
+    ],
+    "values": [
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name",
+        "equals": "tree_fn"
+      },
+      {
+        "path": "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials/address/signature",
+        "equals": "void"
+      },
+      {
+        "path": "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/invoke_host_function",
+        "equals": "trapped"
+      }
+    ],
+    "participants": {
+      "must_include": [
+        {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X",
+          "roles": [
+            "fee_payer",
+            "source"
+          ]
+        }
+      ],
+      "must_not_include": [
+        {
+          "address": "CAA3QKIP2SNVXUJTB4HKOGF55JTSSMQGED3FZYNHMNSXYV3DRRMAWA3Y",
+          "because": "The custom account named in the authorization entry of a failed transaction; no nonce was created and none of its entries changed."
+        }
+      ]
+    },
+    "movements": [
+      {
+        "kind": "fee",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "2000100",
+        "from": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      },
+      {
+        "kind": "fee_refund",
+        "tx_index": 0,
+        "asset": "native",
+        "amount": "608189",
+        "to": {
+          "address": "GC4EFXBN6BEENDAX7PBW5PGIIIVH3INMD3OEPQASXOLGOHVVP7ZEMG7X"
+        }
+      }
+    ],
+    "movements_exact": true
+  },
+  "conformance": {
+    "levels": [
+      "L0",
+      "L1",
+      "L2"
+    ]
+  },
+  "replay": {
+    "unit": "single",
+    "indexer_scope": "all",
+    "requires_prior_state": false
+  },
+  "notes": "Frame 10 of the golden."
+}
