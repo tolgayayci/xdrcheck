@@ -1,0 +1,1096 @@
+# The shape-emitter test contract (contracts/shape-emitter) puts rare but valid shapes into ledger
+# meta on both passphrases: event data nested 99 vectors deep, a map whose keys collide after
+# native conversion, a `transfer` event shaped like a Stellar Asset Contract event from a contract
+# that is not that asset's contract, events with 0 and 4 topics, custom-token events with
+# non-conforming `to_muxed_id` values, SEP-41 map-form `burn`, `approve` and `clawback` events, large
+# byte arguments, a second instance created with CREATE_CONTRACT_V2 and constructor arguments, and
+# a wasm upload. Contract calls are simulated with the pinned host, so the file runs at Protocols
+# 29 and 30 only (the generator deploys custom contracts from Protocol 29).
+#
+# Every event here comes from the emitter contract, so no event moves value: the custom-token and
+# forged events are claims by a contract that holds no balances, and the named classic asset USD
+# moves nowhere (its own contract is deployed and untouched).
+scenario: shape-emitter-contract
+caps: [46, 54, 58, 67, 87]
+protocols: [29, 30]
+profile: lake
+actors: [A, B, C, I, MARK, VICTIM]     # MARK and VICTIM are never funded: they appear only in events
+assets:
+  USD: {credit_alphanum4: {asset_code: USD, issuer: "${acct.I}"}}
+contracts:
+  emitter:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+    constructor_args: [{symbol: xcc}]
+  # Created by the step `create-contract-v2` (not by a setup item), from A with the salt
+  # sha256("xcc/contract-salt/twin"), so `${contract.id(twin)}` names it.
+  twin:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000", I: "10000"}
+  - deploy_sac: USD
+  - deploy_contract: emitter
+
+steps:
+  - id: nested-vec-99
+    entry: cap-0046/scval-nested-vec-99-in-event
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: nested_vec, args: [{u32: 99}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics
+        equals:
+        - symbol: nested
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec
+        equals:
+        - void
+        note: 'Event data nested 99 vectors deep around Void: the host maximum. nested_vec(100) fails in the
+          host (simulation: Error(Context, ExceededLimit)), measured on this scenario at Protocol 30.'
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec/0/vec
+        equals:
+        - void
+        note: The return value is the same 99-level vector.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: colliding-keys
+    entry: cap-0046/event-data-map-with-colliding-keys
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: colliding_keys, args: []}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 4
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: colliding
+          data:
+            map:
+            - key:
+                u32: 1
+              val:
+                u32: 10
+            - key:
+                string: '1'
+              val:
+                u32: 20
+            - key:
+                symbol: '1'
+              val:
+                u32: 30
+        note: 'Keys U32(1), String("1"), Symbol("1"): three distinct keys that collide as native strings;
+          the host orders them by type, then value.'
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/1/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/1/body/v0
+        equals:
+          topics:
+          - symbol: colliding
+          data:
+            map:
+            - key:
+                bool: true
+              val:
+                u32: 1
+            - key:
+                u32: 1
+              val:
+                u32: 2
+            - key:
+                i32: 1
+              val:
+                u32: 3
+        note: 'Keys Bool(true), U32(1), I32(1): distinct keys that collide as native numbers or booleans.'
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value
+        equals:
+          vec:
+          - map:
+            - key:
+                u32: 1
+              val:
+                u32: 10
+            - key:
+                string: '1'
+              val:
+                u32: 20
+            - key:
+                symbol: '1'
+              val:
+                u32: 30
+          - map:
+            - key:
+                bool: true
+              val:
+                u32: 1
+            - key:
+                u32: 1
+              val:
+                u32: 2
+            - key:
+                i32: 1
+              val:
+                u32: 3
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: forged-sac-transfer-event
+    entry: cap-0067/forged-token-event-from-unrelated-contract
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: forged_sac_event
+                  args:
+                    - {symbol: transfer}
+                    - {vec: [{address: "${acct.MARK}"}, {address: "${acct.VICTIM}"}]}
+                    - {string: "USD:${acct.I}"}
+                    - {i128: "1000000000"}
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: transfer
+          - address: ${acct.MARK}
+          - address: ${acct.VICTIM}
+          - string: USD:${acct.I}
+          data:
+            i128: '1000000000'
+        note: Shaped exactly like a Stellar Asset Contract transfer of USD, but emitted by the emitter contract,
+          not by USD's own contract (which is deployed and untouched).
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+        equals: []
+        note: 'No balance, trustline or account changes: nothing moved.'
+      participants:
+        must_include:
+        - address: ${acct.A}
+          roles:
+          - source
+          - fee_payer
+        must_not_include:
+        - address: ${acct.VICTIM}
+          because: named only by a transfer-shaped event of a contract that is not USD's contract; no entry
+            of it exists or changed
+        - address: ${acct.MARK}
+          because: named only as the from of the forged event; no entry of it exists or changed
+      state_changes: []
+      state_changes_exact: true
+      movements:
+      - kind: transfer
+        op_index: 0
+        asset: USD:${acct.I}
+        amount: '1000000000'
+        from:
+          address: ${acct.MARK}
+        to:
+          address: ${acct.VICTIM}
+        count: 0
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: zero-topics
+    entry: cap-0046/event-topic-count-extremes.zero-topics
+    tx: &topic-call
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: topic_count, args: [{u32: 0}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics: []
+          data:
+            u32: 0
+        note: No topics at all.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: four-topics
+    entry: cap-0046/event-topic-count-extremes.four-topics
+    tx:
+      <<: *topic-call
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: topic_count, args: [{u32: 4}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - u32: 0
+          - u32: 1
+          - u32: 2
+          - u32: 3
+          data:
+            u32: 4
+        note: Four topics, none a symbol or an address.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: transfer-lookalike
+    entry: cap-0046/event-topic-count-extremes.non-token-transfer-symbol
+    tx:
+      <<: *topic-call
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: transfer_lookalike, args: []}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: transfer
+          data:
+            string: not a token transfer
+        note: First topic `transfer`, but no from, no to and string data.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: muxed-id-bytes-4
+    entry: cap-0067/token-events-bytes-and-bad-type-muxed-id.bytes-4
+    tx: &token-transfer
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: transfer
+                  args: [{address: "${acct.A}"}, {address: "${acct.B}"}, {i128: "100"}, {bool: true}, {bytes: "01020304"}]
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: transfer
+          - address: ${acct.A}
+          - address: ${acct.B}
+          data:
+            map:
+            - key:
+                symbol: amount
+              val:
+                i128: '100'
+            - key:
+                symbol: to_muxed_id
+              val:
+                bytes: '01020304'
+        note: 'to_muxed_id is 4 bytes: shorter than any hash or muxed ID.'
+      participants:
+        must_include:
+        - address: ${acct.A}
+          roles:
+          - source
+          - fee_payer
+          - counterparty
+        - address: ${acct.B}
+          roles:
+          - counterparty
+      state_changes: []
+      state_changes_exact: true
+      movements:
+      - kind: transfer
+        op_index: 0
+        asset: ${derived.contracts.emitter}
+        amount: '100'
+        from:
+          address: ${acct.A}
+        to:
+          address: ${acct.B}
+        routing:
+          type: bytes
+          value: '01020304'
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: muxed-id-bytes-40
+    entry: cap-0067/token-events-bytes-and-bad-type-muxed-id.bytes-40
+    tx:
+      <<: *token-transfer
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: transfer
+                  args: [{address: "${acct.A}"}, {address: "${acct.B}"}, {i128: "100"}, {bool: true}, {bytes: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021222324252627"}]
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: transfer
+          - address: ${acct.A}
+          - address: ${acct.B}
+          data:
+            map:
+            - key:
+                symbol: amount
+              val:
+                i128: '100'
+            - key:
+                symbol: to_muxed_id
+              val:
+                bytes: 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021222324252627
+        note: 'to_muxed_id is 40 bytes: longer than 32.'
+      participants:
+        must_include:
+        - address: ${acct.A}
+          roles:
+          - source
+          - fee_payer
+          - counterparty
+        - address: ${acct.B}
+          roles:
+          - counterparty
+      state_changes: []
+      state_changes_exact: true
+      movements:
+      - kind: transfer
+        op_index: 0
+        asset: ${derived.contracts.emitter}
+        amount: '100'
+        from:
+          address: ${acct.A}
+        to:
+          address: ${acct.B}
+        routing:
+          type: bytes
+          value: 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021222324252627
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: muxed-id-i32
+    entry: cap-0067/token-events-bytes-and-bad-type-muxed-id.i32
+    tx:
+      <<: *token-transfer
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: transfer
+                  args: [{address: "${acct.A}"}, {address: "${acct.B}"}, {i128: "100"}, {bool: true}, {i32: 5}]
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: transfer
+          - address: ${acct.A}
+          - address: ${acct.B}
+          data:
+            map:
+            - key:
+                symbol: amount
+              val:
+                i128: '100'
+            - key:
+                symbol: to_muxed_id
+              val:
+                i32: 5
+        note: 'to_muxed_id is I32(5): none of the types CAP-0067 allows (u64, bytes, string).'
+      participants:
+        must_include:
+        - address: ${acct.A}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  # Three transactions in one ledger (one per source account), each emitting one SEP-41 event
+  # whose data is a map with symbol keys: `burn` with `{amount}`, `approve` with
+  # `{amount, live_until_ledger}` and `clawback` with `{amount}`. core orders a ledger's Soroban
+  # transactions by hash, so the burn's lower time bound is the `${order_nonce}` the generator
+  # searches until every chain applies burn, approve, clawback.
+  - id: sep41-burn-map
+    entry: cap-0067/sep41-map-form-burn-approve-events
+    order: [sep41-burn-map, sep41-approve-map, sep41-clawback-map]
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: burn
+                  args: [{address: "${acct.A}"}, {i128: "304"}, {bool: true}]
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 3
+        operations: 3
+        events: 9
+        entry_changes: 18
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      - index: 1
+        hash: ${derived.tx_hashes.1}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+      - index: 2
+        hash: ${derived.tx_hashes.2}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: burn
+          - address: ${acct.A}
+          data:
+            map:
+            - key:
+                symbol: amount
+              val:
+                i128: '304'
+        note: SEP-41 burn with map data {amount} (applied first on every chain).
+      - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: approve
+          - address: ${acct.C}
+          - address: ${acct.A}
+          data:
+            map:
+            - key:
+                symbol: amount
+              val:
+                i128: '500'
+            - key:
+                symbol: live_until_ledger
+              val:
+                u32: 100000
+        note: SEP-41 approve with map data {amount, live_until_ledger}, in the second transaction.
+      - path: /v2/tx_processing/2/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/2/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: clawback
+          - address: ${acct.A}
+          data:
+            map:
+            - key:
+                symbol: amount
+              val:
+                i128: '100'
+        note: SEP-41 clawback in the CAP-0067 form (no admin topic) with map data {amount}, in the third transaction.
+      participants:
+        must_include:
+        - address: ${acct.A}
+          roles:
+          - source
+          - fee_payer
+          - counterparty
+      state_changes: []
+      state_changes_exact: true
+      movements:
+      - kind: burn
+        op_index: 0
+        asset: ${derived.contracts.emitter}
+        amount: '304'
+        from:
+          address: ${acct.A}
+        routing:
+          type: absent
+      - kind: clawback
+        tx_index: 2
+        op_index: 0
+        asset: ${derived.contracts.emitter}
+        amount: '100'
+        from:
+          address: ${acct.A}
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a], passed_through: [VF-53b]}
+
+  - id: sep41-approve-map
+    entry: cap-0067/sep41-map-form-burn-approve-events
+    same_ledger_as: sep41-burn-map
+    tx:
+      source_account: "${acct.C}"
+      fee: 1002
+      seq_num: "${seq.C}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: approve
+                  args: [{address: "${acct.C}"}, {address: "${acct.A}"}, {i128: "500"}, {u32: 100000}, {bool: true}]
+    simulate: true
+    sign: [{key: C}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+
+  - id: sep41-clawback-map
+    entry: cap-0067/sep41-map-form-burn-approve-events
+    same_ledger_as: sep41-burn-map
+    tx:
+      source_account: "${acct.B}"
+      fee: 1004
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: clawback
+                  args: [void, {address: "${acct.A}"}, {i128: "100"}, {bool: true}]
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+
+  - id: create-contract-v2
+    entry: cap-0058/create-contract-v2-with-constructor
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                create_contract_v2:
+                  contract_id_preimage:
+                    address: {address: "${acct.A}", salt: dc9dbae992b059ff823f9762e3e1395830a79e4f14f525ec22801c0f35c194f0}
+                  executable: {wasm: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+                  constructor_args: [{symbol: twin}]
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 8
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/create_contract_v2/constructor_args
+        equals:
+        - symbol: twin
+        note: CREATE_CONTRACT_V2 with one constructor argument.
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/val/contract_instance
+        equals:
+          executable:
+            wasm: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+          storage:
+          - key:
+              symbol: tag
+            val:
+              symbol: twin
+        note: The constructor wrote the argument into instance storage.
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.twin}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: init
+          data:
+            symbol: twin
+        note: The constructor's event, in the same transaction, from the new contract.
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value
+        equals:
+          address: ${derived.contracts.twin}
+      participants:
+        must_include:
+        - address: ${acct.A}
+          roles:
+          - source
+          - fee_payer
+        - address: ${derived.contracts.twin}
+          roles:
+          - contract
+      state_changes:
+      - kind: contract_deployed
+        op_index: 0
+        account:
+          address: ${derived.contracts.twin}
+        cause: contract-call
+        detail:
+          contract: ${derived.contracts.twin}
+          executable: wasm
+          wasm_hash: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-47]}
+
+  - id: upload-wasm
+    entry: cap-0054/contract-code-entry-with-cost-inputs
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              # contracts/custom-account.wasm (sha256 0a4d4597…), uploaded for the first time here.
+              host_function: {upload_contract_wasm: "0061736d01000000016e1360027f7f017f60037f7f7f017f60027e7e017e60017e017e6000017e60037e7e7e017e60037f7f7f0060000060047f7e7e7e0060027f7e0060027f7f0060017f0060017f017e60037f7f7f017e60037f7e7e017e60027f7e017e60027f7f017e60017e017f60057f7f7f7f7f000237090162016a00020176013600020178013100020161016100030161013900040176013100020176013300030176015f000401620138000303313005060708090a070005060b0a0c0b0c0d06090607060e0e0e0f0c10100d0e0e0f0c0e0f0c0f060a0c11000600010112000405017001060605030100110611027f01418080c0000b7f00419082c0000b071d03066d656d6f727902000c5f5f636865636b5f617574680011015f0301090b010041010b050b0f1038320aff1d308b0101027f23808080800041206b220324808080800020032000370300200341086a2003411f6a2003108a80808000024020032903084201510d00200341818080800036020820032802081a200242ff018342cb00520d00200341086a200020002000108c808080002003280208210420032903102100200341206a2480808080002000420220041b0f0b000b5102017f017e23808080800041106b220324808080800020032001200210928080800042012104024020032802000d0020002003290308370308420021040b20002004370300200341106a2480808080000b7f01017f23808080800041106b220041828080800036020c200028020c1a41002d00e681c080001a41002d00d881c080001a41002d00bc81c080001a41002d00f481c080001a200041828080800036020820002802081a41002d00d881c080001a41002d00bc81c080001a41002d008282c080001a41002d00ca81c080001a0b910303017f027e027f23808080800041c0006b22042480808080002004413f6a10968080800020042004413f6a1095808080002205370300200441086a2005108d8080800002400340200441286a200441086a108e8080800002400240200429032822064202560d002006a70e03010003010b419080c08000412b2004413f6a418080c0800041ac81c0800010b780808000000b200420042903303703282004413f6a1096808080002004413f6a200441286a1094808080000c000b0b20042004413f6a41bb80c08000410a1098808080003703202004200441206a10978080800037031820042004413f6a10a2808080002206370308200441086a41086a2107410021080240034020084108460d012004200441186a20086a290300370328200420072006200441286a200710a380808000109e808080002206370308200841086a21080c000b0b2004200441086a200510a18080800010b1808080003602282004413f6a2006200441286a2004413f6a10a480808000109f808080001a20004200370300200441c0006a2480808080000b4d01017f23808080800041106b2202248080808000200220013703082000200241106a200110a18080800010b18080800036020c2000410036020820002001370300200241106a2480808080000b8d0103017f017e027f23808080800041206b220224808080800042022103024020012802082204200128020c4f0d002002200141086a22052001290300200410b08080800010a080808000370318200241086a2005200241186a109d8080800020022903082103200020022903103703082001200441016a3602080b20002003370300200241206a2480808080000b02000b1200200141c580c08000410f10b6808080000b1400109c808080002000200120021089808080000b2a01017e02402002290300220342ff018342c800510d00200042013703000f0b20002003109a808080000b0300000b10002000200129030010a8808080001a0b0a00200010a9808080000b02000b070020002903000b5902017f017e23808080800041206b22032480808080002003200236020c20032001360208200341106a2000200341086a109980808000024020032903104201520d00000b20032903182104200341206a24808080800020040b3901017f23808080800041106b22032480808080002003200229020037020820002001200341086a109b80808000200341106a2480808080000b5a02017f017e23808080800041106b220224808080800020022001370308420121030240200241106a200110ad8080800010b1808080004120470d0020002001370308420021030b20002003370300200241106a2480808080000b6d02027f017e23808080800041106b22032480808080002003200228020022042002280204220210ae808080000240024020032802004101470d0020012004200210a58080800021050c010b200329030821050b2000420037030020002005370308200341106a2480808080000b02000b2e01027e4201210302402002290300220442ff018342cd00520d0020002004370308420021030b200020033703000b0e0020002001200210a6808080000b0e0020002001200210a7808080000b0e0020002001200210aa808080000b0c002000200110ab808080000b0a00200010ac808080000b070020002903000b0d0020003502004220864204840b1a002001ad4220864204842002ad4220864204841080808080000b0c00200120021081808080000b0c00200120021082808080000b0a0020011083808080000b08001084808080000b0c00200120021085808080000b0a0020011086808080000b08001087808080000b0a0020011088808080000bb60102017f017e23808080800041106b220324808080800002400240200241094b0d00420021040340024020020d002000410036020020002004420886420e843703080c030b200341086a20012d000010af80808000024020032d000841ff01460d0020002003290308370204200041013602000c030b2002417f6a2102200141016a2101200442068620033100098421040c000b0b20002002360208200041003a0004200041013602000b200341106a2480808080000b830101017f410121020240200141ff017141df00460d0002400240200141506a41ff0171410a490d00200141bf7f6a41ff0171411a490d0102402001419f7f6a41ff0171411a490d00200020013a0001200041013a00000f0b200141456a21020c020b200141526a21020c010b2001414b6a21020b200041ff013a0000200020023a00010b0b002000ad4220864204840b08002000422088a70b140020012000280200200028020410b5808080000b4701017f23808080800041206b2203248080808000200320013602102003200036020c200341013b011c2003200236021820032003410c6a360214200341146a109380808000000beb0601087f024002402001200041036a417c71220220006b2203490d00200120036b22044102762205450d00200441037121064100210741002101024020022000460d0041002108410021010240200020026b2209417c4b0d00410021084100210103402001200020086a22022c000041bf7f4a6a200241016a2c000041bf7f4a6a200241026a2c000041bf7f4a6a200241036a2c000041bf7f4a6a2101200841046a22080d000b0b200020086a21020340200120022c000041bf7f4a6a2101200241016a2102200941016a22090d000b0b200020036a210902402006450d002009200441fcffffff07716a22022c000041bf7f4a210720064101460d00200720022c000141bf7f4a6a210720064102460d00200720022c000241bf7f4a6a21070b200720016a21080340200921032005450d02200541c001200541c001491b22074103712106024002402007410274220441f0077122010d00410021020c010b200320016a2100410021022003210103402001410c6a2802002209417f73410776200941067672418182840871200141086a2802002209417f73410776200941067672418182840871200141046a2802002209417f7341077620094106767241818284087120012802002209417f7341077620094106767241818284087120026a6a6a6a2102200141106a22012000470d000b0b200520076b2105200320046a2109200241087641ff81fc0771200241ff81fc07716a418180046c41107620086a21082006450d000b2003200741fc01714102746a22022802002201417f734107762001410676724181828408712101024020064101460d0020022802042209417f7341077620094106767241818284087120016a210120064102460d0020022802082202417f7341077620024106767241818284087120016a21010b200141087641ff811c71200141ff81fc07716a418180046c41107620086a21080c010b024020010d0041000f0b200141037121024100210941002108024020014104490d002001417c712105410021084100210903402008200020096a22012c000041bf7f4a6a200141016a2c000041bf7f4a6a200141026a2c000041bf7f4a6a200141036a2c000041bf7f4a6a21082005200941046a2209470d000b2002450d010b200020096a21010340200820012c000041bf7f4a6a2108200141016a21012002417f6a22020d000b0b20080b8e0501077f024002402000280208220341808080c00171450d0002400240024002400240200341808080800171450d0020002f010e22040d01410021020c020b024020024110490d002001200210b48080800021050c040b024020020d00410021050c040b200241037121064100210741002105024020024104490d002002410c712104410021054100210703402005200120076a22082c000041bf7f4a6a200841016a2c000041bf7f4a6a200841026a2c000041bf7f4a6a200841036a2c000041bf7f4a6a21052004200741046a2207470d000b2006450d040b200120076a21080340200520082c000041bf7f4a6a2105200841016a21082006417f6a22060d000c040b0b200120026a21074100210220012108200421060340200822052007460d020240024020052c00002208417f4c0d00200541016a21080c010b0240200841604f0d00200541026a21080c010b2005410441032008416f4b1b6a21080b200820056b20026a21022006417f6a22060d000b0b410021060b200420066b21050b200520002f010c22084f0d00200820056b210941002105410021040240024002402003411d764103710e0402000102020b200921040c010b200941feff037141017621040b200341ffffff00712107200028020421062000280200210002400340200541ffff0371200441ffff03714f0d0141012108200541016a2105200020072006280210118080808000000d030c000b0b41012108200020012002200628020c118180808000000d0141002105200920046b41ffff037121020340200541ffff037122042002492108200420024f0d02200541016a2105200020072006280210118080808000000d020c000b0b200028020020012002200028020428020c1181808080000021080b20080b1a00200028020020012002200028020428020c118180808000000b6e01017f23808080800041206b220524808080800020052001360204200520003602002005200336020c200520023602082005418480808000ad422086200541086aad843703182005418580808000ad4220862005ad8437031041d480c08000200541106a200410b380808000000b180020002802002001200028020428020c118080808000000b0b9a020100418080c0000b90020000000000000000010000000300000063616c6c65642060526573756c743a3a756e77726170282960206f6e20616e2060457272602076616c7565636865636b5f61757468436f6e76657273696f6e4572726f72c0023a20c0002f72757374632f343861323239636561656664343938356335303939306231343131366236643835366166303938352f6c6962726172792f636f72652f7372632f6f70732f66756e6374696f6e2e727300005a00100050000000fa00000005000000537045635631d62554d8bfef7f9a537045635631a34acff744930b42537045635631094e2875674c3cf6537045635631f1f99007452a65fd53704563563115e51a2cc0c7efd453704563563173940c1932361d9000e3120e636f6e747261637473706563763000000000000000000000000c5f5f636865636b5f617574680000000300000000000000117369676e61747572655f7061796c6f6164000000000003ee0000002000000000000000097369676e617475726500000000000000000000000000000d617574685f636f6e7465787473000000000003ea000007d000000007436f6e746578740000000001000003e90000000200000003000000020000005f436f6e74726163742065786563757461626c65207573656420666f72206372656174696e672061206e657720636f6e747261637420616e64207573656420696e0a60437265617465436f6e7472616374486f7374466e436f6e74657874602e000000000000000012436f6e747261637445786563757461626c65000000000002000000010000007845786563757461626c65207370656369666965642062792074686520636f6e747261637420696e7374616e63652061732061207370656369666963205761736d20636f6e747261637420636f646520656e747279206964656e74696669656420627920697473205761736d2073686132353620686173682e000000045761736d00000001000003ee00000020000000010000005f45786563757461626c65207265666572656e63652076696120612070657273697374656e742073746f7261676520656e747279206f776e6564206279207468697320636f6e7472616374206f7220616e6f7468657220636f6e74726163742e000000000b45787465726e616c5265660000000001000007d000000015436f6e747261637445786563757461626c6552656600000000000001000000c045786563757461626c65207265666572656e6365642076696120612070657273697374656e742073746f7261676520656e747279206f776e6564206279206120636f6e74726163742c0a656974686572207468697320636f6e7472616374206f7220616e6f7468657220636f6e74726163742e0a0a5468652070657273697374656e742073746f7261676520656e747279206f776e65642062792074686520606f776e657260206861732074686520607461676020617320697473206b65792e0000000000000015436f6e747261637445786563757461626c655265660000000000000200000000000000056f776e6572000000000000130000000000000003746167000000001000000002000000e3436f6e74657874206f6620612073696e676c6520617574686f72697a65642063616c6c20706572666f726d656420627920616e20616464726573732e0a0a437573746f6d206163636f756e7420636f6e747261637473207468617420696d706c656d656e7420605f5f636865636b5f6175746860207370656369616c2066756e6374696f6e0a726563656976652061206c697374206f662060436f6e74657874602076616c75657320636f72726573706f6e64696e6720746f20616c6c207468652063616c6c7320746861740a6e65656420746f20626520617574686f72697a65642e000000000000000007436f6e7465787400000000030000000100000014436f6e747261637420696e766f636174696f6e2e00000008436f6e747261637400000001000007d00000000f436f6e7472616374436f6e7465787400000000010000003d436f6e7472616374207468617420686173206120636f6e7374727563746f722077697468206e6f20617267756d656e747320697320637265617465642e00000000000014437265617465436f6e7472616374486f7374466e00000001000007d00000001b437265617465436f6e7472616374486f7374466e436f6e74657874000000000100000044436f6e7472616374207468617420686173206120636f6e7374727563746f7220776974682031206f72206d6f726520617267756d656e747320697320637265617465642e0000001c437265617465436f6e74726163745769746843746f72486f7374466e00000001000007d00000002a437265617465436f6e747261637457697468436f6e7374727563746f72486f7374466e436f6e74657874000000000001000000bd417574686f72697a6174696f6e20636f6e74657874206f6620612073696e676c6520636f6e74726163742063616c6c2e0a0a546869732073747275637420636f72726573706f6e647320746f20612060726571756972655f617574685f666f725f61726773602063616c6c20666f7220616e20616464726573730a66726f6d2060636f6e7472616374602066756e6374696f6e20776974682060666e5f6e616d6560206e616d6520616e642060617267736020617267756d656e74732e000000000000000000000f436f6e7472616374436f6e746578740000000003000000000000000461726773000003ea000000000000000000000008636f6e7472616374000000130000000000000007666e5f6e616d6500000000110000000100000076417574686f72697a6174696f6e20636f6e7465787420666f7220606372656174655f636f6e74726163746020686f73742066756e6374696f6e2074686174206372656174657320610a6e657720636f6e7472616374206f6e20626568616c66206f6620617574686f72697a657220616464726573732e0000000000000000001b437265617465436f6e7472616374486f7374466e436f6e746578740000000002000000000000000a65786563757461626c650000000007d000000012436f6e747261637445786563757461626c650000000000000000000473616c74000003ee0000002000000001000000d6417574686f72697a6174696f6e20636f6e7465787420666f7220606372656174655f636f6e74726163746020686f73742066756e6374696f6e2074686174206372656174657320610a6e657720636f6e7472616374206f6e20626568616c66206f6620617574686f72697a657220616464726573732e0a54686973206973207468652073616d652061732060437265617465436f6e7472616374486f7374466e436f6e74657874602c2062757420616c736f206861730a636f6e747261637420636f6e7374727563746f7220617267756d656e74732e0000000000000000002a437265617465436f6e747261637457697468436f6e7374727563746f72486f7374466e436f6e746578740000000000030000000000000010636f6e7374727563746f725f61726773000003ea00000000000000000000000a65786563757461626c650000000007d000000012436f6e747261637445786563757461626c650000000000000000000473616c74000003ee00000020001e11636f6e7472616374656e766d6574617630000000000000001d000000000093010e636f6e74726163746d65746176300000000000000005727376657200000000000006312e39382e3100000000000000000008727373646b7665720000002f32392e302e312365313637316130636235386434623863306262386465313135636166303830636130313637366538000000000000000012727373646b5f737065635f7368616b696e6700000000000132000000"}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 2
+        entry_changes: 8
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_code/hash
+        equals: 0a4d4597cbf11959d7e27d795ed4e5d00e2fb8ff59f8a402bf4aefadda9c0999
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_code/ext/v1/cost_inputs
+        equals:
+          ext: v0
+          n_instructions: 1714
+          n_functions: 48
+          n_globals: 2
+          n_table_entries: 6
+          n_types: 19
+          n_data_segments: 4
+          n_elem_segments: 1
+          n_imports: 9
+          n_exports: 3
+          n_data_segment_bytes: 2849
+        note: ContractCodeEntry.ext.v1 holds the ContractCodeCostInputs core computed from the module.
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value
+        equals:
+          bytes: 0a4d4597cbf11959d7e27d795ed4e5d00e2fb8ff59f8a402bf4aefadda9c0999
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes:
+      - kind: contract_code_created
+        op_index: 0
+        account:
+          address: ${acct.B}
+        cause: contract-call
+        detail:
+          wasm_hash: 0a4d4597cbf11959d7e27d795ed4e5d00e2fb8ff59f8a402bf4aefadda9c0999
+          code_bytes: 7018
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a]}
+
+  # ML-DSA-87 sizes: a 2592-byte public key and a 4627-byte signature, as plain SCV_BYTES arguments
+  # (byte i is i mod 256). Two transactions in one ledger, the key first (`${order_nonce}`).
+  - id: ml-dsa-key-size
+    entry: cap-0087/ml-dsa-sized-byte-arguments
+    protocols: [30]
+    order: [ml-dsa-key-size, ml-dsa-signature-size]
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: bytes_len, args: [{bytes: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"}]}
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 2
+        operations: 2
+        events: 4
+        entry_changes: 12
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      - index: 1
+        hash: ${derived.tx_hashes.1}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value
+        equals:
+          u32: 2592
+        note: bytes_len of the 2592-byte argument (ML-DSA-87 public key size), applied first.
+      - path: /v2/tx_processing/1/tx_apply_processing/v4/soroban_meta/return_value
+        equals:
+          u32: 4627
+        note: bytes_len of the 4627-byte argument (ML-DSA-87 signature size).
+      participants:
+        must_include:
+        - address: ${acct.A}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-50a], passed_through: [VF-46b]}
+
+  - id: ml-dsa-signature-size
+    entry: cap-0087/ml-dsa-sized-byte-arguments
+    protocols: [30]
+    same_ledger_as: ml-dsa-key-size
+    tx:
+      source_account: "${acct.B}"
+      fee: 1001
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: bytes_len, args: [{bytes: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff000102030405060708090a0b0c0d0e0f101112"}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]

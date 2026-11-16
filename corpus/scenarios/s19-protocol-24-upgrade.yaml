@@ -1,0 +1,36 @@
+# A stepwise upgrade from Protocol 23 to 24 on a standalone chain. On the public passphrase
+# stellar-core's Protocol 24 upgrade adds 31,879,035 stroops to the header's fee pool (CAP-0076, the
+# correction for XLM burned by a Protocol 23 bug); on any other passphrase it does not.
+#
+# Both passphrases: the upgrade ledgers are byte-for-byte the same shape, and the fee pools differ,
+# 41644474 on the public passphrase and 9765439 (no adjustment) on testnet. The shared expectation
+# pins the fee pool through each variant's derived.header.fee_pool, which verify checks against the
+# header in that variant's blob.
+scenario: protocol-24-upgrade
+caps: [76]
+protocols: [23]
+networks: [testnet, pubnet]
+profile: lake
+actors: [A]
+setup:
+  - fund: {A: "100"}
+
+steps:
+  - id: upgrade-to-24
+    entry: cap-0076/fee-pool-adjustment-on-public-passphrase
+    upgrade: {protocolversion: 24}
+    expect:
+      ledger: {transactions: 0, operations: 0, events: 0, entry_changes: 2}
+      values:
+        - path: /v2/ledger_header/header/ledger_version
+          equals: 24
+        - path: /v2/ledger_header/header/scp_value/upgrades
+          equals: ["0000000100000018"]
+          note: "LEDGER_UPGRADE_VERSION (1) to 24, the only upgrade nominated."
+        - path: /v2/ledger_header/header/fee_pool
+          equals: "${derived.header.fee_pool}"
+          note: "On the public passphrase 41644474: the previous ledger's fee pool, 9765439, plus 31879035 stroops added by the upgrade itself; the ledger has no transaction, and no ledger entry records the addition. On testnet the fee pool stays 9765439."
+        - path: /v2/upgrades_processing/0/upgrade
+          equals: {version: 24}
+        - path: /v2/tx_processing
+          equals: []

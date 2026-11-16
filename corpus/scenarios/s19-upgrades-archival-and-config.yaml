@@ -1,0 +1,210 @@
+# State archival on a local chain, with Soroban settings changed through a configuration upgrade:
+# entry lifetimes shortened to their minimum (10 ledgers persistent, 16 temporary) and the eviction
+# scan started at bucket-list level 1, so that a temporary and a persistent entry of the
+# shape-emitter contract expire and are evicted within a few ledgers (CAP-0062: evicted_keys in
+# LedgerCloseMeta v2; the persistent entry moves to the hot archive), and a later call that writes
+# the archived persistent entry restores it automatically (CAP-0066: the transaction lists the
+# entry in archived_soroban_entries, and its meta shows RESTORED, then UPDATED).
+#
+# The same upgrade freezes F's account key (CAP-0077). A transaction from F is then refused at
+# submission (txFROZEN_KEY_ACCESSED): stellar-core checks frozen keys when it validates a
+# transaction for the queue and for a transaction set, against the same settings it applies with,
+# so a node fed by submission never applies one. That executed fact yields no entry;
+# cap-0077/frozen-key-access-on-local-chain is not produced here.
+#
+# The puts are setup transactions with declared footprints; the restoring write is declared too,
+# because simulation reads only live entries and cannot plan a restore.
+scenario: upgrades-archival-and-config
+caps: [62, 66, 77]
+protocols: [29, 30]
+profile: lake
+actors: [A, B, C, F]
+contracts:
+  emitter:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+    constructor_args: [{symbol: xcc}]
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000", F: "100"}
+  - deploy_contract: emitter
+  - config_upgrade:
+      state_archival: {min_persistent_ttl: 10, min_temporary_ttl: 16, starting_eviction_scan_level: 1}
+      frozen_ledger_keys_delta:
+        keys_to_freeze: [{account: {account_id: "${acct.F}"}}]
+        keys_to_unfreeze: []
+  # put(0, tmp, 1): a temporary entry, live for 16 ledgers.
+  - tx: &put
+      source_account: "${acct.A}"
+      fee: 20001000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: put, args: [{u32: 0}, {symbol: tmp}, {u32: 1}]}
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.id(emitter)}", key: ledger_key_contract_instance, durability: persistent}
+                - contract_code: {hash: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+              read_write:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: tmp}, durability: temporary}
+            instructions: 10000000
+            disk_read_bytes: 10000
+            write_bytes: 1000
+          resource_fee: "20000000"
+  - close: {ledgers: 5}
+  # put(1, per, 2): a persistent entry, live for 10 ledgers; it expires with the temporary one.
+  - tx:
+      <<: *put
+      source_account: "${acct.B}"
+      seq_num: "${seq.B}"
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: put, args: [{u32: 1}, {symbol: per}, {u32: 2}]}
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.id(emitter)}", key: ledger_key_contract_instance, durability: persistent}
+                - contract_code: {hash: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+              read_write:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: per}, durability: persistent}
+            instructions: 10000000
+            disk_read_bytes: 10000
+            write_bytes: 1000
+          resource_fee: "20000000"
+  - close: {ledgers: 9}
+
+steps:
+  - id: eviction
+    entry: cap-0062/eviction-on-local-chain
+    close: {}
+    expect:
+      ledger: {transactions: 0, operations: 0, events: 0, entry_changes: 0}
+      values:
+        - path: /v2/tx_processing
+          equals: []
+          note: "No transaction: the eviction scan runs at the close of every ledger, whatever it applies."
+        - select:
+            in: /v2/evicted_keys
+            key: {contract_data: {contract: "${derived.contracts.emitter}", key: {symbol: tmp}, durability: temporary}}
+          path: /contract_data/durability
+          equals: temporary
+          note: "The temporary entry, live until ledger 36, is deleted: its key is in evicted_keys, and no ledger-entry change records it."
+        - select:
+            in: /v2/evicted_keys
+            key: {contract_data: {contract: "${derived.contracts.emitter}", key: {symbol: per}, durability: persistent}}
+          path: /contract_data/durability
+          equals: persistent
+          note: "The persistent entry, also live until ledger 36, is archived (CAP-0062 moves it to the hot archive); its key is listed the same way."
+        - path: /v2/upgrades_processing
+          equals: []
+
+  - id: autorestore
+    entry: cap-0066/autorestore-on-local-chain
+    tx:
+      source_account: "${acct.C}"
+      fee: 20001000
+      seq_num: "${seq.C}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: put, args: [{u32: 1}, {symbol: per}, {u32: 3}]}
+              auth: []
+      ext:
+        v1:
+          ext: {v1: {archived_soroban_entries: [0]}}
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.id(emitter)}", key: ledger_key_contract_instance, durability: persistent}
+                - contract_code: {hash: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+              read_write:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: per}, durability: persistent}
+            instructions: 10000000
+            disk_read_bytes: 10000
+            write_bytes: 1000
+          resource_fee: "20000000"
+    soroban_resources: declared
+    sign: [{key: C}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 9}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/ext/v1/ext
+          equals: {v1: {archived_soroban_entries: [0]}}
+          note: "SorobanTransactionData ext v1: read_write footprint entry 0 is archived and is to be restored automatically."
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {contract_data: {contract: "${derived.contracts.emitter}", key: {symbol: per}, durability: persistent}}
+            change: restored
+          path: /restored/data/contract_data/val
+          equals: {u32: 2}
+          note: "LEDGER_ENTRY_RESTORED: the archived value comes back from the hot archive..."
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {contract_data: {contract: "${derived.contracts.emitter}", key: {symbol: per}, durability: persistent}}
+            change: updated
+          path: /updated/data/contract_data/val
+          equals: {u32: 3}
+          note: "...and LEDGER_ENTRY_UPDATED, in the same operation, is the call's write. There is no STATE change before the UPDATED: the RESTORED change takes its place."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/ext/v1/rent_fee_charged
+          equals: "1272"
+          note: "Restoring charges rent for the entry's new lifetime."
+      participants:
+        must_include:
+          - {address: "${acct.C}", roles: [source, fee_payer]}
+          - {address: "${derived.contracts.emitter}", roles: [contract]}
+        must_not_include:
+          - {address: "${acct.B}", because: "B created the entry in an earlier ledger; nothing of B changed here"}
+        exact: true
+      state_changes:
+        - kind: entry_restored
+          op_index: 0
+          account: {address: "${derived.contracts.emitter}"}
+          detail: {entry_type: contract_data}
+        - kind: contract_data_changed
+          op_index: 0
+          account: {address: "${derived.contracts.emitter}"}
+          detail: {contract: "${derived.contracts.emitter}", key_xdr_hex: "0000000f0000000370657200", durability: persistent, change: updated}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "20000100", from: {address: "${acct.C}"}}
+      movements_exact: true
+
+  - id: frozen-source-refused
+    notes: "F's account key is frozen; stellar-core refuses the transaction when it is submitted."
+    tx:
+      source_account: "${acct.F}"
+      fee: 1000
+      seq_num: "${seq.F}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.A}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: F}]
+    expect_submit_reject: tx_frozen_key_accessed

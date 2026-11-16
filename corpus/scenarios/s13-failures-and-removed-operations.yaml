@@ -1,0 +1,379 @@
+# Failures a reader must record without inventing effects: an account merge refused because the
+# merged account's sequence number is too far ahead (ACCOUNT_MERGE_SEQNUM_TOO_FAR); a ManageSellOffer
+# deleting offer INT64_MAX, which does not exist (NOT_FOUND); and the removed Inflation operation,
+# which stellar-core refuses at submission from Protocol 12, so it never reaches a ledger. Protocol 28
+# serves the reader pins that cannot decode Protocol 30.
+#
+# Failures decided at apply time by an earlier transaction of the same ledger, in a controlled apply
+# order (the generator searches `${order_nonce}`, a lower time bound, until every chain applies the
+# ledger in the order written): a sequence number bumped by another account's transaction (txBAD_SEQ), a
+# master key zeroed by another account's transaction (txBAD_AUTH), and two path payments of which
+# the first takes most of the only offer and the second fails, so its envelope amounts move nothing.
+#
+# Not here: the insufficient-balance member of classic/apply-time-failure-result-codes. From
+# Protocol 9 stellar-core applies a transaction only after charging its fee and then checks just that
+# the source's available balance is not negative; every operation keeps that balance at or above
+# zero, and a transaction set is valid only if each fee source can pay all of its fees. So at
+# Protocol 13 and later (the lowest the generator runs) no transaction of a ledger can make another
+# one fail with txINSUFFICIENT_BALANCE.
+scenario: failures-and-removed-operations
+caps: [1, 26]
+protocols: [28, 30]
+profile: lake
+actors: [MX, MY, MO, IQ, IN, BW, BY, AW, AX, PI, PM, PA, PB, PD]
+assets:
+  Q: {credit_alphanum4: {asset_code: Q, issuer: "${acct.IQ}"}}
+  PP: {credit_alphanum4: {asset_code: PP, issuer: "${acct.PI}"}}
+setup:
+  - fund: {MX: "100", MY: "100", MO: "100", IQ: "100", IN: "100", BW: "100", BY: "100", AW: "100", AX: "100", PI: "100", PM: "100", PA: "100", PB: "100", PD: "100"}
+  # MX can never submit a transaction again; it can still be an operation source.
+  - tx:
+      source_account: "${acct.MX}"
+      fee: 500
+      seq_num: "${seq.MX}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {bump_sequence: {bump_to: "9223372036854775807"}}
+      ext: v0
+  - trust: {MO: Q}
+  - trust: {PM: PP, PD: PP}
+  - pay: {from: PI, to: PM, asset: PP, amount: "10"}
+  # PM sells its 10 PP for native at 1:1: the only offer on the book (offer 1).
+  - tx:
+      source_account: "${acct.PM}"
+      fee: 500
+      seq_num: "${seq.PM}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {manage_sell_offer: {selling: "${asset.PP}", buying: native, amount: "100000000", price: {n: 1, d: 1}, offer_id: "0"}}
+      ext: v0
+
+steps:
+  - id: account-merge-seqnum-too-far
+    entry: cap-0001/account-merge-seqnum-too-far
+    tx:
+      source_account: "${acct.MY}"
+      fee: 1000
+      seq_num: "${seq.MY}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: "${acct.MX}"
+          body: {account_merge: "${acct.MY}"}
+      ext: v0
+    sign: [{key: MY}, {key: MX}]
+    expect_result: tx_failed
+    expect_op_results: [account_merge.seqnum_too_far]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [account_merge.seqnum_too_far], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/account_merge
+          equals: seqnum_too_far
+          note: "ACCOUNT_MERGE_SEQNUM_TOO_FAR (-5): MX's sequence number is INT64_MAX, at or above this ledger's starting sequence number, so merging it could let it be recreated with a reused sequence number."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.MY}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "${acct.MX}", because: "MX is the source of the failed merge; the transaction failed and no ledger entry of MX changed"}
+        exact: true
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.MY}"}}
+        - {kind: transfer, asset: native, amount: "999999900", from: {address: "${acct.MX}"}, to: {address: "${acct.MY}"}, count: 0}
+      movements_exact: true
+
+  - id: manage-offer-id-int64-max
+    entry: classic/manage-offer-id-int64-max-not-found
+    tx:
+      source_account: "${acct.MO}"
+      fee: 1000
+      seq_num: "${seq.MO}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {manage_sell_offer: {selling: native, buying: "${asset.Q}", amount: "0", price: {n: 1, d: 1}, offer_id: "9223372036854775807"}}
+      ext: v0
+    sign: [{key: MO}]
+    expect_result: tx_failed
+    expect_op_results: [manage_sell_offer.not_found]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [manage_sell_offer.not_found], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/manage_sell_offer/offer_id
+          equals: "9223372036854775807"
+          note: "INT64_MAX, which a float64 cannot hold exactly; amount 0 asks to delete it."
+        - path: /v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/manage_sell_offer
+          equals: not_found
+          note: "No offer has that ID; stellar-core finds out only when applying the operation."
+      participants:
+        must_include:
+          - {address: "${acct.MO}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "${acct.IQ}", because: "IQ only issues the asset named in the failed operation; no ledger entry of IQ changed"}
+        exact: true
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.MO}"}}
+      movements_exact: true
+    fields: {validated: [VF-27]}
+
+  # cap-0026/inflation-op-not-supported cannot be emitted this way: from Protocol 12 stellar-core
+  # answers the submission of an Inflation operation with txFAILED, so it never reaches a ledger.
+  # The step keeps that executed fact; it yields no entry.
+  - id: inflation-rejected-at-submission
+    notes: "Inflation was removed by CAP-0026 (Protocol 12); the transaction is refused when submitted, not failed when applied."
+    tx:
+      source_account: "${acct.IN}"
+      fee: 1000
+      seq_num: "${seq.IN}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: inflation
+      ext: v0
+    sign: [{key: IN}]
+    expect_submit_reject: tx_failed
+
+  # txBAD_SEQ at apply: BW's transaction bumps BY's sequence number (BY signs that operation), so
+  # BY's own transaction, valid when the set was built, meets a stale sequence number.
+  - id: stale-sequence
+    entry: classic/apply-time-failure-result-codes.bad-seq
+    order: [bump-sequence-of-by, stale-sequence]
+    tx:
+      source_account: "${acct.BY}"
+      fee: 1000
+      seq_num: "${seq.BY}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.BW}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: BY}]
+    expect_result: tx_bad_seq
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [bump_sequence.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_bad_seq, operation_result_codes: [], fee_charged: "${derived.fee_charged}"}
+      values:
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {account: {account_id: "${acct.BY}"}}
+            change: updated
+          path: /updated/data/account/seq_num
+          equals: "4611686018427387904"
+          note: "Applied first: BW's transaction moves BY's sequence number to 2^62 (BY signed that operation)."
+        - path: /v2/tx_processing/1/result/result/result
+          equals: tx_bad_seq
+          note: "Applied second: BY's transaction was valid when the set was built (sequence number one above BY's), and fails when applied. A unit arm: no operation results."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/tx_changes_before
+          equals: []
+          note: "A transaction failing the sequence check does not consume a sequence number; only its fee was charged."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.BY}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "${acct.BW}", because: "BW is only the destination of the payment in BY's failed transaction; that transaction changed no ledger entry of BW"}
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.BY}"}}
+        - {kind: transfer, asset: native, amount: "10000000", from: {address: "${acct.BY}"}, to: {address: "${acct.BW}"}, count: 0}
+      movements_exact: true
+  - id: bump-sequence-of-by
+    entry: classic/apply-time-failure-result-codes.bad-seq
+    same_ledger_as: stale-sequence
+    tx:
+      source_account: "${acct.BW}"
+      fee: 1001
+      seq_num: "${seq.BW}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: "${acct.BY}"
+          body: {bump_sequence: {bump_to: "4611686018427387904"}}
+      ext: v0
+    sign: [{key: BW}, {key: BY}]
+    expect_result: tx_success
+    expect_op_results: [bump_sequence.success]
+
+  # txBAD_AUTH at apply: AW's transaction sets AX's master weight to 0 (AX signs that operation), so
+  # AX's own transaction, signed by the master key alone, no longer meets its threshold.
+  - id: master-key-zeroed
+    entry: classic/apply-time-failure-result-codes.bad-auth
+    order: [zero-master-of-ax, master-key-zeroed]
+    tx:
+      source_account: "${acct.AX}"
+      fee: 1000
+      seq_num: "${seq.AX}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.AW}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: AX}]
+    expect_result: tx_bad_auth
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_bad_auth, operation_result_codes: [], fee_charged: "${derived.fee_charged}"}
+      values:
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {account: {account_id: "${acct.AX}"}}
+            change: updated
+          path: /updated/data/account/thresholds
+          equals: "00000000"
+          note: "Applied first: AW's transaction sets AX's master weight (first threshold byte) from 1 to 0; AX signed that operation while its key still counted."
+        - path: /v2/tx_processing/1/result/result/result
+          equals: tx_bad_auth
+          note: "Applied second: AX's transaction, signed only by the master key, no longer meets its threshold. A unit arm: no operation results."
+        - select:
+            in: /v2/tx_processing/1/tx_apply_processing/v4/tx_changes_before
+            key: {account: {account_id: "${acct.AX}"}}
+            change: updated
+          path: /updated/data/account/seq_num
+          equals: "55834574849"
+          note: "Unlike txBAD_SEQ, a transaction failing the signature check at apply time has already consumed its sequence number."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.AX}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "${acct.AW}", because: "AW is only the destination of the payment in AX's failed transaction; that transaction changed no ledger entry of AW"}
+        exact: true
+      state_changes:
+        - kind: sequence_bumped
+          account: {address: "${acct.AX}"}
+          detail: {sequence_after: "55834574849"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.AX}"}}
+        - {kind: transfer, asset: native, amount: "10000000", from: {address: "${acct.AX}"}, to: {address: "${acct.AW}"}, count: 0}
+      movements_exact: true
+  - id: zero-master-of-ax
+    entry: classic/apply-time-failure-result-codes.bad-auth
+    same_ledger_as: master-key-zeroed
+    tx:
+      source_account: "${acct.AW}"
+      fee: 1001
+      seq_num: "${seq.AW}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: "${acct.AX}"
+          body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: 0, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}}
+      ext: v0
+    sign: [{key: AW}, {key: AX}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+
+  # Two PathPaymentStrictReceive operations for 8 PP each against PM's one offer of 10 PP: PA's is
+  # applied first and takes 8 PP for 8 XLM; PB's finds 2 PP left and fails with TOO_FEW_OFFERS.
+  - id: path-payment-fails
+    entry: classic/failed-and-successful-path-payment-amounts
+    order: [path-payment-succeeds, path-payment-fails]
+    tx:
+      source_account: "${acct.PB}"
+      fee: 1000
+      seq_num: "${seq.PB}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {path_payment_strict_receive: {send_asset: native, send_max: "100000000", destination: "${acct.PD}", dest_asset: "${asset.PP}", dest_amount: "80000000", path: []}}
+      ext: v0
+    sign: [{key: PB}]
+    expect_result: tx_failed
+    expect_op_results: [path_payment_strict_receive.too_few_offers]
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 5, entry_changes: 18}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [path_payment_strict_receive.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [path_payment_strict_receive.too_few_offers], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/path_payment_strict_receive/success
+          equals:
+            offers:
+              - order_book: {seller_id: "${acct.PM}", offer_id: "1", asset_sold: {credit_alphanum4: {asset_code: PP, issuer: "${acct.PI}"}}, amount_sold: "80000000", asset_bought: native, amount_bought: "80000000"}
+            last: {destination: "${acct.PD}", asset: {credit_alphanum4: {asset_code: PP, issuer: "${acct.PI}"}}, amount: "80000000"}
+          note: "Applied first: PA's payment takes 8 PP of PM's offer for 8 XLM and delivers them to PD."
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {offer: {seller_id: "${acct.PM}", offer_id: "1"}}
+            change: updated
+          path: /updated/data/offer/amount
+          equals: "20000000"
+          note: "2 PP are left on the book."
+        - path: /v2/tx_processing/1/result/result/result/tx_failed/0/op_inner/path_payment_strict_receive
+          equals: too_few_offers
+          note: "Applied second: PB's identical payment needs 8 PP and finds 2. Its envelope still says send_max 10 XLM and dest_amount 8 PP; nothing of it moved."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.PB}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "${acct.PD}", because: "PD is the destination of PB's failed path payment; that transaction changed no ledger entry of PD (PD's trustline changed in PA's transaction)"}
+          - {address: "${acct.PM}", because: "PM's offer was crossed by PA's transaction, not by PB's failed one"}
+          - {address: "${acct.PI}", because: "PI only issues PP; no ledger entry of PI changed"}
+        exact: true
+      state_changes:
+        - kind: sequence_bumped
+          account: {address: "${acct.PB}"}
+          detail: {sequence_after: "55834574849"}
+        - kind: offer_changed
+          tx_index: 0
+          op_index: 0
+          account: {address: "${acct.PM}"}
+          detail: {offer_id: "1", change: updated, selling: "PP:${acct.PI}", buying: native, amount: "20000000", price_n: 1, price_d: 1}
+        - kind: balance_changed
+          tx_index: 0
+          op_index: 0
+          account: {address: "${acct.PD}"}
+          asset: "PP:${acct.PI}"
+          detail: {delta: "80000000", balance_after: "80000000"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.PB}"}}
+        - {kind: transfer, asset: native, amount: "80000000", from: {address: "${acct.PB}"}, to: {address: "${acct.PM}"}, count: 0}
+        - {kind: transfer, asset: "PP:${acct.PI}", amount: "80000000", from: {address: "${acct.PB}"}, to: {address: "${acct.PD}"}, count: 0}
+        - {kind: transfer, tx_index: 0, op_index: 0, asset: native, amount: "80000000", from: {address: "${acct.PA}"}, to: {address: "${acct.PM}"}, routing: {type: absent}}
+        - {kind: transfer, tx_index: 0, op_index: 0, asset: "PP:${acct.PI}", amount: "80000000", from: {address: "${acct.PM}"}, to: {address: "${acct.PA}"}, routing: {type: absent}}
+        - {kind: transfer, tx_index: 0, op_index: 0, asset: "PP:${acct.PI}", amount: "80000000", from: {address: "${acct.PA}"}, to: {address: "${acct.PD}"}, routing: {type: absent}}
+      movements_exact: true
+  - id: path-payment-succeeds
+    entry: classic/failed-and-successful-path-payment-amounts
+    same_ledger_as: path-payment-fails
+    tx:
+      source_account: "${acct.PA}"
+      fee: 1001
+      seq_num: "${seq.PA}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {path_payment_strict_receive: {send_asset: native, send_max: "100000000", destination: "${acct.PD}", dest_asset: "${asset.PP}", dest_amount: "80000000", path: []}}
+      ext: v0
+    sign: [{key: PA}]
+    expect_result: tx_success
+    expect_op_results: [path_payment_strict_receive.success]

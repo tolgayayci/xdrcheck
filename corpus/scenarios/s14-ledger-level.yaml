@@ -1,0 +1,238 @@
+# Ledger-level shapes, independent of any transaction pattern: an ordinary ledger at Protocol 28,
+# whose StellarValue is the whole-second STELLAR_VALUE_SIGNED arm; an ordinary ledger at Protocol 30,
+# STELLAR_VALUE_SIGNED_MS with a millisecond close time; a LEDGER_UPGRADE_FLAGS upgrade that gives the
+# header its v1 extension with flags 7 (the ledger also applies one payment); a ledger with no
+# transactions at all.
+#
+# The bring-up ledgers carry entries too: ledger 2, the upgrade of the fresh node from protocol 0
+# (LedgerCloseMeta v0; the upgrade creates every configuration setting, CONFIG_SETTING_SCP_TIMING
+# among them), and the ledger that applies the protocol's network settings set (a
+# LEDGER_UPGRADE_CONFIG with STATE/UPDATED pairs). stellar-core writes upgrade changes in no fixed
+# order, so their pinpoints select the change by its ledger key.
+scenario: ledger-level
+caps: [34, 38, 46, 70, 88]
+protocols: [28, 30]
+profile: lake
+actors: [P, Q, U, V]
+bring_up:
+  - ledger: upgrade
+    entry: ledger/standalone-upgrade-0-to-30-lcm-v0
+    protocols: [30]
+    expect:
+      ledger: {transactions: 0, operations: 0, events: 0, entry_changes: 19}
+      values:
+        - path: /v0/ledger_header/header/ledger_version
+          equals: 30
+          note: "The header already shows the protocol the ledger upgrades to; the empty transaction set was nominated under protocol 0."
+        - path: /v0/ledger_header/header/scp_value/upgrades
+          equals: ["000000010000001e", "00000004004c4b40"]
+          note: "Two upgrades as nominated: LEDGER_UPGRADE_VERSION (1) to 30, then LEDGER_UPGRADE_BASE_RESERVE (4) to 5000000 stroops."
+        - path: /v0/tx_set/txs
+          equals: []
+          note: "LedgerCloseMeta v0 with the legacy TransactionSet: the first ledger of a fresh chain is closed under protocol 0."
+        - path: /v0/upgrades_processing/1
+          equals: {upgrade: {base_reserve: 5000000}, changes: []}
+        - select:
+            in: /v0/upgrades_processing/0/changes
+            key: {config_setting: {config_setting_id: contract_cost_params_cpu_instructions}}
+            change: created
+          path: /created/data/config_setting/contract_cost_params_cpu_instructions/94
+          equals: {ext: v0, const_term: "1437210", linear_term: "6102"}
+          note: "The version upgrade creates every configuration setting of every protocol it crosses at its Protocol 30 value; the cost-parameter arrays have 95 entries (cost type 94 is the last one)."
+  - ledger: upgrade
+    entry: cap-0070/scp-timing-config-setting-created-at-upgrade
+    expect:
+      ledger: {transactions: 0, operations: 0, events: 0, entry_changes: 19}
+      values:
+        - select:
+            in: /v0/upgrades_processing/0/changes
+            key: {config_setting: {config_setting_id: scp_timing}}
+            change: created
+          path: /created
+          equals:
+            last_modified_ledger_seq: 2
+            data:
+              config_setting:
+                scp_timing:
+                  ledger_target_close_time_milliseconds: 5000
+                  nomination_timeout_initial_milliseconds: 1000
+                  nomination_timeout_increment_milliseconds: 1000
+                  ballot_timeout_initial_milliseconds: 1000
+                  ballot_timeout_increment_milliseconds: 1000
+            ext: v0
+          note: "CONFIG_SETTING_SCP_TIMING (CAP-0070), created with its initial values by the upgrade from protocol 0, beside the other configuration settings."
+  - ledger: settings-applied
+    entry: ledger/config-upgrade-set-applied
+    expect:
+      ledger: {transactions: 0, operations: 0, events: 0, entry_changes: 32}
+      values:
+        - path: /v2/tx_processing
+          equals: []
+        - select:
+            in: /v2/upgrades_processing/0/changes
+            key: {config_setting: {config_setting_id: state_archival}}
+            change: state
+          path: /state/data/config_setting/state_archival/min_persistent_ttl
+          equals: 4096
+          note: "STATE: the value the version upgrade created."
+        - select:
+            in: /v2/upgrades_processing/0/changes
+            key: {config_setting: {config_setting_id: state_archival}}
+            change: updated
+          path: /updated
+          equals:
+            last_modified_ledger_seq: 12
+            data:
+              config_setting:
+                state_archival:
+                  max_entry_ttl: 3110400
+                  min_temporary_ttl: 720
+                  min_persistent_ttl: 120960
+                  persistent_rent_rate_denominator: "1215"
+                  temp_rent_rate_denominator: "2430"
+                  max_entries_to_archive: 1000
+                  live_soroban_state_size_window_sample_size: 30
+                  live_soroban_state_size_window_sample_period: 64
+                  eviction_scan_size: 500000
+                  starting_eviction_scan_level: 7
+            ext: v0
+          note: "UPDATED: the value of the applied ConfigUpgradeSet. A LEDGER_UPGRADE_CONFIG writes one STATE/UPDATED pair per setting in the set (16 here), in no fixed order."
+setup:
+  - fund: {P: "100", Q: "100", U: "100", V: "100"}
+
+steps:
+  - id: ordinary-ledger-p28
+    entry: cap-0034/stellar-value-signed-before-protocol-30
+    protocols: [28]
+    tx:
+      source_account: "${acct.P}"
+      fee: 1000
+      seq_num: "${seq.P}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.Q}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: P}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/ledger_header/header/scp_value/ext/signed/node_id
+          equals: "GDLQEQW527BQAXKHDAGS3EPPSHN4WK4BRAVSSPPOUB3MESCCAGDBYTWK"
+          note: "STELLAR_VALUE_SIGNED (arm 1): the node's key and signature, with the close time in whole seconds. The node key is the generator's fixed validator key."
+        - path: /v2/ledger_header/header/scp_value/close_time
+          equals: "1712000000"
+        - path: /v2/ledger_header/header/ledger_version
+          equals: 28
+      participants:
+        must_include:
+          - {address: "${acct.P}", roles: [source, fee_payer]}
+          - {address: "${acct.Q}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.P}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.P}"}, to: {address: "${acct.Q}"}, routing: {type: absent}}
+      movements_exact: true
+
+  - id: ordinary-ledger-p30
+    entry: cap-0088/signed-ms-local-twins
+    protocols: [30]
+    tx:
+      source_account: "${acct.P}"
+      fee: 1000
+      seq_num: "${seq.P}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.Q}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: P}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/ledger_header/header/scp_value/ext/signed_ms/close_time_ms
+          equals: "1712000000000"
+          note: "STELLAR_VALUE_SIGNED_MS (CAP-0088): the close time again, in milliseconds, inside the signed extension."
+        - path: /v2/ledger_header/header/scp_value/close_time
+          equals: "1712000000"
+          note: "The whole-second close time stays in its usual field."
+        - path: /v2/ledger_header/header/scp_value/ext/signed_ms/lc_value_signature/node_id
+          equals: "GDLQEQW527BQAXKHDAGS3EPPSHN4WK4BRAVSSPPOUB3MESCCAGDBYTWK"
+        - path: /v2/ext
+          equals: {v1: {ext: v0, soroban_fee_write1_kb: "1000"}}
+          note: "LedgerCloseMeta ext.v1, written because the node runs with EMIT_LEDGER_CLOSE_META_EXT_V1."
+      participants:
+        must_include:
+          - {address: "${acct.P}", roles: [source, fee_payer]}
+          - {address: "${acct.Q}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.P}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.P}"}, to: {address: "${acct.Q}"}, routing: {type: absent}}
+      movements_exact: true
+
+  # U and V send nothing before this step and the payment carries no time bound, so the focus
+  # transaction has the shape of a stellar-core golden payment (check AG-4).
+  - id: header-flags-upgrade
+    entry: ledger/header-extension-v1-flags
+    upgrade: {flags: 7}
+    tx:
+      source_account: "${acct.U}"
+      fee: 1000
+      seq_num: "${seq.U}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.V}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: U}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/ledger_header/header/ext
+          equals: {v1: {flags: 7, ext: v0}}
+          note: "LedgerHeader.ext arm 1, LedgerHeaderExtensionV1: flags 7 disables liquidity-pool trading, deposits and withdrawals."
+        - path: /v2/ledger_header/header/scp_value/upgrades
+          equals: ["0000000500000007"]
+          note: "The upgrade as nominated: XDR of LedgerUpgrade LEDGER_UPGRADE_FLAGS (5) with value 7, carried as opaque bytes."
+        - path: /v2/upgrades_processing
+          equals: [{upgrade: {flags: 7}, changes: []}]
+          note: "A flags upgrade changes no ledger entry; only the header shows it. The ledger's one payment is applied before the upgrade."
+      participants:
+        must_include:
+          - {address: "${acct.U}", roles: [source, fee_payer]}
+          - {address: "${acct.V}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.U}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.U}"}, to: {address: "${acct.V}"}, routing: {type: absent}}
+      movements_exact: true
+
+  - id: empty-ledger
+    entry: ledger/empty-ledger-no-transactions
+    close: {}
+    expect:
+      ledger: {transactions: 0, operations: 0, events: 0, entry_changes: 0}
+      values:
+        - path: /v2/tx_set/v1/phases
+          equals: [{v0: []}, {v1: {base_fee: null, execution_stages: []}}]
+          note: "Both phases present and empty: the classic phase with no components, the parallel Soroban phase with no stages."
+        - path: /v2/tx_processing
+          equals: []
+        - path: /v2/upgrades_processing
+          equals: []

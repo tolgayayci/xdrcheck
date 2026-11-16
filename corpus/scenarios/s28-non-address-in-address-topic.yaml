@@ -1,0 +1,80 @@
+# A `transfer` event in the token-event layout `[transfer, from, to]` whose `to` topic is not an
+# address: the shape-emitter test contract (contracts/shape-emitter) publishes caller-supplied topics
+# verbatim (`emit`), here a symbol where a reader expects an address or a muxed address. A reader that
+# converts the topic to an address must return an error and keep reading the ledger; it must not
+# panic, halt, or record a movement or a participant. Protocol 30 only (`deploy_contract` needs
+# Protocol 29 or later). Nothing moves: the emitter holds no balances and MARK is never funded.
+scenario: non-address-in-address-topic
+caps: [67]
+protocols: [30]
+profile: lake
+actors: [A, B, MARK]     # MARK is never funded: it appears only as the event's `from`
+contracts:
+  emitter:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+    constructor_args: [{symbol: xcc}]
+setup:
+  - fund: {A: "10000", B: "10000"}
+  - deploy_contract: emitter
+
+steps:
+  - id: symbol-as-to
+    entry: cap-0067/transfer-event-with-non-address-to-topic
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: emit, args: [{vec: [{symbol: transfer}, {address: "${acct.MARK}"}, {symbol: not_an_address}]}, {i128: "1000000000"}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: transfer
+          - address: ${acct.MARK}
+          - symbol: not_an_address
+          data:
+            i128: "1000000000"
+        note: The token-event layout with a symbol where `to` (an address, or a muxed address since CAP-67) belongs.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        must_not_include:
+        - address: ${acct.MARK}
+          because: named only as the from of a transfer-shaped event whose to is not an address; no entry of it exists or changed
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true

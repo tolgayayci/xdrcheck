@@ -1,0 +1,720 @@
+# Operation result codes that stellar-core sets only while applying, each the one failure of its
+# transaction. Readers that map result codes to text, retry decisions or effects meet these arms on
+# real networks rarely or never:
+#
+# - accounts: a twenty-first signer (SET_OPTIONS_TOO_MANY_SIGNERS); authorization flags changed, and
+#   an account merged, while AUTH_IMMUTABLE is set (SET_OPTIONS_CANT_CHANGE,
+#   ACCOUNT_MERGE_IMMUTABLE_SET); a merge into an account whose native buying liabilities leave no
+#   room for the merged balance (ACCOUNT_MERGE_DEST_FULL: DF's offer buys
+#   9,223,372,030,000,000,000 stroops of XLM, so its balance plus liabilities is within 6.9e9
+#   stroops of INT64_MAX, and MG brings 1e10);
+# - sponsorship: an account that is being sponsored begins sponsoring another
+#   (BEGIN_SPONSORING_FUTURE_RESERVES_RECURSIVE); a claimable balance's sponsor revokes the
+#   sponsorship instead of transferring it (REVOKE_SPONSORSHIP_ONLY_TRANSFERABLE);
+# - a clawback of a claimable balance whose asset had no clawback flag
+#   (CLAWBACK_CLAIMABLE_BALANCE_NOT_CLAWBACK_ENABLED);
+# - liquidity pools on the pool native / LX:IL (ID c5566be8fc9344efb6ac00f4c18d50bb6bf10b89cbb8ea69a1b34f117ca90dce,
+#   sha256 of its LiquidityPoolParameters, which no passphrase enters): a pool-share trustline whose
+#   asset trustline is not even authorized to maintain liabilities
+#   (CHANGE_TRUST_NOT_AUTH_MAINTAIN_LIABILITIES); a deposit with the asset trustline only authorized
+#   to maintain liabilities (NOT_AUTHORIZED); a deposit beyond the pool-share trustline's limit
+#   (LINE_FULL); a withdrawal into an asset trustline at its limit (LINE_FULL); a deposit and a
+#   withdrawal whose asset trustline key is frozen (CAP-0077, TRUSTLINE_FROZEN: the frozen-key check
+#   of these operations runs only while applying);
+# - an authorization revocation that redeems pool shares into claimable balances inside a
+#   sponsorship sandwich, so the sandwich's sponsor must pay the balances' reserves and cannot
+#   (SET_TRUST_LINE_FLAGS_LOW_RESERVE, ALLOW_TRUST_LOW_RESERVE; SP holds exactly its minimum
+#   balance).
+scenario: apply-time-operation-results
+caps: [33, 35, 38, 77]
+protocols: [28, 30]
+profile: lake
+actors: [SG, IM, DF, MG, SA, SB, SC, CI, CC, IL, HC, HN, HF, HW, HZ, HL1, HL2, SP,
+         K01, K02, K03, K04, K05, K06, K07, K08, K09, K10, K11, K12, K13, K14, K15, K16, K17, K18, K19, K20, K21]
+assets:
+  DFA: {credit_alphanum4: {asset_code: DFA, issuer: "${acct.DF}"}}
+  CBA: {credit_alphanum4: {asset_code: CBA, issuer: "${acct.CI}"}}
+  LX: {credit_alphanum4: {asset_code: LX, issuer: "${acct.IL}"}}
+setup:
+  - fund: {SG: "100", IM: "100", DF: "100", MG: "1000", SA: "100", SB: "100", SC: "100", CI: "100", CC: "100", IL: "1000", HC: "100", HN: "100", HF: "100", HW: "100", HZ: "100", HL1: "100", HL2: "100", SP: "1"}
+  # SG gets twenty signers, the most an account may hold.
+  - tx:
+      source_account: "${acct.SG}"
+      fee: 2000
+      seq_num: "${seq.SG}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K01}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K02}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K03}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K04}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K05}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K06}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K07}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K08}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K09}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K10}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K11}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K12}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K13}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K14}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K15}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K16}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K17}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K18}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K19}", weight: 1}}}}
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K20}", weight: 1}}}}
+      ext: v0
+  # IM sets AUTH_IMMUTABLE (4); IL sets AUTH_REVOCABLE (2).
+  - tx:
+      source_account: "${acct.IM}"
+      fee: 200
+      seq_num: "${seq.IM}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: 4, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}}}
+        - {source_account: "${acct.IL}", body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: 2, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}}}
+      ext: v0
+  # DF, issuer of DFA, offers DFA for 922,337,203 XLM at 1:1: native buying liabilities that leave
+  # DF about 585 XLM of room below INT64_MAX.
+  - tx:
+      source_account: "${acct.DF}"
+      fee: 100
+      seq_num: "${seq.DF}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {manage_sell_offer: {selling: "${asset.DFA}", buying: native, amount: "9223372030000000000", price: {n: 1, d: 1}, offer_id: "0"}}
+      ext: v0
+  # CI creates a claimable balance of its own asset CBA (no clawback flag), claimable by CC.
+  - tx:
+      source_account: "${acct.CI}"
+      fee: 100
+      seq_num: "${seq.CI}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {create_claimable_balance: {asset: "${asset.CBA}", amount: "10000000", claimants: [{claimant_type_v0: {destination: "${acct.CC}", predicate: unconditional}}]}}
+      ext: v0
+  - trust: {HC: LX, HN: LX, HF: LX, HW: LX, HZ: LX, HL1: LX, HL2: LX}
+  - tx:
+      source_account: "${acct.IL}"
+      fee: 600
+      seq_num: "${seq.IL}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.HN}", asset: "${asset.LX}", amount: "10000000000"}}}
+        - {source_account: null, body: {payment: {destination: "${acct.HF}", asset: "${asset.LX}", amount: "10000000000"}}}
+        - {source_account: null, body: {payment: {destination: "${acct.HW}", asset: "${asset.LX}", amount: "10000000000"}}}
+        - {source_account: null, body: {payment: {destination: "${acct.HZ}", asset: "${asset.LX}", amount: "10000000000"}}}
+        - {source_account: null, body: {payment: {destination: "${acct.HL1}", asset: "${asset.LX}", amount: "10000000000"}}}
+        - {source_account: null, body: {payment: {destination: "${acct.HL2}", asset: "${asset.LX}", amount: "10000000000"}}}
+      ext: v0
+  # Pool-share trustlines (HF's limited to 1000 shares); HW, HZ, HL1 and HL2 deposit 10 XLM and 10 LX each.
+  - tx:
+      source_account: "${acct.HW}"
+      fee: 1000
+      seq_num: "${seq.HW}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.LX}", fee: 30}}}, limit: "9223372036854775807"}}}
+        - {source_account: null, body: {liquidity_pool_deposit: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}}
+        - {source_account: "${acct.HZ}", body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.LX}", fee: 30}}}, limit: "9223372036854775807"}}}
+        - {source_account: "${acct.HZ}", body: {liquidity_pool_deposit: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}}
+        - {source_account: "${acct.HL1}", body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.LX}", fee: 30}}}, limit: "9223372036854775807"}}}
+        - {source_account: "${acct.HL1}", body: {liquidity_pool_deposit: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}}
+        - {source_account: "${acct.HL2}", body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.LX}", fee: 30}}}, limit: "9223372036854775807"}}}
+        - {source_account: "${acct.HL2}", body: {liquidity_pool_deposit: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}}
+        - {source_account: "${acct.HN}", body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.LX}", fee: 30}}}, limit: "9223372036854775807"}}}
+        - {source_account: "${acct.HF}", body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.LX}", fee: 30}}}, limit: "1000"}}}
+      ext: v0
+  # HW's LX limit drops to its balance (990 LX); IL leaves HN only authorized to maintain
+  # liabilities and takes HC's authorization away entirely.
+  - tx:
+      source_account: "${acct.IL}"
+      fee: 300
+      seq_num: "${seq.IL}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.HW}", body: {change_trust: {line: "${asset.LX}", limit: "9900000000"}}}
+        - {source_account: null, body: {set_trust_line_flags: {trustor: "${acct.HN}", asset: "${asset.LX}", clear_flags: 1, set_flags: 2}}}
+        - {source_account: null, body: {set_trust_line_flags: {trustor: "${acct.HC}", asset: "${asset.LX}", clear_flags: 1, set_flags: 0}}}
+      ext: v0
+  # HZ's LX trustline key is frozen (CAP-0077).
+  - config_upgrade:
+      frozen_ledger_keys_delta:
+        keys_to_freeze: [{trustline: {account_id: "${acct.HZ}", asset: "${asset.LX}"}}]
+        keys_to_unfreeze: []
+
+  # HZ sends one transaction first, so the deposit's source account carries the sequence-time
+  # extension (AccountEntryExtensionV3), as the source of stellar-core's own golden deposit does.
+  - tx:
+      source_account: "${acct.HZ}"
+      fee: 100
+      seq_num: "${seq.HZ}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {bump_sequence: {bump_to: "0"}}}
+      ext: v0
+
+steps:
+  - id: too-many-signers
+    entry: classic/set-options-too-many-signers
+    tx:
+      source_account: "${acct.SG}"
+      fee: 1000
+      seq_num: "${seq.SG}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.K21}", weight: 1}}}}
+      ext: v0
+    sign: [{key: SG}]
+    expect_result: tx_failed
+    expect_op_results: [set_options.too_many_signers]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [set_options.too_many_signers], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/set_options"
+          equals: too_many_signers
+        - path: "/v2/tx_processing/0/tx_apply_processing/v4/operations"
+          equals: []
+          note: "A failed transaction has no operation meta."
+      participants:
+        must_include:
+          - {address: "${acct.SG}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.K21}", because: "named only as the signer key of the failed SetOptions; no ledger entry of K21 exists or changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.SG}"}, detail: {sequence_after: "55834574850"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.SG}"}}
+      movements_exact: true
+
+  - id: auth-immutable-cant-change
+    entry: classic/set-options-auth-immutable-cant-change
+    tx:
+      source_account: "${acct.IM}"
+      fee: 1000
+      seq_num: "${seq.IM}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: 1, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}}}
+      ext: v0
+    sign: [{key: IM}]
+    expect_result: tx_failed
+    expect_op_results: [set_options.cant_change]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [set_options.cant_change], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/set_options"
+          equals: cant_change
+        - select:
+            in: "/v2/tx_processing/0/fee_processing"
+            key: {account: {account_id: "${acct.IM}"}}
+            change: updated
+          path: "/updated/data/account/flags"
+          equals: 4
+          note: "IM's flags stay AUTH_IMMUTABLE (4) only."
+      participants:
+        must_include:
+          - {address: "${acct.IM}", roles: [fee_payer, source]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.IM}"}, detail: {sequence_after: "55834574850"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IM}"}}
+      movements_exact: true
+
+  - id: merge-auth-immutable
+    entry: classic/account-merge-auth-immutable
+    tx:
+      source_account: "${acct.IM}"
+      fee: 1000
+      seq_num: "${seq.IM}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {account_merge: "${acct.SG}"}}
+      ext: v0
+    sign: [{key: IM}]
+    expect_result: tx_failed
+    expect_op_results: [account_merge.immutable_set]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [account_merge.immutable_set], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/account_merge"
+          equals: immutable_set
+      participants:
+        must_include:
+          - {address: "${acct.IM}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.SG}", because: "the destination of the failed merge; no ledger entry of SG changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.IM}"}, detail: {sequence_after: "55834574851"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IM}"}}
+        - {kind: transfer, asset: native, amount: "999999700", from: {address: "${acct.IM}"}, to: {address: "${acct.SG}"}, count: 0}
+      movements_exact: true
+
+  - id: merge-destination-full
+    entry: classic/account-merge-destination-full
+    tx:
+      source_account: "${acct.MG}"
+      fee: 1000
+      seq_num: "${seq.MG}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {account_merge: "${acct.DF}"}}
+      ext: v0
+    sign: [{key: MG}]
+    expect_result: tx_failed
+    expect_op_results: [account_merge.dest_full]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [account_merge.dest_full], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/account_merge"
+          equals: dest_full
+      participants:
+        must_include:
+          - {address: "${acct.MG}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.DF}", because: "the destination of the failed merge; no ledger entry of DF changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.MG}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.MG}"}}
+        - {kind: transfer, asset: native, amount: "9999999900", from: {address: "${acct.MG}"}, to: {address: "${acct.DF}"}, count: 0}
+      movements_exact: true
+
+  - id: begin-sponsoring-recursive
+    entry: cap-0033/begin-sponsoring-recursive
+    tx:
+      source_account: "${acct.SA}"
+      fee: 1000
+      seq_num: "${seq.SA}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.SB}"}}}
+        - {source_account: "${acct.SB}", body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.SC}"}}}
+        - {source_account: "${acct.SB}", body: end_sponsoring_future_reserves}
+      ext: v0
+    sign: [{key: SA}, {key: SB}]
+    expect_result: tx_failed
+    expect_op_results: [begin_sponsoring_future_reserves.success, begin_sponsoring_future_reserves.recursive, end_sponsoring_future_reserves.success]
+    expect:
+      ledger: {transactions: 1, operations: 3, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [begin_sponsoring_future_reserves.success, begin_sponsoring_future_reserves.recursive, end_sponsoring_future_reserves.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/1/op_inner/begin_sponsoring_future_reserves"
+          equals: recursive
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/begin_sponsoring_future_reserves"
+          equals: success
+        - path: "/v2/tx_processing/0/tx_apply_processing/v4/operations"
+          equals: []
+          note: "Nothing of the first operation's success remains: the failed transaction has no operation meta."
+      participants:
+        must_include:
+          - {address: "${acct.SA}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.SC}", because: "named only as the sponsored ID of the failed second operation; no ledger entry of SC changed"}
+          - {address: "${acct.SB}", because: "sponsored by the first operation and source of the others, all rolled back with the failed transaction; nothing of SB changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.SA}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.SA}"}}
+      movements_exact: true
+
+  - id: change-trust-not-auth-maintain
+    entry: cap-0038/change-trust-pool-share-not-authorized-to-maintain
+    tx:
+      source_account: "${acct.HC}"
+      fee: 1000
+      seq_num: "${seq.HC}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.LX}", fee: 30}}}, limit: "9223372036854775807"}}}
+      ext: v0
+    sign: [{key: HC}]
+    expect_result: tx_failed
+    expect_op_results: [change_trust.not_auth_maintain_liabilities]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [change_trust.not_auth_maintain_liabilities], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/change_trust"
+          equals: not_auth_maintain_liabilities
+      participants:
+        must_include:
+          - {address: "${acct.HC}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.IL}", because: "LX's issuer; nothing of IL changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.HC}"}, detail: {sequence_after: "55834574850"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HC}"}}
+      movements_exact: true
+
+  - id: deposit-not-authorized
+    entry: cap-0038/pool-deposit-not-authorized
+    tx:
+      source_account: "${acct.HN}"
+      fee: 1000
+      seq_num: "${seq.HN}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {liquidity_pool_deposit: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}}
+      ext: v0
+    sign: [{key: HN}]
+    expect_result: tx_failed
+    expect_op_results: [liquidity_pool_deposit.not_authorized]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [liquidity_pool_deposit.not_authorized], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/liquidity_pool_deposit"
+          equals: not_authorized
+      participants:
+        must_include:
+          - {address: "${acct.HN}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.IL}", because: "LX's issuer; nothing of IL changed"}
+          - {address: "LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7", because: "the pool named by the failed operation; its reserves and shares are unchanged"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.HN}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HN}"}}
+      movements_exact: true
+
+  - id: deposit-line-full
+    entry: cap-0038/pool-deposit-line-full
+    tx:
+      source_account: "${acct.HF}"
+      fee: 1000
+      seq_num: "${seq.HF}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {liquidity_pool_deposit: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}}
+      ext: v0
+    sign: [{key: HF}]
+    expect_result: tx_failed
+    expect_op_results: [liquidity_pool_deposit.line_full]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [liquidity_pool_deposit.line_full], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/liquidity_pool_deposit"
+          equals: line_full
+      participants:
+        must_include:
+          - {address: "${acct.HF}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.IL}", because: "LX's issuer; nothing of IL changed"}
+          - {address: "LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7", because: "the pool named by the failed operation; its reserves and shares are unchanged"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.HF}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HF}"}}
+      movements_exact: true
+
+  - id: withdraw-line-full
+    entry: cap-0038/pool-withdraw-line-full
+    tx:
+      source_account: "${acct.HW}"
+      fee: 1000
+      seq_num: "${seq.HW}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {liquidity_pool_withdraw: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, amount: "10000000", min_amount_a: "0", min_amount_b: "0"}}}
+      ext: v0
+    sign: [{key: HW}]
+    expect_result: tx_failed
+    expect_op_results: [liquidity_pool_withdraw.line_full]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [liquidity_pool_withdraw.line_full], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/liquidity_pool_withdraw"
+          equals: line_full
+      participants:
+        must_include:
+          - {address: "${acct.HW}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.IL}", because: "LX's issuer; nothing of IL changed"}
+          - {address: "LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7", because: "the pool named by the failed operation; its reserves and shares are unchanged"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.HW}"}, detail: {sequence_after: "55834574850"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HW}"}}
+      movements_exact: true
+
+  - id: deposit-trustline-frozen
+    entry: cap-0077/pool-deposit-trustline-frozen
+    tx:
+      source_account: "${acct.HZ}"
+      fee: 1000
+      seq_num: "${seq.HZ}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {liquidity_pool_deposit: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}}
+      ext: v0
+    sign: [{key: HZ}]
+    expect_result: tx_failed
+    expect_op_results: [liquidity_pool_deposit.trustline_frozen]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [liquidity_pool_deposit.trustline_frozen], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/liquidity_pool_deposit"
+          equals: trustline_frozen
+      participants:
+        must_include:
+          - {address: "${acct.HZ}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.IL}", because: "LX's issuer; nothing of IL changed"}
+          - {address: "LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7", because: "the pool named by the failed operation; its reserves and shares are unchanged"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.HZ}"}, detail: {sequence_after: "55834574850"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HZ}"}}
+      movements_exact: true
+
+  - id: withdraw-trustline-frozen
+    entry: cap-0077/pool-withdraw-trustline-frozen
+    tx:
+      source_account: "${acct.HZ}"
+      fee: 1000
+      seq_num: "${seq.HZ}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {liquidity_pool_withdraw: {liquidity_pool_id: LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7, amount: "10000000", min_amount_a: "0", min_amount_b: "0"}}}
+      ext: v0
+    sign: [{key: HZ}]
+    expect_result: tx_failed
+    expect_op_results: [liquidity_pool_withdraw.trustline_frozen]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [liquidity_pool_withdraw.trustline_frozen], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/liquidity_pool_withdraw"
+          equals: trustline_frozen
+      participants:
+        must_include:
+          - {address: "${acct.HZ}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.IL}", because: "LX's issuer; nothing of IL changed"}
+          - {address: "LDCVM27I7SJUJ35WVQAPJQMNKC5WX4ILRHF3R2TJUGZU6EL4VEG45ZL7", because: "the pool named by the failed operation; its reserves and shares are unchanged"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.HZ}"}, detail: {sequence_after: "55834574851"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HZ}"}}
+      movements_exact: true
+
+  - id: set-trust-line-flags-low-reserve
+    entry: cap-0038/set-trust-line-flags-redeem-low-reserve
+    tx:
+      source_account: "${acct.IL}"
+      fee: 1000
+      seq_num: "${seq.IL}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.SP}", body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.HL1}"}}}
+        - {source_account: null, body: {set_trust_line_flags: {trustor: "${acct.HL1}", asset: "${asset.LX}", clear_flags: 1, set_flags: 0}}}
+        - {source_account: "${acct.HL1}", body: end_sponsoring_future_reserves}
+      ext: v0
+    sign: [{key: IL}, {key: SP}, {key: HL1}]
+    expect_result: tx_failed
+    expect_op_results: [begin_sponsoring_future_reserves.success, set_trust_line_flags.low_reserve, end_sponsoring_future_reserves.success]
+    expect:
+      ledger: {transactions: 1, operations: 3, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [begin_sponsoring_future_reserves.success, set_trust_line_flags.low_reserve, end_sponsoring_future_reserves.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/1/op_inner/set_trust_line_flags"
+          equals: low_reserve
+        - path: "/v2/tx_processing/0/tx_apply_processing/v4/operations"
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.IL}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.SP}", because: "the would-be sponsor of the redeemed balances; the transaction failed and nothing of SP changed"}
+          - {address: "${acct.HL1}", because: "the trustor whose authorization was not revoked; nothing of HL1 changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.IL}"}, detail: {sequence_after: "55834574851"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IL}"}}
+      movements_exact: true
+
+  - id: allow-trust-low-reserve
+    entry: cap-0038/allow-trust-redeem-low-reserve
+    tx:
+      source_account: "${acct.IL}"
+      fee: 1000
+      seq_num: "${seq.IL}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.SP}", body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.HL2}"}}}
+        - {source_account: null, body: {allow_trust: {trustor: "${acct.HL2}", asset: LX, authorize: 0}}}
+        - {source_account: "${acct.HL2}", body: end_sponsoring_future_reserves}
+      ext: v0
+    sign: [{key: IL}, {key: SP}, {key: HL2}]
+    expect_result: tx_failed
+    expect_op_results: [begin_sponsoring_future_reserves.success, allow_trust.low_reserve, end_sponsoring_future_reserves.success]
+    expect:
+      ledger: {transactions: 1, operations: 3, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [begin_sponsoring_future_reserves.success, allow_trust.low_reserve, end_sponsoring_future_reserves.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/1/op_inner/allow_trust"
+          equals: low_reserve
+        - path: "/v2/tx_processing/0/tx_apply_processing/v4/operations"
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.IL}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.SP}", because: "the would-be sponsor of the redeemed balances; the transaction failed and nothing of SP changed"}
+          - {address: "${acct.HL2}", because: "the trustor whose authorization was not revoked; nothing of HL2 changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.IL}"}, detail: {sequence_after: "55834574852"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IL}"}}
+      movements_exact: true
+
+  # CI's balance: created by CI's first transaction (sequence 55834574849, operation 0), so its ID is
+  # BAAD2FXSUYMKIZUQFAI6HEQEC3LQZR7GMVHPBZTT5CX5OW7PTGDS3UXBTU on every chain.
+  - id: clawback-claimable-balance-not-enabled
+    entry: cap-0035/clawback-claimable-balance-not-enabled
+    tx:
+      source_account: "${acct.CI}"
+      fee: 1000
+      seq_num: "${seq.CI}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {clawback_claimable_balance: {balance_id: BAAD2FXSUYMKIZUQFAI6HEQEC3LQZR7GMVHPBZTT5CX5OW7PTGDS3UXBTU}}}
+      ext: v0
+    sign: [{key: CI}]
+    expect_result: tx_failed
+    expect_op_results: [clawback_claimable_balance.not_clawback_enabled]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [clawback_claimable_balance.not_clawback_enabled], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/clawback_claimable_balance"
+          equals: not_clawback_enabled
+        - path: "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/clawback_claimable_balance/balance_id"
+          equals: "BAAD2FXSUYMKIZUQFAI6HEQEC3LQZR7GMVHPBZTT5CX5OW7PTGDS3UXBTU"
+      participants:
+        must_include:
+          - {address: "${acct.CI}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.CC}", because: "the balance's claimant; nothing of CC changed"}
+          - {address: "BAAD2FXSUYMKIZUQFAI6HEQEC3LQZR7GMVHPBZTT5CX5OW7PTGDS3UXBTU", because: "the claimable balance named by the failed operation; it is unchanged"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.CI}"}, detail: {sequence_after: "55834574850"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.CI}"}}
+        - {kind: clawback, asset: "CBA:${acct.CI}", amount: "10000000", count: 0}
+      movements_exact: true
+
+  - id: revoke-claimable-balance-sponsorship
+    entry: cap-0033/revoke-claimable-balance-sponsorship-only-transferable
+    tx:
+      source_account: "${acct.CI}"
+      fee: 1000
+      seq_num: "${seq.CI}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {revoke_sponsorship: {ledger_entry: {claimable_balance: {balance_id: BAAD2FXSUYMKIZUQFAI6HEQEC3LQZR7GMVHPBZTT5CX5OW7PTGDS3UXBTU}}}}}
+      ext: v0
+    sign: [{key: CI}]
+    expect_result: tx_failed
+    expect_op_results: [revoke_sponsorship.only_transferable]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [revoke_sponsorship.only_transferable], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/revoke_sponsorship"
+          equals: only_transferable
+        - path: "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/revoke_sponsorship/ledger_entry/claimable_balance/balance_id"
+          equals: "BAAD2FXSUYMKIZUQFAI6HEQEC3LQZR7GMVHPBZTT5CX5OW7PTGDS3UXBTU"
+          note: "CI's balance; CI created it and is its sponsor."
+      participants:
+        must_include:
+          - {address: "${acct.CI}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.CC}", because: "the balance's claimant; nothing of CC changed"}
+          - {address: "BAAD2FXSUYMKIZUQFAI6HEQEC3LQZR7GMVHPBZTT5CX5OW7PTGDS3UXBTU", because: "the claimable balance named by the failed operation; it is unchanged"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.CI}"}, detail: {sequence_after: "55834574851"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.CI}"}}
+      movements_exact: true

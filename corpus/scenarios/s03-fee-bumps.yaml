@@ -1,0 +1,68 @@
+# CAP-0015 fee bump with a muxed fee source (ID 7) whose inner transaction fails, as the
+# local-core probe executed it (evidence/local-core/): C pays an account that was never created,
+# the inner payment fails with no_destination, and D pays the fee through M(D, 7).
+scenario: fee-bumps
+caps: [15, 27]
+protocols: [28, 30]
+profile: lake
+actors: [C, D, GHOST]          # GHOST is never funded
+setup:
+  - fund: {C: "10000", D: "10000"}
+
+steps:
+  - id: fee-bump-muxed-fee-source-inner-failed
+    entry: cap-0015/fee-bump-muxed-fee-source-inner-failed
+    tx:
+      source_account: "${acct.C}"
+      fee: 100
+      seq_num: "${seq.C}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.GHOST}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: C}]
+    fee_bump: {fee_source: "${muxed(D, 7)}", fee: "1000"}    # signed by D
+    expect_result: tx_fee_bump_inner_failed
+    expect_op_results: [payment.no_destination]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - index: 0
+          hash: "${derived.tx_hash}"
+          successful: false
+          result_code: tx_fee_bump_inner_failed
+          inner_hash: "${derived.inner_tx_hash}"
+          inner_successful: false
+          inner_result_code: tx_failed
+          operation_result_codes: [payment.no_destination]
+          fee_charged: "${derived.fee_charged}"
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx_fee_bump/tx/fee_source
+          equals: "${muxed(D, 7)}"
+          note: "The fee source is muxed; its base account D pays."
+        - path: /v2/tx_processing/0/result/result/result/tx_fee_bump_inner_failed/result/fee_charged
+          equals: "0"
+          note: "The inner transaction is not charged (Protocol 25 and later)."
+        - path: /v2/tx_processing/0/fee_processing/1/updated/data/account/account_id
+          equals: "${acct.D}"
+          note: "The fee is taken from D's base account; the muxed ID appears nowhere in the entry changes."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations
+          equals: []
+          note: "A failed transaction has no operation meta."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/events/0/event/body/v0/topics/1
+          equals: {address: "${acct.D}"}
+          note: "The fee event names the base account."
+      participants:
+        must_include:
+          - {address: "${acct.D}", muxed_id: "7", on_chain_form: "${muxed(D, 7)}", roles: [fee_payer]}
+          - {address: "${acct.C}", roles: [source]}
+        must_not_include:
+          - {address: "${acct.GHOST}", because: "the payment to it failed; the account does not exist"}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.D}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.C}"}, to: {address: "${acct.GHOST}"}, count: 0}
+      movements_exact: true
+    fields: {validated: [VF-10, VF-11], partially_validated: [VF-09], passed_through: [VF-12]}

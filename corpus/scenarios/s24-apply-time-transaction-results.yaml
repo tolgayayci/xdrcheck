@@ -1,0 +1,634 @@
+# Transaction result codes stellar-core sets while applying, on a transaction that was valid when
+# the ledger's transaction set was built: an earlier transaction of the same ledger, applied first in
+# a controlled order (`${order_nonce}`, a lower time bound, searched until every chain applies the
+# ledger in the order written), changes the state the later one depends on.
+#
+# - txNO_ACCOUNT: the source account was merged away by the earlier transaction (MA's own key signs
+#   the merge, from MB's transaction).
+# - txBAD_AUTH_EXTRA: the earlier transaction adds XA as a signer of Y. XA's transaction has an
+#   operation whose source is Y and carries XA's signature, then Y's: when applied, XA's signature
+#   already meets Y's threshold, so Y's signature is never needed (stellar-core checks signatures
+#   in envelope order and stops at the threshold).
+# - txBAD_MIN_SEQ_AGE_OR_GAP: the earlier transaction bumps GA's sequence number to a lower value, a
+#   no-op that still sets GA's seqLedger to this ledger, so GA's transaction with
+#   min_seq_ledger_gap 1 now comes too early.
+# - opBAD_AUTH: the earlier transaction sets OX's master weight to 0, so the operation of OY's
+#   transaction whose source is OX is no longer authorised; the transaction fails with txFAILED.
+#
+# The same failures inside a fee bump (CAP-0015) leave the outer result
+# txFEE_BUMP_INNER_FAILED with the code in the inner result: txBAD_SEQ (QW bumps QS's sequence
+# number), txBAD_AUTH (AW2 zeroes AX2's master weight), txNO_ACCOUNT, txBAD_AUTH_EXTRA,
+# txBAD_MIN_SEQ_AGE_OR_GAP, and txBAD_SPONSORSHIP (the inner transaction begins sponsoring and
+# never ends it; no earlier transaction is needed). FB pays every fee bump.
+scenario: apply-time-transaction-results
+caps: [15, 21, 33]
+protocols: [28, 30]
+profile: lake
+actors: [MA, MB, XA, XW, Y, GA, GW, OX, OY, OW, FB, NA, NB, XA2, XW2, Y2, GA2, GW2, QS, QW, AX2, AW2, BS1, BS2]
+setup:
+  - fund: {MA: "100", MB: "100", XA: "100", XW: "100", Y: "100", GA: "100", GW: "100", OX: "100", OY: "100", OW: "100", FB: "1000", NA: "100", NB: "100", XA2: "100", XW2: "100", Y2: "100", GA2: "100", GW2: "100", QS: "100", QW: "100", AX2: "100", AW2: "100", BS1: "100", BS2: "100"}
+
+steps:
+  # --- txNO_ACCOUNT ---------------------------------------------------------------------------
+  - id: no-account
+    entry: classic/apply-time-failure-result-codes.no-account
+    order: [merge-ma, no-account]
+    tx:
+      source_account: "${acct.MA}"
+      fee: 1000
+      seq_num: "${seq.MA}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.MB}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: MA}]
+    expect_result: tx_no_account
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 3, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [account_merge.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_no_account, operation_result_codes: [], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result"
+          equals: tx_no_account
+          note: "A unit arm: no operation results."
+        - path: "/v2/tx_processing/0/result/result/result/tx_success/0/op_inner/account_merge/success"
+          equals: "999999900"
+          note: "Applied first: the merge moves MA's balance, already reduced by the fee of MA's own transaction (fees are charged before any transaction applies)."
+        - path: "/v2/tx_processing/1/tx_apply_processing/v4/operations"
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.MA}", roles: [fee_payer]}
+        must_not_include:
+          - {address: "${acct.MB}", because: "only the destination of MA's failed payment; MA's transaction changed nothing of MB (MB's balance changed in its own transaction)"}
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.MA}"}}
+        - {kind: transfer, asset: native, amount: "10000000", from: {address: "${acct.MA}"}, to: {address: "${acct.MB}"}, count: 0}
+      movements_exact: true
+  - id: merge-ma
+    entry: classic/apply-time-failure-result-codes.no-account
+    same_ledger_as: no-account
+    tx:
+      source_account: "${acct.MB}"
+      fee: 1001
+      seq_num: "${seq.MB}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.MA}", body: {account_merge: "${acct.MB}"}}
+      ext: v0
+    sign: [{key: MB}, {key: MA}]
+    expect_result: tx_success
+    expect_op_results: [account_merge.success]
+
+  # --- txBAD_AUTH_EXTRA ------------------------------------------------------------------------
+  - id: bad-auth-extra
+    entry: classic/apply-time-failure-result-codes.bad-auth-extra
+    order: [add-xa-to-y, bad-auth-extra]
+    tx:
+      source_account: "${acct.XA}"
+      fee: 1000
+      seq_num: "${seq.XA}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - {source_account: "${acct.Y}", body: {payment: {destination: "${acct.XW}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: XA}, {key: Y}]
+    expect_result: tx_bad_auth_extra
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_bad_auth_extra, operation_result_codes: [], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result"
+          equals: tx_bad_auth_extra
+          note: "A unit arm: no operation results."
+        - select:
+            in: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes"
+            key: {account: {account_id: "${acct.Y}"}}
+            change: updated
+          path: "/updated/data/account/signers"
+          equals: [{key: "${acct.XA}", weight: 1}]
+          note: "Applied first: XA becomes a signer of Y with weight 1."
+        - path: "/v2/tx_processing/1/tx_apply_processing/v4/operations"
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.XA}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.Y}", because: "the source of the failed transaction's operation; nothing of Y changed in that transaction"}
+          - {address: "${acct.XW}", because: "only the destination of the failed payment"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 1, account: {address: "${acct.XA}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.XA}"}}
+        - {kind: transfer, asset: native, amount: "10000000", from: {address: "${acct.Y}"}, to: {address: "${acct.XW}"}, count: 0}
+      movements_exact: true
+  - id: add-xa-to-y
+    entry: classic/apply-time-failure-result-codes.bad-auth-extra
+    same_ledger_as: bad-auth-extra
+    tx:
+      source_account: "${acct.XW}"
+      fee: 1001
+      seq_num: "${seq.XW}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.Y}", body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.XA}", weight: 1}}}}
+      ext: v0
+    sign: [{key: XW}, {key: Y}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+
+  # --- txBAD_MIN_SEQ_AGE_OR_GAP ----------------------------------------------------------------
+  - id: bad-min-seq-ledger-gap
+    entry: classic/apply-time-failure-result-codes.bad-min-seq-age-or-gap
+    order: [touch-ga-sequence, bad-min-seq-ledger-gap]
+    tx:
+      source_account: "${acct.GA}"
+      fee: 1000
+      seq_num: "${seq.GA}"
+      cond:
+        v2:
+          time_bounds: {min_time: "${order_nonce}", max_time: "0"}
+          ledger_bounds: null
+          min_seq_num: null
+          min_seq_age: "0"
+          min_seq_ledger_gap: 1
+          extra_signers: []
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.GW}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: GA}]
+    expect_result: tx_bad_min_seq_age_or_gap
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [bump_sequence.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_bad_min_seq_age_or_gap, operation_result_codes: [], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result"
+          equals: tx_bad_min_seq_age_or_gap
+          note: "A unit arm: no operation results."
+        - select:
+            in: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes"
+            key: {account: {account_id: "${acct.GA}"}}
+            change: updated
+          path: "/updated/data/account/ext/v1/ext/v2/ext/v3/seq_ledger"
+          equals: 16
+          note: "Applied first: the no-op bump sets GA's seqLedger to this ledger, 16."
+        - path: "/v2/tx_processing/1/tx_apply_processing/v4/operations"
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.GA}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.GW}", because: "only the destination of the failed payment"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 1, account: {address: "${acct.GA}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.GA}"}}
+        - {kind: transfer, asset: native, amount: "10000000", from: {address: "${acct.GA}"}, to: {address: "${acct.GW}"}, count: 0}
+      movements_exact: true
+  - id: touch-ga-sequence
+    entry: classic/apply-time-failure-result-codes.bad-min-seq-age-or-gap
+    same_ledger_as: bad-min-seq-ledger-gap
+    tx:
+      source_account: "${acct.GW}"
+      fee: 1001
+      seq_num: "${seq.GW}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.GA}", body: {bump_sequence: {bump_to: "1"}}}
+      ext: v0
+    sign: [{key: GW}, {key: GA}]
+    expect_result: tx_success
+    expect_op_results: [bump_sequence.success]
+
+  # --- opBAD_AUTH ------------------------------------------------------------------------------
+  - id: op-bad-auth
+    entry: classic/apply-time-failure-result-codes.op-bad-auth
+    order: [zero-master-of-ox, op-bad-auth]
+    tx:
+      source_account: "${acct.OY}"
+      fee: 1000
+      seq_num: "${seq.OY}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - {source_account: "${acct.OX}", body: {payment: {destination: "${acct.OY}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: OY}, {key: OX}]
+    expect_result: tx_failed
+    expect_op_results: [op_bad_auth]
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [op_bad_auth], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result/tx_failed"
+          equals: [op_bad_auth]
+          note: "OperationResult arm opBAD_AUTH (-1): a code with no inner operation result."
+        - select:
+            in: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes"
+            key: {account: {account_id: "${acct.OX}"}}
+            change: updated
+          path: "/updated/data/account/thresholds"
+          equals: "00000000"
+          note: "Applied first: OX's master weight (first threshold byte) goes from 1 to 0."
+      participants:
+        must_include:
+          - {address: "${acct.OY}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${acct.OX}", because: "the source of the failed operation; nothing of OX changed in this transaction"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 1, account: {address: "${acct.OY}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.OY}"}}
+        - {kind: transfer, asset: native, amount: "10000000", from: {address: "${acct.OX}"}, to: {address: "${acct.OY}"}, count: 0}
+      movements_exact: true
+  - id: zero-master-of-ox
+    entry: classic/apply-time-failure-result-codes.op-bad-auth
+    same_ledger_as: op-bad-auth
+    tx:
+      source_account: "${acct.OW}"
+      fee: 1001
+      seq_num: "${seq.OW}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.OX}", body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: 0, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}}}
+      ext: v0
+    sign: [{key: OW}, {key: OX}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+
+  # --- inside a fee bump -----------------------------------------------------------------------
+  - id: inner-bad-seq
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-seq
+    order: [bump-qs-sequence, inner-bad-seq]
+    tx:
+      source_account: "${acct.QS}"
+      fee: 100
+      seq_num: "${seq.QS}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.QW}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: QS}]
+    fee_bump: {fee_source: "${acct.FB}", fee: "1000"}
+    expect_result: tx_fee_bump_inner_failed
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [bump_sequence.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_fee_bump_inner_failed, operation_result_codes: [], fee_charged: "${derived.fee_charged}", inner_hash: "${derived.inner_tx_hash}", inner_successful: false, inner_result_code: tx_bad_seq}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/result"
+          equals: tx_bad_seq
+          note: "The inner result's code; the outer result is txFEE_BUMP_INNER_FAILED."
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/fee_charged"
+          equals: "0"
+          note: "The inner transaction is not charged; FB pays the outer fee."
+        - select:
+            in: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes"
+            key: {account: {account_id: "${acct.QS}"}}
+            change: updated
+          path: "/updated/data/account/seq_num"
+          equals: "4611686018427387904"
+          note: "Applied first: QS's sequence number moves to 2^62."
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [fee_payer]}
+        must_not_include:
+          - {address: "${acct.QW}", because: "only the destination of the failed inner payment"}
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.FB}"}}
+      movements_exact: true
+  - id: bump-qs-sequence
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-seq
+    same_ledger_as: inner-bad-seq
+    tx:
+      source_account: "${acct.QW}"
+      fee: 1001
+      seq_num: "${seq.QW}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.QS}", body: {bump_sequence: {bump_to: "4611686018427387904"}}}
+      ext: v0
+    sign: [{key: QW}, {key: QS}]
+    expect_result: tx_success
+    expect_op_results: [bump_sequence.success]
+
+  - id: inner-bad-auth
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-auth
+    order: [zero-master-of-ax2, inner-bad-auth]
+    tx:
+      source_account: "${acct.AX2}"
+      fee: 100
+      seq_num: "${seq.AX2}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.AW2}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: AX2}]
+    fee_bump: {fee_source: "${acct.FB}", fee: "1000"}
+    expect_result: tx_fee_bump_inner_failed
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 12}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_fee_bump_inner_failed, operation_result_codes: [], fee_charged: "${derived.fee_charged}", inner_hash: "${derived.inner_tx_hash}", inner_successful: false, inner_result_code: tx_bad_auth}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/result"
+          equals: tx_bad_auth
+          note: "The inner result's code; the outer result is txFEE_BUMP_INNER_FAILED."
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/fee_charged"
+          equals: "0"
+          note: "The inner transaction is not charged; FB pays the outer fee."
+        - select:
+            in: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes"
+            key: {account: {account_id: "${acct.AX2}"}}
+            change: updated
+          path: "/updated/data/account/thresholds"
+          equals: "00000000"
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [fee_payer]}
+          - {address: "${acct.AX2}", roles: [source]}
+        must_not_include:
+          - {address: "${acct.AW2}", because: "only the destination of the failed inner payment"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 1, account: {address: "${acct.AX2}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.FB}"}}
+      movements_exact: true
+  - id: zero-master-of-ax2
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-auth
+    same_ledger_as: inner-bad-auth
+    tx:
+      source_account: "${acct.AW2}"
+      fee: 1001
+      seq_num: "${seq.AW2}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.AX2}", body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: 0, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}}}
+      ext: v0
+    sign: [{key: AW2}, {key: AX2}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+
+  - id: inner-no-account
+    entry: cap-0015/fee-bump-inner-apply-time-failures.no-account
+    order: [merge-na, inner-no-account]
+    tx:
+      source_account: "${acct.NA}"
+      fee: 100
+      seq_num: "${seq.NA}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.NB}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: NA}]
+    fee_bump: {fee_source: "${acct.FB}", fee: "1000"}
+    expect_result: tx_fee_bump_inner_failed
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 3, entry_changes: 12}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [account_merge.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_fee_bump_inner_failed, operation_result_codes: [], fee_charged: "${derived.fee_charged}", inner_hash: "${derived.inner_tx_hash}", inner_successful: false, inner_result_code: tx_no_account}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/result"
+          equals: tx_no_account
+          note: "The inner result's code; the outer result is txFEE_BUMP_INNER_FAILED."
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/fee_charged"
+          equals: "0"
+          note: "The inner transaction is not charged; FB pays the outer fee."
+        - path: "/v2/tx_processing/0/result/result/result/tx_success/0/op_inner/account_merge/success"
+          equals: "1000000000"
+          note: "Applied first: NA's whole balance moves; FB, not NA, paid the fee bump."
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [fee_payer]}
+        must_not_include:
+          - {address: "${acct.NB}", because: "only the destination of the failed inner payment; NB's balance changed in its own transaction"}
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.FB}"}}
+      movements_exact: true
+  - id: merge-na
+    entry: cap-0015/fee-bump-inner-apply-time-failures.no-account
+    same_ledger_as: inner-no-account
+    tx:
+      source_account: "${acct.NB}"
+      fee: 1001
+      seq_num: "${seq.NB}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.NA}", body: {account_merge: "${acct.NB}"}}
+      ext: v0
+    sign: [{key: NB}, {key: NA}]
+    expect_result: tx_success
+    expect_op_results: [account_merge.success]
+
+  - id: inner-bad-auth-extra
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-auth-extra
+    order: [add-xa2-to-y2, inner-bad-auth-extra]
+    tx:
+      source_account: "${acct.XA2}"
+      fee: 100
+      seq_num: "${seq.XA2}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - {source_account: "${acct.Y2}", body: {payment: {destination: "${acct.XW2}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: XA2}, {key: Y2}]
+    fee_bump: {fee_source: "${acct.FB}", fee: "1000"}
+    expect_result: tx_fee_bump_inner_failed
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 12}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_fee_bump_inner_failed, operation_result_codes: [], fee_charged: "${derived.fee_charged}", inner_hash: "${derived.inner_tx_hash}", inner_successful: false, inner_result_code: tx_bad_auth_extra}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/result"
+          equals: tx_bad_auth_extra
+          note: "The inner result's code; the outer result is txFEE_BUMP_INNER_FAILED."
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/fee_charged"
+          equals: "0"
+          note: "The inner transaction is not charged; FB pays the outer fee."
+        - select:
+            in: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes"
+            key: {account: {account_id: "${acct.Y2}"}}
+            change: updated
+          path: "/updated/data/account/signers"
+          equals: [{key: "${acct.XA2}", weight: 1}]
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [fee_payer]}
+          - {address: "${acct.XA2}", roles: [source]}
+        must_not_include:
+          - {address: "${acct.Y2}", because: "the source of the failed inner operation; nothing of Y2 changed in this transaction"}
+          - {address: "${acct.XW2}", because: "only the destination of the failed inner payment"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 1, account: {address: "${acct.XA2}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.FB}"}}
+      movements_exact: true
+  - id: add-xa2-to-y2
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-auth-extra
+    same_ledger_as: inner-bad-auth-extra
+    tx:
+      source_account: "${acct.XW2}"
+      fee: 1001
+      seq_num: "${seq.XW2}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.Y2}", body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: {key: "${acct.XA2}", weight: 1}}}}
+      ext: v0
+    sign: [{key: XW2}, {key: Y2}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+
+  - id: inner-bad-min-seq-ledger-gap
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-min-seq-age-or-gap
+    order: [touch-ga2-sequence, inner-bad-min-seq-ledger-gap]
+    tx:
+      source_account: "${acct.GA2}"
+      fee: 100
+      seq_num: "${seq.GA2}"
+      cond:
+        v2:
+          time_bounds: {min_time: "${order_nonce}", max_time: "0"}
+          ledger_bounds: null
+          min_seq_num: null
+          min_seq_age: "0"
+          min_seq_ledger_gap: 1
+          extra_signers: []
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.GW2}", asset: native, amount: "10000000"}}}
+      ext: v0
+    sign: [{key: GA2}]
+    fee_bump: {fee_source: "${acct.FB}", fee: "1000"}
+    expect_result: tx_fee_bump_inner_failed
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 12}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [bump_sequence.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hash}", successful: false, result_code: tx_fee_bump_inner_failed, operation_result_codes: [], fee_charged: "${derived.fee_charged}", inner_hash: "${derived.inner_tx_hash}", inner_successful: false, inner_result_code: tx_bad_min_seq_age_or_gap}
+      values:
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/result"
+          equals: tx_bad_min_seq_age_or_gap
+          note: "The inner result's code; the outer result is txFEE_BUMP_INNER_FAILED."
+        - path: "/v2/tx_processing/1/result/result/result/tx_fee_bump_inner_failed/result/fee_charged"
+          equals: "0"
+          note: "The inner transaction is not charged; FB pays the outer fee."
+        - select:
+            in: "/v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes"
+            key: {account: {account_id: "${acct.GA2}"}}
+            change: updated
+          path: "/updated/data/account/ext/v1/ext/v2/ext/v3/seq_ledger"
+          equals: 22
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [fee_payer]}
+          - {address: "${acct.GA2}", roles: [source]}
+        must_not_include:
+          - {address: "${acct.GW2}", because: "only the destination of the failed inner payment"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 1, account: {address: "${acct.GA2}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 1, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.FB}"}}
+      movements_exact: true
+  - id: touch-ga2-sequence
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-min-seq-age-or-gap
+    same_ledger_as: inner-bad-min-seq-ledger-gap
+    tx:
+      source_account: "${acct.GW2}"
+      fee: 1001
+      seq_num: "${seq.GW2}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: "${acct.GA2}", body: {bump_sequence: {bump_to: "1"}}}
+      ext: v0
+    sign: [{key: GW2}, {key: GA2}]
+    expect_result: tx_success
+    expect_op_results: [bump_sequence.success]
+
+  - id: inner-bad-sponsorship
+    entry: cap-0015/fee-bump-inner-apply-time-failures.bad-sponsorship
+    tx:
+      source_account: "${acct.BS1}"
+      fee: 100
+      seq_num: "${seq.BS1}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.BS2}"}}}
+      ext: v0
+    sign: [{key: BS1}]
+    fee_bump: {fee_source: "${acct.FB}", fee: "1000"}
+    expect_result: tx_fee_bump_inner_failed
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_fee_bump_inner_failed, operation_result_codes: [], fee_charged: "${derived.fee_charged}", inner_hash: "${derived.inner_tx_hash}", inner_successful: false, inner_result_code: tx_bad_sponsorship}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_fee_bump_inner_failed/result/result"
+          equals: tx_bad_sponsorship
+          note: "The inner result's code; the outer result is txFEE_BUMP_INNER_FAILED."
+        - path: "/v2/tx_processing/0/result/result/result/tx_fee_bump_inner_failed/result/fee_charged"
+          equals: "0"
+          note: "The inner transaction is not charged; FB pays the outer fee."
+        - path: "/v2/tx_processing/0/tx_apply_processing/v4/operations"
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [fee_payer]}
+          - {address: "${acct.BS1}", roles: [source]}
+        must_not_include:
+          - {address: "${acct.BS2}", because: "named only as the sponsored ID in the failed inner transaction"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.BS1}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.FB}"}}
+      movements_exact: true

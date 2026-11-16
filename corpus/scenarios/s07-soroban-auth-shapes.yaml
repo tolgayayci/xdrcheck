@@ -1,0 +1,248 @@
+# Soroban authorization shapes that succeed although the authorization list says more than the call
+# uses: address-credential entries of an account the call never touches (Void signature, expired,
+# one of them a nested tree); a source-account entry whose tree declares a `create_contract` from a
+# claimable-balance (`B…`) address that nothing consumes; and CAP-0071 address credentials with
+# delegates nested two deep, checked by instances of the custom-account test contract
+# (contracts/custom-account, which accepts any signature value and forwards to its delegates).
+# Calls are simulated with the pinned host, enforcing the authorization written here; the file runs
+# at Protocols 29 and 30 (the generator deploys custom contracts from Protocol 29).
+
+scenario: soroban-auth-shapes
+caps: [46, 71]
+protocols: [29, 30]
+profile: lake
+actors: [A, B, I, U]            # U is never funded: it appears only in authorization entries
+assets:
+  USDC: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.I}"}}
+contracts:
+  emitter:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+    constructor_args: [{symbol: xcc}]
+  account:                      # the authorizing custom account
+    wasm: contracts/custom-account.wasm
+    wasm_sha256: 0a4d4597cbf11959d7e27d795ed4e5d00e2fb8ff59f8a402bf4aefadda9c0999
+    deployer: A
+  delegate:                     # its delegate
+    wasm: contracts/custom-account.wasm
+    wasm_sha256: 0a4d4597cbf11959d7e27d795ed4e5d00e2fb8ff59f8a402bf4aefadda9c0999
+    deployer: A
+  nested:                       # the delegate's own delegate
+    wasm: contracts/custom-account.wasm
+    wasm_sha256: 0a4d4597cbf11959d7e27d795ed4e5d00e2fb8ff59f8a402bf4aefadda9c0999
+    deployer: A
+setup:
+  - fund: {A: "10000", B: "10000", I: "10000"}
+  - trust: {A: USDC, B: USDC}
+  - pay: {from: I, to: A, asset: USDC, amount: "1000"}
+  - deploy_sac: USDC
+  - deploy_contract: emitter
+  - deploy_contract: account
+  - deploy_contract: delegate
+  - deploy_contract: nested
+
+steps:
+  # A pays B 10 USDC through the SAC. The transfer needs only A's source-account authorization; the
+  # two entries for U are never matched, so neither signature nor expiry is checked and no nonce of
+  # U is written.
+  - id: unmatched-entries
+    entry: cap-0046/auth-unmatched-entries-succeed
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: &usdc-transfer
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: transfer
+                  args: [{address: "${acct.A}"}, {address: "${acct.B}"}, {i128: "100000000"}]
+              auth:
+                - credentials: source_account
+                  root_invocation:
+                    function: {contract_fn: *usdc-transfer}
+                    sub_invocations: []
+                - credentials:
+                    address: {address: "${acct.U}", nonce: "1001", signature_expiration_ledger: 1, signature: void}
+                  root_invocation:
+                    function: {contract_fn: *usdc-transfer}
+                    sub_invocations: []
+                - credentials:
+                    address: {address: "${acct.U}", nonce: "1002", signature_expiration_ledger: 1, signature: void}
+                  root_invocation:
+                    function:
+                      contract_fn: {contract_address: "${contract.id(emitter)}", function_name: auth_nested, args: [{address: "${acct.U}"}, {vec: []}]}
+                    sub_invocations:
+                      - function:
+                          contract_fn: {contract_address: "${contract.sac(USDC)}", function_name: transfer, args: [{address: "${acct.U}"}, {address: "${acct.B}"}, {i128: "1"}]}
+                        sub_invocations:
+                          - function:
+                              contract_fn: {contract_address: "${contract.sac(USDC)}", function_name: approve, args: [{address: "${acct.U}"}, {address: "${acct.B}"}, {i128: "1"}, {u32: 1}]}
+                            sub_invocations: []
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 3, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/1/credentials/address
+          equals: {address: "${acct.U}", nonce: "1001", signature_expiration_ledger: 1, signature: void}
+          note: "Unmatched: U's entry has a Void signature and expired at ledger 1."
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/2/root_invocation/sub_invocations/0/sub_invocations/0/function/contract_fn/function_name
+          equals: approve
+          note: "The second unmatched entry is a tree three invocations deep."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/1
+          equals: {address: "${acct.A}"}
+          note: "The transfer itself is A's, authorised by the source-account entry."
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "${acct.B}", roles: [trustline_owner]}
+        must_not_include:
+          - {address: "${acct.U}", because: "named only in two authorization entries that no call matched; no nonce entry of U is written (10 entry changes: fee, sequence and the two trustlines)"}
+          - {address: "${derived.contracts.emitter}", because: "named only as the root of an unmatched authorization tree; the call never reaches it"}
+      state_changes:
+        - {kind: balance_changed, op_index: 0, account: {address: "${acct.A}"}, asset: "USDC:${acct.I}", cause: contract-call, detail: {delta: "-100000000", balance_after: "9900000000"}}
+        - {kind: balance_changed, op_index: 0, account: {address: "${acct.B}"}, asset: "USDC:${acct.I}", cause: contract-call, detail: {delta: "100000000", balance_after: "100000000"}}
+      state_changes_exact: true
+      movements:
+        - {kind: transfer, op_index: 0, asset: "USDC:${acct.I}", amount: "100000000", from: {address: "${acct.A}"}, to: {address: "${acct.B}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-47], passed_through: [VF-48b, VF-49b]}
+
+  # B emits one event through the emitter (no authorization needed) and carries one source-account
+  # entry whose tree declares creating a contract from a claimable-balance address
+  # (sha256("xcc/claimable-balance/unconsumed") as the balance ID). Nothing consumes it.
+  - id: unconsumed-create-contract-from-b-address
+    entry: cap-0046/auth-create-contract-from-claimable-balance-unconsumed
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: topic_count, args: [{u32: 1}]}
+              auth:
+                - credentials: source_account
+                  root_invocation:
+                    function:
+                      create_contract_host_fn:
+                        contract_id_preimage:
+                          address: {address: BAAK4HJVT25XUNH7PBB4CZSN3IVKVOTB6L36Q43R37GWPYXIWAAHDOZSPE, salt: "0000000000000000000000000000000000000000000000000000000000000001"}
+                        executable: {wasm: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+                    sub_invocations: []
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 3, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials
+          equals: source_account
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/root_invocation/function/create_contract_host_fn/contract_id_preimage/address/address
+          equals: BAAK4HJVT25XUNH7PBB4CZSN3IVKVOTB6L36Q43R37GWPYXIWAAHDOZSPE
+          note: "The unconsumed tree declares a contract created from a claimable-balance address."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+          equals: []
+          note: "No contract is created: the operation changes no ledger entry."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+          equals: {topics: [{u32: 0}], data: {u32: 1}}
+          note: "What the call did: topic_count(1) emitted one event."
+      participants:
+        must_include:
+          - {address: "${acct.B}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: BAAK4HJVT25XUNH7PBB4CZSN3IVKVOTB6L36Q43R37GWPYXIWAAHDOZSPE, because: "named only in an unconsumed authorization entry; no claimable balance and no contract exists or changes"}
+        exact: true
+      state_changes: []
+      state_changes_exact: true              # in particular no contract_deployed fabricated from the entry
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-47], passed_through: [VF-49b, VF-53b]}
+
+  # emitter.auth_nested(account, []) calls account.require_auth(). The entry gives `account`'s
+  # credentials with one delegate, which has one nested delegate: the host runs __check_auth of
+  # account, then of delegate, then of nested (one `check_auth` event each) and writes account's
+  # nonce.
+  - id: nested-delegates
+    entry: cap-0071/credentials-with-nested-delegates
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: &auth-nested
+                  contract_address: "${contract.id(emitter)}"
+                  function_name: auth_nested
+                  args: [{address: "${contract.id(account)}"}, {vec: []}]
+              auth:
+                - credentials:
+                    address_with_delegates:
+                      address_credentials: {address: "${contract.id(account)}", nonce: "7", signature_expiration_ledger: 100000, signature: void}
+                      delegates:
+                        - address: "${contract.id(delegate)}"
+                          signature: void
+                          nested_delegates:
+                            - {address: "${contract.id(nested)}", signature: void, nested_delegates: []}
+                  root_invocation:
+                    function: {contract_fn: *auth-nested}
+                    sub_invocations: []
+    simulate: true
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 5, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials/address_with_delegates/delegates/0/address
+          equals: "${derived.contracts.delegate}"
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth/0/credentials/address_with_delegates/delegates/0/nested_delegates/0/address
+          equals: "${derived.contracts.nested}"
+          note: "SorobanDelegateSignature.nestedDelegates: the second level of the recursion."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data
+          equals: {ext: v0, contract: "${derived.contracts.account}", key: {ledger_key_nonce: {nonce: "7"}}, durability: temporary, val: void}
+          note: "The authorizing account's nonce is consumed; delegates have no nonce."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/ttl/live_until_ledger_seq
+          equals: 100000
+          note: "The nonce lives until the signature expiration ledger."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+          equals: "${derived.contracts.nested}"
+          note: "__check_auth order: the nested delegate (0 delegates of its own) …"
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/1/contract_id
+          equals: "${derived.contracts.delegate}"
+          note: "… then the delegate (1) …"
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/2/contract_id
+          equals: "${derived.contracts.account}"
+          note: "… then the account itself (1)."
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer]}
+          - {address: "${derived.contracts.account}", roles: [authorizer]}
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-48a, VF-49a]}

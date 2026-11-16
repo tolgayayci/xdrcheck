@@ -1,0 +1,114 @@
+# Soroban operations with muxed (`M…`) sources: an ExtendFootprintTtl and a RestoreFootprint in one
+# ledger, each with a muxed transaction source and a muxed operation source of the same base
+# account. Both act on the instance entry of the USDC Stellar Asset Contract: the extension moves
+# its TTL to ledger 200000, the restore finds it live and leaves it as it is. stellar-core queues
+# one transaction per source account, so the two transactions come from two accounts. Every step
+# declares its footprint, so the file runs at Protocol 28, which serves the wallet-backend pins.
+#
+# Not here: cap-0046/invoke-host-function-muxed-source-or-memo-pre-p25. Before Protocol 25 such a
+# transaction is valid in a ledger, but stellar-core's transaction queue refuses it at submission
+# (txSOROBAN_INVALID, "Soroban transactions are not allowed to use memo or muxed source account";
+# src/herder/TransactionQueue.cpp at v30.0.0), so a node that takes transactions by submission, as
+# the generator's does, never puts one into a ledger. Executed at Protocols 22 and 24.
+scenario: soroban-muxed-sources
+caps: [46, 27]
+protocols: [28, 30]
+profile: lake
+actors: [A, B, I]
+assets:
+  USDC: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.I}"}}
+setup:
+  - fund: {A: "10000", B: "10000", I: "10000"}
+  - deploy_sac: USDC
+
+steps:
+  - id: extend-ttl-muxed-sources
+    entry: cap-0046/soroban-ops-with-muxed-source
+    tx:
+      source_account: "${muxed(A, 1)}"
+      fee: 50001000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: "${muxed(A, 2)}"
+          body: {extend_footprint_ttl: {ext: v0, extend_to: 200000}}
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+              read_write: []
+            instructions: 0
+            disk_read_bytes: 20000
+            write_bytes: 0
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [extend_footprint_ttl.success]
+    # Apply order on every chain: the restore (B) first, then this extension, the focus. The
+    # transaction-set order of the two differs per passphrase, so only meta paths are pinned.
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 4, entry_changes: 14}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [restore_footprint.success]}
+        - {index: 1, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [extend_footprint_ttl.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/changes/1/updated/data/ttl/live_until_ledger_seq
+          equals: 200015
+          note: "Extended to ledger 15 + 200000."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/events/0/event/body/v0/topics/1
+          equals: {address: "${acct.A}"}
+          note: "The fee event names the base account of the muxed source."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+          equals: []
+          note: "The restore finds the instance live and changes nothing."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/events/0/event/body/v0/topics/1
+          equals: {address: "${acct.B}"}
+      participants:
+        must_include:
+          - {address: "${acct.A}", muxed_id: "1", on_chain_form: "${muxed(A, 1)}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "${acct.B}", because: "B is the source of the other transaction in the ledger (the restore), not of this one"}
+        exact: true
+      state_changes:
+        - kind: ttl_extended
+          op_index: 0
+          account: {address: "${derived.contracts.sac_usdc}"}
+          detail: {live_until_ledger: 200015, live_until_ledger_before: 120973, entry_type: contract_data, contract: "${derived.contracts.sac_usdc}"}
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-02a, VF-22a, VF-41, VF-51, VF-52], passed_through: [VF-02b, VF-22b]}
+
+  - id: restore-muxed-sources
+    entry: cap-0046/soroban-ops-with-muxed-source
+    same_ledger_as: extend-ttl-muxed-sources
+    tx:
+      source_account: "${muxed(B, 18446744073709551615)}"
+      fee: 50001001
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: "${muxed(B, 9223372036854775808)}"
+          body: {restore_footprint: {ext: v0}}
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only: []
+              read_write:
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+            instructions: 0
+            disk_read_bytes: 20000
+            write_bytes: 20000
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [restore_footprint.success]

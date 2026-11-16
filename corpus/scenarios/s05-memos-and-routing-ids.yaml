@@ -1,0 +1,170 @@
+# Memos copied into CAP-0067 classic events: for a payment to an unmuxed account stellar-core copies
+# the transaction memo into the event's `to_muxed_id` (MEMO_TEXT as a string, MEMO_ID as a u64,
+# MEMO_HASH and MEMO_RETURN as bytes). The text memos repeat what the local-core probe executed
+# (evidence/local-core/, ledgers 25 and 26): one that is not UTF-8 and one that looks like the start of
+# a G address. Then a MEMO_ID and a MEMO_RETURN payment. Every payment goes from S to the plain G
+# address of R. Protocol 28 serves the reader pins that cannot decode Protocol 30.
+scenario: memos-and-routing-ids
+caps: [67]
+protocols: [28, 30]
+profile: lake
+actors: [S, R]
+setup:
+  - fund: {S: "10000", R: "10000"}
+
+steps:
+  - id: non-utf8-text-memo
+    entry: cap-0067/to-muxed-id-text-non-utf8-memo
+    tx:
+      source_account: "${acct.S}"
+      fee: 1000
+      seq_num: "${seq.S}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: {text: '\xff\xfe\0\xc3(\xed\xa0\x80A'}      # bytes ff fe 00 c3 28 ed a0 80 41
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.R}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: S}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/memo
+          equals: {text: '\xff\xfe\0\xc3(\xed\xa0\x80A'}
+          note: "MEMO_TEXT of 9 bytes ff fe 00 c3 28 ed a0 80 41: an invalid UTF-8 lead byte pair, a NUL, a truncated sequence and a UTF-16 surrogate encoding. stellar-core checks only the 28-byte limit."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data/map/1
+          equals: {key: {symbol: to_muxed_id}, val: {string: '\xff\xfe\0\xc3(\xed\xa0\x80A'}}
+          note: "The same 9 bytes as an SCV_STRING in the classic event; a reader that decodes them as UTF-8 text loses or replaces bytes."
+      participants:
+        must_include:
+          - {address: "${acct.S}", roles: [source, fee_payer]}
+          - {address: "${acct.R}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.S}"}}
+        # No `routing` here: the manifest gives no byte-exact spelling for a text routing value that
+        # is not UTF-8, and the reference extractor renders it lossily (U+FFFD). The value pinpoint
+        # above pins the exact bytes instead.
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.S}"}, to: {address: "${acct.R}"}}
+      movements_exact: true
+    fields: {passed_through: [VF-19, VF-21]}
+
+  - id: address-like-text-memo
+    entry: cap-0067/memo-text-that-looks-like-an-address
+    tx:
+      source_account: "${acct.S}"
+      fee: 1000
+      seq_num: "${seq.S}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: {text: GBRPYHIL2CI3FNQ4BXLFMNDLFJUN}            # 28 bytes, the maximum
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.R}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: S}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/memo
+          equals: {text: GBRPYHIL2CI3FNQ4BXLFMNDLFJUN}
+          note: "28 bytes, the maximum: the first 28 characters of the testnet root account's G address."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data/map/1
+          equals: {key: {symbol: to_muxed_id}, val: {string: GBRPYHIL2CI3FNQ4BXLFMNDLFJUN}}
+          note: "Copied into the event as a string. It is sender-chosen text, not an address."
+      participants:
+        must_include:
+          - {address: "${acct.S}", roles: [source, fee_payer]}
+          - {address: "${acct.R}", roles: [destination]}
+        must_not_include:
+          - {address: GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H, because: "the memo text is the first 28 characters of this address (the testnet root); no ledger entry of it changed"}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.S}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.S}"}, to: {address: "${acct.R}"}, routing: {type: text, value: GBRPYHIL2CI3FNQ4BXLFMNDLFJUN}}
+      movements_exact: true
+    fields: {passed_through: [VF-19, VF-21]}
+
+  - id: memo-id
+    entry: cap-0067/memo-id-and-memo-return-in-events.memo-id
+    tx:
+      source_account: "${acct.S}"
+      fee: 1000
+      seq_num: "${seq.S}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: {id: "18446744073709551615"}
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.R}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: S}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/memo
+          equals: {id: "18446744073709551615"}
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/payment/destination
+          equals: "${acct.R}"
+          note: "The destination is a plain G address; the ID in the event comes from the memo."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data/map/1
+          equals: {key: {symbol: to_muxed_id}, val: {u64: "18446744073709551615"}}
+          note: "MEMO_ID becomes an SCV_U64, the same type a muxed destination produces; 2^64 - 1 does not fit a signed 64-bit integer."
+      participants:
+        must_include:
+          - {address: "${acct.S}", roles: [source, fee_payer]}
+          - {address: "${acct.R}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.S}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.S}"}, to: {address: "${acct.R}"}, routing: {type: u64, value: "18446744073709551615"}}
+      movements_exact: true
+    fields: {passed_through: [VF-19, VF-21]}
+
+  - id: memo-return
+    entry: cap-0067/memo-id-and-memo-return-in-events.memo-return
+    tx:
+      source_account: "${acct.S}"
+      fee: 1000
+      seq_num: "${seq.S}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: {return: "52455455524e000000000000000000000000000000000000000000000000ffee"}
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.R}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: S}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/memo
+          equals: {return: "52455455524e000000000000000000000000000000000000000000000000ffee"}
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data/map/1
+          equals: {key: {symbol: to_muxed_id}, val: {bytes: "52455455524e000000000000000000000000000000000000000000000000ffee"}}
+          note: "MEMO_RETURN becomes SCV_BYTES, exactly as MEMO_HASH does; the event does not say which memo type it came from."
+      participants:
+        must_include:
+          - {address: "${acct.S}", roles: [source, fee_payer]}
+          - {address: "${acct.R}", roles: [destination]}
+        must_not_include:
+          - {address: GBJEKVCVKJHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD7645QO, because: "the 32 memo bytes read as an ed25519 key; they are sender-chosen memo bytes and no ledger entry of this account changed"}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.S}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.S}"}, to: {address: "${acct.R}"}, routing: {type: bytes, value: "52455455524e000000000000000000000000000000000000000000000000ffee"}}
+      movements_exact: true
+    fields: {passed_through: [VF-19, VF-21]}

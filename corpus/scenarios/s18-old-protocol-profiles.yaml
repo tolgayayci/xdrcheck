@@ -1,0 +1,185 @@
+# What a node emits at older protocols with stellar-core's default meta flags (every meta flag off):
+# no classic or fee events, no diagnostic events, no LedgerCloseMeta extension. The public data lake
+# holds only TransactionMeta v4 (its objects were rewritten by a recent stellar-core), so these are
+# the shapes a reader meets from a node or archive of its own: a classic payment at Protocols 13 and
+# 19 (LedgerCloseMeta v0, TransactionMeta v2), and the deployment of a Stellar Asset Contract at
+# Protocol 22 (LedgerCloseMeta v1, TransactionMeta v3 with SorobanTransactionMeta), then a classic
+# payment at Protocol 22 (TransactionMeta v3 with no SorobanTransactionMeta). Below 20 the
+# bring-up has no Soroban settings; at 22 it applies the vendored Protocol 22 set. The Soroban step
+# declares its footprint (simulation needs Protocol 29).
+scenario: old-protocol-profiles
+caps: [46]
+protocols: [13, 19, 22]
+profile: custom
+profile_flags: {ENABLE_SOROBAN_DIAGNOSTIC_EVENTS: false}
+actors: [A, B, I]
+assets:
+  USD: {credit_alphanum4: {asset_code: USD, issuer: "${acct.I}"}}
+setup:
+  - fund: {A: "10000", B: "10000", I: "10000"}
+
+steps:
+  - id: classic-payment
+    entry: ledger/meta-profile-default-flags-txmeta-v2
+    protocols: [13, 19]
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.B}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 0, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "1000"}
+      values:
+        - select:
+            in: /v0/tx_processing/0/tx_apply_processing/v2/operations/0/changes
+            key: {account: {account_id: "${acct.B}"}}
+            change: updated
+          path: /updated/data/account/balance
+          equals: "100010000000"
+          note: "TransactionMeta v2: operation meta holds only ledger-entry changes, no events, and the node emitted no classic or fee events, so the payment is visible only as balance changes."
+        - path: /v0/tx_processing/0/tx_apply_processing/v2/tx_changes_after
+          equals: []
+        - path: /v0/tx_processing/0/result/result/fee_charged
+          equals: "1000"
+          note: "The whole bid. A legacy transaction set (before Protocol 20) charges the lowest per-operation bid once its operations exceed max_tx_set_size - 100; this chain's limit is 100, so every set counts as surge-priced."
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer]}
+          - {address: "${acct.B}", roles: [destination]}
+        exact: true
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "1000", from: {address: "${acct.A}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.A}"}, to: {address: "${acct.B}"}, routing: {type: absent}}
+      movements_exact: true
+
+  - id: sac-deploy
+    entry: ledger/meta-profile-default-flags-txmeta-v3
+    protocols: [22]
+    tx:
+      source_account: "${acct.A}"
+      fee: 50001000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                create_contract:
+                  contract_id_preimage: {asset: "${asset.USD}"}
+                  executable: stellar_asset
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - account: {account_id: "${acct.I}"}
+              read_write:
+                - contract_data: {contract: "${contract.sac(USD)}", key: ledger_key_contract_instance, durability: persistent}
+            instructions: 50000000
+            disk_read_bytes: 20000
+            write_bytes: 20000
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 0, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v1/tx_processing/0/tx_apply_processing/v3/soroban_meta
+          equals: {ext: v0, events: [], return_value: {address: "${derived.contracts.sac_usd}"}, diagnostic_events: []}
+          note: "TransactionMeta v3: the Soroban result sits in SorobanTransactionMeta (ext v0: no fee breakdown, since EMIT_SOROBAN_TRANSACTION_META_EXT_V1 is off); no contract or diagnostic events."
+        - select:
+            in: /v1/tx_processing/0/tx_apply_processing/v3/tx_changes_after
+            key: {account: {account_id: "${acct.A}"}}
+            change: updated
+          path: /updated/data/account/balance
+          equals: "99999095258"
+          note: "The resource-fee refund is written into tx_changes_after (TransactionMeta v4 moves it to post_tx_apply_fee_processing)."
+        - path: /v1/ext
+          equals: v0
+          note: "LedgerCloseMeta v1 without the ext v1 extension (EMIT_LEDGER_CLOSE_META_EXT_V1 is off)."
+        - path: /v1/tx_set/v1/phases/1/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/invoke_host_function/host_function/create_contract
+          equals: {contract_id_preimage: {asset: {credit_alphanum4: {asset_code: USD, issuer: "${acct.I}"}}}, executable: stellar_asset}
+          note: "Before Protocol 23 the Soroban phase is a v0 phase of components, like the classic one."
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer]}
+          - {address: "${derived.contracts.sac_usd}", roles: [contract]}
+        must_not_include:
+          - {address: "${acct.I}", because: "the issuer account is only read (footprint read-only); none of its entries changes"}
+        exact: true
+      state_changes:
+        - kind: contract_deployed
+          op_index: 0
+          account: {address: "${derived.contracts.sac_usd}"}
+          detail: {contract: "${derived.contracts.sac_usd}", executable: stellar_asset}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "50000100", from: {address: "${acct.A}"}}
+        - {kind: fee_refund, asset: native, amount: "49095358", to: {address: "${acct.A}"}}
+      movements_exact: true
+
+  - id: classic-payment-p22
+    entry: ledger/meta-profile-default-flags-classic-txmeta-v3
+    protocols: [22]
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.B}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 0, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "100"}
+      values:
+        - path: /v1/tx_processing/0/tx_apply_processing/v3/soroban_meta
+          equals: null
+          note: "TransactionMeta v3 (Protocols 20 to 22) of a classic transaction: the optional sorobanMeta is absent. Readers that take v3 to mean a Soroban transaction, or dereference sorobanMeta unconditionally, fail here."
+        - select:
+            in: /v1/tx_processing/0/tx_apply_processing/v3/operations/0/changes
+            key: {account: {account_id: "${acct.B}"}}
+            change: updated
+          path: /updated/data/account/balance
+          equals: "100010000000"
+          note: "With every meta flag off the payment shows only as balance changes: no classic or fee events."
+        - path: /v1/tx_processing/0/tx_apply_processing/v3/ext
+          equals: v0
+        - path: /v1/tx_processing/0/result/result/fee_charged
+          equals: "100"
+          note: "The ledger's base fee, not the bid of 1000: from Protocol 20 the generalized transaction set gives the classic component a base fee, and a set this small is not surge-priced (contrast the Protocol 13 and 19 payment above)."
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer]}
+          - {address: "${acct.B}", roles: [destination]}
+        exact: true
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "100", from: {address: "${acct.A}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.A}"}, to: {address: "${acct.B}"}, routing: {type: absent}}
+      movements_exact: true

@@ -1,0 +1,355 @@
+# CAP-0023 claimable balances: ten claimants (the maximum), each with a predicate four levels deep
+# (the maximum); a depth-4 predicate for a claimant account that does not exist; a relative-time
+# predicate that the ledger stores as an absolute time; a claim of a balance that can never be
+# claimed (NOT(UNCONDITIONAL)); a balance created from a muxed transaction source; a claim of a
+# balance ID that does not exist. Protocol 28 serves the reader pins that cannot decode Protocol 30.
+#
+# Balance IDs are sha256 of the ENVELOPE_TYPE_OP_ID preimage (un-muxed transaction source,
+# transaction sequence number, operation index), which no passphrase enters. Every actor here is
+# funded in ledger 13 and so starts at sequence number 13 << 32 = 55834574848, and each creates one
+# balance with its first transaction (sequence 55834574849, operation 0):
+#   A: BAAO2N4JFKI7DVXRBJZ64XEG22LLLYVUW7ZOFFU6NVZ6BHCPA36GJWIVNA
+#   M: BAANRBCP7VC4VIDXBMRN3S4PR7BYAD726LYQG4LYOCGKPW3ME4SKGJIIYY
+#   Y: BAAC7DRX3GBOAAWWRQQGRYFS2QXF7QFUMXSZRKIEKNTBNPCIKEJU7GE5LM (the setup item; claimed below)
+# and sha256("xcc/claimable-balance/none"), which nobody created:
+#      BAAO36PT6SN6SUR3ID6GRCLN6QQZ47DEKZYUYWJ5AUYWB2N5XJDM4UFU34
+# The balances of B and R are not named before the run; their IDs are pinned from the result.
+#
+# The ledger of the never-claimable claim holds only the failed claim: the balance and its
+# NOT(UNCONDITIONAL) predicate are created by the setup item, one ledger earlier on the same chain.
+# Y creates the balance for itself, so its account sponsors the balance's reserve (account ext v2)
+# when it claims, as in stellar-core's own claimable-balance tests.
+scenario: claimable-balances
+caps: [23]
+protocols: [28, 30]
+profile: lake
+actors: [A, B, R, X, M, Y, Z, N, C0, C1, C2, C3, C4, C5, C6, C7, C8, C9]   # N and C0–C9 are only keys
+setup:
+  - fund: {A: "100", B: "100", R: "100", X: "100", M: "100", Y: "100", Z: "100"}
+  # A balance only Y may claim, under a predicate that is never true; Y itself creates it.
+  - tx:
+      source_account: "${acct.Y}"
+      fee: 500
+      seq_num: "${seq.Y}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            create_claimable_balance:
+              asset: native
+              amount: "10000000"
+              claimants:
+                - claimant_type_v0: {destination: "${acct.Y}", predicate: {not: unconditional}}
+      ext: v0
+
+steps:
+  - id: claimants-max-10
+    entry: cap-0023/claimants-max-10
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            create_claimable_balance:
+              asset: native
+              amount: "100000000"
+              claimants:
+                # AND → OR → NOT → leaf: four levels, the most stellar-core accepts.
+                - claimant_type_v0: {destination: "${acct.C0}", predicate: &depth4 {and: [{or: [{not: {before_absolute_time: "1"}}, {before_relative_time: "86400"}]}, unconditional]}}
+                - claimant_type_v0: {destination: "${acct.C1}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C2}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C3}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C4}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C5}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C6}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C7}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C8}", predicate: *depth4}
+                - claimant_type_v0: {destination: "${acct.C9}", predicate: *depth4}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [create_claimable_balance.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 7}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [create_claimable_balance.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/create_claimable_balance/claimants/9
+          equals: {claimant_type_v0: {destination: "${acct.C9}", predicate: {and: [{or: [{not: {before_absolute_time: "1"}}, {before_relative_time: "86400"}]}, unconditional]}}}
+          note: "The tenth claimant, the most claimants<10> holds; each predicate nests AND, OR and NOT over a leaf, four levels."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/create_claimable_balance/success
+          equals: "BAAO2N4JFKI7DVXRBJZ64XEG22LLLYVUW7ZOFFU6NVZ6BHCPA36GJWIVNA"
+          note: "sha256 of ENVELOPE_TYPE_OP_ID (A, sequence 55834574849, operation 0), computed before the run."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/claimable_balance/claimants/0
+          equals: {claimant_type_v0: {destination: "${acct.C0}", predicate: {and: [{or: [{not: {before_absolute_time: "1"}}, {before_absolute_time: "1713086400"}]}, unconditional]}}}
+          note: "Claimants are stored in operation order. The relative leaf is stored as an absolute time: the close time 1713000000 plus 86400."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/claimable_balance/claimants/9/claimant_type_v0/destination
+          equals: "${acct.C9}"
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer, sponsor]}
+          - {address: "BAAO2N4JFKI7DVXRBJZ64XEG22LLLYVUW7ZOFFU6NVZ6BHCPA36GJWIVNA", roles: [claimable_balance]}
+        must_not_include:
+          - {address: "${acct.C0}", because: "C0 is only named as a claimant; it has no account and no ledger entry of it changed"}
+          - {address: "${acct.C5}", because: "C5 is only named as a claimant; it has no account and no ledger entry of it changed"}
+          - {address: "${acct.C9}", because: "C9 is only named as a claimant; it has no account and no ledger entry of it changed"}
+        exact: true
+      state_changes:
+        - kind: claimable_balance_created
+          op_index: 0
+          account: {address: "BAAO2N4JFKI7DVXRBJZ64XEG22LLLYVUW7ZOFFU6NVZ6BHCPA36GJWIVNA"}
+          asset: native
+          detail: {balance_id: "BAAO2N4JFKI7DVXRBJZ64XEG22LLLYVUW7ZOFFU6NVZ6BHCPA36GJWIVNA", amount: "100000000", claimants: 10, sponsor: "${acct.A}"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.A}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "100000000", from: {address: "${acct.A}"}, to: {address: "BAAO2N4JFKI7DVXRBJZ64XEG22LLLYVUW7ZOFFU6NVZ6BHCPA36GJWIVNA"}, routing: {type: absent}}
+      movements_exact: true
+      addresses:
+        - {strkey: "BAAO2N4JFKI7DVXRBJZ64XEG22LLLYVUW7ZOFFU6NVZ6BHCPA36GJWIVNA", type: claimable_balance, xdr_bytes: 36, chars: 58}
+    fields: {validated: [VF-35]}
+
+  - id: claim-predicate-depth-4
+    entry: cap-0023/claim-predicate-depth-4
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            create_claimable_balance:
+              asset: native
+              amount: "10000000"
+              claimants:
+                # OR → AND → NOT → UNCONDITIONAL on one branch: four levels.
+                - claimant_type_v0: {destination: "${acct.N}", predicate: {or: [{and: [{not: unconditional}, unconditional]}, {before_absolute_time: "9223372036854775807"}]}}
+      ext: v0
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [create_claimable_balance.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 7}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [create_claimable_balance.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/claimable_balance/claimants
+          equals: [{claimant_type_v0: {destination: "${acct.N}", predicate: {or: [{and: [{not: unconditional}, unconditional]}, {before_absolute_time: "9223372036854775807"}]}}}]
+          note: "Stored as submitted: OR over AND over NOT over UNCONDITIONAL is four levels, the limit. The claimant account N does not exist; stellar-core does not require it to."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/create_claimable_balance/success
+          equals: "BAAEJFUOO7JALUAYYMV3VYHZV7TBEI3Z5HZASI7Q5LNR42T7IQIDXTAXXA"
+          note: "sha256 of ENVELOPE_TYPE_OP_ID (B, sequence 55834574849, operation 0)."
+      participants:
+        must_include:
+          - {address: "${acct.B}", roles: [source, fee_payer, sponsor]}
+          - {address: "BAAEJFUOO7JALUAYYMV3VYHZV7TBEI3Z5HZASI7Q5LNR42T7IQIDXTAXXA", roles: [claimable_balance]}
+        must_not_include:
+          - {address: "${acct.N}", because: "N is only named as the claimant; the account does not exist and no ledger entry of it changed"}
+        exact: true
+      state_changes:
+        - kind: claimable_balance_created
+          op_index: 0
+          account: {address: "BAAEJFUOO7JALUAYYMV3VYHZV7TBEI3Z5HZASI7Q5LNR42T7IQIDXTAXXA"}
+          asset: native
+          detail: {balance_id: "BAAEJFUOO7JALUAYYMV3VYHZV7TBEI3Z5HZASI7Q5LNR42T7IQIDXTAXXA", amount: "10000000", claimants: 1, sponsor: "${acct.B}"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.B}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.B}"}, to: {address: "BAAEJFUOO7JALUAYYMV3VYHZV7TBEI3Z5HZASI7Q5LNR42T7IQIDXTAXXA"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-35]}
+
+  - id: relative-predicate-stored-absolute
+    entry: cap-0023/relative-predicate-stored-absolute
+    tx:
+      source_account: "${acct.R}"
+      fee: 1000
+      seq_num: "${seq.R}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            create_claimable_balance:
+              asset: native
+              amount: "10000000"
+              claimants:
+                - claimant_type_v0: {destination: "${acct.Y}", predicate: {before_relative_time: "9223372036854775807"}}
+      ext: v0
+    sign: [{key: R}]
+    expect_result: tx_success
+    expect_op_results: [create_claimable_balance.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 7}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [create_claimable_balance.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/create_claimable_balance/claimants/0/claimant_type_v0/predicate
+          equals: {before_relative_time: "9223372036854775807"}
+          note: "The operation asks for a relative time of INT64_MAX seconds."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/claimable_balance/claimants/0/claimant_type_v0/predicate
+          equals: {before_absolute_time: "9223372036854775807"}
+          note: "The ledger never stores a relative predicate: close time plus INT64_MAX saturates at INT64_MAX, stored as an absolute time."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/create_claimable_balance/success
+          equals: "BAAL2NAVBT4R3JIVJ2EXR2K7CRZDTQX6YCPMZZADZWDUMFVWV3IMKQUMW4"
+      participants:
+        must_include:
+          - {address: "${acct.R}", roles: [source, fee_payer, sponsor]}
+          - {address: "BAAL2NAVBT4R3JIVJ2EXR2K7CRZDTQX6YCPMZZADZWDUMFVWV3IMKQUMW4", roles: [claimable_balance]}
+        must_not_include:
+          - {address: "${acct.Y}", because: "Y is only named as the claimant; its account exists but did not change"}
+        exact: true
+      state_changes:
+        - kind: claimable_balance_created
+          op_index: 0
+          account: {address: "BAAL2NAVBT4R3JIVJ2EXR2K7CRZDTQX6YCPMZZADZWDUMFVWV3IMKQUMW4"}
+          asset: native
+          detail: {balance_id: "BAAL2NAVBT4R3JIVJ2EXR2K7CRZDTQX6YCPMZZADZWDUMFVWV3IMKQUMW4", amount: "10000000", claimants: 1, sponsor: "${acct.R}"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.R}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.R}"}, to: {address: "BAAL2NAVBT4R3JIVJ2EXR2K7CRZDTQX6YCPMZZADZWDUMFVWV3IMKQUMW4"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-35]}
+
+  - id: claim-never-claimable
+    entry: cap-0023/claim-predicate-never-claimable
+    tx:
+      source_account: "${acct.Y}"
+      fee: 1000
+      seq_num: "${seq.Y}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {claim_claimable_balance: {balance_id: BAAC7DRX3GBOAAWWRQQGRYFS2QXF7QFUMXSZRKIEKNTBNPCIKEJU7GE5LM}}
+      ext: v0
+    sign: [{key: Y}]
+    expect_result: tx_failed
+    expect_op_results: [claim_claimable_balance.cannot_claim]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [claim_claimable_balance.cannot_claim], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/claim_claimable_balance/balance_id
+          equals: "BAAC7DRX3GBOAAWWRQQGRYFS2QXF7QFUMXSZRKIEKNTBNPCIKEJU7GE5LM"
+          note: "The balance Y created in the setup item with the predicate NOT(UNCONDITIONAL), for Y alone: it exists and Y is its claimant, but the predicate is never true."
+        - path: /v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/claim_claimable_balance
+          equals: cannot_claim
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations
+          equals: []
+          note: "A failed transaction applies no operation: the balance stays on the ledger and Y receives nothing."
+      participants:
+        must_include:
+          - {address: "${acct.Y}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "BAAC7DRX3GBOAAWWRQQGRYFS2QXF7QFUMXSZRKIEKNTBNPCIKEJU7GE5LM", because: "the claim failed; the balance entry did not change"}
+        exact: true
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.Y}"}}
+        - {kind: transfer, asset: native, amount: "10000000", from: {address: "BAAC7DRX3GBOAAWWRQQGRYFS2QXF7QFUMXSZRKIEKNTBNPCIKEJU7GE5LM"}, to: {address: "${acct.Y}"}, count: 0}
+      movements_exact: true
+    fields: {passed_through: [VF-36b]}
+
+  - id: balance-id-from-muxed-source
+    entry: cap-0023/balance-id-from-muxed-source
+    tx:
+      source_account: "${muxed(M, 7)}"
+      fee: 1000
+      seq_num: "${seq.M}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            create_claimable_balance:
+              asset: native
+              amount: "10000000"
+              claimants:
+                - claimant_type_v0: {destination: "${acct.Y}", predicate: unconditional}
+      ext: v0
+    sign: [{key: M}]
+    expect_result: tx_success
+    expect_op_results: [create_claimable_balance.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 7}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [create_claimable_balance.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/source_account
+          equals: "${muxed(M, 7)}"
+          note: "The transaction source is M muxed with ID 7."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/create_claimable_balance/success
+          equals: "BAANRBCP7VC4VIDXBMRN3S4PR7BYAD726LYQG4LYOCGKPW3ME4SKGJIIYY"
+          note: "sha256 of ENVELOPE_TYPE_OP_ID with the un-muxed source M (no muxed ID in the preimage), sequence 55834574849, operation 0; computed before the run."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/claimable_balance/balance_id
+          equals: "BAANRBCP7VC4VIDXBMRN3S4PR7BYAD726LYQG4LYOCGKPW3ME4SKGJIIYY"
+      participants:
+        must_include:
+          - {address: "${acct.M}", muxed_id: "7", on_chain_form: "${muxed(M, 7)}", roles: [source, fee_payer, sponsor]}
+          - {address: "BAANRBCP7VC4VIDXBMRN3S4PR7BYAD726LYQG4LYOCGKPW3ME4SKGJIIYY", roles: [claimable_balance]}
+        must_not_include:
+          - {address: "${acct.Y}", because: "Y is only named as the claimant; its account exists but did not change"}
+        exact: true
+      state_changes:
+        - kind: claimable_balance_created
+          op_index: 0
+          account: {address: "BAANRBCP7VC4VIDXBMRN3S4PR7BYAD726LYQG4LYOCGKPW3ME4SKGJIIYY"}
+          asset: native
+          detail: {balance_id: "BAANRBCP7VC4VIDXBMRN3S4PR7BYAD726LYQG4LYOCGKPW3ME4SKGJIIYY", amount: "10000000", claimants: 1, sponsor: "${acct.M}"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.M}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.M}"}, to: {address: "BAANRBCP7VC4VIDXBMRN3S4PR7BYAD726LYQG4LYOCGKPW3ME4SKGJIIYY"}, routing: {type: absent}}
+      movements_exact: true
+    fields:
+      validated: [VF-02a, VF-35]
+      passed_through: [VF-02b]
+
+  - id: claim-nonexistent-balance
+    entry: cap-0023/claim-nonexistent-balance-fails
+    tx:
+      source_account: "${acct.Z}"
+      fee: 1000
+      seq_num: "${seq.Z}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {claim_claimable_balance: {balance_id: BAAO36PT6SN6SUR3ID6GRCLN6QQZ47DEKZYUYWJ5AUYWB2N5XJDM4UFU34}}
+      ext: v0
+    sign: [{key: Z}]
+    expect_result: tx_failed
+    expect_op_results: [claim_claimable_balance.does_not_exist]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [claim_claimable_balance.does_not_exist], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/claim_claimable_balance/balance_id
+          equals: "BAAO36PT6SN6SUR3ID6GRCLN6QQZ47DEKZYUYWJ5AUYWB2N5XJDM4UFU34"
+          note: "A well-formed balance ID (sha256 of the text xcc/claimable-balance/none) that no operation created. stellar-core accepts it at submission and checks existence only when applying."
+        - path: /v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/claim_claimable_balance
+          equals: does_not_exist
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.Z}", roles: [source, fee_payer]}
+        must_not_include:
+          - {address: "BAAO36PT6SN6SUR3ID6GRCLN6QQZ47DEKZYUYWJ5AUYWB2N5XJDM4UFU34", because: "the balance does not exist; the address is only named in the failed operation"}
+        exact: true
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.Z}"}}
+      movements_exact: true
+    fields: {passed_through: [VF-36b]}

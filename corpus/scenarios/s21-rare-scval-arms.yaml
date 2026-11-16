@@ -1,0 +1,189 @@
+# Rare SCVal and SCError arms that real ledgers seldom show, put into contract events by the
+# shape-emitter test contract (contracts/shape-emitter, `emit` publishes its arguments verbatim):
+# an SCV_TIMEPOINT event data value, and SCV_ERROR data with the SCE_OBJECT and SCE_EVENTS error
+# types. Readers that switch over SCVal or SCError arms and know only the common ones fail here.
+#
+# The setup also changes a Soroban setting through a configuration upgrade whose ConfigUpgradeSet
+# holds a CONFIG_SETTING_FREEZE_BYPASS_TXS_DELTA entry (CAP-0077): the delta exists in ledgers only
+# as those upgrade-set bytes in contract data (stellar-core applies a delta to the stored
+# CONFIG_SETTING_FREEZE_BYPASS_TXS setting and never stores the delta itself). The run's chain keeps
+# those ledgers.
+scenario: rare-scval-arms
+caps: [46, 77]
+protocols: [29, 30]
+profile: lake
+actors: [A, B]
+contracts:
+  emitter:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+    constructor_args: [{symbol: xcc}]
+setup:
+  - fund: {A: "10000", B: "10000"}
+  - deploy_contract: emitter
+  - config_upgrade:
+      freeze_bypass_txs_delta:
+        add_txs: ["7863632f667265657a652d6279706173732f7363656e6172696f2f7332312f30"]
+        remove_txs: []
+
+steps:
+  - id: timepoint-data
+    entry: cap-0046/scval-timepoint-in-event-data
+    tx: &emit-call
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: emit, args: [{vec: [{symbol: timepoint}]}, {timepoint: "1794470400"}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: timepoint
+          data:
+            timepoint: "1794470400"
+        note: SCV_TIMEPOINT (arm 7), a u64 of seconds; SEP-51 renders it as a decimal string.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+
+  - id: error-object-data
+    entry: cap-0046/sc-error-object-in-event-data
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: emit, args: [{vec: [{symbol: error}]}, {error: {object: index_bounds}}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: error
+          data:
+            error:
+              object: index_bounds
+        note: SCV_ERROR whose SCError type is SCE_OBJECT (3) with code SCEC_INDEX_BOUNDS.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+
+  - id: error-events-data
+    entry: cap-0046/sc-error-events-in-event-data
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: emit, args: [{vec: [{symbol: error}]}, {error: {events: invalid_input}}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: error
+          data:
+            error:
+              events: invalid_input
+        note: SCV_ERROR whose SCError type is SCE_EVENTS (6) with code SCEC_INVALID_INPUT.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true

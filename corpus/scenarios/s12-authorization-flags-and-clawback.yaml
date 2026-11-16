@@ -1,0 +1,344 @@
+# Authorization flags and clawback: AllowTrust moving a trustline to AUTHORIZED_TO_MAINTAIN_LIABILITIES
+# (CAP-0018); the same transition by AllowTrust and by SetTrustLineFlags in one transaction
+# (CAP-0035); a clawback from a muxed account; a claimable balance that inherits the clawback flag and
+# is clawed back in the same transaction; an account with all four authorization flags; SetOptions
+# setting the master weight and the three thresholds. Protocol 28 serves the reader pins that cannot
+# decode Protocol 30.
+#
+# HC, funded in ledger 13, sends its first transaction with sequence 55834574849; its operation 0
+# creates the balance BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY (sha256 of the
+# ENVELOPE_TYPE_OP_ID preimage, no passphrase in it), which operation 1 claws back.
+scenario: authorization-flags-and-clawback
+caps: [18, 35]
+protocols: [28, 30]
+profile: lake
+actors: [IA, IB, HA1, HA2, HA3, HB, HC, IF, T]
+assets:
+  AT: {credit_alphanum4: {asset_code: AT, issuer: "${acct.IA}"}}
+  CLW: {credit_alphanum4: {asset_code: CLW, issuer: "${acct.IB}"}}
+setup:
+  - fund: {IA: "100", IB: "100", HA1: "100", HA2: "100", HA3: "100", HB: "100", HC: "100", IF: "100", T: "100"}
+  # IA: AUTH_REVOCABLE (2). IB: AUTH_REVOCABLE | AUTH_CLAWBACK_ENABLED (2 | 8), before any trustline
+  # to CLW exists, so that the trustlines are created clawback-enabled.
+  - tx:
+      source_account: "${acct.IA}"
+      fee: 500
+      seq_num: "${seq.IA}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options: &flags-only {inflation_dest: null, clear_flags: null, set_flags: 2, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}
+        - source_account: "${acct.IB}"
+          body:
+            set_options: {<<: *flags-only, set_flags: 10}
+      ext: v0
+  - trust: {HA1: AT, HA2: AT, HA3: AT, HB: CLW, HC: CLW}
+  - tx:
+      source_account: "${acct.IA}"
+      fee: 500
+      seq_num: "${seq.IA}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.HA1}", asset: "${asset.AT}", amount: "1000000000"}}}
+        - {source_account: null, body: {payment: {destination: "${acct.HA2}", asset: "${asset.AT}", amount: "1000000000"}}}
+        - {source_account: null, body: {payment: {destination: "${acct.HA3}", asset: "${asset.AT}", amount: "1000000000"}}}
+        - {source_account: "${acct.IB}", body: {payment: {destination: "${acct.HB}", asset: "${asset.CLW}", amount: "1000000000"}}}
+        - {source_account: "${acct.IB}", body: {payment: {destination: "${acct.HC}", asset: "${asset.CLW}", amount: "1000000000"}}}
+      ext: v0
+
+steps:
+  - id: allow-trust-maintain-liabilities
+    entry: cap-0018/allow-trust-maintain-liabilities
+    tx:
+      source_account: "${acct.IA}"
+      fee: 1000
+      seq_num: "${seq.IA}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {allow_trust: {trustor: "${acct.HA1}", asset: AT, authorize: 2}}
+      ext: v0
+    sign: [{key: IA}]
+    expect_result: tx_success
+    expect_op_results: [allow_trust.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [allow_trust.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/allow_trust
+          equals: {trustor: "${acct.HA1}", asset: AT, authorize: 2}
+          note: "authorize is a uint32, not a boolean: 2 is AUTHORIZED_TO_MAINTAIN_LIABILITIES_FLAG."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/state/data/trustline/flags
+          equals: 1
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/trustline/flags
+          equals: 2
+          note: "From AUTHORIZED (1) to AUTHORIZED_TO_MAINTAIN_LIABILITIES (2): the holder keeps its offers but may not receive or send."
+      participants:
+        must_include:
+          - {address: "${acct.IA}", roles: [source, fee_payer]}
+          - {address: "${acct.HA1}", roles: [trustline_owner]}
+        exact: true
+      state_changes:
+        - kind: trustline_flags_changed
+          op_index: 0
+          account: {address: "${acct.HA1}"}
+          asset: "AT:${acct.IA}"
+          detail: {flags: 2, authorized: false, authorized_to_maintain_liabilities: true, clawback_enabled: false}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IA}"}}
+      movements_exact: true
+    fields: {validated: [VF-33]}
+
+  - id: allow-trust-versus-set-trust-line-flags
+    entry: cap-0035/allow-trust-versus-set-trust-line-flags
+    tx:
+      source_account: "${acct.IA}"
+      fee: 1000
+      seq_num: "${seq.IA}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {allow_trust: {trustor: "${acct.HA2}", asset: AT, authorize: 2}}
+        - source_account: null
+          body: {set_trust_line_flags: {trustor: "${acct.HA3}", asset: "${asset.AT}", clear_flags: 1, set_flags: 2}}
+      ext: v0
+    sign: [{key: IA}]
+    expect_result: tx_success
+    expect_op_results: [allow_trust.success, set_trust_line_flags.success]
+    expect:
+      ledger: {transactions: 1, operations: 2, events: 3, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [allow_trust.success, set_trust_line_flags.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/allow_trust/asset
+          equals: AT
+          note: "AllowTrust names the asset by its code alone; the issuer is the operation's source."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/1/body/set_trust_line_flags
+          equals: {trustor: "${acct.HA3}", asset: {credit_alphanum4: {asset_code: AT, issuer: "${acct.IA}"}}, clear_flags: 1, set_flags: 2}
+          note: "SetTrustLineFlags names the full asset and gives the transition as flags to clear and to set."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/trustline/flags
+          equals: 2
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/changes/1/updated/data/trustline/flags
+          equals: 2
+          note: "Both operations leave the trustline in the same state."
+      participants:
+        must_include:
+          - {address: "${acct.IA}", roles: [source, fee_payer]}
+          - {address: "${acct.HA2}", roles: [trustline_owner]}
+          - {address: "${acct.HA3}", roles: [trustline_owner]}
+        exact: true
+      state_changes:
+        - kind: trustline_flags_changed
+          op_index: 0
+          account: {address: "${acct.HA2}"}
+          asset: "AT:${acct.IA}"
+          detail: {flags: 2, authorized: false, authorized_to_maintain_liabilities: true, clawback_enabled: false}
+        - kind: trustline_flags_changed
+          op_index: 1
+          account: {address: "${acct.HA3}"}
+          asset: "AT:${acct.IA}"
+          detail: {flags: 2, authorized: false, authorized_to_maintain_liabilities: true, clawback_enabled: false}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IA}"}}
+      movements_exact: true
+    fields: {validated: [VF-33]}
+
+  - id: clawback-from-muxed
+    entry: cap-0035/clawback-from-muxed-account
+    tx:
+      source_account: "${acct.IB}"
+      fee: 1000
+      seq_num: "${seq.IB}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {clawback: {asset: "${asset.CLW}", from: "${muxed(HB, 99)}", amount: "250000000"}}
+      ext: v0
+    sign: [{key: IB}]
+    expect_result: tx_success
+    expect_op_results: [clawback.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [clawback.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/clawback/from
+          equals: "${muxed(HB, 99)}"
+          note: "ClawbackOp.from is a MuxedAccount; here HB muxed with ID 99."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/trustline/account_id
+          equals: "${acct.HB}"
+          note: "The trustline debited is HB's; the muxed ID is not part of any ledger entry."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/trustline/balance
+          equals: "750000000"
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/1
+          equals: {address: "${acct.HB}"}
+          note: "The clawback event names the base account; the muxed ID is dropped."
+      participants:
+        must_include:
+          - {address: "${acct.IB}", roles: [source, fee_payer]}
+          - {address: "${acct.HB}", muxed_id: "99", on_chain_form: "${muxed(HB, 99)}", roles: [trustline_owner]}
+        exact: true
+      state_changes:
+        - kind: balance_changed
+          op_index: 0
+          account: {address: "${acct.HB}"}
+          asset: "CLW:${acct.IB}"
+          detail: {delta: "-250000000", balance_after: "750000000"}
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IB}"}}
+        - {kind: clawback, op_index: 0, asset: "CLW:${acct.IB}", amount: "250000000", from: {address: "${acct.HB}"}, routing: {type: absent}}
+      movements_exact: true
+      addresses:
+        - {strkey: "${muxed(HB, 99)}", type: muxed_account, xdr_bytes: 44, chars: 69}
+    fields:
+      validated: [VF-34]
+      passed_through: [VF-20]
+
+  - id: claimable-balance-clawback
+    entry: cap-0035/claimable-balance-clawback-flag-ext-v1
+    tx:
+      source_account: "${acct.HC}"
+      fee: 1000
+      seq_num: "${seq.HC}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {create_claimable_balance: {asset: "${asset.CLW}", amount: "100000000", claimants: [{claimant_type_v0: {destination: "${acct.HB}", predicate: unconditional}}]}}
+        - source_account: "${acct.IB}"
+          body: {clawback_claimable_balance: {balance_id: BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY}}
+      ext: v0
+    sign: [{key: HC}, {key: IB}]
+    expect_result: tx_success
+    expect_op_results: [create_claimable_balance.success, clawback_claimable_balance.success]
+    expect:
+      ledger: {transactions: 1, operations: 2, events: 3, entry_changes: 15}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [create_claimable_balance.success, clawback_claimable_balance.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/create_claimable_balance/success
+          equals: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY"
+          note: "sha256 of ENVELOPE_TYPE_OP_ID (HC, sequence 55834574849, operation 0), computed before the run."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/changes/4/state/data/claimable_balance/ext
+          equals: {v1: {ext: v0, flags: 1}}
+          note: "The balance was made from a clawback-enabled trustline, so it carries CLAIMABLE_BALANCE_CLAWBACK_ENABLED_FLAG in ext.v1; that is what lets the issuer claw it back."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/events/0/body/v0/topics
+          equals: [{symbol: clawback}, {address: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY"}, {string: "CLW:${acct.IB}"}]
+          note: "The clawback is from the balance's B address, not from its creator or its claimant."
+      participants:
+        must_include:
+          - {address: "${acct.HC}", roles: [source, fee_payer, sponsor, trustline_owner]}
+          - {address: "${acct.IB}", roles: [operation_source]}
+          - {address: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY", roles: [claimable_balance]}
+        must_not_include:
+          - {address: "${acct.HB}", because: "HB is only the claimant of a balance that was clawed back; no ledger entry of HB changed"}
+        exact: true
+      state_changes:
+        - kind: claimable_balance_created
+          op_index: 0
+          account: {address: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY"}
+          asset: "CLW:${acct.IB}"
+          detail: {balance_id: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY", amount: "100000000", claimants: 1, sponsor: "${acct.HC}"}
+        - kind: claimable_balance_claimed
+          op_index: 1
+          account: {address: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY"}
+          asset: "CLW:${acct.IB}"
+          detail: {balance_id: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY", amount: "100000000"}
+          cause: "clawed back by the issuer, not claimed by the claimant"
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HC}"}}
+        - {kind: transfer, op_index: 0, asset: "CLW:${acct.IB}", amount: "100000000", from: {address: "${acct.HC}"}, to: {address: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY"}, routing: {type: absent}}
+        - {kind: clawback, op_index: 1, asset: "CLW:${acct.IB}", amount: "100000000", from: {address: "BAAIRQAUDD7H5FSOA6H5DRYQUQ3QUGBCXVIRIQNMNUDGQVGOPPULYUXRAY"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-35, VF-36a]}
+
+  - id: account-flags-all-four
+    entry: cap-0035/account-flags-all-four
+    tx:
+      source_account: "${acct.IF}"
+      fee: 1000
+      seq_num: "${seq.IF}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options: {inflation_dest: null, clear_flags: null, set_flags: 15, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}
+      ext: v0
+    sign: [{key: IF}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/flags
+          equals: 15
+          note: "AUTH_REQUIRED (1) | AUTH_REVOCABLE (2) | AUTH_IMMUTABLE (4) | AUTH_CLAWBACK_ENABLED (8), set in one operation; with IMMUTABLE set the flags can never change again."
+      participants:
+        must_include:
+          - {address: "${acct.IF}", roles: [source, fee_payer]}
+        exact: true
+      state_changes:
+        - kind: account_flags_changed
+          op_index: 0
+          account: {address: "${acct.IF}"}
+          detail: {flags: 15, flags_before: 0, auth_required: true, auth_revocable: true, auth_immutable: true, auth_clawback_enabled: true}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IF}"}}
+      movements_exact: true
+    fields: {validated: [VF-30]}
+
+  - id: thresholds-and-master-weight
+    entry: classic/set-options-thresholds-and-master-weight
+    tx:
+      source_account: "${acct.T}"
+      fee: 1000
+      seq_num: "${seq.T}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options: {inflation_dest: null, clear_flags: null, set_flags: null, master_weight: 255, low_threshold: 1, med_threshold: 128, high_threshold: 255, home_domain: null, signer: null}
+      ext: v0
+    sign: [{key: T}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/state/data/account/thresholds
+          equals: "01000000"
+          note: "The default: master weight 1, all thresholds 0."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/thresholds
+          equals: "ff0180ff"
+          note: "Four bytes in the order master weight, low, medium, high: 255, 1, 128, 255."
+      participants:
+        must_include:
+          - {address: "${acct.T}", roles: [source, fee_payer]}
+        exact: true
+      state_changes:
+        - kind: thresholds_changed
+          op_index: 0
+          account: {address: "${acct.T}"}
+          detail: {master_weight: 255, low: 1, medium: 128, high: 255}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.T}"}}
+      movements_exact: true
+    fields: {validated: [VF-30]}

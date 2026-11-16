@@ -1,0 +1,160 @@
+# Local twins, on both passphrases, of two Stellar Asset Contract entries whose other variants are
+# a testnet-history ledger and a stellar-core golden (their whole-ledger receipts differ, so the
+# twins are entries of their own): a USDC SAC `transfer` to a muxed account (`M…`, ID
+# 8719886936707710911, above 2^53), whose event names the plain `G…` address and carries the ID as
+# `to_muxed_id` (CAP-0067); and an XLM SAC `transfer` to an account that does not exist, which
+# creates it with no CreateAccount operation (CAP-0073). Calls are simulated with the pinned host, so
+# the file runs at Protocols 29 and 30.
+scenario: sac-transfer-twins
+caps: [67, 73]
+protocols: [29, 30]
+profile: lake
+actors: [holder, receiver, issuer, newcomer]     # newcomer is never funded: the transfer creates it
+assets:
+  USDC: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.issuer}"}}
+setup:
+  - fund: {holder: "10000", receiver: "10000", issuer: "10000"}
+  - trust: {holder: USDC, receiver: USDC}
+  - pay: {from: issuer, to: holder, asset: USDC, amount: "1000"}
+  - deploy_sac: USDC
+  - deploy_sac: native
+
+steps:
+  - id: sac-transfer-to-muxed-account
+    entry: cap-0067/sac-transfer-to-muxed-account-local-twins
+    tx:
+      source_account: "${acct.holder}"
+      fee: 2001000
+      seq_num: "${seq.holder}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: transfer
+                  args: [{address: "${acct.holder}"}, {address: "${muxed(receiver, 8719886936707710911)}"}, {i128: "1000000"}]
+              auth:
+                - credentials: source_account
+                  root_invocation:
+                    function:
+                      contract_fn:
+                        contract_address: "${contract.sac(USDC)}"
+                        function_name: transfer
+                        args: [{address: "${acct.holder}"}, {address: "${muxed(receiver, 8719886936707710911)}"}, {i128: "1000000"}]
+                    sub_invocations: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            # Declared as stellar-core's own tests declare a credit SAC transfer: the issuer account
+            # read-only first, so the transaction has the shape of a golden one (AG-4).
+            footprint:
+              read_only:
+                - account: {account_id: "${acct.issuer}"}
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+              read_write:
+                - trustline: {account_id: "${acct.holder}", asset: "${asset.USDC}"}
+                - trustline: {account_id: "${acct.receiver}", asset: "${asset.USDC}"}
+            instructions: 2000000
+            disk_read_bytes: 2000
+            write_bytes: 2000
+          resource_fee: "2000000"
+    soroban_resources: declared
+    sign: [{key: holder}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 3, entry_changes: 10}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/1
+          equals: {address: "${muxed(receiver, 8719886936707710911)}"}
+          note: "The argument is an ScAddress of type SC_ADDRESS_TYPE_MUXED_ACCOUNT (CAP-0067)."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics
+          equals: [{symbol: transfer}, {address: "${acct.holder}"}, {address: "${acct.receiver}"}, {string: "USDC:${acct.issuer}"}]
+          note: "The event's to topic is the plain G address, not the M form."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data
+          equals: {map: [{key: {symbol: amount}, val: {i128: "1000000"}}, {key: {symbol: to_muxed_id}, val: {u64: "8719886936707710911"}}]}
+          note: "The ID travels in the data map; 8719886936707710911 is above 2^53, so a float64 cannot hold it."
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {trustline: {account_id: "${acct.receiver}", asset: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.issuer}"}}}}
+            change: updated
+          path: /updated/data/trustline/balance
+          equals: "1000000"
+          note: "The balance is credited to the base account's trustline."
+      participants:
+        must_include:
+          - {address: "${acct.holder}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "${acct.receiver}", muxed_id: "8719886936707710911", on_chain_form: "${muxed(receiver, 8719886936707710911)}", roles: [trustline_owner]}
+        exact: true
+      state_changes:
+        - {kind: balance_changed, op_index: 0, account: {address: "${acct.receiver}"}, asset: "USDC:${acct.issuer}", detail: {delta: "1000000", balance_after: "1000000"}}
+        - {kind: balance_changed, op_index: 0, account: {address: "${acct.holder}"}, asset: "USDC:${acct.issuer}", detail: {delta: "-1000000", balance_after: "9999000000"}}
+      state_changes_exact: true
+      movements:
+        - kind: transfer
+          op_index: 0
+          asset: "USDC:${acct.issuer}"
+          amount: "1000000"
+          from: {address: "${acct.holder}"}
+          to: {address: "${acct.receiver}", muxed_id: "8719886936707710911"}
+          routing: {type: u64, value: "8719886936707710911"}
+      movements_exact: true
+      addresses:
+        - {strkey: "${muxed(receiver, 8719886936707710911)}", type: muxed_account, xdr_bytes: 44, chars: 69}
+
+  - id: native-sac-transfer-creates-account
+    entry: cap-0073/native-sac-transfer-creates-account-local-twins
+    tx:
+      source_account: "${acct.holder}"
+      fee: 1000
+      seq_num: "${seq.holder}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(native)}"
+                  function_name: transfer
+                  args: [{address: "${acct.holder}"}, {address: "${acct.newcomer}"}, {i128: "1000000000"}]
+    simulate: true
+    sign: [{key: holder}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 3, entry_changes: 9}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name
+          equals: transfer
+          note: "An InvokeHostFunction on the XLM SAC; there is no CreateAccount operation anywhere in the ledger."
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {account: {account_id: "${acct.newcomer}"}}
+            change: created
+          path: /created/data/account/balance
+          equals: "1000000000"
+          note: "The transfer creates the destination account with the transferred amount as its balance (CAP-0073)."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+          equals: {topics: [{symbol: transfer}, {address: "${acct.holder}"}, {address: "${acct.newcomer}"}, {string: native}], data: {i128: "1000000000"}}
+      participants:
+        must_include:
+          - {address: "${acct.holder}", roles: [source, fee_payer]}
+          - {address: "${acct.newcomer}", roles: [destination]}
+        exact: true
+      state_changes:
+        - {kind: account_created, op_index: 0, account: {address: "${acct.newcomer}"}, detail: {starting_balance: "1000000000"}}
+      state_changes_exact: true
+      movements:
+        - {kind: transfer, op_index: 0, asset: native, amount: "1000000000", from: {address: "${acct.holder}"}, to: {address: "${acct.newcomer}"}, routing: {type: absent}}
+      movements_exact: true

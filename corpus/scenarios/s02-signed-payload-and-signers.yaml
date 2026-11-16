@@ -1,0 +1,381 @@
+# CAP-0040 signed-payload signers and the other non-ed25519 signer types. The first three steps
+# are what the local-core probe executed (evidence/local-core/): two signed-payload signers added
+# in one ledger (1-byte and 64-byte payloads), a transaction authorised only by a signed-payload
+# signature, and a signed-payload extra signer in PRECOND_V2. Then a signed-payload signer is
+# reweighted and removed in one transaction, and a transaction is authorised only by two hash-x
+# preimages of 0 and 64 bytes. Last, a pre-authorised transaction that fails: its pre-auth-tx
+# signer is removed all the same. Protocol 28 serves the reader pins that cannot decode Protocol 30.
+scenario: signed-payload-and-signers
+caps: [40, 21, 28]
+protocols: [28, 30]
+profile: lake
+actors: [A, B, C, D, E, W, GHOST]     # GHOST is never funded
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000", D: "10000", E: "10000", W: "10000"}
+  # W: one pre-auth-tx signer, the hash of the last step's transaction on this passphrase.
+  - tx:
+      source_account: "${acct.W}"
+      fee: 100
+      seq_num: "${seq.W}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options:
+              inflation_dest: null
+              clear_flags: null
+              set_flags: null
+              master_weight: null
+              low_threshold: null
+              med_threshold: null
+              high_threshold: null
+              home_domain: null
+              signer: {key: "${signer.pre_auth_tx(pre-authorised-tx-fails)}", weight: 1}
+      ext: v0
+  # E: two hash-x signers (preimages of 0 and 64 bytes), every threshold 2, so that a transaction
+  # signed by both preimages and nothing else is authorised and uses both signatures.
+  - tx:
+      source_account: "${acct.E}"
+      fee: 300
+      seq_num: "${seq.E}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options: &no-change
+              inflation_dest: null
+              clear_flags: null
+              set_flags: null
+              master_weight: null
+              low_threshold: null
+              med_threshold: null
+              high_threshold: null
+              home_domain: null
+              signer: {key: XDR3BRCCTD6BYFE27P2MRGLPXESCPLSB4RSJXE2MUSKZSG3YKK4FKDDZ, weight: 1}   # sha256 of the empty preimage
+        - source_account: null
+          body:
+            set_options:
+              <<: *no-change
+              signer: {key: XD66VONM6NYQGYV5EZMM3SNCT2HZY5L7Z6MBCYB2RRCHZUOZCUIQRWEL, weight: 1}   # sha256 of bytes 00…3f
+        - source_account: null
+          body:
+            set_options:
+              <<: *no-change
+              signer: null
+              low_threshold: 2
+              med_threshold: 2
+              high_threshold: 2
+      ext: v0
+
+steps:
+  - id: add-signed-payload-signers
+    entry: cap-0040/signed-payload-signers-1-byte-and-64-byte
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options:
+              <<: *no-change
+              signer: {key: "${signer.payload(D, 2a)}", weight: 1}
+        - source_account: null
+          body:
+            set_options:
+              <<: *no-change
+              signer: {key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", weight: 1}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success, set_options.success]
+    expect:
+      ledger: {transactions: 1, operations: 2, events: 1, entry_changes: 8}
+      transactions:
+        - index: 0
+          hash: "${derived.tx_hash}"
+          successful: true
+          result_code: tx_success
+          operation_result_codes: [set_options.success, set_options.success]
+          fee_charged: "${derived.fee_charged}"
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/changes/1/updated/data/account/signers
+          equals:
+            - {key: "${signer.payload(D, 2a)}", weight: 1}
+            - {key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", weight: 1}
+          note: "After the second operation the account holds both signers, each with its full payload (1 byte and 64 bytes)."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/changes/1/updated/data/account/num_sub_entries
+          equals: 2
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.A}"}}
+      movements_exact: true
+      state_changes:
+        - kind: signer_added
+          op_index: 0
+          account: {address: "${acct.A}"}
+          signer: {type: ed25519_signed_payload, key: "${signer.payload(D, 2a)}", payload_hex: "2a", weight: 1}
+        - kind: signer_added
+          op_index: 1
+          account: {address: "${acct.A}"}
+          signer: {type: ed25519_signed_payload, key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", payload_hex: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f", weight: 1}
+      state_changes_exact: true
+      participants:
+        must_include: [{address: "${acct.A}", roles: [source, fee_payer, signer_owner]}]
+        must_not_include:
+          - {address: "${acct.D}", because: "D's key is inside the signer key; no ledger entry of D changed"}
+          - {address: "${acct.C}", because: "C's key is inside the signer key; no ledger entry of C changed"}
+      addresses:
+        - {strkey: "${signer.payload(D, 2a)}", type: signed_payload}
+        - {strkey: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", type: signed_payload}
+    fields: {validated: [VF-29]}
+
+  - id: authorised-by-signed-payload-only
+    entry: cap-0040/tx-authorised-by-signed-payload-signature
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{signed_payload: {key: D, payload_hex: "2a"}}]     # A's own key does not sign
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures/0/hint
+          equals: "9bb80000"
+          note: "The only signature. Its hint is the last 4 bytes of D's key (b1 b8 00 00) XOR the payload hint (2a 00 00 00, the 1-byte payload at the start of a zeroed hint), so it matches neither D's key hint nor A's."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/0/state/data/account/signers/0
+          equals: {key: "${signer.payload(D, 2a)}", weight: 1}
+          note: "The signer of A that the signature satisfies."
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer]}
+          - {address: "${acct.C}", roles: [destination]}
+        must_not_include:
+          - {address: "${acct.D}", because: "D signed through a signed-payload signer of A; no ledger entry of D changed"}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.A}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.A}"}, to: {address: "${acct.C}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-06, VF-08], partially_validated: [VF-07]}
+
+  - id: extra-signer-in-preconditions
+    entry: cap-0040/extra-signer-signed-payload-local
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond:
+        v2:
+          time_bounds: {min_time: "0", max_time: "0"}
+          ledger_bounds: null
+          min_seq_num: null
+          min_seq_age: "0"
+          min_seq_ledger_gap: 0
+          extra_signers: ["${signer.payload(D, 5ca1ab1e00000000000000000000000000000000000000000000000000000001)}"]
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: B}, {signed_payload: {key: D, payload_hex: "5ca1ab1e00000000000000000000000000000000000000000000000000000001"}}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/cond/v2/extra_signers
+          equals: ["${signer.payload(D, 5ca1ab1e00000000000000000000000000000000000000000000000000000001)}"]
+          note: "A signed-payload extra signer with a 32-byte payload; it is a precondition, not a signer of any account."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures/1/hint
+          equals: "b1b80001"
+          note: "Last 4 bytes of D's key (b1 b8 00 00) XOR the last 4 bytes of the payload (00 00 00 01)."
+      participants:
+        must_include:
+          - {address: "${acct.B}", roles: [source, fee_payer]}
+          - {address: "${acct.C}", roles: [destination]}
+        must_not_include:
+          - {address: "${acct.D}", because: "D is named only as an extra signer; no ledger entry of D changed"}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.B}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.B}"}, to: {address: "${acct.C}"}, routing: {type: absent}}
+      movements_exact: true
+      # No `addresses` item for the extra signer: it is a precondition in the envelope, no ledger
+      # entry holds it and no observation kind stores it. The `cond` pinpoint above pins it.
+    fields: {validated: [VF-13, VF-18]}
+
+  - id: reweight-and-remove-signed-payload-signer
+    entry: cap-0040/signed-payload-signer-reweighted-and-removed
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options:
+              <<: *no-change
+              signer: {key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", weight: 2}
+        - source_account: null
+          body:
+            set_options:
+              <<: *no-change
+              signer: {key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", weight: 0}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success, set_options.success]
+    expect:
+      ledger: {transactions: 1, operations: 2, events: 1, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success, set_options.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/signers/1
+          equals: {key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", weight: 2}
+          note: "The first operation changes the 64-byte-payload signer's weight from 1 to 2; the account keeps two signers."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/changes/1/updated/data/account/signers
+          equals: [{key: "${signer.payload(D, 2a)}", weight: 1}]
+          note: "The second operation removes it (weight 0); only the 1-byte-payload signer is left."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/changes/1/updated/data/account/num_sub_entries
+          equals: 1
+      state_changes:
+        - kind: signer_changed
+          op_index: 0
+          account: {address: "${acct.A}"}
+          signer: {type: ed25519_signed_payload, key: "${signer.payload(C, 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f)}", payload_hex: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f", weight: 2}
+          detail: {weight_before: 1, payload_bytes: 64}
+        # No `signer` block: it is compared in full, weight included, and a removed signer has no
+        # weight of its own. The key is pinned by its XDR in `detail` instead.
+        - kind: signer_removed
+          op_index: 1
+          account: {address: "${acct.A}"}
+          detail:
+            signer_key_xdr_hex: "00000003b1d1b4fa29f85f8842451899bd0fd8de074fce59dbccd6b5ee7f34b86ccb641c00000040000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+            signer_ed25519_key: "${acct.C}"
+            payload_bytes: 64
+            weight_before: 2
+      state_changes_exact: true
+      participants:
+        must_include: [{address: "${acct.A}", roles: [source, fee_payer, signer_owner]}]
+        must_not_include:
+          - {address: "${acct.C}", because: "C's key is inside the signer key; no ledger entry of C changed"}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.A}"}}
+      movements_exact: true
+    fields: {validated: [VF-29]}
+
+  - id: authorised-by-hash-x-preimages
+    entry: classic/hash-x-signer-preimage-0-and-64-bytes
+    tx:
+      source_account: "${acct.E}"
+      fee: 1000
+      seq_num: "${seq.E}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.C}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign:
+      - {hash_x: ""}
+      - {hash_x: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"}
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures
+          equals:
+            - {hint: "7852b855", signature: ""}
+            - {hint: "d9151108", signature: "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"}
+          note: "Two hash-x signatures. Each `signature` is the preimage itself (0 bytes, then 64 bytes) and each hint is the last 4 bytes of sha256(preimage); neither is an ed25519 signature."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/0/state/data/account/signers
+          equals:
+            - {key: XDR3BRCCTD6BYFE27P2MRGLPXESCPLSB4RSJXE2MUSKZSG3YKK4FKDDZ, weight: 1}
+            - {key: XD66VONM6NYQGYV5EZMM3SNCT2HZY5L7Z6MBCYB2RRCHZUOZCUIQRWEL, weight: 1}
+          note: "E's signers are the two hashes; with every threshold at 2 both preimages are needed, and the master key does not sign."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/0/state/data/account/thresholds
+          equals: "01020202"
+      participants:
+        must_include:
+          - {address: "${acct.E}", roles: [source, fee_payer]}
+          - {address: "${acct.C}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.E}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.E}"}, to: {address: "${acct.C}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-06, VF-08]}
+
+  - id: pre-authorised-tx-fails
+    entry: cap-0028/pre-auth-signer-removed-on-failed-tx
+    tx:
+      source_account: "${acct.W}"
+      fee: 1000
+      seq_num: "${seq.W}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.GHOST}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{pre_auth: true}]          # no signature: the transaction's own hash is W's signer
+    expect_result: tx_failed
+    expect_op_results: [payment.no_destination]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [payment.no_destination], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures
+          equals: []
+          note: "No signature at all: the transaction is authorised by W's pre-auth-tx signer, which is its own hash."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/0/state/data/account/num_sub_entries
+          equals: 1
+          note: "Before: W holds one signer, the pre-auth-tx key (its strkey differs per passphrase, as the hash does)."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/1/updated/data/account/signers
+          equals: []
+          note: "The signer is removed in the transaction-level changes, together with the sequence-number bump, although the transaction then fails."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/1/updated/data/account/num_sub_entries
+          equals: 0
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations
+          equals: []
+          note: "A failed transaction has no operation meta."
+      participants:
+        must_include:
+          - {address: "${acct.W}", roles: [source, fee_payer, signer_owner]}
+        must_not_include:
+          - {address: "${acct.GHOST}", because: "the payment to it failed; the account does not exist"}
+        exact: true
+      # The removed signer is pinned through its XDR, which is the key type (1, pre-auth-tx) and this
+      # variant's transaction hash; the T… strkey differs per passphrase and has no derived value.
+      state_changes:
+        - kind: signer_removed
+          account: {address: "${acct.W}"}
+          detail: {signer_key_xdr_hex: "00000001${derived.tx_hash}", weight_before: 1}
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.W}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.W}"}, to: {address: "${acct.GHOST}"}, count: 0}
+      movements_exact: true
+    fields: {validated: [VF-08]}

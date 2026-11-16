@@ -1,0 +1,267 @@
+# Offers, fees and paths: two ManageSellOffers that create selling and buying liabilities in the
+# seller's account and trustlines (CAP-0003); a transaction bidding ten times the base fee in a ledger
+# that is not full, charged only the base fee (CAP-0005); a PathPaymentStrictSend that crosses one
+# offer, with its claim atom in the result (CAP-0024); a surge-priced ledger, where more operations
+# were queued than the ledger admits, one transaction is left out and the set's component carries a
+# discounted base fee (CAP-0042). Protocol 28 serves the reader pins that cannot decode Protocol 30.
+scenario: offers-fees-and-paths
+caps: [3, 5, 24, 42]
+protocols: [28, 30]
+profile: lake
+actors: [IL, OS, IP, MMK, SS, DD, FB, FBD]
+assets:
+  LX: {credit_alphanum4: {asset_code: LX, issuer: "${acct.IL}"}}
+  LY: {credit_alphanum4: {asset_code: LY, issuer: "${acct.IL}"}}
+  PX: {credit_alphanum4: {asset_code: PX, issuer: "${acct.IP}"}}
+  PY: {credit_alphanum4: {asset_code: PY, issuer: "${acct.IP}"}}
+setup:
+  - fund: {IL: "100", OS: "100", IP: "100", MMK: "100", SS: "100", DD: "100", FB: "100", FBD: "100"}
+  - trust: {OS: [LX, LY], MMK: [PX, PY], SS: PX, DD: PY}
+  - tx:
+      source_account: "${acct.IL}"
+      fee: 500
+      seq_num: "${seq.IL}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.OS}", asset: "${asset.LX}", amount: "1000000000"}}}
+        - {source_account: "${acct.IP}", body: {payment: {destination: "${acct.MMK}", asset: "${asset.PY}", amount: "1000000000"}}}
+        - {source_account: "${acct.IP}", body: {payment: {destination: "${acct.SS}", asset: "${asset.PX}", amount: "1000000000"}}}
+      ext: v0
+  # MMK sells 100 PY for PX at 1:1.
+  - tx:
+      source_account: "${acct.MMK}"
+      fee: 500
+      seq_num: "${seq.MMK}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {manage_sell_offer: {selling: "${asset.PY}", buying: "${asset.PX}", amount: "1000000000", price: {n: 1, d: 1}, offer_id: "0"}}
+      ext: v0
+
+steps:
+  - id: offers-create-liabilities
+    entry: cap-0003/offer-creates-liabilities
+    tx:
+      source_account: "${acct.OS}"
+      fee: 1000
+      seq_num: "${seq.OS}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {manage_sell_offer: {selling: "${asset.LX}", buying: native, amount: "100000000", price: {n: 1, d: 1}, offer_id: "0"}}
+        - source_account: null
+          body: {manage_sell_offer: {selling: native, buying: "${asset.LY}", amount: "200000000", price: {n: 1, d: 1}, offer_id: "0"}}
+      ext: v0
+    sign: [{key: OS}]
+    expect_result: tx_success
+    expect_op_results: [manage_sell_offer.success, manage_sell_offer.success]
+    expect:
+      ledger: {transactions: 1, operations: 2, events: 1, entry_changes: 14}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [manage_sell_offer.success, manage_sell_offer.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/ext/v1/liabilities
+          equals: {buying: "100000000", selling: "0"}
+          note: "Offer 1 sells LX for native: the account's buying liabilities (native) grow by what the offer could buy, and the LX trustline's selling liabilities (100000000) by what it could sell; the trustline's position among the operation's changes differs between runs of stellar-core (the offer comes before or after it), so no pinpoint states it."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/changes/1/updated/data/account/ext/v1/liabilities
+          equals: {buying: "100000000", selling: "200000000"}
+          note: "Offer 2 sells native for LY: the account now has selling liabilities too. The LY trustline's buying liabilities (200000000) are in the same operation's changes, at a position that differs between the four variants, so no pinpoint states them."
+      participants:
+        must_include:
+          - {address: "${acct.OS}", roles: [source, fee_payer, trustline_owner]}
+        must_not_include:
+          - {address: "${acct.IL}", because: "IL only issues LX and LY; no ledger entry of IL changed"}
+        exact: true
+      state_changes:
+        - kind: offer_changed
+          op_index: 0
+          account: {address: "${acct.OS}"}
+          detail: {change: created, selling: "LX:${acct.IL}", buying: native, amount: "100000000", price_n: 1, price_d: 1}
+        - kind: offer_changed
+          op_index: 1
+          account: {address: "${acct.OS}"}
+          detail: {change: created, selling: native, buying: "LY:${acct.IL}", amount: "200000000", price_n: 1, price_d: 1}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.OS}"}}
+      movements_exact: true
+    fields: {validated: [VF-27]}
+
+  - id: fee-charged-below-bid
+    entry: cap-0005/fee-charged-below-bid
+    tx:
+      source_account: "${acct.FB}"
+      fee: 1000
+      seq_num: "${seq.FB}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.FBD}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: FB}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "100"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/fee
+          equals: 1000
+          note: "The bid: 1000 stroops for one operation, ten times the base fee."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/base_fee
+          equals: "100"
+          note: "The ledger was not full, so its classic component is charged at the network base fee."
+        - path: /v2/tx_processing/0/result/result/fee_charged
+          equals: "100"
+          note: "What was charged: the base fee times one operation, not the bid."
+        - path: /v2/tx_processing/0/fee_processing/1/updated/data/account/balance
+          equals: "999999900"
+          note: "The fee change debits 100 stroops."
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [source, fee_payer]}
+          - {address: "${acct.FBD}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "100", from: {address: "${acct.FB}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.FB}"}, to: {address: "${acct.FBD}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-03]}
+
+  - id: strict-send-through-offer
+    entry: cap-0024/path-payment-strict-send-through-offer
+    tx:
+      source_account: "${acct.SS}"
+      fee: 1000
+      seq_num: "${seq.SS}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {path_payment_strict_send: {send_asset: "${asset.PX}", send_amount: "100000000", destination: "${acct.DD}", dest_asset: "${asset.PY}", dest_min: "1", path: []}}
+      ext: v0
+    sign: [{key: SS}]
+    expect_result: tx_success
+    expect_op_results: [path_payment_strict_send.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 4, entry_changes: 14}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [path_payment_strict_send.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/path_payment_strict_send/success/offers
+          equals:
+            - order_book: {seller_id: "${acct.MMK}", offer_id: "1", asset_sold: {credit_alphanum4: {asset_code: PY, issuer: "${acct.IP}"}}, amount_sold: "100000000", asset_bought: {credit_alphanum4: {asset_code: PX, issuer: "${acct.IP}"}}, amount_bought: "100000000"}
+          note: "One claim atom: MMK's offer 1 sold 10 PY for 10 PX. The empty path in the operation does not say which offers were crossed; the result does."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/path_payment_strict_send/success/last
+          equals: {destination: "${acct.DD}", asset: {credit_alphanum4: {asset_code: PY, issuer: "${acct.IP}"}}, amount: "100000000"}
+          note: "What the destination received: the strict-send amount out, decided at apply time."
+      participants:
+        must_include:
+          - {address: "${acct.SS}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "${acct.DD}", roles: [trustline_owner]}
+          - {address: "${acct.MMK}", roles: [trustline_owner]}
+        must_not_include:
+          - {address: "${acct.IP}", because: "IP only issues PX and PY; no ledger entry of IP changed"}
+        exact: true
+      state_changes:
+        - kind: offer_changed
+          op_index: 0
+          account: {address: "${acct.MMK}"}
+          detail: {offer_id: "1", change: updated, selling: "PY:${acct.IP}", buying: "PX:${acct.IP}", amount: "900000000", price_n: 1, price_d: 1}
+        - kind: balance_changed
+          op_index: 0
+          account: {address: "${acct.DD}"}
+          asset: "PY:${acct.IP}"
+          detail: {delta: "100000000", balance_after: "100000000"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.SS}"}}
+        - {kind: transfer, op_index: 0, asset: "PX:${acct.IP}", amount: "100000000", from: {address: "${acct.SS}"}, to: {address: "${acct.MMK}"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "PY:${acct.IP}", amount: "100000000", from: {address: "${acct.MMK}"}, to: {address: "${acct.SS}"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "PY:${acct.IP}", amount: "100000000", from: {address: "${acct.SS}"}, to: {address: "${acct.DD}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-25]}
+
+  # Surge pricing (CAP-0042): the ledger admits 100 operations (its max_tx_set_size), and 101 are
+  # queued: FB bids 300 for one payment, FBD 200 per operation for 99, SS 100 for one. SS's
+  # transaction is left out (its time bounds end with this ledger, so no later ledger takes it up),
+  # and the classic component's base fee is discounted to the lowest included bid, 200, which both
+  # included transactions are charged per operation. FB's transaction (the focus) has no time bound
+  # and one payment, the shape of a stellar-core golden payment (check AG-4); the order nonce is in
+  # FBD's time bound.
+  - id: surge-bid-300
+    entry: cap-0042/surge-priced-set-discounted-base-fee
+    order: [surge-bid-300, surge-bid-200]
+    tx:
+      source_account: "${acct.FB}"
+      fee: 300
+      seq_num: "${seq.FB}"
+      cond: none
+      memo: none
+      operations: [&op {source_account: null, body: {payment: {destination: "${acct.IL}", asset: native, amount: "1"}}}]
+      ext: v0
+    sign: [{key: FB}]
+    expect_result: tx_success
+    expect:
+      ledger: {transactions: 2, operations: 100, events: 102, entry_changes: 408}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, fee_charged: "200"}
+        - {index: 1, hash: "${derived.tx_hashes.1}", successful: true, result_code: tx_success, fee_charged: "19800"}
+      values:
+        - path: /v2/ledger_header/header/max_tx_set_size
+          equals: 100
+          note: "The ledger admits 100 operations; 101 were queued."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/base_fee
+          equals: "200"
+          note: "The classic component's discounted base fee: the lowest per-operation bid that made it into the set (FBD's 200), not the network base fee of 100."
+        - path: /v2/ledger_header/header/base_fee
+          equals: 100
+        - path: /v2/tx_processing/0/result/result/fee_charged
+          equals: "200"
+          note: "FB bid 300 for one operation and is charged 200, the component's base fee."
+        - path: /v2/tx_processing/1/result/result/fee_charged
+          equals: "19800"
+          note: "FBD bid exactly 200 per operation for 99 operations and is charged its bid."
+      participants:
+        must_include:
+          - {address: "${acct.FB}", roles: [source, fee_payer]}
+          - {address: "${acct.IL}", roles: [destination]}
+        must_not_include:
+          - {address: "${acct.SS}", because: "SS's transaction was left out of the ledger by surge pricing; it is in neither the transaction set nor the results"}
+        exact: true
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "200", from: {address: "${acct.FB}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "1", from: {address: "${acct.FB}"}, to: {address: "${acct.IL}"}, routing: {type: absent}}
+      movements_exact: true
+  - id: surge-bid-200
+    entry: cap-0042/surge-priced-set-discounted-base-fee
+    same_ledger_as: surge-bid-300
+    tx:
+      source_account: "${acct.FBD}"
+      fee: 19800
+      seq_num: "${seq.FBD}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations: [*op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op, *op]
+      ext: v0
+    sign: [{key: FBD}]
+    expect_result: tx_success
+  - id: surge-bid-100
+    entry: cap-0042/surge-priced-set-discounted-base-fee
+    same_ledger_as: surge-bid-300
+    tx:
+      source_account: "${acct.SS}"
+      fee: 100
+      seq_num: "${seq.SS}"
+      cond: {time: {min_time: "0", max_time: "${close_time}"}}
+      memo: none
+      operations: [*op]
+      ext: v0
+    sign: [{key: SS}]
+    expect_excluded: true

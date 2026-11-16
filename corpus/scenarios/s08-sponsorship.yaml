@@ -1,0 +1,192 @@
+# CAP-0033 sponsored reserves: a sponsorship sandwich that creates an account with a zero starting
+# balance and gives it a signer and a trustline, all paid for by the sponsor; a signer sponsorship
+# revoked back to the account, which leaves a null in the middle of `signerSponsoringIDs`.
+# Protocol 28 serves the reader pins that cannot decode Protocol 30.
+#
+# Not here: the local twins of cap-0033/bad-sponsorship-tx-result, which share an expectation with
+# that entry's stellar-core golden, in s08-bad-sponsorship-twins.yaml.
+scenario: sponsorship
+caps: [33]
+protocols: [28, 30]
+profile: lake
+actors: [SP, N, I, R, K1, K2, K3]     # N is created by the sandwich; K1–K3 are only keys
+assets:
+  TOK: {credit_alphanum4: {asset_code: TOK, issuer: "${acct.I}"}}
+setup:
+  - fund: {SP: "10000", I: "10000", R: "10000"}
+  # SP sponsors three ed25519 signers of R, so that R's signerSponsoringIDs is [SP, SP, SP].
+  - tx:
+      source_account: "${acct.SP}"
+      fee: 500
+      seq_num: "${seq.SP}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.R}"}}
+        - source_account: "${acct.R}"
+          body:
+            set_options: &signer-only
+              inflation_dest: null
+              clear_flags: null
+              set_flags: null
+              master_weight: null
+              low_threshold: null
+              med_threshold: null
+              high_threshold: null
+              home_domain: null
+              signer: {key: "${acct.K1}", weight: 1}
+        - source_account: "${acct.R}"
+          body:
+            set_options:
+              <<: *signer-only
+              signer: {key: "${acct.K2}", weight: 1}
+        - source_account: "${acct.R}"
+          body:
+            set_options:
+              <<: *signer-only
+              signer: {key: "${acct.K3}", weight: 1}
+        - source_account: "${acct.R}"
+          body: end_sponsoring_future_reserves
+      ext: v0
+
+steps:
+  - id: sponsorship-sandwich
+    entry: cap-0033/sponsorship-sandwich-zero-starting-balance
+    tx:
+      source_account: "${acct.SP}"
+      fee: 1000
+      seq_num: "${seq.SP}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.N}"}}
+        - source_account: null
+          body: {create_account: {destination: "${acct.N}", starting_balance: "0"}}
+        - source_account: "${acct.N}"
+          body:
+            set_options:
+              <<: *signer-only
+              signer: {key: "${acct.K1}", weight: 1}
+        - source_account: "${acct.N}"
+          body: {change_trust: {line: "${asset.TOK}", limit: "9223372036854775807"}}
+        - source_account: "${acct.N}"
+          body: end_sponsoring_future_reserves
+      ext: v0
+    sign: [{key: SP}, {key: N}]
+    expect_result: tx_success
+    expect_op_results: [begin_sponsoring_future_reserves.success, create_account.success, set_options.success, change_trust.success, end_sponsoring_future_reserves.success]
+    expect:
+      ledger: {transactions: 1, operations: 5, events: 2, entry_changes: 16}
+      transactions:
+        - index: 0
+          hash: "${derived.tx_hash}"
+          successful: true
+          result_code: tx_success
+          operation_result_codes: [begin_sponsoring_future_reserves.success, create_account.success, set_options.success, change_trust.success, end_sponsoring_future_reserves.success]
+          fee_charged: "${derived.fee_charged}"
+      # Operations 1 and 3 create an entry and update the sponsor; stellar-core writes those
+      # changes in an order that varies from run to run (the normalised comparison sorts them), so
+      # nothing below indexes into them. The sponsor of each created entry is in `state_changes`.
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/1/body/create_account/starting_balance
+          equals: "0"
+          note: "The account is created with nothing; its two base reserves are carried by SP."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/2/changes/3/updated/data/account/ext/v1/ext/v2/signer_sponsoring_i_ds
+          equals: ["${acct.SP}"]
+          note: "The new signer is sponsored by SP."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/2/changes/3/updated/data/account/ext/v1/ext/v2/num_sponsored
+          equals: 3
+          note: "Two base reserves for the account and one for the signer; the trustline adds the fourth."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/2/changes/3/updated/data/account/balance
+          equals: "0"
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+          equals: []
+          note: "BeginSponsoringFutureReserves changes no ledger entry."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/4/changes
+          equals: []
+          note: "EndSponsoringFutureReserves changes no ledger entry."
+      participants:
+        must_include:
+          - {address: "${acct.SP}", roles: [source, fee_payer, sponsor]}
+          - {address: "${acct.N}", roles: [destination, signer_owner, trustline_owner]}
+        # K1, the key of N's new signer, has no account and no entry of its own changed, so it is no
+        # participant (`exact`). It is not a must-not either: the signer_added change stores its key,
+        # and a must-not address may appear nowhere in what a reader holds.
+        exact: true
+        must_not_include:
+          - {address: "${acct.I}", because: "I only issues the asset of the new trustline; no ledger entry of I changed"}
+      state_changes:
+        - kind: account_created
+          op_index: 1
+          account: {address: "${acct.N}"}
+          detail: {starting_balance: "0", sponsor: "${acct.SP}"}
+        - kind: signer_added
+          op_index: 2
+          account: {address: "${acct.N}"}
+          signer: {type: ed25519, key: "${acct.K1}", weight: 1}
+          detail: {sponsor: "${acct.SP}"}
+        - kind: trustline_created
+          op_index: 3
+          account: {address: "${acct.N}"}
+          asset: "TOK:${acct.I}"
+          detail: {balance: "0", limit: "9223372036854775807", flags: 1, authorized: true, sponsor: "${acct.SP}", num_sub_entries_after: 2}
+        - kind: trustline_flags_changed
+          only_if: initial_authorization_separate
+          op_index: 3
+          account: {address: "${acct.N}"}
+          asset: "TOK:${acct.I}"
+          detail: {flags: 1, authorized: true, initial: true}
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.SP}"}}
+    fields: {validated: [VF-23, VF-29, VF-39]}
+
+  - id: revoke-signer-sponsorship
+    entry: cap-0033/revoke-signer-sponsorship-null-hole
+    tx:
+      source_account: "${acct.SP}"
+      fee: 1000
+      seq_num: "${seq.SP}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          # Signers are ordered by key: K1 (GBGX…), K3 (GBYZ…), K2 (GDOV…), so K3 is the middle one.
+          body: {revoke_sponsorship: {signer: {account_id: "${acct.R}", signer_key: "${acct.K3}"}}}
+      ext: v0
+    sign: [{key: SP}]
+    expect_result: tx_success
+    expect_op_results: [revoke_sponsorship.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [revoke_sponsorship.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/state/data/account/signers
+          equals:
+            - {key: "${acct.K1}", weight: 1}
+            - {key: "${acct.K3}", weight: 1}
+            - {key: "${acct.K2}", weight: 1}
+          note: "R's signers, ordered by key. The signer list itself does not change."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/state/data/account/ext/v1/ext/v2/signer_sponsoring_i_ds
+          equals: ["${acct.SP}", "${acct.SP}", "${acct.SP}"]
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/3/updated/data/account/ext/v1/ext/v2/signer_sponsoring_i_ds
+          equals: ["${acct.SP}", null, "${acct.SP}"]
+          note: "The array runs parallel to the signers; the middle signer is no longer sponsored and its slot is null, between two sponsored ones."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/3/updated/data/account/ext/v1/ext/v2/num_sponsored
+          equals: 2
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/ext/v1/ext/v2/num_sponsoring
+          equals: 6
+          note: "SP sponsors one entry less (7 before)."
+      participants:
+        must_include:
+          - {address: "${acct.SP}", roles: [source, fee_payer, sponsor]}
+          - {address: "${acct.R}", roles: [signer_owner]}
+        # K3, the signer whose sponsorship moved, is no participant (`exact`); it is no must-not either,
+        # because a reader may store the key of the signer it reports on.
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.SP}"}}
+      movements_exact: true
+    fields: {validated: [VF-39]}

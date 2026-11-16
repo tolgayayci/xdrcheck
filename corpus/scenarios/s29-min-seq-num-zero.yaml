@@ -1,0 +1,61 @@
+# CAP-0021 PRECOND_V2 whose minSeqNum is present and 0: the transaction is valid for any source
+# sequence number below its own, unlike an absent minSeqNum, which requires exactly seqNum - 1. The
+# time bounds are set (unbounded) so that SDK builders that require them can rebuild the transaction;
+# every other PRECOND_V2 field is at its zero value. Protocol 28 serves the reader pins that cannot
+# decode Protocol 30.
+scenario: min-seq-num-zero
+caps: [21]
+protocols: [28, 30]
+profile: lake
+actors: [A, B]
+setup:
+  - fund: {A: "10000", B: "10000"}
+
+steps:
+  - id: precond-v2-min-seq-num-zero
+    entry: cap-0021/precond-v2-min-seq-num-zero
+    tx:
+      source_account: "${acct.A}"
+      fee: 1000
+      seq_num: "${seq.A}"
+      cond:
+        v2:
+          time_bounds: {min_time: "0", max_time: "0"}
+          ledger_bounds: null
+          min_seq_num: "0"
+          min_seq_age: "0"
+          min_seq_ledger_gap: 0
+          extra_signers: []
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.B}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: A}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/cond
+          equals:
+            v2:
+              time_bounds: {min_time: "0", max_time: "0"}
+              ledger_bounds: null
+              min_seq_num: "0"
+              min_seq_age: "0"
+              min_seq_ledger_gap: 0
+              extra_signers: []
+          note: "PRECOND_V2 with minSeqNum present and 0: any source sequence number below the transaction's is accepted. An absent minSeqNum would require exactly seqNum - 1; the two encode differently and hash differently."
+      participants:
+        must_include:
+          - {address: "${acct.A}", roles: [source, fee_payer]}
+          - {address: "${acct.B}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.A}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.A}"}, to: {address: "${acct.B}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-13, VF-16]}

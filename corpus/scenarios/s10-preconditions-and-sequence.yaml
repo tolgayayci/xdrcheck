@@ -1,0 +1,218 @@
+# Sequence numbers and CAP-0021 preconditions: BumpSequence to INT64_MAX; a BumpSequence whose
+# target is below the current sequence number, which changes only seqLedger and seqTime; a
+# PRECOND_V2 that sets every field except time bounds; PRECOND_TIME with maxTime 0 (unbounded).
+# Protocol 28 serves the reader pins that cannot decode Protocol 30.
+scenario: preconditions-and-sequence
+caps: [1, 21]
+protocols: [28, 30]
+profile: lake
+actors: [X, Q, T, P, Y, Z, K1, K2]     # K1 and K2 are only keys (extra signers)
+setup:
+  # X must be funded in the first setup ledger (13): its sequence number is then 13 << 32 =
+  # 55834574848, which the PRECOND_V2 step writes out as literals.
+  - fund: {X: "10000", Q: "10000", T: "10000", P: "10000", Y: "10000", Z: "10000"}
+
+steps:
+  - id: bump-sequence-to-int64-max
+    entry: cap-0001/bump-sequence-to-int64-max
+    tx:
+      source_account: "${acct.Q}"
+      fee: 1000
+      seq_num: "${seq.Q}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {bump_sequence: {bump_to: "9223372036854775807"}}
+      ext: v0
+    sign: [{key: Q}]
+    expect_result: tx_success
+    expect_op_results: [bump_sequence.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [bump_sequence.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/1/updated/data/account/seq_num
+          equals: "55834574849"
+          note: "The transaction first consumes its own sequence number."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/seq_num
+          equals: "9223372036854775807"
+          note: "Then the operation sets it to INT64_MAX; the account can never submit another transaction."
+      participants:
+        must_include:
+          - {address: "${acct.Q}", roles: [source, fee_payer]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.Q}"}}
+      movements_exact: true
+    fields: {validated: [VF-38]}
+
+  - id: bump-sequence-noop
+    entry: cap-0001/bump-sequence-noop-updates-seq-time
+    tx:
+      source_account: "${acct.T}"
+      fee: 1000
+      seq_num: "${seq.T}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: "${acct.P}"         # P's sequence number is not consumed by the transaction
+          body: {bump_sequence: {bump_to: "1"}}
+      ext: v0
+    sign: [{key: T}, {key: P}]
+    expect_result: tx_success
+    expect_op_results: [bump_sequence.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [bump_sequence.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/state/data/account/seq_num
+          equals: "55834574848"
+          note: "P's sequence number before; bumpTo (1) is below it."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/seq_num
+          equals: "55834574848"
+          note: "The sequence number does not change."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/state/data/account/ext
+          equals: v0
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/ext/v1/ext/v2/ext/v3
+          equals: {ext: v0, seq_ledger: 15, seq_time: "1713000000"}
+          note: "What changes is seqLedger and seqTime, set to this ledger and its close time (the account entry gains the v1, v2 and v3 extensions to hold them); balance and everything else are unchanged."
+      participants:
+        must_include:
+          - {address: "${acct.T}", roles: [source, fee_payer]}
+          - {address: "${acct.P}", roles: [operation_source]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.T}"}}
+      movements_exact: true
+    fields: {validated: [VF-38, VF-22a]}
+
+  - id: precond-v2-all-fields
+    entry: cap-0021/precond-v2-all-fields
+    tx:
+      source_account: "${acct.X}"
+      fee: 1000
+      seq_num: "55834574850"                   # X's sequence number + 2: allowed by min_seq_num
+      cond:
+        v2:
+          time_bounds: null
+          ledger_bounds: {min_ledger: 2, max_ledger: 0}
+          min_seq_num: "55834574848"
+          min_seq_age: "1"
+          min_seq_ledger_gap: 1
+          extra_signers:
+            - "${acct.K1}"
+            - "${signer.payload(K2, 0102030405060708)}"
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.T}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: X}, {key: K1}, {signed_payload: {key: K2, payload_hex: "0102030405060708"}}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/cond
+          equals:
+            v2:
+              time_bounds: null
+              ledger_bounds: {min_ledger: 2, max_ledger: 0}
+              min_seq_num: "55834574848"
+              min_seq_age: "1"
+              min_seq_ledger_gap: 1
+              extra_signers: ["${acct.K1}", "${signer.payload(K2, 0102030405060708)}"]
+          note: "Every PRECOND_V2 field but the time bounds: ledger bounds with maxLedger 0 (unbounded), a minimum sequence number, a minimum sequence age and ledger gap, and two extra signers of different types."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/seq_num
+          equals: "55834574850"
+          note: "Two above the account's sequence number, which minSeqNum allows."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/tx_changes_before/1/updated/data/account/seq_num
+          equals: "55834574850"
+          note: "The account's sequence number jumps to the transaction's, skipping 55834574849."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures/1/hint
+          equals: "4190cf4d"
+          note: "Three signatures: X's, then K1's for the ed25519 extra signer (hint = last 4 bytes of K1's key)."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures/2/hint
+          equals: "6ca7b0dd"
+          note: "K2's signature over the payload for the signed-payload extra signer: last 4 bytes of K2's key XOR the last 4 bytes of the payload (05 06 07 08)."
+      participants:
+        must_include:
+          - {address: "${acct.X}", roles: [source, fee_payer]}
+          - {address: "${acct.T}", roles: [destination]}
+        must_not_include:
+          - {address: "${acct.K1}", because: "K1 is only an extra signer; it has no account and no ledger entry of it changed"}
+          - {address: "${acct.K2}", because: "K2's key is inside a signed-payload extra signer; it has no account and no ledger entry of it changed"}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.X}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.X}"}, to: {address: "${acct.T}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-06, VF-13, VF-15, VF-16, VF-17, VF-18]}
+
+  - id: precond-time-max-time-zero
+    entry: cap-0021/precond-time-max-time-zero
+    # Y pays itself: a native payment to its own account changes no entry, the transaction shape
+    # of stellar-core's own time-bounds tests.
+    tx:
+      source_account: "${acct.Y}"
+      fee: 1000
+      seq_num: "${seq.Y}"
+      cond: {time: {min_time: "1700000000", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.Y}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: Y}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/cond
+          equals: {time: {min_time: "1700000000", max_time: "0"}}
+          note: "PRECOND_TIME with a lower bound and maxTime 0, which means no upper bound, not a deadline at the epoch."
+        - path: /v2/ledger_header/header/scp_value/close_time
+          equals: "1715000000"
+          note: "The ledger closes long after minTime and was not rejected as too late."
+      participants:
+        must_include:
+          - {address: "${acct.Y}", roles: [source, fee_payer, destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.Y}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.Y}"}, to: {address: "${acct.Y}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-14a]}
+
+  # cap-0021/min-seq-age-failure cannot be emitted this way: stellar-core rejects the transaction
+  # when it is submitted, so it never reaches a ledger. The step keeps that executed fact; it yields
+  # no entry.
+  - id: min-seq-age-rejected-at-submission
+    notes: "minSeqAge = 2^64 - 1 can never be met, and stellar-core checks it before queueing the transaction."
+    tx:
+      source_account: "${acct.Z}"
+      fee: 1000
+      seq_num: "${seq.Z}"
+      cond:
+        v2:
+          time_bounds: null
+          ledger_bounds: null
+          min_seq_num: null
+          min_seq_age: "18446744073709551615"
+          min_seq_ledger_gap: 0
+          extra_signers: []
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.T}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: Z}]
+    expect_submit_reject: tx_bad_min_seq_age_or_gap

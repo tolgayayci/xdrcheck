@@ -1,0 +1,53 @@
+# Local twins of cap-0033/bad-sponsorship-tx-result, whose first variant is the stellar-core golden
+# "sponsor future reserves|protocol version 30|bad sponsorship" on the core-test passphrase. The
+# twins run under the lake profile, as the public data lake writes ledgers (classic and fee events
+# on); the golden runs with its test's flags (fee events off). The shared expectation therefore
+# leaves out the whole-ledger event count, which depends on the flags (docs/manifest.md, 4.3). As
+# in the golden, the network root account begins sponsoring another account's future reserves and
+# never ends the sponsorship, so the transaction fails as a whole with txBAD_SPONSORSHIP.
+#
+# The expectation names both accounts through `${derived.accounts.*}`: the root key derives from the
+# network ID, and the golden's sponsored account is not label-derived; the golden variant gives the
+# same two labels in its own `derived`.
+scenario: bad-sponsorship-twins
+caps: [33]
+protocols: [28, 30]
+profile: lake
+actors: [sponsored]
+setup:
+  - fund: {sponsored: "100"}
+
+steps:
+  - id: sponsorship-left-open
+    entry: cap-0033/bad-sponsorship-tx-result
+    tx:
+      source_account: "${acct.root}"
+      fee: 100
+      seq_num: "${seq.root}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {begin_sponsoring_future_reserves: {sponsored_id: "${acct.sponsored}"}}
+      ext: v0
+    sign: [{key: root}]
+    expect_result: tx_bad_sponsorship
+    expect:
+      ledger: {transactions: 1, operations: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_bad_sponsorship, operation_result_codes: [], fee_charged: "100"}
+      values:
+        - path: /v2/tx_processing/0/result/result/result
+          equals: tx_bad_sponsorship
+          note: "A unit arm: no operation results at all."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/begin_sponsoring_future_reserves/sponsored_id
+          equals: "${derived.accounts.sponsored}"
+      participants:
+        must_include:
+          - {address: "${acct.root}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${derived.accounts.sponsored}", because: "Named only as the sponsored ID in the envelope of a transaction that failed; none of its ledger entries changed."}
+        exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "100", from: {address: "${acct.root}"}}
+    fields: {validated: [VF-39]}

@@ -1,0 +1,290 @@
+# Soroban failures decided while applying, and an SCVal arm no contract can produce:
+#
+# - SCV_MAP with no map (SCMap* absent) as an invocation argument. The envelope carries it in the
+#   ledger; the host refuses to convert it when the transaction is applied.
+# - ExtendFootprintTTL of an entry larger than the current maximum entry size: the entry `big`
+#   (a 2400-byte value) is written first, then a configuration upgrade lowers
+#   contract_data_entry_size_bytes to 2000 (the lowest stellar-core accepts). stellar-core checks
+#   each extended entry's size against the setting when it applies the operation
+#   (EXTEND_FOOTPRINT_TTL_RESOURCE_LIMIT_EXCEEDED).
+# - RestoreFootprint of an archived entry (`per`, written after the same upgrade shortened
+#   persistent lifetimes to 10 ledgers and evicted into the hot archive) with no disk-read bytes
+#   declared (RESTORE_FOOTPRINT_RESOURCE_LIMIT_EXCEEDED), and with a resource fee that covers the
+#   non-refundable part but not the restore's rent (RESTORE_FOOTPRINT_INSUFFICIENT_REFUNDABLE_FEE).
+#
+# All transactions declare their footprints: simulation would refuse each of them.
+scenario: soroban-apply-time-failures
+caps: [46, 62, 66]
+protocols: [29, 30]
+profile: lake
+actors: [A, B, C, D, E]
+contracts:
+  emitter:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+    constructor_args: [{symbol: xcc}]
+setup:
+  - fund: {A: "10000", B: "10000", C: "10000", D: "10000", E: "10000"}
+  - deploy_contract: emitter
+  # put(1, big, <2400 bytes>): a persistent entry of about 2.5 KB.
+  - tx:
+      source_account: "${acct.A}"
+      fee: 20001000
+      seq_num: "${seq.A}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: put, args: [{u32: 1}, {symbol: big}, {bytes: 786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300786363007863630078636300}]}
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.id(emitter)}", key: ledger_key_contract_instance, durability: persistent}
+                - contract_code: {hash: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+              read_write:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: big}, durability: persistent}
+            instructions: 10000000
+            disk_read_bytes: 10000
+            write_bytes: 4000
+          resource_fee: "20000000"
+  - config_upgrade:
+      state_archival: {min_persistent_ttl: 10, min_temporary_ttl: 16, starting_eviction_scan_level: 1}
+      contract_data_entry_size_bytes: 2000
+  # put(1, per, 2): a persistent entry live for 10 ledgers.
+  - tx:
+      source_account: "${acct.B}"
+      fee: 20001000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: put, args: [{u32: 1}, {symbol: per}, {u32: 2}]}
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.id(emitter)}", key: ledger_key_contract_instance, durability: persistent}
+                - contract_code: {hash: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+              read_write:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: per}, durability: persistent}
+            instructions: 10000000
+            disk_read_bytes: 10000
+            write_bytes: 1000
+          resource_fee: "20000000"
+  - close: {ledgers: 12}
+
+steps:
+  - id: scv-map-none-argument
+    entry: cap-0046/scval-map-absent-in-invocation-argument
+    tx:
+      source_account: "${acct.C}"
+      fee: 20001000
+      seq_num: "${seq.C}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: echo, args: [{map: null}]}
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.id(emitter)}", key: ledger_key_contract_instance, durability: persistent}
+                - contract_code: {hash: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8}
+              read_write: []
+            instructions: 10000000
+            disk_read_bytes: 0
+            write_bytes: 0
+          resource_fee: "20000000"
+    soroban_resources: declared
+    sign: [{key: C}]
+    expect_result: tx_failed
+    expect_op_results: [invoke_host_function.trapped]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [invoke_host_function.trapped], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args"
+          equals: [{map: null}]
+          note: "SCV_MAP (17) with SCMap* absent."
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/invoke_host_function"
+          equals: trapped
+      participants:
+        must_include:
+          - {address: "${acct.C}", roles: [fee_payer, source]}
+        must_not_include:
+          - {address: "${derived.contracts.emitter}", because: "the invoked contract; the call trapped on its argument and none of the contract's entries changed"}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.C}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "20000100", from: {address: "${acct.C}"}}
+        - {kind: fee_refund, tx_index: 0, asset: native, amount: "19995681", to: {address: "${acct.C}"}}
+      movements_exact: true
+
+  - id: extend-entry-above-size-limit
+    entry: cap-0046/extend-footprint-ttl-entry-above-size-limit
+    tx:
+      source_account: "${acct.D}"
+      fee: 20001000
+      seq_num: "${seq.D}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {extend_footprint_ttl: {ext: v0, extend_to: 1000000}}
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: big}, durability: persistent}
+              read_write: []
+            instructions: 0
+            disk_read_bytes: 0
+            write_bytes: 0
+          resource_fee: "20000000"
+    soroban_resources: declared
+    sign: [{key: D}]
+    expect_result: tx_failed
+    expect_op_results: [extend_footprint_ttl.resource_limit_exceeded]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [extend_footprint_ttl.resource_limit_exceeded], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/extend_footprint_ttl"
+          equals: resource_limit_exceeded
+        - path: "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/ext/v1/resources/footprint/read_only/0"
+          equals: {contract_data: {contract: "${derived.contracts.emitter}", key: {symbol: big}, durability: persistent}}
+      participants:
+        must_include:
+          - {address: "${acct.D}", roles: [fee_payer, source]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.D}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "20000100", from: {address: "${acct.D}"}}
+        - {kind: fee_refund, tx_index: 0, asset: native, amount: "19998864", to: {address: "${acct.D}"}}
+      movements_exact: true
+
+  - id: restore-without-read-bytes
+    entry: cap-0066/restore-footprint-read-bytes-exceeded
+    tx:
+      source_account: "${acct.E}"
+      fee: 20001000
+      seq_num: "${seq.E}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {restore_footprint: {ext: v0}}
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only: []
+              read_write:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: per}, durability: persistent}
+            instructions: 0
+            disk_read_bytes: 0
+            write_bytes: 1000
+          resource_fee: "20000000"
+    soroban_resources: declared
+    sign: [{key: E}]
+    expect_result: tx_failed
+    expect_op_results: [restore_footprint.resource_limit_exceeded]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [restore_footprint.resource_limit_exceeded], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/restore_footprint"
+          equals: resource_limit_exceeded
+        - path: "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/ext/v1/resources/disk_read_bytes"
+          equals: 0
+      participants:
+        must_include:
+          - {address: "${acct.E}", roles: [fee_payer, source]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.E}"}, detail: {sequence_after: "55834574849"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "20000100", from: {address: "${acct.E}"}}
+        - {kind: fee_refund, tx_index: 0, asset: native, amount: "19996415", to: {address: "${acct.E}"}}
+      movements_exact: true
+
+  - id: restore-short-of-rent
+    entry: cap-0066/restore-footprint-insufficient-refundable-fee
+    tx:
+      source_account: "${acct.E}"
+      fee: 5000
+      seq_num: "${seq.E}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {restore_footprint: {ext: v0}}
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only: []
+              read_write:
+                - contract_data: {contract: "${contract.id(emitter)}", key: {symbol: per}, durability: persistent}
+            instructions: 0
+            disk_read_bytes: 1000
+            write_bytes: 1000
+          resource_fee: "4000"
+    soroban_resources: declared
+    sign: [{key: E}]
+    expect_result: tx_failed
+    expect_op_results: [restore_footprint.insufficient_refundable_fee]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [restore_footprint.insufficient_refundable_fee], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/tx_processing/0/result/result/result/tx_failed/0/op_inner/restore_footprint"
+          equals: insufficient_refundable_fee
+        - path: "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/ext/v1/resource_fee"
+          equals: "4000"
+      participants:
+        must_include:
+          - {address: "${acct.E}", roles: [fee_payer, source]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.E}"}, detail: {sequence_after: "55834574850"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "4100", from: {address: "${acct.E}"}}
+        - {kind: fee_refund, tx_index: 0, asset: native, amount: "197", to: {address: "${acct.E}"}}
+      movements_exact: true

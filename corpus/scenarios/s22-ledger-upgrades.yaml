@@ -1,0 +1,195 @@
+# Two ledger upgrades no public network has shown for years: LEDGER_UPGRADE_BASE_FEE (pubnet's and
+# testnet's base fee has been 100 stroops since their first ledgers) and
+# LEDGER_UPGRADE_MAX_SOROBAN_TX_SET_SIZE, which changes the Soroban lane's transaction count limit
+# held in the CONFIG_SETTING_CONTRACT_EXECUTION_LANES entry rather than a header field.
+#
+# Upgrades are applied after the ledger's transactions: the payment in the base-fee ledger is charged
+# the old base fee (100) while the header of the same ledger already shows the new one (200).
+#
+# Before the upgrades, a ledger in which every transaction bids exactly the base fee per operation:
+# a payment with fee 100, two payments in one transaction with fee 200, and a Soroban ExtendFootprintTTL (empty footprint) whose inclusion bid,
+# fee minus resource fee, is 100. Each transaction is charged its whole bid, so the transaction
+# set's discounted base fee (100 in both phases) and the bids coincide. The synthetic entries that
+# leave the component's base fee out (cap-0042/classic-component-base-fee-absent and its
+# neighbours) start from this ledger: with no base fee a transaction pays its own bid, which here
+# is what stellar-core charged.
+scenario: ledger-upgrades
+caps: [46]
+protocols: [28, 30]
+profile: lake
+actors: [P, Q, R]
+setup:
+  - fund: {P: "100", Q: "100", R: "100"}
+
+steps:
+  - id: bid-at-base-fee-p
+    entry: ledger/inclusion-bids-equal-base-fee
+    order: [bid-at-base-fee-p, bid-at-base-fee-q, bid-at-base-fee-r]
+    tx:
+      source_account: "${acct.P}"
+      fee: 100
+      seq_num: "${seq.P}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.R}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: P}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 3, operations: 4, events: 7, entry_changes: 26}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+        - {index: 1, hash: "${derived.tx_hashes.1}", successful: true, result_code: tx_success, operation_result_codes: [payment.success, payment.success], fee_charged: "200"}
+        - {index: 2, hash: "${derived.tx_hashes.2}", successful: true, result_code: tx_success, operation_result_codes: [extend_footprint_ttl.success]}
+      values:
+        - path: "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/base_fee"
+          equals: "100"
+          note: "The classic component's discounted base fee: 100 per operation, the ledger's base fee."
+        - path: "/v2/tx_set/v1/phases/1/v1/base_fee"
+          equals: "100"
+          note: "The parallel Soroban phase's base fee for inclusion."
+        - path: "/v2/tx_processing/1/result/result/fee_charged"
+          equals: "200"
+          note: "Q's two-operation transaction bid 200 and is charged 200."
+        - path: "/v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/fee"
+          equals: 100100
+          note: "R's Soroban bid: resource fee 100000 plus an inclusion bid of 100."
+      participants:
+        must_include:
+          - {address: "${acct.P}", roles: [fee_payer, source]}
+          - {address: "${acct.R}", roles: [counterparty]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.P}"}, detail: {sequence_after: "55834574849"}}
+        - {kind: balance_changed, tx_index: 0, op_index: 0, account: {address: "${acct.P}"}, asset: native, detail: {delta: "-10000000", balance_after: "989999900"}, cause: payment}
+        - {kind: balance_changed, tx_index: 0, op_index: 0, account: {address: "${acct.R}"}, asset: native, detail: {delta: "10000000", balance_after: "1009899900"}, cause: payment}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.P}"}}
+        - {kind: transfer, tx_index: 0, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.P}"}, to: {address: "${acct.R}"}, routing: {type: absent}}
+      movements_exact: true
+  - id: bid-at-base-fee-q
+    entry: ledger/inclusion-bids-equal-base-fee
+    same_ledger_as: bid-at-base-fee-p
+    tx:
+      source_account: "${acct.Q}"
+      fee: 200
+      seq_num: "${seq.Q}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.R}", asset: native, amount: "10000000"}}
+        - source_account: null
+          body: {payment: {destination: "${acct.P}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: Q}]
+    expect_result: tx_success
+    expect_op_results: [payment.success, payment.success]
+  - id: bid-at-base-fee-r
+    entry: ledger/inclusion-bids-equal-base-fee
+    same_ledger_as: bid-at-base-fee-p
+    tx:
+      source_account: "${acct.R}"
+      fee: 100100
+      seq_num: "${seq.R}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {extend_footprint_ttl: {ext: v0, extend_to: 100}}
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint: {read_only: [], read_write: []}
+            instructions: 0
+            disk_read_bytes: 0
+            write_bytes: 0
+          resource_fee: "100000"
+    soroban_resources: declared
+    sign: [{key: R}]
+    expect_result: tx_success
+    expect_op_results: [extend_footprint_ttl.success]
+
+  - id: max-soroban-tx-set-size-upgrade
+    entry: ledger/max-soroban-tx-set-size-upgrade
+    upgrade: {maxsorobantxsetsize: 150}
+    expect:
+      ledger: {transactions: 0, operations: 0, events: 0, entry_changes: 2}
+      values:
+        - path: "/v2/ledger_header/header/scp_value/upgrades"
+          equals: ["0000000700000096"]
+          note: "LedgerUpgrade arm 7 (LEDGER_UPGRADE_MAX_SOROBAN_TX_SET_SIZE) with value 150, as nominated."
+        - path: "/v2/upgrades_processing/0/upgrade"
+          equals: {max_soroban_tx_set_size: 150}
+        - select:
+            in: "/v2/upgrades_processing/0/changes"
+            key: {config_setting: {config_setting_id: contract_execution_lanes}}
+            change: state
+          path: "/state/data/config_setting/contract_execution_lanes/ledger_max_tx_count"
+          equals: 2000
+          note: "The lane limit before: 2000, from the vendored network settings."
+        - select:
+            in: "/v2/upgrades_processing/0/changes"
+            key: {config_setting: {config_setting_id: contract_execution_lanes}}
+            change: updated
+          path: "/updated/data/config_setting/contract_execution_lanes/ledger_max_tx_count"
+          equals: 150
+          note: "After the upgrade: 150. The ledger has no transaction; this entry change is the upgrade's only effect."
+        - path: "/v2/tx_processing"
+          equals: []
+
+  - id: base-fee-upgrade
+    entry: ledger/base-fee-upgrade
+    upgrade: {basefee: 200}
+    tx:
+      source_account: "${acct.P}"
+      fee: 1000
+      seq_num: "${seq.P}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {payment: {destination: "${acct.Q}", asset: native, amount: "10000000"}}
+      ext: v0
+    sign: [{key: P}]
+    expect_result: tx_success
+    expect_op_results: [payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v2/ledger_header/header/base_fee"
+          equals: 200
+          note: "The header shows the upgraded base fee."
+        - path: "/v2/ledger_header/header/scp_value/upgrades"
+          equals: ["00000002000000c8"]
+          note: "LedgerUpgrade arm 2 (LEDGER_UPGRADE_BASE_FEE) with value 200."
+        - path: "/v2/upgrades_processing"
+          equals: [{upgrade: {base_fee: 200}, changes: []}]
+          note: "A base-fee upgrade changes no ledger entry."
+        - path: "/v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/base_fee"
+          equals: "100"
+          note: "The transaction set was built under the old base fee..."
+        - path: "/v2/tx_processing/0/result/result/fee_charged"
+          equals: "100"
+          note: "...and the payment is charged 100, not 200."
+      participants:
+        must_include:
+          - {address: "${acct.P}", roles: [fee_payer, source]}
+          - {address: "${acct.Q}", roles: [counterparty]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.P}"}, detail: {sequence_after: "55834574850"}}
+        - {kind: balance_changed, tx_index: 0, op_index: 0, account: {address: "${acct.P}"}, asset: native, detail: {delta: "-10000000", balance_after: "989999800"}, cause: payment}
+        - {kind: balance_changed, tx_index: 0, op_index: 0, account: {address: "${acct.Q}"}, asset: native, detail: {delta: "10000000", balance_after: "989999800"}, cause: payment}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.P}"}}
+        - {kind: transfer, tx_index: 0, op_index: 0, asset: native, amount: "10000000", from: {address: "${acct.P}"}, to: {address: "${acct.Q}"}, routing: {type: absent}}
+      movements_exact: true

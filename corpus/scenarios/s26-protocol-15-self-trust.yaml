@@ -1,0 +1,94 @@
+# An issuer naming itself in a trust operation, at Protocol 15. From Protocol 3 until Protocol 15
+# stellar-core lets such an operation into a ledger and fails it while applying
+# (CHANGE_TRUST_SELF_NOT_ALLOWED, ALLOW_TRUST_SELF_NOT_ALLOWED); from Protocol 16 (CAP-0035) it
+# refuses both as malformed before they reach a ledger, so these result arms exist only in ledgers
+# of Protocols 3 to 15. The chain runs at 15, the latest protocol that still applies them;
+# LedgerCloseMeta is v0 and transaction meta v2 there.
+scenario: protocol-15-self-trust
+caps: []
+protocols: [15]
+profile: lake
+actors: [IS]
+assets:
+  ST: {credit_alphanum4: {asset_code: ST, issuer: "${acct.IS}"}}
+setup:
+  - fund: {IS: "100"}
+  # AUTH_REQUIRED | AUTH_REVOCABLE, so that AllowTrust is permitted at all.
+  - tx:
+      source_account: "${acct.IS}"
+      fee: 100
+      seq_num: "${seq.IS}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {set_options: {inflation_dest: null, clear_flags: null, set_flags: 3, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}}}
+      ext: v0
+
+steps:
+  - id: change-trust-self
+    entry: protocol-15/change-trust-self-not-allowed
+    tx:
+      source_account: "${acct.IS}"
+      fee: 1000
+      seq_num: "${seq.IS}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {change_trust: {line: "${asset.ST}", limit: "9223372036854775807"}}}
+      ext: v0
+    sign: [{key: IS}]
+    expect_result: tx_failed
+    expect_op_results: [change_trust.self_not_allowed]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [change_trust.self_not_allowed], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v0/tx_processing/0/result/result/result/tx_failed/0/op_inner/change_trust"
+          equals: self_not_allowed
+        - path: "/v0/ledger_header/header/ledger_version"
+          equals: 15
+      participants:
+        must_include:
+          - {address: "${acct.IS}", roles: [fee_payer, source]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.IS}"}, detail: {sequence_after: "12884901890"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IS}"}}
+      movements_exact: true
+
+  - id: allow-trust-self
+    entry: protocol-15/allow-trust-self-not-allowed
+    tx:
+      source_account: "${acct.IS}"
+      fee: 1000
+      seq_num: "${seq.IS}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {allow_trust: {trustor: "${acct.IS}", asset: ST, authorize: 1}}}
+      ext: v0
+    sign: [{key: IS}]
+    expect_result: tx_failed
+    expect_op_results: [allow_trust.self_not_allowed]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 4}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: false, result_code: tx_failed, operation_result_codes: [allow_trust.self_not_allowed], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: "/v0/tx_processing/0/result/result/result/tx_failed/0/op_inner/allow_trust"
+          equals: self_not_allowed
+        - path: "/v0/ledger_header/header/ledger_version"
+          equals: 15
+      participants:
+        must_include:
+          - {address: "${acct.IS}", roles: [fee_payer, source]}
+        exact: true
+      state_changes:
+        - {kind: sequence_bumped, tx_index: 0, account: {address: "${acct.IS}"}, detail: {sequence_after: "12884901891"}}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, tx_index: 0, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.IS}"}}
+      movements_exact: true

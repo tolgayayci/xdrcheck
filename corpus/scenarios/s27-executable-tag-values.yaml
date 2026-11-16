@@ -1,0 +1,201 @@
+# SCV_EXECUTABLE_TAG (ScVal arm 22, CAP-0085) away from the one place real ledgers show it, a
+# contract-data key: the shape-emitter test contract (contracts/shape-emitter) takes the tag as an
+# invocation argument and stores it as a persistent contract-data value (`put`), publishes it as
+# contract event data (`emit`) and returns it (`echo`). Readers that learned the arm from storage
+# keys and footprints alone meet it here in an argument, a stored value, event data and a return
+# value. Protocol 30 only: the arm is new there and `deploy_contract` needs Protocol 29 or later.
+scenario: executable-tag-values
+caps: [85]
+protocols: [30]
+profile: lake
+actors: [A, B]
+contracts:
+  emitter:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: A
+    constructor_args: [{symbol: xcc}]
+setup:
+  - fund: {A: "10000", B: "10000"}
+  - deploy_contract: emitter
+
+steps:
+  - id: stored-value
+    entry: cap-0085/executable-tag-stored-as-contract-data-value
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: put, args: [{u32: 1}, {symbol: tag}, {executable_tag: pocket}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 2
+        entry_changes: 8
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/2
+        equals:
+          executable_tag: pocket
+        note: SCV_EXECUTABLE_TAG (arm 22) as the third invocation argument.
+      - select:
+          in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+          key: {contract_data: {contract: "${derived.contracts.emitter}", key: {symbol: tag}, durability: persistent}}
+          change: created
+        path: /created/data/contract_data/val
+        equals:
+          executable_tag: pocket
+        note: The tag is the stored value of a persistent entry keyed by a plain symbol, not the key.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        - address: ${derived.contracts.emitter}
+          roles:
+          - contract
+        exact: true
+      state_changes:
+      - kind: contract_data_changed
+        tx_index: 0
+        op_index: 0
+        account:
+          address: ${derived.contracts.emitter}
+        detail:
+          contract: ${derived.contracts.emitter}
+          key_xdr_hex: 0000000f0000000374616700
+          durability: persistent
+          change: created
+        cause: invoke_host_function
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+
+  - id: event-data
+    entry: cap-0085/executable-tag-as-event-data
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: emit, args: [{vec: [{symbol: tag}]}, {executable_tag: pocket}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 3
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/1
+        equals:
+          executable_tag: pocket
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/contract_id
+        equals: ${derived.contracts.emitter}
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0
+        equals:
+          topics:
+          - symbol: tag
+          data:
+            executable_tag: pocket
+        note: SCV_EXECUTABLE_TAG as contract event data.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+
+  - id: return-value
+    entry: cap-0085/executable-tag-as-return-value
+    tx:
+      source_account: "${acct.B}"
+      fee: 1000
+      seq_num: "${seq.B}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract: {contract_address: "${contract.id(emitter)}", function_name: echo, args: [{executable_tag: pocket}]}
+    simulate: true
+    sign: [{key: B}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger:
+        transactions: 1
+        operations: 1
+        events: 2
+        entry_changes: 6
+      transactions:
+      - index: 0
+        hash: ${derived.tx_hash}
+        successful: true
+        result_code: tx_success
+        operation_result_codes:
+        - invoke_host_function.success
+        fee_charged: ${derived.fee_charged}
+      values:
+      - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/0
+        equals:
+          executable_tag: pocket
+      - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value
+        equals:
+          executable_tag: pocket
+        note: echo returns its argument; SCV_EXECUTABLE_TAG as the Soroban return value.
+      participants:
+        must_include:
+        - address: ${acct.B}
+          roles:
+          - source
+          - fee_payer
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true

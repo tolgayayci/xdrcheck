@@ -1,0 +1,535 @@
+# Stellar Asset Contract (SAC) shapes: deploying the SAC of an issued asset; `trust(G)` creating a
+# trustline with no ChangeTrust operation and no event (CAP-0073), alone in its ledger so the
+# Soroban phase holds one stage with one cluster (CAP-0063); `trust` as a no-op for an existing
+# trustline and for a contract address; a classic trustline deleted and re-created in one ledger;
+# and, at Protocol 30, SAC transfers to muxed contract addresses (`W…`, CAP-0084). The steps that
+# run at Protocol 28 declare their footprints, so the file serves the reader pins that cannot
+# decode Protocol 30; the Protocol 30-only transfers are simulated.
+#
+# The actors are named `owner` and `issuer` so that `${derived.accounts.owner}` lines up with the
+# stellar-core golden variant of cap-0073/sac-trust-creates-trustline, whose accounts differ; that
+# entry names the asset by its contract (`${derived.contracts.sac_usdc}`), which is the same asset
+# under each variant's passphrase (docs/manifest.md section 6.3).
+#
+# As in stellar-core's own tests (check AG-4): `deployer`, which has sent a transaction before (a
+# setup no-op), deploys the SAC with an empty read-only footprint; `owner` sends nothing before
+# `trust(owner)`, so its account entry still has no extension, and that call's read-only footprint
+# lists the issuer account first.
+#
+# Not here: the local twins of cap-0067/sac-transfer-to-muxed-account (history) and of
+# cap-0073/native-sac-transfer-creates-account (golden). Their whole-ledger receipts differ from a
+# one-transaction local ledger, so the twins are entries of their own, in s06-sac-transfer-twins.yaml.
+scenario: stellar-asset-contract
+caps: [46, 63, 73, 84]
+protocols: [28, 30]
+profile: lake
+actors: [owner, issuer, relinker, holder, holder2, deployer]
+assets:
+  USDC: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.issuer}"}}
+contracts:
+  # Never deployed: only the receiver of the `W…` transfers. A contract's SAC balance lives in the
+  # SAC's own storage, so the receiving contract need not exist.
+  recipient:
+    wasm: contracts/shape-emitter.wasm
+    wasm_sha256: b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8
+    deployer: owner
+setup:
+  - fund: {owner: "10000", issuer: "10000", relinker: "10000", holder: "10000", holder2: "10000", deployer: "10000"}
+  - trust: {relinker: USDC, holder: USDC, holder2: USDC}
+  # deployer's no-op transaction: an account that has sent one carries the sequence-ledger extension.
+  - tx:
+      source_account: "${acct.deployer}"
+      fee: 100
+      seq_num: "${seq.deployer}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {bump_sequence: {bump_to: "0"}}}
+      ext: v0
+  - pay: {from: issuer, to: holder, asset: USDC, amount: "1000"}
+  - pay: {from: issuer, to: holder2, asset: USDC, amount: "1000"}
+
+steps:
+  - id: sac-deploy
+    entry: cap-0046/sac-deploy-for-issued-asset
+    tx:
+      source_account: "${acct.deployer}"
+      fee: 50001000
+      seq_num: "${seq.deployer}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                create_contract:
+                  contract_id_preimage: {asset: "${asset.USDC}"}
+                  executable: stellar_asset
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only: []
+              read_write:
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+            instructions: 50000000
+            disk_read_bytes: 20000
+            write_bytes: 20000
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: deployer}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/create_contract
+          equals: {contract_id_preimage: {asset: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.issuer}"}}}, executable: stellar_asset}
+          note: "CREATE_CONTRACT from the asset itself; the contract ID derives from the asset and the network ID."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/ttl/live_until_ledger_seq
+          equals: 120977
+          note: "The instance's TTL entry is created with it."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/contract
+          equals: "${derived.contracts.sac_usdc}"
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/key
+          equals: ledger_key_contract_instance
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/created/data/contract_data/val/contract_instance/executable
+          equals: stellar_asset
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/soroban_meta/return_value
+          equals: {address: "${derived.contracts.sac_usdc}"}
+      participants:
+        must_include:
+          - {address: "${acct.deployer}", roles: [source, fee_payer]}
+          - {address: "${derived.contracts.sac_usdc}", roles: [contract]}
+        must_not_include:
+          - {address: "${acct.issuer}", because: "the issuer is only named in the asset of the contract ID preimage; its account is not even in the footprint and none of its entries changes"}
+      state_changes:
+        - kind: contract_deployed
+          op_index: 0
+          account: {address: "${derived.contracts.sac_usdc}"}
+          cause: contract-call
+          detail: {contract: "${derived.contracts.sac_usdc}", executable: stellar_asset}
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-41, VF-42, VF-43, VF-44, VF-46a]}
+
+  - id: sac-trust
+    entry: cap-0073/sac-trust-creates-trustline
+    precondition: "owner has no USDC trustline"
+    tx:
+      source_account: "${acct.owner}"
+      fee: 50001016
+      seq_num: "${seq.owner}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: trust
+                  args: [{address: "${acct.owner}"}]
+              auth:
+                - credentials: source_account
+                  root_invocation:
+                    function:
+                      contract_fn:
+                        contract_address: "${contract.sac(USDC)}"
+                        function_name: trust
+                        args: [{address: "${acct.owner}"}]
+                    sub_invocations: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - account: {account_id: "${acct.issuer}"}
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+              read_write:
+                - trustline: {account_id: "${acct.owner}", asset: "${asset.USDC}"}
+                - account: {account_id: "${acct.owner}"}
+            instructions: 50000000
+            disk_read_bytes: 20000
+            write_bytes: 20000
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: owner}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    # Shared with the entry's stellar-core golden variant: accounts and the asset are named through
+    # `derived`, which every variant carries.
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 9}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/function_name
+          equals: trust
+          note: "The only operation is a contract call; there is no ChangeTrust."
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/contract_address
+          equals: "${derived.contracts.sac_usdc}"
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events
+          equals: []
+          note: "trust() emits no contract event."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline/flags
+          equals: 1
+          note: "Created already authorized."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/2/created/data/trustline/limit
+          equals: "9223372036854775807"
+      participants:
+        must_include:
+          - {address: "${derived.accounts.owner}", roles: [source, fee_payer, trustline_owner]}
+      state_changes:
+        - kind: trustline_created
+          tx_index: 0
+          op_index: 0
+          account: {address: "${derived.accounts.owner}"}
+          asset: "${derived.contracts.sac_usdc}"
+          cause: contract-call
+          detail: {balance: "0", limit: "9223372036854775807", flags: 1, authorized: true, num_sub_entries_after: 1}
+        - kind: trustline_flags_changed        # only for readers that record the initial authorisation
+          only_if: initial_authorization_separate
+          tx_index: 0
+          op_index: 0
+          account: {address: "${derived.accounts.owner}"}
+          asset: "${derived.contracts.sac_usdc}"
+          cause: contract-call
+          detail: {flags: 1, authorized: true, initial: true}
+      state_changes_exact: true              # fee and sequence changes are ambient and outside this
+      movements: []
+      movements_exact: true                  # nothing moves but the fee
+    fields: {partially_validated: [VF-46], validated: [VF-42, VF-43, VF-44, VF-47]}
+
+  # The same ledger seen as a transaction set: no transaction of its own.
+  - id: parallel-phase-single-cluster
+    entry: cap-0063/parallel-phase-single-cluster
+    same_ledger_as: sac-trust
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 9}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success}
+      values:
+        - path: /v2/tx_set/v1/phases/0
+          equals: {v0: []}
+          note: "The classic phase is present and empty."
+        - path: /v2/tx_set/v1/phases/1/v1/base_fee
+          equals: "100"
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/source_account
+          equals: "${acct.owner}"
+          note: "The ledger's one transaction sits in stage 0, cluster 0: one stage, one cluster, one transaction."
+    fields: {validated: [VF-41]}
+
+  - id: sac-trust-existing-trustline
+    entry: cap-0073/sac-trust-noop-existing-or-contract-address.existing-trustline
+    precondition: "owner already has the USDC trustline"
+    tx:
+      source_account: "${acct.owner}"
+      fee: 50001000
+      seq_num: "${seq.owner}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: trust
+                  args: [{address: "${acct.owner}"}]
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+                - account: {account_id: "${acct.issuer}"}
+                - trustline: {account_id: "${acct.owner}", asset: "${asset.USDC}"}
+              read_write: []
+            instructions: 50000000
+            disk_read_bytes: 20000
+            write_bytes: 20000
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: owner}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/auth
+          equals: []
+          note: "No authorization: trust() requires it only when it creates a trustline."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+          equals: []
+          note: "The operation changes no ledger entry."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.owner}", roles: [source, fee_payer]}
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-43, VF-46a]}
+
+  - id: sac-trust-contract-address
+    entry: cap-0073/sac-trust-noop-existing-or-contract-address.contract-address
+    precondition: "the address is the USDC contract itself; contracts hold SAC balances in contract data, not trustlines"
+    tx:
+      source_account: "${acct.owner}"
+      fee: 50001000
+      seq_num: "${seq.owner}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: trust
+                  args: [{address: "${contract.sac(USDC)}"}]
+              auth: []
+      ext:
+        v1:
+          ext: v0
+          resources:
+            footprint:
+              read_only:
+                - contract_data: {contract: "${contract.sac(USDC)}", key: ledger_key_contract_instance, durability: persistent}
+                - account: {account_id: "${acct.issuer}"}
+              read_write: []
+            instructions: 50000000
+            disk_read_bytes: 20000
+            write_bytes: 20000
+          resource_fee: "50000000"
+    soroban_resources: declared
+    sign: [{key: owner}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/1/v1/execution_stages/0/0/0/tx/tx/operations/0/body/invoke_host_function/host_function/invoke_contract/args/0
+          equals: {address: "${derived.contracts.sac_usdc}"}
+          note: "trust(C…): a contract address."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+          equals: []
+          note: "No trustline, no contract data: nothing changes."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events
+          equals: []
+      participants:
+        must_include:
+          - {address: "${acct.owner}", roles: [source, fee_payer]}
+        exact: true
+      state_changes: []
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-43, VF-46a]}
+
+  # Two transactions in one ledger, both changing relinker's USDC trustline: the empty trustline is
+  # removed (limit 0), then created again. stellar-core queues one transaction per source account,
+  # so the second one is sourced by owner with relinker as the operation source. Core shuffles the
+  # apply order of a ledger's classic transactions by hash, so it differs per passphrase; the
+  # re-create's memo ID is the order nonce `gen` picks so that every chain applies the deletion
+  # first. `expect` checks that order.
+  - id: trustline-delete
+    entry: classic/trustline-deleted-and-recreated-in-one-ledger
+    order: [trustline-delete, trustline-recreate]
+    tx:
+      source_account: "${acct.relinker}"
+      fee: 100
+      seq_num: "${seq.relinker}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {change_trust: {line: "${asset.USDC}", limit: "0"}}
+      ext: v0
+    sign: [{key: relinker}]
+    expect_result: tx_success
+    expect_op_results: [change_trust.success]
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 2, entry_changes: 15}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [change_trust.success], fee_charged: "100"}
+        - {index: 1, hash: "${derived.tx_hashes.1}", successful: true, result_code: tx_success, operation_result_codes: [change_trust.success], fee_charged: "100"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/3/removed/trustline
+          equals: {account_id: "${acct.relinker}", asset: {credit_alphanum4: {asset_code: USDC, issuer: "${acct.issuer}"}}}
+          note: "Applied first: the trustline is removed."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/changes/0/created/data/trustline/account_id
+          equals: "${acct.relinker}"
+          note: "Applied second, in the same ledger: the same trustline is created again."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/changes/0/created/data/trustline/balance
+          equals: "0"
+      participants:
+        must_include:
+          - {address: "${acct.relinker}", roles: [source, fee_payer, trustline_owner]}
+        exact: true
+      state_changes:
+        - kind: trustline_removed
+          tx_index: 0
+          op_index: 0
+          account: {address: "${acct.relinker}"}
+          asset: "USDC:${acct.issuer}"
+          detail: {balance: "0"}
+        - kind: trustline_created
+          tx_index: 1
+          op_index: 0
+          account: {address: "${acct.relinker}"}
+          asset: "USDC:${acct.issuer}"
+          detail: {balance: "0", limit: "9223372036854775807", flags: 1, authorized: true, num_sub_entries_after: 1}
+        - kind: trustline_flags_changed
+          only_if: initial_authorization_separate
+          tx_index: 1
+          op_index: 0
+          account: {address: "${acct.relinker}"}
+          asset: "USDC:${acct.issuer}"
+          detail: {flags: 1, authorized: true, initial: true}
+      state_changes_exact: true
+      movements: []
+      movements_exact: true
+    fields: {validated: [VF-32]}
+
+  - id: trustline-recreate
+    entry: classic/trustline-deleted-and-recreated-in-one-ledger
+    same_ledger_as: trustline-delete
+    tx:
+      source_account: "${acct.owner}"
+      fee: 101
+      seq_num: "${seq.owner}"
+      cond: none
+      memo: {id: "${order_nonce}"}   # the nonce that makes the chain apply the deletion first
+      operations:
+        - source_account: "${acct.relinker}"
+          body: {change_trust: {line: "${asset.USDC}", limit: "9223372036854775807"}}
+      ext: v0
+    sign: [{key: owner}, {key: relinker}]
+    expect_result: tx_success
+    expect_op_results: [change_trust.success]
+
+  # Protocol 30: two SAC transfers in one ledger to `W…` addresses of the same contract, with muxed
+  # IDs 2^63 and 2^64 − 1. The event's `to` topic is the plain `C…` address; the ID travels in the
+  # data map as `to_muxed_id`, and the balance is credited to the plain contract.
+  - id: sac-transfer-to-w-2-pow-63
+    entry: cap-0084/sac-transfer-to-muxed-contract-local-twins
+    protocols: [30]
+    order: [sac-transfer-to-w-2-pow-64-minus-1, sac-transfer-to-w-2-pow-63]
+    tx:
+      source_account: "${acct.holder}"
+      fee: 1000
+      seq_num: "${seq.holder}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: transfer
+                  args: [{address: "${acct.holder}"}, {address: "${muxed_contract(recipient, 9223372036854775808)}"}, {i128: "1000000"}]
+    simulate: true
+    sign: [{key: holder}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]
+    # Apply order (both passphrases, fixed by the order nonce in holder2's time bound): holder2's
+    # transfer first (it creates the contract's balance entry), then this one, the focus.
+    expect:
+      ledger: {transactions: 2, operations: 2, events: 6, entry_changes: 20}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hashes.0}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success]}
+        - {index: 1, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [invoke_host_function.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/2
+          equals: {address: "${derived.contracts.recipient}"}
+          note: "The event's to topic is the plain C address, not the W form."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/events/0/body/v0/data
+          equals: {map: [{key: {symbol: amount}, val: {i128: "1000000"}}, {key: {symbol: to_muxed_id}, val: {u64: "9223372036854775808"}}]}
+          note: "2^63: above the signed 64-bit range."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/data
+          equals: {map: [{key: {symbol: amount}, val: {i128: "2000000"}}, {key: {symbol: to_muxed_id}, val: {u64: "18446744073709551615"}}]}
+          note: "2^64 − 1, the largest muxed ID."
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {contract_data: {contract: "${derived.contracts.sac_usdc}", key: {vec: [{symbol: Balance}, {address: "${derived.contracts.recipient}"}]}, durability: persistent}}
+            change: created
+          path: /created/data/contract_data/key
+          equals: {vec: [{symbol: Balance}, {address: "${derived.contracts.recipient}"}]}
+          note: "The balance is keyed by the plain contract address in the SAC's storage."
+        - path: /v2/tx_processing/1/tx_apply_processing/v4/operations/0/changes/1/updated/data/contract_data/val/map/0/val
+          equals: {i128: "3000000"}
+          note: "Both transfers credit the same contract balance."
+      participants:
+        must_include:
+          - {address: "${acct.holder}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "${derived.contracts.sac_usdc}", roles: [contract]}
+      state_changes:
+        - kind: balance_changed
+          op_index: 0
+          account: {address: "${acct.holder}"}
+          asset: "USDC:${acct.issuer}"
+          cause: contract-call
+          detail: {delta: "-1000000", balance_after: "9999000000"}
+        - kind: contract_data_changed
+          op_index: 0
+          account: {address: "${derived.contracts.sac_usdc}"}
+          cause: contract-call
+          detail: {contract: "${derived.contracts.sac_usdc}", durability: persistent, change: updated}
+      state_changes_exact: true
+      movements:
+        - kind: transfer
+          op_index: 0
+          asset: "USDC:${acct.issuer}"
+          amount: "1000000"
+          from: {address: "${acct.holder}"}
+          to: {address: "${derived.contracts.recipient}", muxed_id: "9223372036854775808"}
+          routing: {type: u64, value: "9223372036854775808"}
+      movements_exact: true
+    fields: {validated: [VF-46a, VF-53a]}
+
+  - id: sac-transfer-to-w-2-pow-64-minus-1
+    entry: cap-0084/sac-transfer-to-muxed-contract-local-twins
+    protocols: [30]
+    same_ledger_as: sac-transfer-to-w-2-pow-63
+    tx:
+      source_account: "${acct.holder2}"
+      fee: 1001
+      seq_num: "${seq.holder2}"
+      cond: {time: {min_time: "${order_nonce}", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            invoke_host_function:
+              host_function:
+                invoke_contract:
+                  contract_address: "${contract.sac(USDC)}"
+                  function_name: transfer
+                  args: [{address: "${acct.holder2}"}, {address: "${muxed_contract(recipient, 18446744073709551615)}"}, {i128: "2000000"}]
+    simulate: true
+    sign: [{key: holder2}]
+    expect_result: tx_success
+    expect_op_results: [invoke_host_function.success]

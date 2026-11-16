@@ -1,0 +1,422 @@
+# Maximum-length vectors of a classic transaction: 100 operations (MAX_OPS_PER_TX) with 20
+# signatures (TransactionV1Envelope.signatures<20>), every one of them used, and a 28-byte text
+# memo; a ManageData value of 64 bytes holding 00, ff and invalid UTF-8, then its deletion; a home
+# domain of the maximum 32 bytes. Protocol 28 serves the reader pins that cannot decode Protocol 30.
+#
+# Every signature is used because each of the 20 accounts S00…S19 is the source of five operations
+# and signs for its own key only: stellar-core rejects a transaction carrying a signature it did
+# not need (txBAD_AUTH_EXTRA), so 20 signatures of one account's signers would not be accepted.
+scenario: maximum-length-vectors
+caps: []
+caps_note: "The vector bounds are fixed by the XDR definitions and stellar-core constants; no CAP changed them."
+protocols: [28, 30]
+profile: lake
+actors: [S00, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, D, W, HD]
+setup:
+  - fund: {S00: "100", S01: "100", S02: "100", S03: "100", S04: "100", S05: "100", S06: "100", S07: "100", S08: "100", S09: "100", S10: "100", S11: "100", S12: "100", S13: "100", S14: "100", S15: "100", S16: "100", S17: "100", S18: "100", S19: "100", D: "100", W: "100", HD: "100"}
+
+steps:
+  - id: operations-100-signatures-20
+    entry: classic/operations-100-signatures-20
+    tx:
+      source_account: "${acct.S00}"
+      fee: 20000
+      seq_num: "${seq.S00}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: {text: "xcc memo of 28 bytes exactly"}
+      operations:
+        - {source_account: "${acct.S00}", body: {payment: {destination: "${acct.D}", asset: native, amount: "1"}}}
+        - {source_account: "${acct.S00}", body: {payment: {destination: "${acct.D}", asset: native, amount: "2"}}}
+        - {source_account: "${acct.S00}", body: {payment: {destination: "${acct.D}", asset: native, amount: "3"}}}
+        - {source_account: "${acct.S00}", body: {payment: {destination: "${acct.D}", asset: native, amount: "4"}}}
+        - {source_account: "${acct.S00}", body: {payment: {destination: "${acct.D}", asset: native, amount: "5"}}}
+        - {source_account: "${acct.S01}", body: {payment: {destination: "${acct.D}", asset: native, amount: "6"}}}
+        - {source_account: "${acct.S01}", body: {payment: {destination: "${acct.D}", asset: native, amount: "7"}}}
+        - {source_account: "${acct.S01}", body: {payment: {destination: "${acct.D}", asset: native, amount: "8"}}}
+        - {source_account: "${acct.S01}", body: {payment: {destination: "${acct.D}", asset: native, amount: "9"}}}
+        - {source_account: "${acct.S01}", body: {payment: {destination: "${acct.D}", asset: native, amount: "10"}}}
+        - {source_account: "${acct.S02}", body: {payment: {destination: "${acct.D}", asset: native, amount: "11"}}}
+        - {source_account: "${acct.S02}", body: {payment: {destination: "${acct.D}", asset: native, amount: "12"}}}
+        - {source_account: "${acct.S02}", body: {payment: {destination: "${acct.D}", asset: native, amount: "13"}}}
+        - {source_account: "${acct.S02}", body: {payment: {destination: "${acct.D}", asset: native, amount: "14"}}}
+        - {source_account: "${acct.S02}", body: {payment: {destination: "${acct.D}", asset: native, amount: "15"}}}
+        - {source_account: "${acct.S03}", body: {payment: {destination: "${acct.D}", asset: native, amount: "16"}}}
+        - {source_account: "${acct.S03}", body: {payment: {destination: "${acct.D}", asset: native, amount: "17"}}}
+        - {source_account: "${acct.S03}", body: {payment: {destination: "${acct.D}", asset: native, amount: "18"}}}
+        - {source_account: "${acct.S03}", body: {payment: {destination: "${acct.D}", asset: native, amount: "19"}}}
+        - {source_account: "${acct.S03}", body: {payment: {destination: "${acct.D}", asset: native, amount: "20"}}}
+        - {source_account: "${acct.S04}", body: {payment: {destination: "${acct.D}", asset: native, amount: "21"}}}
+        - {source_account: "${acct.S04}", body: {payment: {destination: "${acct.D}", asset: native, amount: "22"}}}
+        - {source_account: "${acct.S04}", body: {payment: {destination: "${acct.D}", asset: native, amount: "23"}}}
+        - {source_account: "${acct.S04}", body: {payment: {destination: "${acct.D}", asset: native, amount: "24"}}}
+        - {source_account: "${acct.S04}", body: {payment: {destination: "${acct.D}", asset: native, amount: "25"}}}
+        - {source_account: "${acct.S05}", body: {payment: {destination: "${acct.D}", asset: native, amount: "26"}}}
+        - {source_account: "${acct.S05}", body: {payment: {destination: "${acct.D}", asset: native, amount: "27"}}}
+        - {source_account: "${acct.S05}", body: {payment: {destination: "${acct.D}", asset: native, amount: "28"}}}
+        - {source_account: "${acct.S05}", body: {payment: {destination: "${acct.D}", asset: native, amount: "29"}}}
+        - {source_account: "${acct.S05}", body: {payment: {destination: "${acct.D}", asset: native, amount: "30"}}}
+        - {source_account: "${acct.S06}", body: {payment: {destination: "${acct.D}", asset: native, amount: "31"}}}
+        - {source_account: "${acct.S06}", body: {payment: {destination: "${acct.D}", asset: native, amount: "32"}}}
+        - {source_account: "${acct.S06}", body: {payment: {destination: "${acct.D}", asset: native, amount: "33"}}}
+        - {source_account: "${acct.S06}", body: {payment: {destination: "${acct.D}", asset: native, amount: "34"}}}
+        - {source_account: "${acct.S06}", body: {payment: {destination: "${acct.D}", asset: native, amount: "35"}}}
+        - {source_account: "${acct.S07}", body: {payment: {destination: "${acct.D}", asset: native, amount: "36"}}}
+        - {source_account: "${acct.S07}", body: {payment: {destination: "${acct.D}", asset: native, amount: "37"}}}
+        - {source_account: "${acct.S07}", body: {payment: {destination: "${acct.D}", asset: native, amount: "38"}}}
+        - {source_account: "${acct.S07}", body: {payment: {destination: "${acct.D}", asset: native, amount: "39"}}}
+        - {source_account: "${acct.S07}", body: {payment: {destination: "${acct.D}", asset: native, amount: "40"}}}
+        - {source_account: "${acct.S08}", body: {payment: {destination: "${acct.D}", asset: native, amount: "41"}}}
+        - {source_account: "${acct.S08}", body: {payment: {destination: "${acct.D}", asset: native, amount: "42"}}}
+        - {source_account: "${acct.S08}", body: {payment: {destination: "${acct.D}", asset: native, amount: "43"}}}
+        - {source_account: "${acct.S08}", body: {payment: {destination: "${acct.D}", asset: native, amount: "44"}}}
+        - {source_account: "${acct.S08}", body: {payment: {destination: "${acct.D}", asset: native, amount: "45"}}}
+        - {source_account: "${acct.S09}", body: {payment: {destination: "${acct.D}", asset: native, amount: "46"}}}
+        - {source_account: "${acct.S09}", body: {payment: {destination: "${acct.D}", asset: native, amount: "47"}}}
+        - {source_account: "${acct.S09}", body: {payment: {destination: "${acct.D}", asset: native, amount: "48"}}}
+        - {source_account: "${acct.S09}", body: {payment: {destination: "${acct.D}", asset: native, amount: "49"}}}
+        - {source_account: "${acct.S09}", body: {payment: {destination: "${acct.D}", asset: native, amount: "50"}}}
+        - {source_account: "${acct.S10}", body: {payment: {destination: "${acct.D}", asset: native, amount: "51"}}}
+        - {source_account: "${acct.S10}", body: {payment: {destination: "${acct.D}", asset: native, amount: "52"}}}
+        - {source_account: "${acct.S10}", body: {payment: {destination: "${acct.D}", asset: native, amount: "53"}}}
+        - {source_account: "${acct.S10}", body: {payment: {destination: "${acct.D}", asset: native, amount: "54"}}}
+        - {source_account: "${acct.S10}", body: {payment: {destination: "${acct.D}", asset: native, amount: "55"}}}
+        - {source_account: "${acct.S11}", body: {payment: {destination: "${acct.D}", asset: native, amount: "56"}}}
+        - {source_account: "${acct.S11}", body: {payment: {destination: "${acct.D}", asset: native, amount: "57"}}}
+        - {source_account: "${acct.S11}", body: {payment: {destination: "${acct.D}", asset: native, amount: "58"}}}
+        - {source_account: "${acct.S11}", body: {payment: {destination: "${acct.D}", asset: native, amount: "59"}}}
+        - {source_account: "${acct.S11}", body: {payment: {destination: "${acct.D}", asset: native, amount: "60"}}}
+        - {source_account: "${acct.S12}", body: {payment: {destination: "${acct.D}", asset: native, amount: "61"}}}
+        - {source_account: "${acct.S12}", body: {payment: {destination: "${acct.D}", asset: native, amount: "62"}}}
+        - {source_account: "${acct.S12}", body: {payment: {destination: "${acct.D}", asset: native, amount: "63"}}}
+        - {source_account: "${acct.S12}", body: {payment: {destination: "${acct.D}", asset: native, amount: "64"}}}
+        - {source_account: "${acct.S12}", body: {payment: {destination: "${acct.D}", asset: native, amount: "65"}}}
+        - {source_account: "${acct.S13}", body: {payment: {destination: "${acct.D}", asset: native, amount: "66"}}}
+        - {source_account: "${acct.S13}", body: {payment: {destination: "${acct.D}", asset: native, amount: "67"}}}
+        - {source_account: "${acct.S13}", body: {payment: {destination: "${acct.D}", asset: native, amount: "68"}}}
+        - {source_account: "${acct.S13}", body: {payment: {destination: "${acct.D}", asset: native, amount: "69"}}}
+        - {source_account: "${acct.S13}", body: {payment: {destination: "${acct.D}", asset: native, amount: "70"}}}
+        - {source_account: "${acct.S14}", body: {payment: {destination: "${acct.D}", asset: native, amount: "71"}}}
+        - {source_account: "${acct.S14}", body: {payment: {destination: "${acct.D}", asset: native, amount: "72"}}}
+        - {source_account: "${acct.S14}", body: {payment: {destination: "${acct.D}", asset: native, amount: "73"}}}
+        - {source_account: "${acct.S14}", body: {payment: {destination: "${acct.D}", asset: native, amount: "74"}}}
+        - {source_account: "${acct.S14}", body: {payment: {destination: "${acct.D}", asset: native, amount: "75"}}}
+        - {source_account: "${acct.S15}", body: {payment: {destination: "${acct.D}", asset: native, amount: "76"}}}
+        - {source_account: "${acct.S15}", body: {payment: {destination: "${acct.D}", asset: native, amount: "77"}}}
+        - {source_account: "${acct.S15}", body: {payment: {destination: "${acct.D}", asset: native, amount: "78"}}}
+        - {source_account: "${acct.S15}", body: {payment: {destination: "${acct.D}", asset: native, amount: "79"}}}
+        - {source_account: "${acct.S15}", body: {payment: {destination: "${acct.D}", asset: native, amount: "80"}}}
+        - {source_account: "${acct.S16}", body: {payment: {destination: "${acct.D}", asset: native, amount: "81"}}}
+        - {source_account: "${acct.S16}", body: {payment: {destination: "${acct.D}", asset: native, amount: "82"}}}
+        - {source_account: "${acct.S16}", body: {payment: {destination: "${acct.D}", asset: native, amount: "83"}}}
+        - {source_account: "${acct.S16}", body: {payment: {destination: "${acct.D}", asset: native, amount: "84"}}}
+        - {source_account: "${acct.S16}", body: {payment: {destination: "${acct.D}", asset: native, amount: "85"}}}
+        - {source_account: "${acct.S17}", body: {payment: {destination: "${acct.D}", asset: native, amount: "86"}}}
+        - {source_account: "${acct.S17}", body: {payment: {destination: "${acct.D}", asset: native, amount: "87"}}}
+        - {source_account: "${acct.S17}", body: {payment: {destination: "${acct.D}", asset: native, amount: "88"}}}
+        - {source_account: "${acct.S17}", body: {payment: {destination: "${acct.D}", asset: native, amount: "89"}}}
+        - {source_account: "${acct.S17}", body: {payment: {destination: "${acct.D}", asset: native, amount: "90"}}}
+        - {source_account: "${acct.S18}", body: {payment: {destination: "${acct.D}", asset: native, amount: "91"}}}
+        - {source_account: "${acct.S18}", body: {payment: {destination: "${acct.D}", asset: native, amount: "92"}}}
+        - {source_account: "${acct.S18}", body: {payment: {destination: "${acct.D}", asset: native, amount: "93"}}}
+        - {source_account: "${acct.S18}", body: {payment: {destination: "${acct.D}", asset: native, amount: "94"}}}
+        - {source_account: "${acct.S18}", body: {payment: {destination: "${acct.D}", asset: native, amount: "95"}}}
+        - {source_account: "${acct.S19}", body: {payment: {destination: "${acct.D}", asset: native, amount: "96"}}}
+        - {source_account: "${acct.S19}", body: {payment: {destination: "${acct.D}", asset: native, amount: "97"}}}
+        - {source_account: "${acct.S19}", body: {payment: {destination: "${acct.D}", asset: native, amount: "98"}}}
+        - {source_account: "${acct.S19}", body: {payment: {destination: "${acct.D}", asset: native, amount: "99"}}}
+        - {source_account: "${acct.S19}", body: {payment: {destination: "${acct.D}", asset: native, amount: "100"}}}
+      ext: v0
+    sign: [{key: S00}, {key: S01}, {key: S02}, {key: S03}, {key: S04}, {key: S05}, {key: S06}, {key: S07}, {key: S08}, {key: S09}, {key: S10}, {key: S11}, {key: S12}, {key: S13}, {key: S14}, {key: S15}, {key: S16}, {key: S17}, {key: S18}, {key: S19}]
+    expect_result: tx_success
+    expect_op_results: [payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success]
+    expect:
+      ledger: {transactions: 1, operations: 100, events: 101, entry_changes: 404}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success, payment.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/99
+          equals: {source_account: "${acct.S19}", body: {payment: {destination: "${acct.D}", asset: native, amount: "100"}}}
+          note: "The hundredth operation, the most one transaction may carry (MAX_OPS_PER_TX)."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures/0/hint
+          equals: "9a0584c6"
+          note: "First of 20 signatures, the most an envelope may carry: S00's (hint = last 4 bytes of its key)."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/signatures/19/hint
+          equals: "fe21e778"
+          note: "The twentieth signature, S19's. Every one is used: each account signs only for its own five operations."
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/memo
+          equals: {text: "xcc memo of 28 bytes exactly"}
+          note: "A text memo of exactly 28 bytes, the maximum."
+        - path: /v2/tx_processing/0/result/result/fee_charged
+          equals: "10000"
+          note: "100 operations at the base fee of 100 stroops; the bid was 20000."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/99
+          equals: {op_inner: {payment: success}}
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/99/events/0/body/v0/data/map/1
+          equals: {key: {symbol: to_muxed_id}, val: {string: "xcc memo of 28 bytes exactly"}}
+          note: "The text memo is copied into every payment event as to_muxed_id; it is the sender's text, not an address."
+      participants:
+        must_include:
+          - {address: "${acct.S00}", roles: [source, fee_payer, operation_source]}
+          - {address: "${acct.S01}", roles: [operation_source]}
+          - {address: "${acct.S02}", roles: [operation_source]}
+          - {address: "${acct.S03}", roles: [operation_source]}
+          - {address: "${acct.S04}", roles: [operation_source]}
+          - {address: "${acct.S05}", roles: [operation_source]}
+          - {address: "${acct.S06}", roles: [operation_source]}
+          - {address: "${acct.S07}", roles: [operation_source]}
+          - {address: "${acct.S08}", roles: [operation_source]}
+          - {address: "${acct.S09}", roles: [operation_source]}
+          - {address: "${acct.S10}", roles: [operation_source]}
+          - {address: "${acct.S11}", roles: [operation_source]}
+          - {address: "${acct.S12}", roles: [operation_source]}
+          - {address: "${acct.S13}", roles: [operation_source]}
+          - {address: "${acct.S14}", roles: [operation_source]}
+          - {address: "${acct.S15}", roles: [operation_source]}
+          - {address: "${acct.S16}", roles: [operation_source]}
+          - {address: "${acct.S17}", roles: [operation_source]}
+          - {address: "${acct.S18}", roles: [operation_source]}
+          - {address: "${acct.S19}", roles: [operation_source]}
+          - {address: "${acct.D}", roles: [destination]}
+        exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.S00}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "1", from: {address: "${acct.S00}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 1, asset: native, amount: "2", from: {address: "${acct.S00}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 2, asset: native, amount: "3", from: {address: "${acct.S00}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 3, asset: native, amount: "4", from: {address: "${acct.S00}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 4, asset: native, amount: "5", from: {address: "${acct.S00}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 5, asset: native, amount: "6", from: {address: "${acct.S01}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 6, asset: native, amount: "7", from: {address: "${acct.S01}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 7, asset: native, amount: "8", from: {address: "${acct.S01}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 8, asset: native, amount: "9", from: {address: "${acct.S01}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 9, asset: native, amount: "10", from: {address: "${acct.S01}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 10, asset: native, amount: "11", from: {address: "${acct.S02}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 11, asset: native, amount: "12", from: {address: "${acct.S02}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 12, asset: native, amount: "13", from: {address: "${acct.S02}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 13, asset: native, amount: "14", from: {address: "${acct.S02}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 14, asset: native, amount: "15", from: {address: "${acct.S02}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 15, asset: native, amount: "16", from: {address: "${acct.S03}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 16, asset: native, amount: "17", from: {address: "${acct.S03}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 17, asset: native, amount: "18", from: {address: "${acct.S03}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 18, asset: native, amount: "19", from: {address: "${acct.S03}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 19, asset: native, amount: "20", from: {address: "${acct.S03}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 20, asset: native, amount: "21", from: {address: "${acct.S04}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 21, asset: native, amount: "22", from: {address: "${acct.S04}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 22, asset: native, amount: "23", from: {address: "${acct.S04}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 23, asset: native, amount: "24", from: {address: "${acct.S04}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 24, asset: native, amount: "25", from: {address: "${acct.S04}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 25, asset: native, amount: "26", from: {address: "${acct.S05}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 26, asset: native, amount: "27", from: {address: "${acct.S05}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 27, asset: native, amount: "28", from: {address: "${acct.S05}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 28, asset: native, amount: "29", from: {address: "${acct.S05}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 29, asset: native, amount: "30", from: {address: "${acct.S05}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 30, asset: native, amount: "31", from: {address: "${acct.S06}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 31, asset: native, amount: "32", from: {address: "${acct.S06}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 32, asset: native, amount: "33", from: {address: "${acct.S06}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 33, asset: native, amount: "34", from: {address: "${acct.S06}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 34, asset: native, amount: "35", from: {address: "${acct.S06}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 35, asset: native, amount: "36", from: {address: "${acct.S07}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 36, asset: native, amount: "37", from: {address: "${acct.S07}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 37, asset: native, amount: "38", from: {address: "${acct.S07}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 38, asset: native, amount: "39", from: {address: "${acct.S07}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 39, asset: native, amount: "40", from: {address: "${acct.S07}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 40, asset: native, amount: "41", from: {address: "${acct.S08}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 41, asset: native, amount: "42", from: {address: "${acct.S08}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 42, asset: native, amount: "43", from: {address: "${acct.S08}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 43, asset: native, amount: "44", from: {address: "${acct.S08}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 44, asset: native, amount: "45", from: {address: "${acct.S08}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 45, asset: native, amount: "46", from: {address: "${acct.S09}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 46, asset: native, amount: "47", from: {address: "${acct.S09}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 47, asset: native, amount: "48", from: {address: "${acct.S09}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 48, asset: native, amount: "49", from: {address: "${acct.S09}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 49, asset: native, amount: "50", from: {address: "${acct.S09}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 50, asset: native, amount: "51", from: {address: "${acct.S10}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 51, asset: native, amount: "52", from: {address: "${acct.S10}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 52, asset: native, amount: "53", from: {address: "${acct.S10}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 53, asset: native, amount: "54", from: {address: "${acct.S10}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 54, asset: native, amount: "55", from: {address: "${acct.S10}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 55, asset: native, amount: "56", from: {address: "${acct.S11}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 56, asset: native, amount: "57", from: {address: "${acct.S11}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 57, asset: native, amount: "58", from: {address: "${acct.S11}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 58, asset: native, amount: "59", from: {address: "${acct.S11}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 59, asset: native, amount: "60", from: {address: "${acct.S11}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 60, asset: native, amount: "61", from: {address: "${acct.S12}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 61, asset: native, amount: "62", from: {address: "${acct.S12}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 62, asset: native, amount: "63", from: {address: "${acct.S12}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 63, asset: native, amount: "64", from: {address: "${acct.S12}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 64, asset: native, amount: "65", from: {address: "${acct.S12}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 65, asset: native, amount: "66", from: {address: "${acct.S13}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 66, asset: native, amount: "67", from: {address: "${acct.S13}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 67, asset: native, amount: "68", from: {address: "${acct.S13}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 68, asset: native, amount: "69", from: {address: "${acct.S13}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 69, asset: native, amount: "70", from: {address: "${acct.S13}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 70, asset: native, amount: "71", from: {address: "${acct.S14}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 71, asset: native, amount: "72", from: {address: "${acct.S14}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 72, asset: native, amount: "73", from: {address: "${acct.S14}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 73, asset: native, amount: "74", from: {address: "${acct.S14}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 74, asset: native, amount: "75", from: {address: "${acct.S14}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 75, asset: native, amount: "76", from: {address: "${acct.S15}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 76, asset: native, amount: "77", from: {address: "${acct.S15}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 77, asset: native, amount: "78", from: {address: "${acct.S15}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 78, asset: native, amount: "79", from: {address: "${acct.S15}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 79, asset: native, amount: "80", from: {address: "${acct.S15}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 80, asset: native, amount: "81", from: {address: "${acct.S16}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 81, asset: native, amount: "82", from: {address: "${acct.S16}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 82, asset: native, amount: "83", from: {address: "${acct.S16}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 83, asset: native, amount: "84", from: {address: "${acct.S16}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 84, asset: native, amount: "85", from: {address: "${acct.S16}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 85, asset: native, amount: "86", from: {address: "${acct.S17}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 86, asset: native, amount: "87", from: {address: "${acct.S17}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 87, asset: native, amount: "88", from: {address: "${acct.S17}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 88, asset: native, amount: "89", from: {address: "${acct.S17}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 89, asset: native, amount: "90", from: {address: "${acct.S17}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 90, asset: native, amount: "91", from: {address: "${acct.S18}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 91, asset: native, amount: "92", from: {address: "${acct.S18}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 92, asset: native, amount: "93", from: {address: "${acct.S18}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 93, asset: native, amount: "94", from: {address: "${acct.S18}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 94, asset: native, amount: "95", from: {address: "${acct.S18}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 95, asset: native, amount: "96", from: {address: "${acct.S19}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 96, asset: native, amount: "97", from: {address: "${acct.S19}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 97, asset: native, amount: "98", from: {address: "${acct.S19}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 98, asset: native, amount: "99", from: {address: "${acct.S19}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+        - {kind: transfer, op_index: 99, asset: native, amount: "100", from: {address: "${acct.S19}"}, to: {address: "${acct.D}"}, routing: {type: text, value: "xcc memo of 28 bytes exactly"}}
+      movements_exact: true
+    fields:
+      validated: [VF-06, VF-22a, VF-24a]
+      passed_through: [VF-19, VF-22b, VF-24b, VF-21]
+
+  - id: manage-data-binary-value
+    entry: classic/manage-data-binary-value-and-delete.binary-value
+    tx:
+      source_account: "${acct.W}"
+      fee: 1000
+      seq_num: "${seq.W}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {manage_data: {data_name: "xcc-binary", data_value: "00ffc328a0a1e228a1f0288cbc808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2"}}
+      ext: v0
+    sign: [{key: W}]
+    expect_result: tx_success
+    expect_op_results: [manage_data.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 7}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [manage_data.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/manage_data
+          equals: {data_name: "xcc-binary", data_value: "00ffc328a0a1e228a1f0288cbc808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2"}
+          note: "64 bytes, the maximum: a NUL, 0xff, the invalid UTF-8 sequences c3 28, a0 a1, e2 28 a1 and f0 28 8c bc, then 51 bare continuation bytes 80…b2."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/created/data/data
+          equals: {account_id: "${acct.W}", data_name: "xcc-binary", data_value: "00ffc328a0a1e228a1f0288cbc808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2", ext: v0}
+          note: "The stored entry holds exactly those bytes."
+      participants:
+        must_include:
+          - {address: "${acct.W}", roles: [source, fee_payer]}
+        exact: true
+      state_changes:
+        - kind: data_entry_changed
+          op_index: 0
+          account: {address: "${acct.W}"}
+          detail: {name: "xcc-binary", value_hex: "00ffc328a0a1e228a1f0288cbc808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2", change: created}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.W}"}}
+      movements_exact: true
+    fields:
+      validated: [VF-31a]
+      passed_through: [VF-31b]
+
+  - id: manage-data-delete
+    entry: classic/manage-data-binary-value-and-delete.delete
+    tx:
+      source_account: "${acct.W}"
+      fee: 1000
+      seq_num: "${seq.W}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {manage_data: {data_name: "xcc-binary", data_value: null}}
+      ext: v0
+    sign: [{key: W}]
+    expect_result: tx_success
+    expect_op_results: [manage_data.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [manage_data.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/manage_data
+          equals: {data_name: "xcc-binary", data_value: null}
+          note: "The optional value is absent, which deletes the entry; it is not an empty value."
+      participants:
+        must_include:
+          - {address: "${acct.W}", roles: [source, fee_payer]}
+        exact: true
+      state_changes:
+        - kind: data_entry_changed
+          op_index: 0
+          account: {address: "${acct.W}"}
+          detail: {name: "xcc-binary", change: removed}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.W}"}}
+      movements_exact: true
+    fields:
+      validated: [VF-31a]
+
+  - id: home-domain-32-bytes
+    entry: classic/set-options-home-domain-32-bytes
+    tx:
+      source_account: "${acct.HD}"
+      fee: 1000
+      seq_num: "${seq.HD}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options:
+              inflation_dest: null
+              clear_flags: null
+              set_flags: null
+              master_weight: null
+              low_threshold: null
+              med_threshold: null
+              high_threshold: null
+              home_domain: thirty-two-byte-home-domain.test
+              signer: null
+      ext: v0
+    sign: [{key: HD}]
+    expect_result: tx_success
+    expect_op_results: [set_options.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [set_options.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/set_options/home_domain
+          equals: "thirty-two-byte-home-domain.test"
+          note: "32 bytes, the maximum of string32."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/0/state/data/account/home_domain
+          equals: ""
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/account/home_domain
+          equals: "thirty-two-byte-home-domain.test"
+          note: "The account entry holds all 32 bytes; a reader with a shorter column truncates it."
+      participants:
+        must_include:
+          - {address: "${acct.HD}", roles: [source, fee_payer]}
+        exact: true
+      state_changes:
+        - kind: home_domain_changed
+          op_index: 0
+          account: {address: "${acct.HD}"}
+          detail: {home_domain: "thirty-two-byte-home-domain.test", home_domain_hex: "7468697274792d74776f2d627974652d686f6d652d646f6d61696e2e74657374", home_domain_before: ""}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.HD}"}}
+      movements_exact: true
+    fields:
+      validated: [VF-28]

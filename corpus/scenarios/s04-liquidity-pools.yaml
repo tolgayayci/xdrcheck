@@ -1,0 +1,660 @@
+# CAP-0038 liquidity pools, classic only: the first deposit into a pool (the asset trustlines
+# already count the pool-share trustline in liquidityPoolUseCount); a limit-only change of a
+# pool-share trustline; withdrawing everything and removing the pool-share trustline, which removes
+# the pool; a pool-share trustline held by the issuer of one of the pool's assets; an authorization
+# revocation that redeems pool shares into claimable balances; classic events whose addresses are a
+# pool and a claimable balance; a path payment whose pool hop comes after 1000 crossed offers
+# (Protocol 29 and later only). Protocol 28 serves the reader pins that cannot decode Protocol 30.
+#
+# Pool IDs are sha256 of the LiquidityPoolParameters (assets in XDR order, fee 30), which no
+# passphrase enters; they are written as literals below:
+#   X:I1 / Y:I2    10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85
+#   native / X:I1  dab87934e48eeff16d46bf3fc96b9bccbcbc04f1ddf3eb0937ee24981104c32a
+#   R:I3 / Y:I2    16c943ea5f70758583260bf0e3fc4caf03accebebb0fc5e8433f9984c2c5a8fd
+#   native / Y:I2  cde8471e3d30eedab980644c0a3ed7820bb9c2d9940539c44c86b6fcd2bded1c
+#   OB:I5 / OC:I5  0cae09cd0db88bdb9aca9a1cd8b55b443ba25047d62cc0e1b3a2d3621037a7cf
+# H4, funded in ledger 13, sends its first transaction with sequence 55834574849; its operation 1
+# creates the balance BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4, which its
+# operation 2 claims.
+#
+# Local twins of cap-0038/pool-issuers-order-by-bytes-not-strkey: the issuers are labelled PI3 and PI9
+# because their raw keys and their strkeys sort in opposite orders (PI3's key 70ca71d5… is below
+# PI9's 7989ebe5…, while GBYM… sorts after GB4Y…), and the pool's assets are USD of each, in raw-key
+# order. Its pool ID, from the same rule as above:
+#   USD:PI3 / USD:PI9  41ca328897f7273543665a0c61d241fad41591ac8951bbf8858ccacf52a4257e
+scenario: liquidity-pools
+caps: [38]
+protocols: [28, 30]
+profile: lake
+actors: [I1, I2, I3, I5, H, H3, H4, C, LPP, MM1, MM2, S, SD, PI3, PI9, PT]
+assets:
+  X: {credit_alphanum4: {asset_code: X, issuer: "${acct.I1}"}}
+  Y: {credit_alphanum4: {asset_code: Y, issuer: "${acct.I2}"}}
+  R: {credit_alphanum4: {asset_code: R, issuer: "${acct.I3}"}}
+  OA: {credit_alphanum4: {asset_code: OA, issuer: "${acct.I5}"}}
+  OB: {credit_alphanum4: {asset_code: OB, issuer: "${acct.I5}"}}
+  OC: {credit_alphanum4: {asset_code: OC, issuer: "${acct.I5}"}}
+  USD3: {credit_alphanum4: {asset_code: USD, issuer: "${acct.PI3}"}}
+  USD9: {credit_alphanum4: {asset_code: USD, issuer: "${acct.PI9}"}}
+setup:
+  - fund: {I1: "1000", I2: "1000", I3: "1000", I5: "1000", H: "1000", H3: "1000", H4: "1000", C: "100", LPP: "1000", MM1: "1000", MM2: "1000", S: "1000", SD: "100", PI3: "100", PI9: "100", PT: "100"}
+  # R is revocable, so I3 can take back H3's authorization.
+  - tx:
+      source_account: "${acct.I3}"
+      fee: 500
+      seq_num: "${seq.I3}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body:
+            set_options: {inflation_dest: null, clear_flags: null, set_flags: 2, master_weight: null, low_threshold: null, med_threshold: null, high_threshold: null, home_domain: null, signer: null}
+      ext: v0
+  - trust: {H: [X, Y], H3: [R, Y], H4: Y, LPP: [OB, OC], MM1: [OA, OB], MM2: [OA, OB], S: OA, SD: OC}
+  - tx:
+      source_account: "${acct.I1}"
+      fee: 5000
+      seq_num: "${seq.I1}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {payment: {destination: "${acct.H}", asset: "${asset.X}", amount: "10000000000"}}}
+        - {source_account: "${acct.I2}", body: {payment: {destination: "${acct.H}", asset: "${asset.Y}", amount: "10000000000"}}}
+        - {source_account: "${acct.I2}", body: {payment: {destination: "${acct.H3}", asset: "${asset.Y}", amount: "10000000000"}}}
+        - {source_account: "${acct.I2}", body: {payment: {destination: "${acct.H4}", asset: "${asset.Y}", amount: "10000000000"}}}
+        - {source_account: "${acct.I3}", body: {payment: {destination: "${acct.H3}", asset: "${asset.R}", amount: "10000000000"}}}
+        - {source_account: "${acct.I5}", body: {payment: {destination: "${acct.LPP}", asset: "${asset.OB}", amount: "10000000000"}}}
+        - {source_account: "${acct.I5}", body: {payment: {destination: "${acct.LPP}", asset: "${asset.OC}", amount: "10000000000"}}}
+        - {source_account: "${acct.I5}", body: {payment: {destination: "${acct.MM1}", asset: "${asset.OB}", amount: "500"}}}
+        - {source_account: "${acct.I5}", body: {payment: {destination: "${acct.MM2}", asset: "${asset.OB}", amount: "500"}}}
+        - {source_account: "${acct.I5}", body: {payment: {destination: "${acct.S}", asset: "${asset.OA}", amount: "10000000000"}}}
+      ext: v0
+  # Pool-share trustlines of H, H3, H4 and LPP; H3 and LPP deposit.
+  - tx:
+      source_account: "${acct.H}"
+      fee: 5000
+      seq_num: "${seq.H}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: "${asset.X}", asset_b: "${asset.Y}", fee: 30}}}, limit: "9223372036854775807"}}
+        - source_account: "${acct.H3}"
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: "${asset.R}", asset_b: "${asset.Y}", fee: 30}}}, limit: "9223372036854775807"}}
+        - source_account: "${acct.H3}"
+          body: {liquidity_pool_deposit: {liquidity_pool_id: LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}
+        - source_account: "${acct.H4}"
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.Y}", fee: 30}}}, limit: "9223372036854775807"}}
+        - source_account: "${acct.LPP}"
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: "${asset.OB}", asset_b: "${asset.OC}", fee: 30}}}, limit: "9223372036854775807"}}
+        - source_account: "${acct.LPP}"
+          body: {liquidity_pool_deposit: {liquidity_pool_id: LAGK4CONBW4IXW42ZKNBZWFVLNCDXISQI7LCZQHBWORNGYQQG6T474V7, max_amount_a: "1000000000", max_amount_b: "1000000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}
+      ext: v0
+  # 1000 offers selling one stroop of OB for one stroop of OA, 500 from each market maker (an
+  # account holds at most 1000 sub-entries).
+  - tx:
+      source_account: "${acct.MM1}"
+      fee: 10000
+      seq_num: "${seq.MM1}"
+      cond: none
+      memo: none
+      operations: [&one-stroop-offer {source_account: null, body: {manage_sell_offer: {selling: "${asset.OB}", buying: "${asset.OA}", amount: "1", price: {n: 1, d: 1}, offer_id: "0"}}}, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM1}"
+      fee: 10000
+      seq_num: "${seq.MM1}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM1}"
+      fee: 10000
+      seq_num: "${seq.MM1}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM1}"
+      fee: 10000
+      seq_num: "${seq.MM1}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM1}"
+      fee: 10000
+      seq_num: "${seq.MM1}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM2}"
+      fee: 10000
+      seq_num: "${seq.MM2}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM2}"
+      fee: 10000
+      seq_num: "${seq.MM2}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM2}"
+      fee: 10000
+      seq_num: "${seq.MM2}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM2}"
+      fee: 10000
+      seq_num: "${seq.MM2}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  - tx:
+      source_account: "${acct.MM2}"
+      fee: 10000
+      seq_num: "${seq.MM2}"
+      cond: none
+      memo: none
+      operations: [*one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer, *one-stroop-offer]
+      ext: v0
+  # PT's trustlines to USD of PI3 and of PI9, in a transaction of its own: PT has then sent one, so
+  # the pool-share ChangeTrust below has the shape of stellar-core's own (check AG-4).
+  - tx:
+      source_account: "${acct.PT}"
+      fee: 1000
+      seq_num: "${seq.PT}"
+      cond: none
+      memo: none
+      operations:
+        - {source_account: null, body: {change_trust: {line: "${asset.USD3}", limit: "9223372036854775807"}}}
+        - {source_account: null, body: {change_trust: {line: "${asset.USD9}", limit: "9223372036854775807"}}}
+      ext: v0
+
+steps:
+  - id: first-deposit
+    entry: cap-0038/pool-deposit-use-count-on-asset-trustlines
+    tx:
+      source_account: "${acct.H}"
+      fee: 1000
+      seq_num: "${seq.H}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {liquidity_pool_deposit: {liquidity_pool_id: LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}
+      ext: v0
+    sign: [{key: H}]
+    expect_result: tx_success
+    expect_op_results: [liquidity_pool_deposit.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 3, entry_changes: 12}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [liquidity_pool_deposit.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/liquidity_pool_deposit/liquidity_pool_id
+          equals: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"
+          note: "sha256 of the pool parameters (X:I1, Y:I2, fee 30), computed before the run."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics
+          equals: [{symbol: transfer}, {address: "${acct.H}"}, {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, {string: "X:${acct.I1}"}]
+          note: "The deposit is reported as a transfer to the pool's L address."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/1/body/v0/topics
+          equals: [{symbol: transfer}, {address: "${acct.H}"}, {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, {string: "Y:${acct.I2}"}]
+      participants:
+        must_include:
+          - {address: "${acct.H}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH", roles: [liquidity_pool]}
+        must_not_include:
+          - {address: "${acct.I1}", because: "I1 only issues X; no ledger entry of I1 changed"}
+          - {address: "${acct.I2}", because: "I2 only issues Y; no ledger entry of I2 changed"}
+        exact: true
+      state_changes:
+        - kind: liquidity_pool_changed
+          op_index: 0
+          account: {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}
+          detail: {pool_id: "10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85", pool_strkey: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH", asset_a: "X:${acct.I1}", asset_b: "Y:${acct.I2}", fee_bp: 30, reserve_a: "100000000", reserve_b: "100000000", total_shares: "100000000", pool_shares_trust_line_count: "1"}
+        - kind: balance_changed
+          op_index: 0
+          account: {address: "${acct.H}"}
+          asset: "liquidity_pool:10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85"
+          detail: {delta: "100000000", balance_after: "100000000"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.H}"}}
+        - {kind: transfer, op_index: 0, asset: "X:${acct.I1}", amount: "100000000", from: {address: "${acct.H}"}, to: {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "Y:${acct.I2}", amount: "100000000", from: {address: "${acct.H}"}, to: {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, routing: {type: absent}}
+      movements_exact: true
+      addresses:
+        - {strkey: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH", type: liquidity_pool, xdr_bytes: 32, chars: 56}
+    fields: {validated: [VF-40]}
+
+  - id: pool-share-limit-only
+    entry: cap-0038/pool-share-limit-only-change
+    tx:
+      source_account: "${acct.H}"
+      fee: 1000
+      seq_num: "${seq.H}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: "${asset.X}", asset_b: "${asset.Y}", fee: 30}}}, limit: "1000000000"}}
+      ext: v0
+    sign: [{key: H}]
+    expect_result: tx_success
+    expect_op_results: [change_trust.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 6}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [change_trust.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes/1/updated/data/trustline
+          equals: {account_id: "${acct.H}", asset: {pool_share: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, balance: "100000000", limit: "1000000000", flags: 0, ext: v0}
+          note: "The operation changes the pool-share trustline's limit and nothing else: one state/updated pair, no liquidity-pool entry in the change list."
+      participants:
+        must_include:
+          - {address: "${acct.H}", roles: [source, fee_payer, trustline_owner]}
+        must_not_include:
+          - {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH", because: "the pool entry did not change; only H's trustline to its shares did"}
+        exact: true
+      state_changes:
+        - kind: trustline_limit_changed
+          op_index: 0
+          account: {address: "${acct.H}"}
+          asset: "liquidity_pool:10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85"
+          detail: {limit: "1000000000", limit_before: "9223372036854775807"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.H}"}}
+      movements_exact: true
+    fields: {validated: [VF-32]}
+
+  - id: withdraw-all-and-remove
+    entry: cap-0038/pool-withdraw-then-trustline-removal-deletes-pool
+    tx:
+      source_account: "${acct.H}"
+      fee: 1000
+      seq_num: "${seq.H}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {liquidity_pool_withdraw: {liquidity_pool_id: LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH, amount: "100000000", min_amount_a: "1", min_amount_b: "1"}}
+        - source_account: null
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: "${asset.X}", asset_b: "${asset.Y}", fee: 30}}}, limit: "0"}}
+      ext: v0
+    sign: [{key: H}]
+    expect_result: tx_success
+    expect_op_results: [liquidity_pool_withdraw.success, change_trust.success]
+    expect:
+      ledger: {transactions: 1, operations: 2, events: 3, entry_changes: 22}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [liquidity_pool_withdraw.success, change_trust.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/events
+          equals: []
+          note: "The second operation, a ChangeTrust with limit 0, emits no event, although it removes the pool entry."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics
+          equals: [{symbol: transfer}, {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, {address: "${acct.H}"}, {string: "X:${acct.I1}"}]
+      participants:
+        must_include:
+          - {address: "${acct.H}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH", roles: [liquidity_pool]}
+        exact: true
+      state_changes:
+        - kind: liquidity_pool_changed
+          op_index: 0
+          account: {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}
+          detail: {pool_id: "10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85", reserve_a: "0", reserve_b: "0", total_shares: "0", pool_shares_trust_line_count: "1"}
+        - kind: balance_changed
+          op_index: 0
+          account: {address: "${acct.H}"}
+          asset: "liquidity_pool:10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85"
+          detail: {delta: "-100000000", balance_after: "0"}
+        - kind: trustline_removed
+          op_index: 1
+          account: {address: "${acct.H}"}
+          asset: "liquidity_pool:10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85"
+          detail: {balance: "0", pool_strkey: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}
+        - kind: liquidity_pool_removed
+          op_index: 1
+          account: {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}
+          detail: {pool_id: "10eb04b4ae006ea96b392a3d18cb5bc66333f640216c4f8f19a7cfbaa7e78e85", pool_strkey: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}
+          cause: "side effect of the last pool-share trustline being removed by ChangeTrust"
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.H}"}}
+        - {kind: transfer, op_index: 0, asset: "X:${acct.I1}", amount: "100000000", from: {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, to: {address: "${acct.H}"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "Y:${acct.I2}", amount: "100000000", from: {address: "LAIOWBFUVYAG5KLLHEVD2GGLLPDGGM7WIAQWYT4PDGT47OVH46HIKFHH"}, to: {address: "${acct.H}"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-32, VF-40]}
+
+  - id: pool-share-held-by-issuer
+    entry: cap-0038/pool-share-held-by-asset-issuer
+    tx:
+      source_account: "${acct.I1}"
+      fee: 1000
+      seq_num: "${seq.I1}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: "${asset.X}", fee: 30}}}, limit: "9223372036854775807"}}
+      ext: v0
+    sign: [{key: I1}]
+    expect_result: tx_success
+    expect_op_results: [change_trust.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 8}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [change_trust.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/change_trust/line
+          equals: {pool_share: {liquidity_pool_constant_product: {asset_a: native, asset_b: {credit_alphanum4: {asset_code: X, issuer: "${acct.I1}"}}, fee: 30}}}
+          note: "I1 issues X and needs no trustline for it, nor for native, so the pool-share trustline is its only trustline."
+      participants:
+        must_include:
+          - {address: "${acct.I1}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "LDNLQ6JU4SHO74LNI27T7SLLTPGLZPAE6HO7H2YJG7XCJGARATBSVIWM", roles: [liquidity_pool]}
+        exact: true
+      state_changes:
+        - kind: trustline_created
+          op_index: 0
+          account: {address: "${acct.I1}"}
+          asset: "liquidity_pool:dab87934e48eeff16d46bf3fc96b9bccbcbc04f1ddf3eb0937ee24981104c32a"
+          detail: {balance: "0", limit: "9223372036854775807", flags: 0, authorized: false, num_sub_entries_after: 2, pool_strkey: "LDNLQ6JU4SHO74LNI27T7SLLTPGLZPAE6HO7H2YJG7XCJGARATBSVIWM"}
+        - kind: trustline_flags_changed
+          only_if: initial_authorization_separate
+          op_index: 0
+          account: {address: "${acct.I1}"}
+          asset: "liquidity_pool:dab87934e48eeff16d46bf3fc96b9bccbcbc04f1ddf3eb0937ee24981104c32a"
+          detail: {flags: 0, authorized: false, initial: true}
+        - kind: liquidity_pool_created
+          op_index: 0
+          account: {address: "LDNLQ6JU4SHO74LNI27T7SLLTPGLZPAE6HO7H2YJG7XCJGARATBSVIWM"}
+          detail: {pool_id: "dab87934e48eeff16d46bf3fc96b9bccbcbc04f1ddf3eb0937ee24981104c32a", asset_a: native, asset_b: "X:${acct.I1}", fee_bp: 30, reserve_a: "0", reserve_b: "0", total_shares: "0", pool_shares_trust_line_count: "1"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.I1}"}}
+      movements_exact: true
+    fields: {validated: [VF-32]}
+
+  - id: revocation-redeems-pool-shares
+    entry: cap-0038/auth-revocation-redeems-pool-shares
+    tx:
+      source_account: "${acct.I3}"
+      fee: 1000
+      seq_num: "${seq.I3}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {set_trust_line_flags: {trustor: "${acct.H3}", asset: "${asset.R}", clear_flags: 1, set_flags: 0}}
+      ext: v0
+    sign: [{key: I3}]
+    expect_result: tx_success
+    expect_op_results: [set_trust_line_flags.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 4, entry_changes: 16}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [set_trust_line_flags.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics
+          equals: [{symbol: transfer}, {address: "LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D"}, {address: "BAADDR3VHJPHCUBRM55GRIBX3NVIBK2KKE7DPGZWJBEUXDSS6E5A6TXGTU"}, {string: "R:${acct.I3}"}]
+          note: "H3's share of R goes from the pool straight into a new claimable balance; H3's own balance does not change."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/1/body/v0/topics
+          equals: [{symbol: transfer}, {address: "LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D"}, {address: "BAAH34LLXAO7GPYJGHQGLMZ5PT3E5TQT64V4KYHJCFXVXSLEVHYN4G74C4"}, {string: "Y:${acct.I2}"}]
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/2/body/v0/topics
+          equals: [{symbol: set_authorized}, {address: "${acct.H3}"}, {string: "R:${acct.I3}"}]
+      participants:
+        must_include:
+          - {address: "${acct.I3}", roles: [source, fee_payer]}
+          - {address: "${acct.H3}", roles: [trustline_owner, sponsor]}
+          - {address: "LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D", roles: [liquidity_pool]}
+          - {address: "BAADDR3VHJPHCUBRM55GRIBX3NVIBK2KKE7DPGZWJBEUXDSS6E5A6TXGTU", roles: [claimable_balance]}
+          - {address: "BAAH34LLXAO7GPYJGHQGLMZ5PT3E5TQT64V4KYHJCFXVXSLEVHYN4G74C4", roles: [claimable_balance]}
+        exact: true
+      state_changes:
+        - kind: trustline_flags_changed
+          op_index: 0
+          account: {address: "${acct.H3}"}
+          asset: "R:${acct.I3}"
+          detail: {flags: 0, authorized: false, authorized_to_maintain_liabilities: false, clawback_enabled: false}
+        - kind: trustline_removed
+          op_index: 0
+          account: {address: "${acct.H3}"}
+          asset: "liquidity_pool:16c943ea5f70758583260bf0e3fc4caf03accebebb0fc5e8433f9984c2c5a8fd"
+          detail: {balance: "100000000", pool_strkey: "LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D"}
+          cause: "the pool shares are redeemed because R's authorization was revoked"
+        - kind: claimable_balance_created
+          op_index: 0
+          account: {address: "BAADDR3VHJPHCUBRM55GRIBX3NVIBK2KKE7DPGZWJBEUXDSS6E5A6TXGTU"}
+          asset: "R:${acct.I3}"
+          detail: {balance_id: "BAADDR3VHJPHCUBRM55GRIBX3NVIBK2KKE7DPGZWJBEUXDSS6E5A6TXGTU", amount: "100000000", claimants: 1, sponsor: "${acct.H3}"}
+        - kind: claimable_balance_created
+          op_index: 0
+          account: {address: "BAAH34LLXAO7GPYJGHQGLMZ5PT3E5TQT64V4KYHJCFXVXSLEVHYN4G74C4"}
+          asset: "Y:${acct.I2}"
+          detail: {balance_id: "BAAH34LLXAO7GPYJGHQGLMZ5PT3E5TQT64V4KYHJCFXVXSLEVHYN4G74C4", amount: "100000000", claimants: 1, sponsor: "${acct.H3}"}
+        - kind: liquidity_pool_removed
+          op_index: 0
+          account: {address: "LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D"}
+          detail: {pool_id: "16c943ea5f70758583260bf0e3fc4caf03accebebb0fc5e8433f9984c2c5a8fd"}
+          cause: "H3 held the pool's only shares"
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.I3}"}}
+        - {kind: transfer, op_index: 0, asset: "R:${acct.I3}", amount: "100000000", from: {address: "LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D"}, to: {address: "BAADDR3VHJPHCUBRM55GRIBX3NVIBK2KKE7DPGZWJBEUXDSS6E5A6TXGTU"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "Y:${acct.I2}", amount: "100000000", from: {address: "LALMSQ7KL5YHLBMDEYF7BY74JSXQHLGOX25Q7RPIIM7ZTBGCYWUP3K3D"}, to: {address: "BAAH34LLXAO7GPYJGHQGLMZ5PT3E5TQT64V4KYHJCFXVXSLEVHYN4G74C4"}, routing: {type: absent}}
+      movements_exact: true
+    fields: {validated: [VF-33]}
+
+  - id: pool-and-balance-addresses-in-events
+    entry: cap-0067/classic-op-events-with-pool-and-balance-addresses
+    tx:
+      source_account: "${acct.H4}"
+      fee: 1000
+      seq_num: "${seq.H4}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {liquidity_pool_deposit: {liquidity_pool_id: LDG6QRY6HUYO5WVZQBSEYCR626BAXOOC3GKAKOOEJSDLN7GSXXWRYQ7E, max_amount_a: "100000000", max_amount_b: "100000000", min_price: {n: 1, d: 2}, max_price: {n: 2, d: 1}}}
+        - source_account: null
+          body: {create_claimable_balance: {asset: native, amount: "10000000", claimants: [{claimant_type_v0: {destination: "${acct.C}", predicate: unconditional}}]}}
+        - source_account: "${acct.C}"
+          body: {claim_claimable_balance: {balance_id: BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4}}
+      ext: v0
+    sign: [{key: H4}, {key: C}]
+    expect_result: tx_success
+    expect_op_results: [liquidity_pool_deposit.success, create_claimable_balance.success, claim_claimable_balance.success]
+    expect:
+      ledger: {transactions: 1, operations: 3, events: 5, entry_changes: 21}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [liquidity_pool_deposit.success, create_claimable_balance.success, claim_claimable_balance.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/events/0/body/v0/topics/2
+          equals: {address: "LDG6QRY6HUYO5WVZQBSEYCR626BAXOOC3GKAKOOEJSDLN7GSXXWRYQ7E"}
+          note: "SC_ADDRESS_TYPE_LIQUIDITY_POOL as the `to` of the deposit's transfer event."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/1/events/0/body/v0/topics/2
+          equals: {address: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4"}
+          note: "SC_ADDRESS_TYPE_CLAIMABLE_BALANCE as the `to` of the creation's transfer event."
+        - path: /v2/tx_processing/0/tx_apply_processing/v4/operations/2/events/0/body/v0/topics
+          equals: [{symbol: transfer}, {address: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4"}, {address: "${acct.C}"}, {string: native}]
+          note: "The claim is a transfer from the balance's B address to the claimant."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/1/op_inner/create_claimable_balance/success
+          equals: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4"
+          note: "sha256 of ENVELOPE_TYPE_OP_ID (H4, sequence 55834574849, operation 1), computed before the run."
+      participants:
+        must_include:
+          - {address: "${acct.H4}", roles: [source, fee_payer, sponsor, trustline_owner]}
+          - {address: "${acct.C}", roles: [claimant]}
+          - {address: "LDG6QRY6HUYO5WVZQBSEYCR626BAXOOC3GKAKOOEJSDLN7GSXXWRYQ7E", roles: [liquidity_pool]}
+          - {address: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4", roles: [claimable_balance]}
+        must_not_include:
+          - {address: "${acct.I2}", because: "I2 only issues Y; no ledger entry of I2 changed"}
+        exact: true
+      state_changes:
+        - kind: liquidity_pool_changed
+          op_index: 0
+          account: {address: "LDG6QRY6HUYO5WVZQBSEYCR626BAXOOC3GKAKOOEJSDLN7GSXXWRYQ7E"}
+          detail: {pool_id: "cde8471e3d30eedab980644c0a3ed7820bb9c2d9940539c44c86b6fcd2bded1c", asset_a: native, asset_b: "Y:${acct.I2}", reserve_a: "100000000", reserve_b: "100000000", total_shares: "100000000", pool_shares_trust_line_count: "1"}
+        - kind: claimable_balance_created
+          op_index: 1
+          account: {address: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4"}
+          asset: native
+          detail: {balance_id: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4", amount: "10000000", claimants: 1, sponsor: "${acct.H4}"}
+        - kind: claimable_balance_claimed
+          op_index: 2
+          account: {address: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4"}
+          asset: native
+          detail: {balance_id: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4", amount: "10000000"}
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.H4}"}}
+        - {kind: transfer, op_index: 0, asset: native, amount: "100000000", from: {address: "${acct.H4}"}, to: {address: "LDG6QRY6HUYO5WVZQBSEYCR626BAXOOC3GKAKOOEJSDLN7GSXXWRYQ7E"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "Y:${acct.I2}", amount: "100000000", from: {address: "${acct.H4}"}, to: {address: "LDG6QRY6HUYO5WVZQBSEYCR626BAXOOC3GKAKOOEJSDLN7GSXXWRYQ7E"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 1, asset: native, amount: "10000000", from: {address: "${acct.H4}"}, to: {address: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 2, asset: native, amount: "10000000", from: {address: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4"}, to: {address: "${acct.C}"}, routing: {type: absent}}
+      movements_exact: true
+      addresses:
+        - {strkey: "LDG6QRY6HUYO5WVZQBSEYCR626BAXOOC3GKAKOOEJSDLN7GSXXWRYQ7E", type: liquidity_pool, xdr_bytes: 32, chars: 56}
+        - {strkey: "BAACMHKDXNSLWENCF4NBNYJ54VFRPRXOUX7XELLDYNUF5CLG5XYEAXTIW4", type: claimable_balance, xdr_bytes: 36, chars: 58}
+    fields: {validated: [VF-35, VF-40]}
+
+  - id: pool-hop-after-1000-offers
+    entry: protocol-29/path-payment-pool-hops-beyond-crossing-limit
+    protocols: [30]
+    tx:
+      source_account: "${acct.S}"
+      fee: 1000
+      seq_num: "${seq.S}"
+      cond: {time: {min_time: "0", max_time: "0"}}
+      memo: none
+      operations:
+        - source_account: null
+          body: {path_payment_strict_send: {send_asset: "${asset.OA}", send_amount: "1000", destination: "${acct.SD}", dest_asset: "${asset.OC}", dest_min: "1", path: ["${asset.OB}"]}}
+      ext: v0
+    sign: [{key: S}]
+    expect_result: tx_success
+    expect_op_results: [path_payment_strict_send.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 2004, entry_changes: 2022}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [path_payment_strict_send.success], fee_charged: "${derived.fee_charged}"}
+      values:
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/path_payment_strict_send/success/offers/999/order_book/amount_sold
+          equals: "1"
+          note: "The thousandth crossed offer (MAX_OFFERS_TO_CROSS is 1000): each of the 1000 one-stroop offers is a claim atom."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/path_payment_strict_send/success/offers/1000
+          equals: {liquidity_pool: {liquidity_pool_id: "LAGK4CONBW4IXW42ZKNBZWFVLNCDXISQI7LCZQHBWORNGYQQG6T474V7", asset_sold: {credit_alphanum4: {asset_code: OC, issuer: "${acct.I5}"}}, amount_sold: "996", asset_bought: {credit_alphanum4: {asset_code: OB, issuer: "${acct.I5}"}}, amount_bought: "1000"}}
+          note: "The 1001st claim atom is the pool hop. Before Protocol 29 a pool hop counted against the 1000-crossing limit, so this payment could not be made; from Protocol 29 pool hops are exempt."
+        - path: /v2/tx_processing/0/result/result/result/tx_success/0/op_inner/path_payment_strict_send/success/last
+          equals: {destination: "${acct.SD}", asset: {credit_alphanum4: {asset_code: OC, issuer: "${acct.I5}"}}, amount: "996"}
+      participants:
+        must_include:
+          - {address: "${acct.S}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "${acct.SD}", roles: [trustline_owner]}
+          - {address: "${acct.MM1}", roles: [trustline_owner]}
+          - {address: "${acct.MM2}", roles: [trustline_owner]}
+          - {address: "LAGK4CONBW4IXW42ZKNBZWFVLNCDXISQI7LCZQHBWORNGYQQG6T474V7", roles: [liquidity_pool]}
+        must_not_include:
+          - {address: "${acct.I5}", because: "I5 only issues the three assets; no ledger entry of I5 changed"}
+          - {address: "${acct.LPP}", because: "LPP owns the pool's shares; its trustline did not change"}
+        exact: true
+      state_changes:
+        - kind: liquidity_pool_changed
+          op_index: 0
+          account: {address: "LAGK4CONBW4IXW42ZKNBZWFVLNCDXISQI7LCZQHBWORNGYQQG6T474V7"}
+          detail: {pool_id: "0cae09cd0db88bdb9aca9a1cd8b55b443ba25047d62cc0e1b3a2d3621037a7cf", reserve_a: "1000001000", reserve_b: "999999004", total_shares: "1000000000", pool_shares_trust_line_count: "1"}
+        - kind: balance_changed
+          op_index: 0
+          account: {address: "${acct.SD}"}
+          asset: "OC:${acct.I5}"
+          detail: {delta: "996", balance_after: "996"}
+        - kind: balance_changed
+          op_index: 0
+          account: {address: "${acct.S}"}
+          asset: "OA:${acct.I5}"
+          detail: {delta: "-1000", balance_after: "9999999000"}
+      movements:
+        - {kind: fee, asset: native, amount: "${derived.fee_charged}", from: {address: "${acct.S}"}}
+        - {kind: transfer, op_index: 0, asset: "OB:${acct.I5}", amount: "1000", from: {address: "${acct.S}"}, to: {address: "LAGK4CONBW4IXW42ZKNBZWFVLNCDXISQI7LCZQHBWORNGYQQG6T474V7"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "OC:${acct.I5}", amount: "996", from: {address: "LAGK4CONBW4IXW42ZKNBZWFVLNCDXISQI7LCZQHBWORNGYQQG6T474V7"}, to: {address: "${acct.S}"}, routing: {type: absent}}
+        - {kind: transfer, op_index: 0, asset: "OC:${acct.I5}", amount: "996", from: {address: "${acct.S}"}, to: {address: "${acct.SD}"}, routing: {type: absent}}
+    fields: {validated: [VF-25]}
+
+  # The local twins of the testnet ledger: the ChangeTrust to the pool share of USD of PI3 and USD of
+  # PI9, assets in raw-key order (PT's trustlines to the two assets are set up a ledger earlier).
+  - id: pool-issuers-in-key-order
+    entry: cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins
+    tx:
+      source_account: "${acct.PT}"
+      fee: 1000
+      seq_num: "${seq.PT}"
+      cond: none
+      memo: none
+      operations:
+        - source_account: null
+          body: {change_trust: {line: {pool_share: {liquidity_pool_constant_product: {asset_a: "${asset.USD3}", asset_b: "${asset.USD9}", fee: 30}}}, limit: "9223372036854775807"}}
+      ext: v0
+    sign: [{key: PT}]
+    expect_result: tx_success
+    expect_op_results: [change_trust.success]
+    expect:
+      ledger: {transactions: 1, operations: 1, events: 1, entry_changes: 12}
+      transactions:
+        - {index: 0, hash: "${derived.tx_hash}", successful: true, result_code: tx_success, operation_result_codes: [change_trust.success], fee_charged: "100"}
+      values:
+        - path: /v2/tx_set/v1/phases/0/v0/0/txset_comp_txs_maybe_discounted_fee/txs/0/tx/tx/operations/0/body/change_trust/line/pool_share/liquidity_pool_constant_product
+          equals: {asset_a: {credit_alphanum4: {asset_code: USD, issuer: "${acct.PI3}"}}, asset_b: {credit_alphanum4: {asset_code: USD, issuer: "${acct.PI9}"}}, fee: 30}
+          note: "Asset A's issuer has the lower raw key (70ca71d5… < 7989ebe5…), so stellar-core accepts this order; its strkey GBYM… sorts after GB4Y… ('Y' 0x59 > '4' 0x34 at the third character), so a reader that orders by strkey rejects the operation."
+        - select:
+            in: /v2/tx_processing/0/tx_apply_processing/v4/operations/0/changes
+            key: {liquidity_pool: {liquidity_pool_id: LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT}}
+            change: created
+          path: /created/data/liquidity_pool/body/liquidity_pool_constant_product/params
+          equals: {asset_a: {credit_alphanum4: {asset_code: USD, issuer: "${acct.PI3}"}}, asset_b: {credit_alphanum4: {asset_code: USD, issuer: "${acct.PI9}"}}, fee: 30}
+          note: "The pool is created with the assets in the same raw-key order."
+      participants:
+        must_include:
+          - {address: "${acct.PT}", roles: [source, fee_payer, trustline_owner]}
+          - {address: "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT", roles: [liquidity_pool]}
+        must_not_include:
+          - {address: "${acct.PI3}", because: "PI3 only issues asset A; no ledger entry of PI3 changed"}
+          - {address: "${acct.PI9}", because: "PI9 only issues asset B; no ledger entry of PI9 changed"}
+        exact: true
+      state_changes:
+        - kind: trustline_created
+          op_index: 0
+          account: {address: "${acct.PT}"}
+          asset: "liquidity_pool:41ca328897f7273543665a0c61d241fad41591ac8951bbf8858ccacf52a4257e"
+          detail: {pool_strkey: "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT"}
+        - kind: trustline_flags_changed
+          only_if: initial_authorization_separate
+          op_index: 0
+          account: {address: "${acct.PT}"}
+          asset: "liquidity_pool:41ca328897f7273543665a0c61d241fad41591ac8951bbf8858ccacf52a4257e"
+        - kind: liquidity_pool_created
+          op_index: 0
+          account: {address: "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT"}
+          detail: {asset_a: "USD:${acct.PI3}", asset_b: "USD:${acct.PI9}", fee_bp: 30, asset_a_issuer_key_hex: "70ca71d55d244496c1ccda341fe404f377fc87bb0da6774ae9f7261cfed368cc", asset_b_issuer_key_hex: "7989ebe5e53b6843c78ea2d4616db30daea310dec44a19a0616e11c162fc19d3", pool_id: "41ca328897f7273543665a0c61d241fad41591ac8951bbf8858ccacf52a4257e"}
+      state_changes_exact: true
+      movements:
+        - {kind: fee, asset: native, amount: "100", from: {address: "${acct.PT}"}}
+      movements_exact: true
+      addresses:
+        - {strkey: "LBA4UMUIS73SONKDMZNAYYOSIH5NIFMRVSEVDO7YQWGMVT2SUQSX4YVT", type: liquidity_pool, xdr_bytes: 32, chars: 56}
