@@ -1,0 +1,188 @@
+# Classes of the union arms and optional states of LedgerCloseMetaBatch (XDR 30.0), read by
+# `xdrcheck-corpus coverage --arms`.
+#
+# Default rule: an arm of a union switched on a `*ResultCode` enum is `apply-time-result`, or
+# `validation-only` when its case ends in `_MALFORMED` or is listed in `validation_only_codes`;
+# every other arm and optional state is `in-ledger`. `[[arm]]` records override the rule, each with
+# the reason. Classes:
+#   in-ledger          stellar-core builds it into ledgers
+#   apply-time-result  a result code stellar-core can set while applying
+#   validation-only    set or accepted only while validating: no ledger holds it
+#   stored-as-bytes    in ledgers only as bytes (an upgrade set held in contract data)
+#   never-built        valid to consensus, but stellar-core never builds it
+#   not-in-lake        stellar-core built it, but the public lake's regenerated ledgers no longer hold it
+#   not-on-standalone  needs more validators than a standalone network runs
+#
+# Evidence rule. `validation-only` and `never-built` take an arm out of the uncovered list, so
+# reading stellar-core's code is not enough to claim them: the claim needs a zero count over the
+# full pubnet history from an indexer query. Every `validation-only` or `never-built` override
+# states `evidence`: `indexer: <query, date, ledger range, count 0>` when it has that, else
+# `unverified` (the reason is a code reading). `validation_only_evidence` does the same for the
+# default rule and `validation_only_codes`. `coverage --arms` counts an unverified exclusion as
+# uncovered in its summary.
+#
+# Sources read for the validation-only codes (code reading, unverified): stellar-core
+# `src/transactions/*OpFrame.cpp` (`doCheckValid`) and `TransactionFrame.cpp`
+# (`commonValidPreSeqNum`, `commonValid`).
+schema = "xcc.arms/v1"
+root = "LedgerCloseMetaBatch"
+validation_only_evidence = "unverified"
+
+validation_only_codes = [
+  # SetOptionsOpFrame::doCheckValid
+  "SET_OPTIONS_BAD_FLAGS",
+  "SET_OPTIONS_BAD_SIGNER",
+  "SET_OPTIONS_INVALID_HOME_DOMAIN",
+  "SET_OPTIONS_THRESHOLD_OUT_OF_RANGE",
+  "SET_OPTIONS_UNKNOWN_FLAG",
+  # ManageDataOpFrame::doCheckValid
+  "MANAGE_DATA_INVALID_NAME",
+  "MANAGE_DATA_NOT_SUPPORTED_YET",
+  # BumpSequenceOpFrame::doCheckValid
+  "BUMP_SEQUENCE_BAD_SEQ",
+  # TransactionFrame: checked before a transaction enters a valid transaction set; when applying,
+  # the close time is the validated one (txTOO_EARLY, txTOO_LATE) and the envelope is unchanged
+  # (the rest). Not listed, so apply-time: txBAD_AUTH_EXTRA (processSignatures sets it while
+  # applying when a signature is left unused) and txINSUFFICIENT_BALANCE (commonValid charges the
+  # full fee against the balance while applying before protocol 9).
+  "txMALFORMED",
+  "txMISSING_OPERATION",
+  "txINSUFFICIENT_FEE",
+  "txNOT_SUPPORTED",
+  "txSOROBAN_INVALID",
+  "txTOO_EARLY",
+  "txTOO_LATE",
+  # OperationFrame::checkValid: an operation type the ledger protocol does not support.
+  "opNOT_SUPPORTED",
+  # TransactionFrame::commonValidPreSeqNum and FeeBumpTransactionFrame: frozen keys (CAP-0077) are
+  # checked when a transaction is queued and when a set is built, against the settings the ledger
+  # applies with; a configuration upgrade takes effect only after the ledger's transactions, so a
+  # transaction admitted to a set never meets a key frozen since (executed: a transaction from a
+  # frozen account is refused at submission in corpus/scenarios/s19-upgrades-archival-and-config.yaml).
+  "txFROZEN_KEY_ACCESSED",
+]
+
+[[arm]]
+id = "StellarValueExt::STELLAR_VALUE_EMPTY_TX_SET"
+class = "not-on-standalone"
+reason = "stellar-core builds it (HerderSCPDriver::makeEmptyTxSetValueFromValue) only when a validator nominates a value whose transaction set it could not download in time, with EXPERIMENTAL_PARALLEL_TX_SET_DOWNLOAD on; a single standalone validator always has its own set"
+
+[[arm]]
+id = "StellarValueExt::STELLAR_VALUE_EMPTY_TX_SET_MS"
+class = "not-on-standalone"
+reason = "the millisecond close-time form of STELLAR_VALUE_EMPTY_TX_SET (from protocol 30); built under the same multi-validator condition"
+
+[[arm]]
+id = "ConfigSettingEntry::CONFIG_SETTING_FROZEN_LEDGER_KEYS_DELTA"
+class = "stored-as-bytes"
+reason = "a delta is an upgrade instruction, not a stored setting (Upgrades.cpp applyTo: delta entries are not stored config entries); a ledger holds it only inside a ConfigUpgradeSet kept as SCV_BYTES contract data"
+
+[[arm]]
+id = "ConfigSettingEntry::CONFIG_SETTING_FREEZE_BYPASS_TXS_DELTA"
+class = "stored-as-bytes"
+reason = "as CONFIG_SETTING_FROZEN_LEDGER_KEYS_DELTA: present in ledgers only inside upgrade-set bytes"
+
+[[arm]]
+id = "TxSetComponentTxsMaybeDiscountedFee.baseFee?none"
+class = "never-built"
+evidence = "unverified"
+reason = "valid to consensus but not built: TxSetFrame validation accepts a component without a base fee (each transaction then pays its bid), while the builder (sequentialPhaseToXdr, from Protocol 20 to 30) gives every component the int64 base fee of its surge-pricing lane, and a phase with no transactions has no component; covered by synthetic entries edited from a local-core ledger"
+
+[[arm]]
+id = "InnerTransactionResultResult::txINSUFFICIENT_BALANCE"
+class = "validation-only"
+evidence = "unverified"
+reason = "an inner transaction is validated with its fee not charged (FeeBumpTransactionFrame passes chargeFee false; TransactionFrame::commonValid checks the balance only when charging), so applying a fee bump never sets it; the outer fee source's balance is checked at validation"
+
+[[arm]]
+id = "SCPHistoryEntry::v0"
+class = "never-built"
+evidence = "unverified"
+reason = "LedgerCloseMeta scpInfo is declared but stellar-core never fills it: no writer of scpInfo exists in src/ outside tests, and the public lake's ledgers all carry an empty list"
+
+[[arm]]
+id = "SCPStatementPledges::SCP_ST_PREPARE"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "SCPStatementPledges::SCP_ST_CONFIRM"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "SCPStatementPledges::SCP_ST_EXTERNALIZE"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "SCPStatementPledges::SCP_ST_NOMINATE"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "SCPStatementPrepare.prepared?some"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "SCPStatementPrepare.prepared?none"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "SCPStatementPrepare.preparedPrime?some"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "SCPStatementPrepare.preparedPrime?none"
+class = "never-built"
+evidence = "unverified"
+reason = "reachable only through LedgerCloseMeta scpInfo, which stellar-core never fills"
+
+[[arm]]
+id = "ChangeTrustAsset::ASSET_TYPE_NATIVE"
+class = "in-ledger"
+reason = "ChangeTrustOpFrame::doCheckValid rejects a native line with CHANGE_TRUST_MALFORMED only from Protocol 10; before that the operation reached apply, which throws (txINTERNAL_ERROR), so pre-Protocol 10 ledgers hold the arm in their envelopes. Pubnet evidence: the locate index of the full pubnet scan (2026-11-18) lists it in ledgers 13012938..19955608, and classic/change-trust-native-line-before-p10 captures ledger 13012938"
+
+[[arm]]
+id = "TrustLineAsset::ASSET_TYPE_NATIVE"
+class = "validation-only"
+evidence = "unverified"
+reason = "a native trustline key exists nowhere in ledger state; operations and footprints naming one are rejected while validating"
+
+[[arm]]
+id = "LedgerKey::CONFIG_SETTING"
+class = "validation-only"
+evidence = "unverified"
+reason = "the only ledger keys a ledger carries are footprint, eviction and restore keys; a footprint naming a CONFIG_SETTING key is rejected while validating (Soroban footprints may only name contract data, contract code, accounts and trustlines)"
+
+[[arm]]
+id = "ClaimPredicate::CLAIM_PREDICATE_NOT?none"
+class = "validation-only"
+evidence = "unverified"
+reason = "CreateClaimableBalanceOpFrame::doCheckValid requires a NOT predicate to hold an inner predicate"
+
+[[arm]]
+id = "TransactionMeta::v0"
+class = "not-in-lake"
+reason = "stellar-core built v0 meta before protocol 10; the public lake's early ledgers were regenerated by core 23 with v4 meta, so the lake no longer holds it (uncovered: needs another source of pre-protocol-10 meta)"
+
+[[arm]]
+id = "TransactionMeta::v1"
+class = "not-in-lake"
+reason = "stellar-core built v1 meta from protocol 10 until protocol 13 (v2 since); the public lake's early ledgers were regenerated with v4 meta and a local core runs protocol 13 or later, so the lake no longer holds it (uncovered)"
+
+[[arm]]
+id = "OperationResultTr::CREATE_PASSIVE_SELL_OFFER"
+class = "never-built"
+evidence = "unverified"
+reason = "stellar-core applies a passive offer as a converted MANAGE_SELL_OFFER operation (CreatePassiveSellOfferOpFrame) and sets the result arm from that operation's type, so a CREATE_PASSIVE_SELL_OFFER operation carries a MANAGE_SELL_OFFER result; pubnet and testnet ledgers with the operation show it"

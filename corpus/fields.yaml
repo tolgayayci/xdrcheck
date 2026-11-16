@@ -1,0 +1,928 @@
+# corpus/fields.yaml — source of the guide's field-by-field table (check guide-table). Schema:
+# corpus/schema/fields.schema.json. Checked by scripts/py/check_fields.py.
+#
+# Origin: a field-by-field reading of stellar-core v30.0.0 (rows VF-01…VF-52), with demonstrations
+# from an executed local-core scenario run (ledger numbers "L14" etc. in demonstration notes),
+# captured public-network ledgers and an SDK decoding matrix. VF-53 (the emitting-contract rule)
+# was added after an independent design review.
+#
+# Empty reader_may_assume / reader_must_not_assume: the row makes no such statement (the
+# generated table prints an empty cell).
+#
+# status:       validated | partially_validated | passed_through
+#                A row marked partially_validated carries `parts`; each part has exactly one status.
+#                The generated table has one line per part (VF-02a, VF-02b), never a mixed line.
+#                Part status `undetermined` = the claim is not yet established either way.
+# verification:  executed        = a core-emitted ledger or an executed probe demonstrates the row's key claim
+#                code_reference  = read from source at the pinned tag only
+#                unverified      = the row's key claim is not yet backed by either
+#                A row or part marked unverified (or status undetermined) is left out of the published
+#                table and listed in the guide's "not yet established" appendix with its reason.
+# spot_checked:  true = every code_ref of the row was re-read against the pinned commits below
+#                (`check_fields.py --print-refs` prints the cited lines for review).
+# demonstrated_by: canonical corpus entry IDs, every one a row or `<row>.<member>` in corpus/plan.json
+#                (docs/entry-ids.md has the rules). The values here are the planning list carried
+#                over from the design phase. The reference is held in ONE direction: a manifest entry
+#                cites row or part IDs in its `fields` block, and `demonstrated_by` is regenerated
+#                from the manifest by the guide generator, never maintained by hand.
+#
+# What CI enforces for the guide-table check ("the field-by-field table agrees with the corpus manifest"):
+#   1. every row or part ID cited by a manifest entry exists in this file;
+#   2. the status list an entry cites a row under (validated / partially_validated / passed_through)
+#      equals the status of that row or part here;
+#   3. every published row or part is cited by at least one manifest entry whose bytes exist, or has a
+#      recorded `no_demonstration_reason`;
+#   4. every entry ID here is a canonical ID;
+#   5. the table committed in the guide equals the table generated from this file joined with the manifest;
+#   6. no row or part with verification `unverified` or status `undetermined` appears in the published table.
+# A generated table agrees with its source by construction, so conditions 1–4 and 6 are the ones that
+# can fail. Whether each row's claim is TRUE is not a CI matter: that is the review by a core or
+# platform engineer (check guide-review).
+#
+# Stage codes (see `stages` below) are used in core_checks[].stage.
+
+schema: xcc.fields/v1
+pins:
+  stellar_core: {tag: v30.0.0, commit: 0e49751aa9ddf892302cca02cea7f3f5d97df9f1}
+  stellar_xdr: {tag: v30.0, commit: 4f524bbac80c781c06e4fb5fc93a2d0d331d6705}
+  soroban_env_host:
+    commit: 6e6c4a87f46c7fdab0c2e2be82901b1e32378223
+    note: "stellar-core v30.0.0's p30 host submodule pin. The rs-soroban-env tag v30.0.0 is 0c99950e; do not label 6e6c4a87 as the tag."
+  code_ref_convention: "Paths are relative to the stellar-core tree at the pinned tag. 'xdr:' = stellar-xdr at the pinned commit. 'env:' = rs-soroban-env at the pinned host commit."
+
+stages:
+  D0: "Overlay XDR decode (xdrpp; marshaling stack limit 1500, src/main/main.cpp:425). Shape, lengths, padding, discriminants. No semantics."
+  D1: "validateXDRForProtocol (src/transactions/TransactionUtils.cpp:1350-1378). Envelope depth: xdrpp 500 before Protocol 28, Rust parse at depth 1000 from Protocol 28; protocol gating of XDR arms."
+  D2: "XDRProvidesValidFee (src/transactions/TransactionFrame.cpp:1774-1790)."
+  C1: "commonValidPreSeqNum (src/transactions/TransactionFrame.cpp:1241-1495). State-independent checks, Soroban resources, time and ledger bounds, minimum fee, source exists."
+  C2: "commonValid (src/transactions/TransactionFrame.cpp:1608-1728). Sequence number, min-seq age and gap, transaction-level signatures, balance covers fee."
+  C3: "Per-operation checkValid / doCheckValid (src/transactions/OperationFrame.cpp:283-363)."
+  C4: "checkAllSignaturesUsed (src/transactions/TransactionFrame.cpp:1904-1907; src/transactions/SignatureChecker.cpp:172-191)."
+  T: "Transaction-set validity (src/herder/TxSetFrame.cpp:1789-1845): every validator re-runs C1-C4 against the last closed ledger for every transaction in a proposed set."
+  A: "Apply (src/transactions/TransactionFrame.cpp:2028-2098, 2301-2495). C1-C4 re-run against in-ledger state, then doApply. A failure here still puts the transaction in the ledger."
+  H: "Soroban host (env:soroban-env-host/src/e2e_invoke.rs:470-570). Decode at depth 500, value conversion at depth 100, authorization."
+
+general_rule: >-
+  A transaction that appears in a ledger passed every stateless check against the last closed ledger.
+  A transaction that appears with a failed result may have failed any stateful check. Readers branch on
+  TransactionResult.result.code, never on the envelope alone.
+
+fields:
+  - id: VF-01
+    field: TransactionEnvelope.type
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C1, what: "From Protocol 13 ENVELOPE_TYPE_TX_V0 is not supported; before Protocol 13 ENVELOPE_TYPE_TX and any muxed account are not supported.", code_ref: "src/transactions/TransactionFrame.cpp:1256-1264"}
+    reader_may_assume: "V0 envelopes occur only in pre-Protocol-13 history."
+    reader_must_not_assume: "That V0 envelopes never need decoding: full-history readers still meet them."
+    result_code_when_rejected: [txNOT_SUPPORTED]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["protocol-13/upgrade-ledger-header-13-envelopes-v0"]
+    demonstration_note: "history, pubnet 30191538: header 13, 450 of 450 envelopes tx_v0"
+
+  - id: VF-02
+    field: Transaction.sourceAccount
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "ed25519 key: validated. Muxed ID: passed through."
+    parts:
+      - {id: VF-02a, aspect: "The ed25519 key", status: validated, verification: executed}
+      - {id: VF-02b, aspect: "The muxed ID", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C1, what: "The ed25519 key must be an existing account.", code_ref: "src/transactions/TransactionFrame.cpp:1473-1478"}
+      - {stage: C2, what: "The account's signers must meet the LOW threshold.", code_ref: "src/transactions/TransactionFrame.cpp:1683-1688"}
+      - {stage: C1, what: "The muxed ID is stripped before any use (toAccountID).", code_ref: "src/transactions/TransactionUtils.cpp:1185-1201"}
+      - {stage: C1, what: "From Protocol 25 an InvokeHostFunction transaction must not have a muxed source (validateSorobanMemo).", code_ref: "src/transactions/TransactionFrame.cpp:341-369, 1315-1328"}
+    reader_may_assume: "The key names a real account that authorized the transaction."
+    reader_must_not_assume: "Anything about the muxed ID: it is an arbitrary 64-bit label and is never checked."
+    result_code_when_rejected: [txNO_ACCOUNT, txBAD_AUTH, txSOROBAN_INVALID]
+    verification: executed
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0027/muxed-source-and-destination-max-ids"  # local-core probe L14: source M with ID 2^64-1
+      - "cap-0027/muxed-source-id-above-2-pow-63"  # history, pubnet 53071228, tx 64270266…932c
+
+  - id: VF-03
+    field: Transaction.fee
+    controlled_by: submitter
+    status: validated
+    status_detail: "Validated as a bid, not as the amount paid."
+    core_checks:
+      - {stage: C1, what: "Inclusion fee must be at least baseFee times max(1, number of operations).", code_ref: "src/transactions/TransactionFrame.cpp:1460-1465"}
+      - {stage: C2, what: "Available balance must cover the fee.", code_ref: "src/transactions/TransactionFrame.cpp:1695-1708"}
+      - {stage: A, what: "The fee charged is the declared Soroban resource fee (if any) plus min(inclusion-fee bid, base fee times max(1, number of operations)) from Protocol 11; before Protocol 11 the full bid.", code_ref: "src/transactions/TransactionFrame.cpp:395-426"}
+    reader_may_assume: "The fee source could afford the bid when the transaction was applied."
+    reader_must_not_assume: "That the envelope fee was paid. Use TransactionResult.feeCharged and the fee changes in meta."
+    result_code_when_rejected: [txINSUFFICIENT_FEE, txINSUFFICIENT_BALANCE]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0015/fee-bump-muxed-fee-source-inner-failed"]
+    demonstration_note: "local-core probe L18: outer fee 200 charged, inner fee_charged 0"
+
+  - id: VF-04
+    field: Transaction.seqNum
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C2, what: "Must equal the account's sequence + 1; when minSeqNum is set (Protocol 19+) the account's sequence must instead lie in [minSeqNum, seqNum). Never the ledger's starting sequence number.", code_ref: "src/transactions/TransactionFrame.cpp:1581-1605"}
+      - {stage: A, what: "The sequence number is consumed even when the transaction later fails.", code_ref: "src/transactions/TransactionFrame.cpp:1670, 2082-2085"}
+    reader_may_assume: "The sequence number is consumed on ledger for every transaction that got past C1 at apply."
+    reader_must_not_assume: "That it is consumed when the transaction failed C1 at apply (for example txTOO_LATE)."
+    result_code_when_rejected: [txBAD_SEQ]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["classic/failed-and-successful-path-payment-amounts", "cap-0015/fee-bump-muxed-fee-source-inner-failed", "cap-0034/tx-too-late-with-fee-charged"]
+    demonstration_note: "local-core scenarios: a failed path payment and a failed fee-bump inner transaction each consume the source's sequence number; pubnet 30379767 (Protocol 13): a txTOO_LATE result leaves it unchanged"
+
+  - id: VF-05
+    field: Transaction.ext
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C1, what: "Classic transactions: from Protocol 21 ext.v must be 0.", code_ref: "src/transactions/TransactionFrame.cpp:1417-1436"}
+      - {stage: D2, what: "Soroban transactions: ext.v must be 1.", code_ref: "src/transactions/TransactionFrame.cpp:1774-1790"}
+    reader_may_assume: "A Soroban transaction in a ledger carries SorobanTransactionData."
+    reader_must_not_assume: ""
+    result_code_when_rejected: [txMALFORMED]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0067/sac-transfer-to-muxed-account"]
+    demonstration_note: "local-core probe L29"
+
+  - id: VF-06
+    field: "TransactionV1Envelope.signatures<20>"
+    controlled_by: submitter
+    status: validated
+    status_detail: "For transactions that got past C2. Signatures of a transaction that failed C1 or C2 at apply may be unverified."
+    core_checks:
+      - {stage: D0, what: "At most 20 by XDR.", code_ref: "xdr:Stellar-transaction.x:929, 972, 998"}
+      - {stage: C2, what: "Each must verify against a signer of the transaction source, an operation source, or an extra signer.", code_ref: "src/transactions/TransactionFrame.cpp:483-528"}
+      - {stage: C4, what: "Every signature must have been used.", code_ref: "src/transactions/SignatureChecker.cpp:172-191"}
+      - {stage: C2, what: "From Protocol 28 at most 1000 ed25519 verifications per transaction (enforced in overlay validation at every protocol).", code_ref: "src/transactions/SignatureChecker.h:46-50; src/transactions/SignatureChecker.cpp:31-44; src/util/ProtocolVersion.h:85-86"}
+    reader_may_assume: "In txSUCCESS and most txFAILED results every signature was used."
+    reader_must_not_assume: "That signatures were verified in results that failed C1 or C2 during apply (src/transactions/TransactionFrame.cpp:1533-1547)."
+    result_code_when_rejected: [txBAD_AUTH_EXTRA, txBAD_AUTH]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["classic/operations-100-signatures-20", "cap-0021/precond-v2-all-fields"]
+
+  - id: VF-07
+    field: DecoratedSignature.hint
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "Used only as a filter for which signer to try."
+    parts:
+      - {id: VF-07a, aspect: "That each signature counted toward a threshold verified against a real signer", status: validated, verification: executed}
+      - {id: VF-07b, aspect: "The 4 hint bytes as an identifier of a signer", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C2, what: "ed25519: last 4 bytes of the public key. Hash-x: last 4 bytes of the hash. Signed payload: public-key hint XOR payload hint.", code_ref: "src/transactions/SignatureUtils.cpp:38-46, 83-105, 127-136"}
+      - {stage: C4, what: "A signature whose hint matches nothing is unused.", code_ref: "src/transactions/SignatureChecker.cpp:172-191"}
+    reader_may_assume: "In a transaction that passed C4, each hint matched the signer it verified against."
+    reader_must_not_assume: "That a hint identifies a signer, or that it equals the tail of a G key: it is 4 bytes and may be XOR-ed with a payload."
+    result_code_when_rejected: [txBAD_AUTH_EXTRA]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0040/tx-authorised-by-signed-payload-signature"]
+    demonstration_note: "local-core probe L16: hint 5d11d84a = key tail XOR payload tail"
+
+  - id: VF-08
+    field: "DecoratedSignature.signature (opaque<64>)"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C2, what: "ed25519: verified over the contents hash. Hash-x: sha256(signature) must equal the hash, so the 'signature' is the preimage, 0-64 bytes. Signed payload: ed25519 over the payload bytes.", code_ref: "src/transactions/SignatureUtils.cpp:49-61, 83-91"}
+      - {stage: C2, what: "Pre-auth-tx signers consume no signature.", code_ref: "src/transactions/SignatureChecker.cpp:70-85"}
+    reader_may_assume: "Each signature in a transaction that passed C4 satisfied one signer."
+    reader_must_not_assume: "That a signature is a 64-byte ed25519 signature."
+    result_code_when_rejected: [txBAD_AUTH_EXTRA, txBAD_AUTH]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["classic/hash-x-signer-preimage-0-and-64-bytes"]
+
+  - id: VF-09
+    field: FeeBumpTransaction.feeSource
+    controlled_by: fee payer
+    status: partially_validated
+    status_detail: "ed25519 key: validated. Muxed ID: passed through."
+    parts:
+      - {id: VF-09a, aspect: "The ed25519 key of the fee source", status: validated, verification: executed}
+      - {id: VF-09b, aspect: "The muxed ID of the fee source", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C1, what: "Account must exist.", code_ref: "src/transactions/FeeBumpTransactionFrame.cpp:456-460"}
+      - {stage: C2, what: "Must sign at LOW threshold and afford the fee.", code_ref: "src/transactions/FeeBumpTransactionFrame.cpp:273-285, 476-487, 499-502"}
+      - {stage: C1, what: "Muxed ID stripped (getFeeSourceID).", code_ref: "src/transactions/FeeBumpTransactionFrame.cpp:676-678"}
+      - {stage: C1, what: "Not covered by the Protocol 25 Soroban muxed-source rule, which inspects inner transaction and operation sources only.", code_ref: "src/transactions/TransactionFrame.cpp:361-365"}
+    reader_may_assume: "The fee source key is a real account that paid the fee."
+    reader_must_not_assume: "That the fee payer is the inner source, or that its muxed ID means anything."
+    result_code_when_rejected: [txNO_ACCOUNT, txBAD_AUTH, txINSUFFICIENT_BALANCE]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0015/fee-bump-muxed-fee-source-inner-failed"]
+    demonstration_note: "local-core probe L18: fee source M with ID 7"
+
+  - id: VF-10
+    field: FeeBumpTransaction.fee
+    controlled_by: fee payer
+    status: validated
+    status_detail: "Validated as a bid."
+    core_checks:
+      - {stage: C1, what: "Outer inclusion fee at least the minimum and per-operation rate at least the inner rate. An inner transaction with a negative inclusion fee is accepted only for Soroban from Protocol 23, otherwise txFEE_BUMP_INNER_FAILED.", code_ref: "src/transactions/FeeBumpTransactionFrame.cpp:402-454"}
+    reader_may_assume: "The outer fee bid met the minimum."
+    reader_must_not_assume: "That the bid was charged. Use the outer feeCharged."
+    result_code_when_rejected: [txINSUFFICIENT_FEE, txFEE_BUMP_INNER_FAILED]
+    verification: executed
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0015/fee-bump-muxed-fee-source-inner-failed"  # local-core probe L18
+      - "cap-0015/fee-bump-inner-failed"  # history, pubnet 34861066, tx 6d448f79…e27f: outer fee 2000, charged 200
+
+  - id: VF-11
+    field: "FeeBumpTransactionEnvelope.signatures<20>"
+    controlled_by: fee payer
+    status: validated
+    core_checks:
+      - {stage: C4, what: "Separate signature check over the fee-bump hash; all must be used. Inner signatures are checked against the inner hash.", code_ref: "src/transactions/FeeBumpTransactionFrame.cpp:312-347"}
+    reader_may_assume: "Outer and inner signatures were each checked against their own hash."
+    reader_must_not_assume: ""
+    result_code_when_rejected: [txBAD_AUTH_EXTRA]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0015/fee-bump-muxed-fee-source-inner-failed"]
+    demonstration_note: "local-core probe L18"
+
+  - id: VF-12
+    field: "Transaction.fee of the inner transaction of a fee bump"
+    controlled_by: inner signer
+    status: passed_through
+    status_detail: "Not charged. From Protocol 23 it need not even cover resourceFee for Soroban."
+    core_checks:
+      - {stage: C1, what: "The inner transaction is validated with chargeFee = false; from Protocol 23 its fee need not even cover resourceFee.", code_ref: "src/transactions/FeeBumpTransactionFrame.cpp:344-347; src/transactions/TransactionFrame.cpp:1338-1356"}
+      - {stage: A, what: "Only the fee-bump fee is debited, from the fee source. The inner result reports a computed feeCharged before Protocol 25 and 0 from Protocol 25; neither is debited.", code_ref: "src/transactions/FeeBumpTransactionFrame.cpp:721-751"}
+    reader_may_assume: ""
+    reader_must_not_assume: "That the inner fee was paid. Never add it to fees paid."
+    result_code_when_rejected: []
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0015/fee-bump-soroban-inner-fee-zero-from-p25"]
+    demonstration_note: "history, pubnet 65437014, tx 82ebce4b…8494: inner fee_charged 0"
+
+  - id: VF-13
+    field: "Preconditions type PRECOND_V2"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C1, what: "Not supported before Protocol 19.", code_ref: "src/transactions/TransactionFrame.cpp:1266-1272"}
+    reader_may_assume: "PRECOND_V2 occurs only from Protocol 19."
+    reader_must_not_assume: ""
+    result_code_when_rejected: [txNOT_SUPPORTED]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0040/extra-signer-signed-payload-local"]
+    demonstration_note: "local-core probe L17"
+
+  - id: VF-14
+    field: "Preconditions.timeBounds (minTime, maxTime)"
+    controlled_by: submitter
+    status: validated
+    status_detail: "Validated against close time. minTime > maxTime is not rejected as malformed; such a transaction is simply never valid."
+    parts:
+      - {id: VF-14a, aspect: "minTime and maxTime compared with the close time", status: validated, verification: code_reference}
+      - {id: VF-14b, aspect: "A transaction landing in a ledger with txTOO_LATE or txTOO_EARLY after CAP-34 (fee charged)", status: undetermined, verification: unverified}
+    core_checks:
+      - {stage: C1, what: "Checked against close time; maxTime 0 means unbounded.", code_ref: "src/transactions/TransactionFrame.cpp:1148-1195"}
+    reader_may_assume: "For txSUCCESS and txFAILED results the bounds held at the apply close time."
+    reader_must_not_assume: "That a transaction in a ledger satisfied its bounds: pubnet ledger 30379767 (Protocol 13) holds one with txTOO_LATE, its fee charged and its sequence number unchanged (`cap-0034/tx-too-late-with-fee-charged`), and the code at v30.0.0 still re-checks the bounds at apply."
+    result_code_when_rejected: [txTOO_EARLY, txTOO_LATE]
+    verification: unverified
+    unverified_parts: ["Shown only before CAP-34 (Protocol 14, which pubnet skipped): pubnet ledger 30379767 (Protocol 13) holds a txTOO_LATE result with its fee charged and the sequence number unchanged (`cap-0034/tx-too-late-with-fee-charged`), and the scan of pubnet ledgers 2 to 65,505,999 finds txTOO_LATE results only in ledgers 16,247,791 to 32,567,505, before the upgrade to Protocol 15 at ledger 32,747,293. No txTOO_EARLY result is in the corpus. Whether either can happen after CAP-34 is not established. Only part VF-14b is affected: part VF-14a (the comparison with close time) rests on the code reference and stays in the published table."]
+    spot_checked: true
+    demonstrated_by: ["cap-0034/tx-too-late-with-fee-charged"]
+    demonstration_note: "history, pubnet 30379767 (Protocol 13), tx a11c4fcc…22cb0: max_time 1593508579, close time 1593508580, fee 100 charged, seq_num unchanged"
+
+  - id: VF-15
+    field: Preconditions.ledgerBounds
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C1, what: "From Protocol 19: minLedger <= ledgerSeq, and maxLedger is 0 or ledgerSeq < maxLedger.", code_ref: "src/transactions/TransactionFrame.cpp:1162-1166, 1189-1193"}
+    reader_may_assume: "As VF-14."
+    reader_must_not_assume: "As VF-14."
+    result_code_when_rejected: [txTOO_EARLY, txTOO_LATE]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0021/extra-signers-two-signed-payload-keys"]
+    demonstration_note: "history, pubnet 65437035, tx 66ba592f…bd11: max_ledger 65437036"
+
+  - id: VF-16
+    field: Preconditions.minSeqNum
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C2, what: "Relaxes the sequence-number rule of VF-04.", code_ref: "src/transactions/TransactionFrame.cpp:1596-1600"}
+    reader_may_assume: "The account sequence can jump by more than one."
+    reader_must_not_assume: "That consecutive transactions of an account have consecutive sequence numbers."
+    result_code_when_rejected: [txBAD_SEQ]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0021/precond-v2-all-fields"]
+
+  - id: VF-17
+    field: "Preconditions.minSeqAge, minSeqLedgerGap"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C2, what: "Checked against the source's seqTime and seqLedger.", code_ref: "src/transactions/TransactionFrame.cpp:1198-1238"}
+    reader_may_assume: ""
+    reader_must_not_assume: ""
+    result_code_when_rejected: [txBAD_MIN_SEQ_AGE_OR_GAP]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0021/min-seq-age-failure", "cap-0021/precond-v2-all-fields"]
+
+  - id: VF-18
+    field: "Preconditions.extraSigners<2>"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: D0, what: "At most 2 by XDR.", code_ref: "xdr:Stellar-transaction.x:829"}
+      - {stage: C1, what: "Two entries must differ; a signed-payload entry must have a non-empty payload.", code_ref: "src/transactions/TransactionFrame.cpp:1274-1294"}
+      - {stage: C2, what: "Each needs a matching signature (Protocol 19+).", code_ref: "src/transactions/TransactionFrame.cpp:458-481, 521-525"}
+    reader_may_assume: "Each extra signer really signed."
+    reader_must_not_assume: "That extra signers are account signers on the ledger: they are transaction preconditions only."
+    result_code_when_rejected: [txMALFORMED, txBAD_AUTH]
+    verification: executed
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0040/extra-signer-signed-payload-local"  # local-core probe L17
+      - "cap-0021/extra-signers-two-signed-payload-keys"  # history, pubnet 65437035, tx 66ba592f…bd11
+
+  - id: VF-19
+    field: "Memo (all arms)"
+    controlled_by: submitter
+    status: passed_through
+    status_detail: "No semantic check. Exception: from Protocol 25 an InvokeHostFunction transaction must have MEMO_NONE."
+    core_checks:
+      - {stage: D0, what: "MEMO_TEXT is at most 28 bytes by XDR; there is no UTF-8 or printable check. MEMO_ID is any 64-bit value; MEMO_HASH and MEMO_RETURN are any 32 bytes.", code_ref: "xdr:Stellar-transaction.x:773-785"}
+      - {stage: C1, what: "From Protocol 25, Soroban InvokeHostFunction transactions must have no memo.", code_ref: "src/transactions/TransactionFrame.cpp:341-369, 1315-1328"}
+    reader_may_assume: "MEMO_TEXT is at most 28 bytes."
+    reader_must_not_assume: "That memo text is UTF-8, printable, free of NUL bytes, or an identifier of anything. It is attacker-chosen and is copied into classic events (VF-21)."
+    result_code_when_rejected: [txSOROBAN_INVALID]
+    verification: executed
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0067/to-muxed-id-text-non-utf8-memo"  # local-core probe L26: bytes ff fe 00 c3 28 ed a0 80 41 accepted
+      - "cap-0067/memo-text-that-looks-like-an-address"  # local-core probe L25
+
+  - id: VF-20
+    field: "MuxedAccount.med25519.id (transaction source, operation source, fee-bump source, Payment / PathPayment / AccountMerge destination, Clawback from)"
+    controlled_by: submitter
+    status: passed_through
+    core_checks:
+      - {stage: C1, what: "Only the ed25519 part is used (toAccountID). The ID is read only for event emission and JSON printing.", code_ref: "src/transactions/TransactionUtils.cpp:1185-1201, 2272-2299"}
+      - {stage: C3, what: "Clawback compares the full MuxedAccount with the un-muxed source, so a muxed 'from' equal to the issuer key passes the self-clawback check.", code_ref: "src/transactions/ClawbackOpFrame.cpp:64-70"}
+    reader_may_assume: "The base ed25519 key identifies the account that was debited or credited."
+    reader_must_not_assume: "That the ID was validated or changes which account was affected. Two envelopes that differ only in muxed IDs touch identical ledger entries."
+    result_code_when_rejected: []
+    verification: executed
+    unverified_parts: ["Where a Clawback with a muxed 'from' equal to the issuer fails at apply."]
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0027/muxed-source-and-destination-max-ids"  # local-core probe L14: event topics carry G addresses
+      - "cap-0035/clawback-from-muxed-account"
+
+  - id: VF-21
+    field: "Event data to_muxed_id (CAP-67 classic events)"
+    controlled_by: submitter
+    status: passed_through
+    status_detail: "Copied by core: the destination's muxed ID if the destination is muxed. Otherwise the transaction memo, but only when the destination is an account address, the memo is not MEMO_NONE and the calling operation allows it (src/transactions/EventManager.cpp:108-114). In every other case the key is absent."
+    core_checks:
+      - {stage: A, what: "Topics always use the address with muxed information dropped. Data becomes {amount, to_muxed_id}.", code_ref: "src/transactions/EventManager.cpp:104-136, 365-368"}
+      - {stage: A, what: "MEMO_TEXT becomes SCV_STRING, MEMO_ID becomes SCV_U64, MEMO_HASH and MEMO_RETURN become SCV_BYTES.", code_ref: "src/transactions/TransactionUtils.cpp:2253-2270"}
+      - {stage: A, what: "Classic-operation events exist only when the node sets EMIT_CLASSIC_EVENTS (Protocol 23+) or BACKFILL_STELLAR_ASSET_EVENTS (earlier).", code_ref: "src/transactions/EventManager.cpp:13-20"}
+    reader_may_assume: "In events that core emits for classic operations and for the Stellar Asset Contract, address topics are base forms (G… or C…), never muxed forms. This says nothing about events emitted by other contracts: see VF-53."
+    reader_must_not_assume: "That to_muxed_id is a u64 or a muxed ID at all: it can be a string of arbitrary bytes or 32 bytes taken from the memo. Custom token contracts can also emit it as Void."
+    result_code_when_rejected: []
+    verification: executed
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0067/to-muxed-id-text-non-utf8-memo"  # local-core probe L26
+      - "cap-0067/to-muxed-id-text-from-memo"  # history, pubnet 65437006, four transactions
+      - "cap-0067/to-muxed-id-absent"
+      - "cap-0067/to-muxed-id-u64-from-muxed-destination-over-memo"
+      - "cap-0067/to-muxed-id-bytes-from-memo-hash"
+      - "cap-0067/to-muxed-id-void-custom-token"  # history, pubnet 61178766, contract CBBTE46F…2UR6
+
+  - id: VF-22
+    field: Operation.sourceAccount
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "ed25519 key: validated. Muxed ID: passed through."
+    parts:
+      - {id: VF-22a, aspect: "The ed25519 key of the operation source", status: validated, verification: code_reference}
+      - {id: VF-22b, aspect: "The muxed ID of the operation source", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C3, what: "Signatures meet the operation's threshold; muxed ID stripped. The account must exist at apply; before apply a missing operation source passes if its master key signed.", code_ref: "src/transactions/OperationFrame.cpp:216-269, 323-331"}
+    reader_may_assume: "The key names an account that authorized the operation, for transactions that passed C3."
+    reader_must_not_assume: "That the operation took effect: check the transaction and operation result."
+    result_code_when_rejected: [opNO_ACCOUNT, opBAD_AUTH]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0027/muxed-source-and-destination-max-ids"]
+
+  - id: VF-23
+    field: "CreateAccountOp.destination, startingBalance"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Balance non-negative (Protocol 14+); destination differs from source.", code_ref: "src/transactions/CreateAccountOpFrame.cpp:175-193"}
+      - {stage: A, what: "Destination must not exist.", code_ref: "src/transactions/CreateAccountOpFrame.cpp:147"}
+    reader_may_assume: "On success an ACCOUNT entry was created (visible in operation changes)."
+    reader_must_not_assume: ""
+    result_code_when_rejected: [CREATE_ACCOUNT_MALFORMED, CREATE_ACCOUNT_ALREADY_EXIST]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["classic/create-account-funded-from-root"]
+    demonstration_note: "local-core probe L13"
+
+  - id: VF-24
+    field: "PaymentOp.destination, asset, amount"
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "Destination key, asset and amount: validated. Destination muxed ID: passed through."
+    parts:
+      - {id: VF-24a, aspect: "Destination key, asset and amount", status: validated, verification: executed}
+      - {id: VF-24b, aspect: "The destination muxed ID", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C3, what: "Amount > 0; asset valid.", code_ref: "src/transactions/PaymentOpFrame.cpp:139-152"}
+      - {stage: A, what: "Destination must exist.", code_ref: "src/transactions/PaymentOpFrame.cpp:105-106"}
+    code_ref_note: "Payment is applied as a strict-receive path payment; the cited apply lines map that operation's no-destination result to PAYMENT_NO_DESTINATION."
+    reader_may_assume: "A successful payment credited the destination's base account."
+    reader_must_not_assume: "That the destination of a failed payment was affected or even exists."
+    result_code_when_rejected: [PAYMENT_MALFORMED, PAYMENT_NO_DESTINATION]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0015/fee-bump-muxed-fee-source-inner-failed"]
+    demonstration_note: "local-core probe L18: inner payment to a non-existent account, payment:no_destination"
+
+  - id: VF-25
+    field: "PathPayment (sendAsset, destAsset, path<5>, amounts)"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Amounts > 0; every asset valid. Path assets need not be distinct or used.", code_ref: "src/transactions/PathPaymentStrictReceiveOpFrame.cpp:156-179; src/transactions/PathPaymentStrictSendOpFrame.cpp:149-172"}
+    reader_may_assume: "Assets in the path are well formed."
+    reader_must_not_assume: "That the path describes what was traded: the offers and pools actually crossed are in the result and in meta."
+    result_code_when_rejected: [PATH_PAYMENT_STRICT_RECEIVE_MALFORMED, PATH_PAYMENT_STRICT_SEND_MALFORMED]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0038/claim-atoms-pool-and-order-book-mixed"]
+    demonstration_note: "history, pubnet 41232715, tx 58e00d8f…a042"
+
+  - id: VF-26
+    field: "Asset codes (all operations)"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "AlphaNum4: 1-4 characters of [A-Za-z0-9], zeros only trailing. AlphaNum12: 5-12 characters, same rule.", code_ref: "src/util/types.cpp:147-214"}
+    reader_may_assume: "Asset codes are ASCII alphanumeric."
+    reader_must_not_assume: "That an issued asset code differs from 'XLM' or 'native' by case rules of an SDK; core accepts any alphanumeric code."
+    result_code_when_rejected: ["<operation>_MALFORMED"]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["classic/asset-issued-with-code-xlm", "classic/asset-code12-with-five-characters"]
+
+  - id: VF-27
+    field: "ManageSellOffer / ManageBuyOffer / CreatePassiveSellOffer"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Assets valid and different; amount and price positive; offerID non-negative (Protocol 15+); no delete of offer 0.", code_ref: "src/transactions/ManageOfferOpFrameBase.cpp:600-644"}
+    reader_may_assume: "Offer IDs in ledgers from Protocol 15 are non-negative."
+    reader_must_not_assume: "That an offer ID fits in a 53-bit float."
+    result_code_when_rejected: [MANAGE_SELL_OFFER_MALFORMED, MANAGE_BUY_OFFER_MALFORMED]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["classic/manage-offer-id-int64-max-not-found", "classic/muxed-id-max-and-offer-id-max-roundtrip"]
+
+  - id: VF-28
+    field: SetOptionsOp.homeDomain
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Bytes 0x20-0x7E only, at most 32.", code_ref: "src/transactions/SetOptionsOpFrame.cpp:318-325"}
+    reader_may_assume: "The home domain is printable ASCII."
+    reader_must_not_assume: "That it is a valid domain name."
+    result_code_when_rejected: [SET_OPTIONS_INVALID_HOME_DOMAIN]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["classic/set-options-home-domain-32-bytes"]
+
+  - id: VF-29
+    field: "SetOptionsOp.signer (key, weight)"
+    controlled_by: submitter
+    status: validated
+    status_detail: "Shape validated. Signed-payload payload content is arbitrary bytes."
+    core_checks:
+      - {stage: C3, what: "Not the account itself; weight at most 255 (Protocol 10+); signed-payload signer only from Protocol 19 and with a non-empty payload.", code_ref: "src/transactions/SetOptionsOpFrame.cpp:288-316"}
+      - {stage: D0, what: "Payload at most 64 bytes by XDR.", code_ref: "xdr:Stellar-types.x:77"}
+      - {stage: A, what: "At most 20 signers.", code_ref: "src/transactions/SetOptionsOpFrame.cpp:66"}
+    reader_may_assume: "A signed-payload signer on ledger has a payload of 1-64 bytes."
+    reader_must_not_assume: "That a signer key is 32 bytes, has a G form, or that its payload is text."
+    result_code_when_rejected: [SET_OPTIONS_BAD_SIGNER, SET_OPTIONS_TOO_MANY_SIGNERS]
+    verification: executed
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0040/signed-payload-signer-added"  # history, testnet 4437357, tx d9f78749…9fed
+      - "cap-0040/signed-payload-signers-1-byte-and-64-byte"  # local-core probe L15
+
+  - id: VF-30
+    field: "SetOptionsOp flags, thresholds, inflationDest"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Flag masks; set and clear disjoint; thresholds at most 255.", code_ref: "src/transactions/SetOptionsOpFrame.cpp:231-286"}
+      - {stage: A, what: "inflationDest must exist.", code_ref: "src/transactions/SetOptionsOpFrame.cpp:140"}
+    reader_may_assume: ""
+    reader_must_not_assume: ""
+    result_code_when_rejected: ["SET_OPTIONS_*"]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["classic/set-options-thresholds-and-master-weight", "cap-0035/account-flags-all-four"]
+
+  - id: VF-31
+    field: "ManageDataOp.dataName, dataValue"
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "Name: validated (non-empty printable ASCII). Value: passed through."
+    parts:
+      - {id: VF-31a, aspect: "dataName (non-empty printable ASCII, at most 64 bytes)", status: validated, verification: code_reference}
+      - {id: VF-31b, aspect: "dataValue (up to 64 arbitrary bytes)", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C3, what: "Name non-empty and printable ASCII. The value is not checked.", code_ref: "src/transactions/ManageDataOpFrame.cpp:105-122"}
+    reader_may_assume: "The data name is printable ASCII, at most 64 bytes."
+    reader_must_not_assume: "That the value is text: it is up to 64 arbitrary bytes."
+    result_code_when_rejected: [MANAGE_DATA_INVALID_NAME]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["classic/manage-data-binary-value-and-delete.binary-value"]
+
+  - id: VF-32
+    field: "ChangeTrustOp.line (including liquidity-pool parameters), limit"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Limit non-negative; asset valid; not native (Protocol 10+); not the source's own asset (Protocol 16+).", code_ref: "src/transactions/ChangeTrustOpFrame.cpp:312-342"}
+      - {stage: C3, what: "Pool share: both assets valid, assetA < assetB by XDR field-wise comparison (raw bytes, not strkey text), fee equal to 30.", code_ref: "src/util/types.cpp:132-144"}
+    reader_may_assume: "Pool assets in a ledger are ordered by their XDR bytes."
+    reader_must_not_assume: "That they are ordered by strkey text. A reader that re-validates order by text rejects valid ledgers."
+    result_code_when_rejected: [CHANGE_TRUST_MALFORMED]
+    verification: executed
+    spot_checked: true
+    demonstrated_by:
+      # history, testnet 5521432, tx 01267480…346f, pool c2a73012…2d5e; and local-core probe L23,
+      # where the strkey-order variant was rejected at submission with change_trust malformed
+      - "cap-0038/pool-issuers-order-by-bytes-not-strkey"
+
+  - id: VF-33
+    field: "AllowTrustOp / SetTrustLineFlagsOp"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Not native; asset valid; flag masks; trustor differs from source; SetTrustLineFlags source must be the issuer.", code_ref: "src/transactions/AllowTrustOpFrame.cpp:156-191; src/transactions/SetTrustLineFlagsOpFrame.cpp:101-151"}
+    reader_may_assume: ""
+    reader_must_not_assume: ""
+    result_code_when_rejected: [ALLOW_TRUST_MALFORMED, SET_TRUST_LINE_FLAGS_MALFORMED]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0035/allow-trust-versus-set-trust-line-flags"]
+
+  - id: VF-34
+    field: "ClawbackOp.from, asset, amount"
+    controlled_by: submitter
+    status: validated
+    status_detail: "See the VF-20 quirk for a muxed 'from'."
+    core_checks:
+      - {stage: C3, what: "Amount at least 1; non-native valid asset; source is the issuer; 'from' differs from the source.", code_ref: "src/transactions/ClawbackOpFrame.cpp:64-98"}
+    reader_may_assume: "On success the 'from' account's trustline balance changed (visible in meta)."
+    reader_must_not_assume: ""
+    result_code_when_rejected: [CLAWBACK_MALFORMED]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0035/clawback-from-muxed-account"]
+
+  - id: VF-35
+    field: "CreateClaimableBalanceOp.claimants<10>, predicates"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Asset valid; amount > 0; at least one claimant; destinations unique; predicate depth at most 4 (root = 1).", code_ref: "src/transactions/CreateClaimableBalanceOpFrame.cpp:76-126, 264-298"}
+      - {stage: A, what: "BEFORE_RELATIVE_TIME is rewritten to an absolute time in the ledger entry.", code_ref: "src/transactions/CreateClaimableBalanceOpFrame.cpp:59-63"}
+    reader_may_assume: "Predicates in ledgers are at most 4 levels deep; ledger entries never hold a relative-time predicate."
+    reader_must_not_assume: "That claimant accounts exist, or that any claimant ever receives the funds."
+    result_code_when_rejected: [CREATE_CLAIMABLE_BALANCE_MALFORMED]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0023/claimants-max-10", "cap-0023/claim-predicate-depth-4"]
+
+  - id: VF-36
+    field: "ClaimClaimableBalanceOp / ClawbackClaimableBalanceOp balanceID"
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "No stateless check; existence and predicate are checked only at apply."
+    parts:
+      - {id: VF-36a, aspect: "That the balance existed and the predicate held, when the operation succeeded", status: validated, verification: code_reference}
+      - {id: VF-36b, aspect: "The balance ID in a failed operation (no stateless check)", status: passed_through, verification: code_reference}
+    core_checks:
+      - {stage: C3, what: "No stateless check: both operations accept any balance ID before apply.", code_ref: "src/transactions/ClaimClaimableBalanceOpFrame.cpp:198-202; src/transactions/ClawbackClaimableBalanceOpFrame.cpp:87-91"}
+      - {stage: A, what: "Balance must exist; a claim needs the source to be a claimant whose predicate holds at the close time.", code_ref: "src/transactions/ClaimClaimableBalanceOpFrame.cpp:118-142; src/transactions/ClawbackClaimableBalanceOpFrame.cpp:37-43"}
+    reader_may_assume: "On success the claimable-balance entry was removed (visible in meta)."
+    reader_must_not_assume: "That a balance ID in a failed operation refers to anything that exists."
+    result_code_when_rejected: [CLAIM_CLAIMABLE_BALANCE_DOES_NOT_EXIST, CLAIM_CLAIMABLE_BALANCE_CANNOT_CLAIM]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0023/claim-nonexistent-balance-fails"]
+
+  - id: VF-37
+    field: AccountMergeOp.destination
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "Destination key: validated. Muxed ID: passed through."
+    parts:
+      - {id: VF-37a, aspect: "The destination key", status: validated, verification: code_reference}
+      - {id: VF-37b, aspect: "The destination muxed ID", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C3, what: "Destination differs from source.", code_ref: "src/transactions/MergeOpFrame.cpp:278-287"}
+      - {stage: A, what: "Destination must exist.", code_ref: "src/transactions/MergeOpFrame.cpp:86-92"}
+    reader_may_assume: "On success the source ACCOUNT entry was removed and the destination credited."
+    reader_must_not_assume: ""
+    result_code_when_rejected: [ACCOUNT_MERGE_MALFORMED, ACCOUNT_MERGE_NO_ACCOUNT]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0027/account-merge-to-muxed-destination"]
+
+  - id: VF-38
+    field: BumpSequenceOp.bumpTo
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Non-negative.", code_ref: "src/transactions/BumpSequenceOpFrame.cpp:72-81"}
+    reader_may_assume: ""
+    reader_must_not_assume: "That sequence numbers stay small: bumping to INT64_MAX is valid."
+    result_code_when_rejected: [BUMP_SEQUENCE_BAD_SEQ]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0001/bump-sequence-to-int64-max"]
+
+  - id: VF-39
+    field: "BeginSponsoringFutureReserves / EndSponsoringFutureReserves / RevokeSponsorship"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "sponsoredID differs from source; RevokeSponsorship key checks.", code_ref: "src/transactions/BeginSponsoringFutureReservesOpFrame.cpp:106-115; src/transactions/RevokeSponsorshipOpFrame.cpp:403-456"}
+      - {stage: A, what: "A dangling sponsorship at the end of the transaction fails it.", code_ref: "src/transactions/TransactionFrame.cpp:2418-2424"}
+    reader_may_assume: "Sponsorship relations are in entry extensions and the sponsor's counters in meta."
+    reader_must_not_assume: "That the Begin/End operations name every entry that was sponsored: the entries are created by other operations."
+    result_code_when_rejected: ["*_MALFORMED", txBAD_SPONSORSHIP]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0033/revoke-signer-sponsorship-null-hole"]
+
+  - id: VF-40
+    field: "LiquidityPoolDepositOp / LiquidityPoolWithdrawOp"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Deposit: maximum amounts and both price bounds positive, minPrice at most maxPrice. Withdraw: amount positive, minimum amounts non-negative.", code_ref: "src/transactions/LiquidityPoolDepositOpFrame.cpp:377-414; src/transactions/LiquidityPoolWithdrawOpFrame.cpp:165-176"}
+    reader_may_assume: ""
+    reader_must_not_assume: "That the amounts in the operation are the amounts moved: use meta and the result."
+    result_code_when_rejected: [LIQUIDITY_POOL_DEPOSIT_MALFORMED, LIQUIDITY_POOL_WITHDRAW_MALFORMED]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0038/pool-deposit-use-count-on-asset-trustlines"]
+    demonstration_note: "local-core probe L24"
+
+  - id: VF-41
+    field: "Soroban transaction shape"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C1, what: "A Soroban operation implies exactly one operation and no mixing with classic operations (Protocol 20+).", code_ref: "src/transactions/TransactionFrame.cpp:735-753, 1302-1306"}
+    reader_may_assume: "A Soroban transaction in a ledger has exactly one operation."
+    reader_must_not_assume: ""
+    result_code_when_rejected: [txMALFORMED]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0067/sac-transfer-to-muxed-account"]
+    demonstration_note: "local-core probe L29"
+
+  - id: VF-42
+    field: "SorobanResources (instructions, diskReadBytes, writeBytes, entry counts), transaction size"
+    controlled_by: submitter
+    status: validated
+    status_detail: "Declared values are checked against network limits. Actual use is metered by the host."
+    core_checks:
+      - {stage: C1, what: "Declared resources at most the network configuration limits.", code_ref: "src/transactions/TransactionFrame.cpp:756-917"}
+    reader_may_assume: "Declared resources were within the limits in force at that ledger."
+    reader_must_not_assume: "That declared resources were consumed, or that today's limits applied to historic ledgers: limits change by validator vote."
+    result_code_when_rejected: [txSOROBAN_INVALID]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0073/sac-trust-creates-trustline"]
+    demonstration_note: "local-core probe L28: generous resources, refund in meta"
+
+  - id: VF-43
+    field: "SorobanResources.footprint (readOnly, readWrite)"
+    controlled_by: submitter
+    status: validated
+    status_detail: "Shape validated. Whether the keys exist is not checked before apply."
+    core_checks:
+      - {stage: C1, what: "Key types limited to ACCOUNT, TRUSTLINE, CONTRACT_DATA, CONTRACT_CODE; key size at most the configured limit; no duplicates across the two sets.", code_ref: "src/transactions/TransactionFrame.cpp:845-907, 1385-1413"}
+    reader_may_assume: "Footprint keys are well formed."
+    reader_must_not_assume: "That a footprint key was read or written, or that the entry exists: a footprint is a declaration of possible access."
+    result_code_when_rejected: [txSOROBAN_INVALID]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0073/sac-trust-creates-trustline"]
+    demonstration_note: "local-core probe L28: TRUSTLINE and ACCOUNT keys in footprint"
+
+  - id: VF-44
+    field: SorobanTransactionData.resourceFee
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: D2, what: "Between 0 and 2^50.", code_ref: "src/transactions/TransactionFrame.cpp:65, 1774-1790"}
+      - {stage: C1, what: "At most the fee (except the inner transaction of a fee bump from Protocol 23); at least the computed fee.", code_ref: "src/transactions/TransactionFrame.cpp:1338-1383"}
+      - {stage: A, what: "Unused refundable fee is refunded.", code_ref: "src/transactions/TransactionFrame.cpp:975-1014"}
+    reader_may_assume: ""
+    reader_must_not_assume: "That resourceFee was charged. Use meta and the result for charged and refunded amounts."
+    result_code_when_rejected: [txMALFORMED, txSOROBAN_INVALID]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0073/sac-trust-creates-trustline"]
+    demonstration_note: "local-core probe L28: resourceFee 5 XLM declared, fee_charged 339213"
+
+  - id: VF-45
+    field: SorobanTransactionData.ext.v1.archivedSorobanEntries
+    controlled_by: submitter
+    status: partially_validated
+    parts:
+      - {id: VF-45a, aspect: "Indices strictly ascending and inside the read-write footprint (Protocol 23+)", status: validated, verification: code_reference}
+      - {id: VF-45b, aspect: "What happens when an index points at an entry that is live, not archived", status: undetermined, verification: unverified}
+    core_checks:
+      - {stage: C1, what: "Protocol 23+ only; strictly ascending, within the read-write footprint, pointing at persistent entries.", code_ref: "src/transactions/TransactionFrame.cpp:919-970"}
+      - {stage: A, what: "Archived read-write entries must be marked.", code_ref: "src/transactions/InvokeHostFunctionOpFrame.cpp:1171-1293"}
+    reader_may_assume: "Indices are in range and ascending."
+    reader_must_not_assume: "That a marked entry was archived: use LEDGER_ENTRY_RESTORED changes in meta."
+    result_code_when_rejected: [txSOROBAN_INVALID, INVOKE_HOST_FUNCTION_ENTRY_ARCHIVED]
+    verification: unverified
+    unverified_parts: ["Behaviour when a marked index points at a live entry."]
+    spot_checked: true
+    demonstrated_by: ["cap-0066/restore-and-update-in-one-tx"]
+    demonstration_note: "history, pubnet 65437014, tx 82ebce4b…8494"
+
+  - id: VF-46
+    field: "HostFunction (UploadContractWasm, CreateContract, CreateContractV2, InvokeContract)"
+    controlled_by: submitter
+    status: partially_validated
+    parts:
+      - {id: VF-46a, aspect: "Structure of the host function, and for a successful invocation that the host accepted the arguments", status: validated, verification: code_reference}
+      - {id: VF-46b, aspect: "The meaning of the arguments: arbitrary values handed to the contract", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: C3, what: "Wasm size at most the configured limit; CreateContract from an asset requires a valid asset.", code_ref: "src/transactions/InvokeHostFunctionOpFrame.cpp:1441-1470"}
+      - {stage: H, what: "Everything else (contract exists, function exists, arguments convertible) is checked by the host at apply.", code_ref: "env:soroban-env-host/src/e2e_invoke.rs:470-570"}
+    reader_may_assume: "For a successful invocation the arguments were accepted by the host."
+    reader_must_not_assume: "Anything about the arguments of a failed invocation beyond XDR validity (see VF-50)."
+    result_code_when_rejected: ["INVOKE_HOST_FUNCTION_*"]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0046/scval-nested-vec-99-in-event"]
+
+  - id: VF-47
+    field: "SorobanAuthorizationEntry.credentials = SOURCE_ACCOUNT"
+    controlled_by: submitter
+    status: validated
+    status_detail: "Validated only through the transaction signatures; the address is the operation source."
+    core_checks:
+      - {stage: H, what: "Treated as authentic by assumption; no nonce, no signature.", code_ref: "src/transactions/InvokeHostFunctionOpFrame.cpp:691, 704; env:soroban-env-host/src/auth.rs:2353-2365, 2586-2589"}
+    reader_may_assume: "The operation source authorized what the transaction signatures cover."
+    reader_must_not_assume: "That a nonce entry exists for source-account credentials."
+    code_ref_note: "The host reference carries the claim. The two core lines are only the call sites that pass the source account to the host."
+    result_code_when_rejected: []
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0073/sac-trust-creates-trustline"]
+    demonstration_note: "local-core probe L28: source-account credentials"
+
+  - id: VF-48
+    field: "SorobanAuthorizationEntry.credentials = ADDRESS / ADDRESS_V2 / ADDRESS_WITH_DELEGATES (address, nonce, signatureExpirationLedger, signature)"
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "An entry matched by a require_auth call is fully authenticated. An unmatched entry is only decoded and converted."
+    parts:
+      - {id: VF-48a, aspect: "An entry matched by a require_auth call: signature, nonce and expiration", status: validated, verification: code_reference}
+      - {id: VF-48b, aspect: "An entry matched by no require_auth call: decoded and converted, never authenticated", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: H, what: "Authentication is lazy: performed only when an entry matches a require_auth call.", code_ref: "env:soroban-env-host/src/auth.rs:2465-2520"}
+      - {stage: H, what: "Matched entry: signature verified (account: at most 20 signatures, weight at least MEDIUM threshold; contract: its `__check_auth` decides); nonce checked and consumed; expiration checked; nonce entry written.", code_ref: "env:soroban-env-host/src/auth.rs:2586-2720; env:soroban-env-host/src/builtin_contracts/account_contract.rs:175-262"}
+      - {stage: H, what: "Every entry must decode (depth 500) and convert; the address must be an account or contract.", code_ref: "env:soroban-env-host/src/host_object.rs:228-248"}
+    reader_may_assume: "A nonce CONTRACT_DATA entry created in meta proves that address authenticated."
+    reader_must_not_assume: "That an address listed in auth authorized anything. An unmatched entry is never authenticated, its nonce is not consumed and its expiration is not checked. A contract address 'authorizing' means only that its own code accepted."
+    result_code_when_rejected: [INVOKE_HOST_FUNCTION_TRAPPED]
+    verification: executed
+    unverified_parts: ["Whether unused delegate signatures are tolerated (CAP-71 delegates were not exercised)."]
+    spot_checked: true
+    demonstrated_by: ["cap-0046/auth-unmatched-entries-succeed"]
+    demonstration_note: "local-core probe L30: void signature, expired, no nonce entry created, transaction succeeded"
+
+  - id: VF-49
+    field: "SorobanAuthorizedInvocation tree (rootInvocation, subInvocations<>)"
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "A pattern only: nodes are matched when a real require_auth occurs in matching context. Unexercised sub-trees are allowed."
+    parts:
+      - {id: VF-49a, aspect: "Nodes matched by a real require_auth in matching context", status: validated, verification: code_reference}
+      - {id: VF-49b, aspect: "Sub-trees no call ever exercised (3 levels executed; the maximum depth core admits is not yet measured)", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: H, what: "Each node matched at most once against actual calls.", code_ref: "env:soroban-env-host/src/auth.rs:72-85"}
+      - {stage: H, what: "No depth limiter of its own; bounded only by the XDR decode depth of 500 and transaction size.", code_ref: "env:soroban-env-host/src/auth.rs:811-827"}
+    reader_may_assume: ""
+    reader_must_not_assume: "That the tree describes what was called. It is a claim of what may be called. Use events and ledger changes for what happened."
+    result_code_when_rejected: []
+    verification: executed
+    unverified_parts: ["The maximum nesting in a successful transaction and in a failed one: neither is measured here. The executed demonstration is 3 levels."]
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0046/auth-unmatched-entries-succeed"  # local-core probe L30: 3-level nested unmatched tree
+
+  - id: VF-50
+    field: "ScVal anywhere in the envelope (arguments, auth arguments, signature)"
+    controlled_by: submitter
+    status: partially_validated
+    status_detail: "XDR validity and depth at admission; host rules only for values that reached the host."
+    parts:
+      - {id: VF-50a, aspect: "XDR validity and envelope depth at admission", status: validated, verification: code_reference}
+      - {id: VF-50b, aspect: "Host value rules for values that never reached the host (arguments of failed transactions, unmatched auth entries)", status: passed_through, verification: code_reference}
+      - {id: VF-50c, aspect: "The numeric maximum nesting core admits in each protocol era", status: undetermined, verification: unverified}
+    core_checks:
+      - {stage: D1, what: "Envelope depth in the v30.0.0 build: Rust parse at depth 1000 from Protocol 28, xdrpp depth check 500 before Protocol 28. Older core releases enforced less (before v23.0.0 only the overlay stack limit of 1000); that history is not shown by the cited lines.", code_ref: "src/transactions/TransactionUtils.cpp:1350-1378"}
+      - {stage: H, what: "Value nesting at most 100; map keys strictly sorted and unique; symbol character set and length.", code_ref: "env:soroban-env-host/src/budget/limits.rs:41; env:soroban-env-host/src/host/conversion.rs:432-441; env:soroban-env-host/src/host/metered_map.rs:117-138; env:soroban-env-host/src/host_object.rs:294-315"}
+    reader_may_assume: "Values in consensus meta (events, contract data, return values) obeyed host rules."
+    reader_must_not_assume: "That an envelope value in a failed Soroban transaction obeys host rules: it may be nested deeper than 100, unsorted, duplicate-keyed, or hold non-UTF-8 strings."
+    result_code_when_rejected: [txMALFORMED]
+    verification: unverified
+    unverified_parts: ["Maximum nesting core admits in a failed transaction's envelope, per protocol era. The measured decoder cost is 4 depth units per nested vector level in rs-stellar-xdr; the earlier derivation used 3."]
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0046/scval-nested-vec-99-in-event"  # local-core with the shape-emitter contract
+
+  - id: VF-51
+    field: "ExtendFootprintTTLOp.extendTo, footprint"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Read-write footprint empty; read-only keys are contract data or code; extendTo at most maxEntryTTL - 1.", code_ref: "src/transactions/ExtendFootprintTTLOpFrame.cpp:325-372"}
+    reader_may_assume: ""
+    reader_must_not_assume: "That every footprint key had its TTL changed: use TTL entry changes in meta."
+    result_code_when_rejected: [EXTEND_FOOTPRINT_TTL_MALFORMED]
+    verification: code_reference
+    spot_checked: true
+    demonstrated_by: ["cap-0046/extend-footprint-ttl-golden"]
+
+  - id: VF-52
+    field: "RestoreFootprintOp footprint"
+    controlled_by: submitter
+    status: validated
+    core_checks:
+      - {stage: C3, what: "Read-only footprint empty; read-write keys are persistent entries.", code_ref: "src/transactions/RestoreFootprintOpFrame.cpp:431-460"}
+    reader_may_assume: ""
+    reader_must_not_assume: "That every key was restored: use LEDGER_ENTRY_RESTORED changes in meta."
+    result_code_when_rejected: [RESTORE_FOOTPRINT_MALFORMED]
+    verification: executed
+    spot_checked: true
+    demonstrated_by: ["cap-0066/p22-restore-with-backfilled-restored-changes"]
+    demonstration_note: "history, pubnet 55000054, tx c7d932fd…e88a"
+
+  - id: VF-53
+    field: "ContractEvent.contractID, topics and data, for events of type CONTRACT"
+    controlled_by: "contractID: the host. topics and data: the emitting contract, which anyone can deploy."
+    status: partially_validated
+    status_detail: "The host sets contractID to the contract that is executing; a contract cannot choose it. Topics and data are whatever that contract passes."
+    parts:
+      - {id: VF-53a, aspect: "contractID names the contract that emitted the event", status: validated, verification: code_reference}
+      - {id: VF-53b, aspect: "Topics and data, including token-shaped transfer, mint, burn and clawback events that name an asset or an account", status: passed_through, verification: executed}
+    core_checks:
+      - {stage: H, what: "The contract_event host function takes only topics and data; the host fills contract_id from the current frame.", code_ref: "env:soroban-env-host/src/host.rs:1252-1261; env:soroban-env-host/src/events/mod.rs:266-278"}
+      - {stage: A, what: "The contract ID of an asset's Stellar Asset Contract is a function of the network ID and the asset (getAssetContractID); core uses it for the events it emits itself.", code_ref: "src/transactions/TransactionUtils.cpp:2059; src/transactions/EventManager.cpp:95, 363"}
+    reader_may_assume: "The event was emitted by the contract named in contractID."
+    reader_must_not_assume: "That a transfer-shaped event moved the asset or touched the accounts it names. Key every movement on the emitting contract ID. Treat an event as a movement of a classic asset only when contractID equals the Stellar Asset Contract ID derived from that asset and the network ID. Never add a participant because an arbitrary contract's event names it."
+    result_code_when_rejected: []
+    verification: code_reference
+    verification_note: "Real token-shaped events from contracts that are not the Stellar Asset Contract are captured (pubnet 61178766: three-topic transfer events from a custom token). A forged four-topic transfer event naming USD, emitted by a test contract on a local core while USD's own Stellar Asset Contract is deployed and untouched, changes no ledger entry (cap-0067/forged-token-event-from-unrelated-contract)."
+    spot_checked: true
+    demonstrated_by:
+      - "cap-0067/forged-token-event-from-unrelated-contract"
+      - "cap-0067/to-muxed-id-void-custom-token"
+      - "cap-0046/event-topic-count-extremes.non-token-transfer-symbol"
+
