@@ -1,0 +1,43 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/non-ascii-lookalike-and-case.lowercase",
+  "title": "G-address written in lower case",
+  "kind": "strkey",
+  "caps": [],
+  "caps_note": "A pure encoding rule: SEP-0023 strkey text for a key type that no CAP in this entry's family introduced; the strkey group is cross-cutting",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-noncanonical"
+  ],
+  "shapes": [
+    "strkey-account",
+    "strkey-malformed-text",
+    "strkey-invalid"
+  ],
+  "why": "SEP-0023 strkeys use the upper-case RFC 4648 alphabet and are valid only if re-encoding yields the same string; accepting lower case makes two strings name one account.",
+  "strkey": {
+    "text": "ga7qynf7sowq3glr2bgmzehxavirza4kvwltjjfc7mgxua74p7ujvsgz",
+    "type": "account",
+    "origin": "synthetic (probe vector 9S7)"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_noncanonical"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/non-ascii-lookalike-and-case.lowercase.json. Executed in every probe column as vector 9S7 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

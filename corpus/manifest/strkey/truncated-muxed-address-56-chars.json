@@ -1,0 +1,73 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/truncated-muxed-address-56-chars",
+  "title": "The first 56 characters of a 69-character M address: checksum-valid prefix that must not decode",
+  "kind": "strkey",
+  "caps": [
+    27
+  ],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-length"
+  ],
+  "shapes": [
+    "strkey-muxed-account",
+    "strkey-malformed-text",
+    "strkey-invalid"
+  ],
+  "why": "A VARCHAR(56) column truncates a 69-character M address to this string (wallet-backend#716). Its CRC is not checked against the full address, so a decoder that skips the per-type length check reads it as a valid M address with a 32-byte payload, dropping the muxed id.",
+  "strkey": {
+    "text": "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAPG",
+    "type": "muxed_account",
+    "origin": "wallet-backend#716 (probe vector 9S6)"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_length"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": ">=0.7.1 <0.7.2",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed: v0.7.1 strkey.Decode returns a 32-byte payload under the M version byte instead of an error; v0.7.2 rejects it. Earlier versions were not run.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5977",
+        "finding": "F-0024",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 9S6 (evidence/sdk-matrix), executed on go v0.7.1; xcc conform run --columns 'go@v0.7.1' --entries 'strkey/truncated-muxed-address-56-chars'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1580",
+        "finding": "F-0019",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9S6 (evidence/sdk-matrix), executed on js 16.3.0, js 16.3.1 and js 16.4.1"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0027.md",
+    "https://github.com/stellar/wallet-backend/issues/716"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/truncated-muxed-address-56-chars.json. Executed in every probe column as vector 9S6 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

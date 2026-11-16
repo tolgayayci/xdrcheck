@@ -1,0 +1,69 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/udt-name-60-bytes",
+  "title": "Contract spec with a 60-byte struct name, the bound before XDR v30",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "name-length-boundary"
+  ],
+  "why": "60 bytes was SC_SPEC_TYPE_NAME_LIMIT until XDR v30; every reader must accept a name at the old bound.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "0b629a9744f3c939e757686d3c8d566f6ee0938560aeb1430f24d6111e72189a",
+        "bytes": 214,
+        "path": "blobs/0b/0b629a9744f3c939e757686d3c8d566f6ee0938560aeb1430f24d6111e72189a.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/udt-name-60-bytes.json",
+        "reason": "A contract interface built from SEP-51 JSON by the oracle and wrapped in a header-only Wasm module; stellar-core never builds contract code, it stores the uploaded bytes unchanged. The struct name is 60 bytes (the bound was 60 before XDR v30, 1024 since)."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "struct",
+          "name": "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+          "args": [
+            {
+              "name": "v",
+              "type": "u32"
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "get",
+          "args": [],
+          "outputs": [
+            "udt:SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS"
+          ]
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

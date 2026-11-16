@@ -1,0 +1,60 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/synthetic-gap-vectors.signed-payload-65-byte",
+  "title": "Signed-payload strkey whose inner payload is 65 bytes, one more than the XDR maximum of 64",
+  "kind": "strkey",
+  "caps": [
+    40
+  ],
+  "protocol": {
+    "introduced": 19
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-length"
+  ],
+  "shapes": [
+    "strkey-signed-payload",
+    "sep-0023-gap-vector",
+    "strkey-invalid"
+  ],
+  "why": "The XDR type is opaque payload<64>, so a 65-byte payload has no XDR form; a decoder that checks only the SEP layout (length prefix and padding) accepts it.",
+  "strkey": {
+    "text": "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAABAQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DUPB6IBBEIRSIJJGE4UCSKRLFQWS4LZQGEZDGNBVGY3TQOJ2HM6D2PR7IBAQAAAARVTQ",
+    "type": "signed_payload",
+    "origin": "synthetic SEP-0023 gap vector (probe vector 9S3)"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_length",
+      "note": "The SEP layout holds, but XDR opaque payload<64> has no 65-byte form."
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1580",
+        "finding": "F-0019",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9S3 (evidence/sdk-matrix), executed on js 16.3.0, js 16.3.1 and js 16.4.1"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/synthetic-gap-vectors.signed-payload-65-byte.json. The text was encoded from the stated payload with an independent SEP-0023 encoder (version byte, payload, CRC16-XModem little-endian, RFC 4648 base32 without padding) and decoded back by the same rules; no SDK output was used. Executed in every probe column as vector 9S3 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

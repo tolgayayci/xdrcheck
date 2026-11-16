@@ -1,0 +1,133 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/api-encode-signed-payload-empty",
+  "title": "Encoding a signed-payload strkey with an empty payload must be refused",
+  "kind": "api",
+  "caps": [
+    40
+  ],
+  "protocol": {
+    "introduced": 19
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "strkey-length"
+  ],
+  "shapes": [
+    "strkey-signed-payload",
+    "strkey-encode",
+    "invalid-input"
+  ],
+  "why": "XDR allows a 0-byte payload but stellar-core rejects such a signer (CAP-0040), and strict strkey decoders refuse the text; an encoder that emits it produces an address its own decoder and the network refuse.",
+  "api": {
+    "op": "strkey.encode",
+    "input": {
+      "type": "signed_payload",
+      "payload_hex": "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a00000000"
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": "0.7.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on v0.7.1: strkey.Encode emits PA7QYNF7\u2026AAAAAAKH4Y for an empty payload, and its own decoder accepts the text too.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/issues/5981",
+        "finding": "F-0025",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9E3 (evidence/sdk-matrix), executed on go v0.7.1; xcc conform run --columns 'go@*' --entries 'strkey/api-encode-signed-payload-empty'"
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": "0.7.2 - 0.9.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on v0.7.2, v0.7.3, v0.8.0 and v0.9.0: strkey.Encode emits PA7QYNF7\u2026AAAAAAKH4Y for an empty payload, which the SDK's own decoder then refuses ('signed payload declares 0 payload bytes').",
+        "reference": "https://github.com/stellar/go-stellar-sdk/issues/5981",
+        "finding": "F-0025",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9E3 (evidence/sdk-matrix), executed on go v0.7.2 and go v0.7.3 and go v0.8.0 and go v0.9.0; xcc conform run --columns 'go@*' --entries 'strkey/api-encode-signed-payload-empty'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      },
+      {
+        "target": "stellar-xdr (crates.io)",
+        "versions": "28.0.0 - 28.0.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 28.0.0 and 28.0.1, which pin stellar-strkey 0.0.13: SignedPayload with an empty payload encodes to PA7QYNF7\u2026AAAAAAKH4Y, which the library's own parser refuses. stellar-strkey 0.0.17 (#107) requires a non-empty payload; stellar-xdr 30.0.0 pins stellar-strkey 1.0.0 and refuses.",
+        "reference": "https://github.com/stellar/rs-stellar-strkey/pull/107",
+        "finding": "F-0029",
+        "fixed_in": "30.0.0 (stellar-strkey 0.0.17 and later)",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 9E3 (evidence/sdk-matrix), executed on rust 28.0.0 (Limits depth 500); xcc conform run --columns 'rust@*' --entries 'strkey/api-encode-signed-payload-empty'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: StrKey.encodeSignedPayload emits PA7QYNF7\u2026AAAAAAKH4Y for an empty payload instead of refusing it.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1899",
+        "finding": "F-0034",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "xcc conform run --set public --entries 'strkey/api-encode-signed-payload-empty'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0 || 17.2.1 || 17.3.0 || 17.4.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 17.2.0, 17.2.1, 17.3.0 and 17.4.0: StrKey.encodeSignedPayload emits PA7QYNF7\u2026AAAAAAKH4Y for an empty payload, which the SDK's own decoder then refuses ('signed payload: declared length 0 outside 1-64').",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1899",
+        "finding": "F-0034",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "make verify-conformance; xcc conform run --columns 'js@*' --entries 'strkey/api-encode-signed-payload-empty'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0 || 17.0.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "status": "fixed_unreleased",
+        "observed": "executed",
+        "detail": "Executed on 17.0.0 and 17.0.1: StrKey.encode_ed25519_signed_payload emits PA7QYNF7\u2026AAAAAAKH4Y for an empty payload, which the SDK's own decoder then refuses. Fixed on main (pull request #1265), not released.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1256",
+        "finding": "F-0063",
+        "evidence": "make verify-conformance-public; xdrcheck conform run --columns 'python@*' --entries 'strkey/api-encode-signed-payload-empty'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/issues/1899",
+    "https://github.com/stellar/go-stellar-sdk/issues/5981",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-types.x"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/api-encode-signed-payload-empty.json. Origin: probe vector 9E3, in evidence/sdk-matrix/vectors/vectors.json, executed in every probe column (evidence/sdk-matrix). payload_hex is the signed-payload strkey payload: the ed25519 key, then the payload length 0 (no payload bytes). The text an encoder that accepts it produces is PA7QYNF7\u2026AAAAAAKH4Y, the decode vector strkey/synthetic-gap-vectors.signed-payload-empty. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "spec"
+}

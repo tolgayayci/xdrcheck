@@ -1,0 +1,231 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/every-entry-kind-and-type",
+  "title": "Contract spec with every SCSpecEntry kind and every SCSpecTypeDef arm",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "every-arm",
+    "wasm-custom-section"
+  ],
+  "why": "A spec reader that maps each entry kind and type to its own model drops or mislabels the arms it does not know; one function taking every type, a struct, a union with void and tuple cases, an enum, an error enum and an event exercise all of them at once.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "5f35aa9182a65650a9995253d1db0d89afeff6bd02ecd5471a24da99a5f57438",
+        "bytes": 1014,
+        "path": "blobs/5f/5f35aa9182a65650a9995253d1db0d89afeff6bd02ecd5471a24da99a5f57438.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/every-entry-kind-and-type.json",
+        "reason": "A contract interface built from SEP-51 JSON by the oracle and wrapped in a header-only Wasm module; stellar-core never builds contract code, it stores the uploaded bytes unchanged."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "function",
+          "name": "all_types",
+          "args": [
+            {
+              "name": "a_val",
+              "type": "val"
+            },
+            {
+              "name": "a_bool",
+              "type": "bool"
+            },
+            {
+              "name": "a_void",
+              "type": "void"
+            },
+            {
+              "name": "a_error",
+              "type": "error"
+            },
+            {
+              "name": "a_u32",
+              "type": "u32"
+            },
+            {
+              "name": "a_i32",
+              "type": "i32"
+            },
+            {
+              "name": "a_u64",
+              "type": "u64"
+            },
+            {
+              "name": "a_i64",
+              "type": "i64"
+            },
+            {
+              "name": "a_timepoint",
+              "type": "timepoint"
+            },
+            {
+              "name": "a_duration",
+              "type": "duration"
+            },
+            {
+              "name": "a_u128",
+              "type": "u128"
+            },
+            {
+              "name": "a_i128",
+              "type": "i128"
+            },
+            {
+              "name": "a_u256",
+              "type": "u256"
+            },
+            {
+              "name": "a_i256",
+              "type": "i256"
+            },
+            {
+              "name": "a_bytes",
+              "type": "bytes"
+            },
+            {
+              "name": "a_string",
+              "type": "string"
+            },
+            {
+              "name": "a_symbol",
+              "type": "symbol"
+            },
+            {
+              "name": "a_address",
+              "type": "address"
+            },
+            {
+              "name": "a_muxed",
+              "type": "muxed_address"
+            },
+            {
+              "name": "a_option",
+              "type": "option<u32>"
+            },
+            {
+              "name": "a_result",
+              "type": "result<u32,error>"
+            },
+            {
+              "name": "a_vec",
+              "type": "vec<i128>"
+            },
+            {
+              "name": "a_map",
+              "type": "map<symbol,address>"
+            },
+            {
+              "name": "a_tuple",
+              "type": "tuple<u32,bool>"
+            },
+            {
+              "name": "a_bytes_n",
+              "type": "bytes_n<32>"
+            },
+            {
+              "name": "a_udt",
+              "type": "udt:Point"
+            }
+          ],
+          "outputs": [
+            "udt:Shape"
+          ]
+        },
+        {
+          "kind": "struct",
+          "name": "Point",
+          "args": [
+            {
+              "name": "x",
+              "type": "i64"
+            },
+            {
+              "name": "y",
+              "type": "i64"
+            }
+          ]
+        },
+        {
+          "kind": "union",
+          "name": "Shape",
+          "args": [
+            {
+              "name": "Empty",
+              "type": "void"
+            },
+            {
+              "name": "At",
+              "type": "tuple<udt:Point>"
+            }
+          ]
+        },
+        {
+          "kind": "enum",
+          "name": "Color",
+          "args": [
+            {
+              "name": "Red",
+              "type": "=0"
+            },
+            {
+              "name": "Green",
+              "type": "=1"
+            }
+          ]
+        },
+        {
+          "kind": "error_enum",
+          "name": "Failure",
+          "args": [
+            {
+              "name": "Bad",
+              "type": "=1"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "Moved",
+          "args": [
+            {
+              "name": "who",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "to",
+              "type": "udt:Point@data"
+            }
+          ]
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

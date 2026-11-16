@@ -1,0 +1,106 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/api-encode-signed-payload-65-bytes",
+  "title": "Encoding a signed-payload strkey with a 65-byte payload must be refused",
+  "kind": "api",
+  "caps": [
+    40
+  ],
+  "protocol": {
+    "introduced": 19
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "strkey-length"
+  ],
+  "shapes": [
+    "strkey-signed-payload",
+    "strkey-encode",
+    "invalid-input"
+  ],
+  "why": "A signed-payload signer carries 1 to 64 payload bytes (CAP-0040: opaque payload<64>; SEP-23 limits the strkey to 165 characters); an encoder that accepts 65 bytes emits a 172-character P strkey that no conforming decoder, including usually its own, reads back.",
+  "api": {
+    "op": "strkey.encode",
+    "input": {
+      "type": "signed_payload",
+      "payload_hex": "3f0c34bf93ad0d9971d04ccc90f705511c838aad9734a4a2fb0d7a03fc7fe89a00000041000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40000000"
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: StrKey.encodeSignedPayload emits a 172-character P strkey for the 65-byte payload, and the same version's decoder reads it back.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1899",
+        "finding": "F-0034",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "xcc conform run --set public --entries 'strkey/api-encode-signed-payload-65-bytes'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "17.2.0 || 17.2.1 || 17.3.0 || 17.4.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 17.2.0, 17.2.1, 17.3.0 and 17.4.0: StrKey.encodeSignedPayload emits a 172-character P strkey for the 65-byte payload, which the SDK's own decoder refuses ('invalid encoded string length: expected 56-165, got 172').",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1899",
+        "finding": "F-0034",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "xcc conform run --set public --entries 'strkey/api-encode-signed-payload-65-bytes'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      },
+      {
+        "target": "stellar-xdr (crates.io)",
+        "versions": "28.0.0 - 28.0.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 28.0.0 and 28.0.1, which pin stellar-strkey 0.0.13: SignedPayload with a 65-byte payload encodes to a 172-character P strkey, which the library's own parser refuses. stellar-strkey #107 enforces a 1 to 64 byte payload; stellar-xdr 30.0.0 pins stellar-strkey 1.0.0 and refuses.",
+        "reference": "https://github.com/stellar/rs-stellar-strkey/pull/107",
+        "finding": "F-0035",
+        "fixed_in": "30.0.0 (stellar-strkey 0.0.17 and later)",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "xcc conform run --columns 'rust@*' --entries 'strkey/api-encode-signed-payload-65-bytes'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0 || 17.0.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "status": "fixed_unreleased",
+        "observed": "executed",
+        "detail": "Executed on 17.0.0 and 17.0.1: StrKey.encode_ed25519_signed_payload emits a P strkey for a 65-byte payload, which the SDK's own decoder then refuses. Fixed on main (pull request #1265), not released.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1256",
+        "finding": "F-0063",
+        "evidence": "make verify-conformance-public; xdrcheck conform run --columns 'python@*' --entries 'strkey/api-encode-signed-payload-65-bytes'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/issues/1899",
+    "https://github.com/stellar/rs-stellar-strkey/pull/107",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-types.x"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/api-encode-signed-payload-65-bytes.json. Origin: js-stellar-sdk#1899 (its second case). payload_hex is the signed-payload strkey payload: the ed25519 key of strkey/api-encode-signed-payload-empty, the payload length 65, the bytes 00 to 40, and three bytes of XDR padding. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "spec"
+}

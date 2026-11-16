@@ -1,0 +1,84 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/synthetic-gap-vectors.signed-payload-nonzero-padding",
+  "title": "Signed-payload strkey with a 1-byte inner payload whose three padding bytes are 0xff instead of zero",
+  "kind": "strkey",
+  "caps": [
+    40
+  ],
+  "protocol": {
+    "introduced": 19
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-padding"
+  ],
+  "shapes": [
+    "strkey-signed-payload",
+    "sep-0023-gap-vector",
+    "strkey-invalid"
+  ],
+  "why": "SEP-0023 requires the padding of a signed payload to be present and zero; the SEP's own vectors test only absent padding, so a decoder can pass all 30 and still accept non-zero padding.",
+  "strkey": {
+    "text": "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAQD77777KO4",
+    "type": "signed_payload",
+    "origin": "synthetic SEP-0023 gap vector (probe vector 9S2)"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_padding"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": ">=0.7.1 <0.7.2",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed: v0.7.1 strkey.Decode returns the payload with its 0xff padding instead of an error; v0.7.2 rejects it. Earlier versions were not run.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5977",
+        "finding": "F-0024",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 9S2 (evidence/sdk-matrix), executed on go v0.7.1; xcc conform run --columns 'go@v0.7.1' --entries 'strkey/synthetic-gap-vectors.signed-payload-nonzero-padding'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1580",
+        "finding": "F-0019",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9S2 (evidence/sdk-matrix), executed on js 16.3.0, js 16.3.1 and js 16.4.1"
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0 || 17.0.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "status": "fixed_unreleased",
+        "observed": "executed",
+        "detail": "Executed on 17.0.0 and 17.0.1: StrKey decoding of a signed payload returns the payload with its non-zero padding bytes instead of an error. Fixed on main (pull request #1261), not released.",
+        "reference": "https://github.com/StellarCN/py-stellar-base/issues/1258",
+        "finding": "F-0064",
+        "evidence": "make verify-conformance-public; xdrcheck conform run --columns 'python@*' --entries 'strkey/synthetic-gap-vectors.signed-payload-nonzero-padding'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/synthetic-gap-vectors.signed-payload-nonzero-padding.json. The text was encoded from the stated payload with an independent SEP-0023 encoder (version byte, payload, CRC16-XModem little-endian, RFC 4648 base32 without padding) and decoded back by the same rules; no SDK output was used. Executed in every probe column as vector 9S2 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

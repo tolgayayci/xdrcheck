@@ -1,0 +1,92 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/event-spec-entries",
+  "title": "Contract spec with event entries in every data format",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "event-spec"
+  ],
+  "why": "Event entries (SEP-48 v1.1) carry prefix topics, params located in the topic list or the data, and a data format; readers written before events existed skip or refuse them.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "d5e2a5fef87a8f9e5ccb899aa104617b408ee05d46f1e56a6aa60ec88038b86a",
+        "bytes": 322,
+        "path": "blobs/d5/d5e2a5fef87a8f9e5ccb899aa104617b408ee05d46f1e56a6aa60ec88038b86a.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/event-spec-entries.json",
+        "reason": "A contract interface built from SEP-51 JSON by the oracle and wrapped in a header-only Wasm module; stellar-core never builds contract code, it stores the uploaded bytes unchanged."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "event",
+          "name": "Transfer",
+          "args": [
+            {
+              "name": "from",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "to",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "amount",
+              "type": "i128@data"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "Approve",
+          "args": [
+            {
+              "name": "owner",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "amount",
+              "type": "i128@data"
+            },
+            {
+              "name": "live_until",
+              "type": "u32@data"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "Paused",
+          "args": []
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

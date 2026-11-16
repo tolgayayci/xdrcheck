@@ -1,0 +1,376 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/qualified-udt-names",
+  "title": "Testnet code built by soroban-sdk 30 with fully qualified 63-byte UDT names",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "shapes": [
+    "qualified-name",
+    "name-length-boundary",
+    "wasm-custom-section"
+  ],
+  "why": "soroban-sdk 30 writes UDT names such as ::soroban_sdk::auth::CreateContractWithConstructorHostFnContext (63 bytes); readers on XDR older than v30 (name bound 60) refuse the whole interface.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 29,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "blob": {
+        "sha256": "700d2dd10460b9c2ce3d484c92d8eceb322196c6e5a1356dada73a301f7fd0d0",
+        "bytes": 10465,
+        "path": "blobs/70/700d2dd10460b9c2ce3d484c92d8eceb322196c6e5a1356dada73a301f7fd0d0.wasm"
+      },
+      "source": {
+        "kind": "contract-code",
+        "network": "testnet",
+        "wasm_hash": "700d2dd10460b9c2ce3d484c92d8eceb322196c6e5a1356dada73a301f7fd0d0",
+        "upload_ledger": 5388187,
+        "fetched_via": "stellar-rpc getLedgerEntries on the CONTRACT_CODE key",
+        "captured_at": "2026-11-14T00:00:00Z",
+        "perishable": true
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "error_enum",
+          "name": "::kyc_verifier::Error",
+          "args": [
+            {
+              "name": "NotConfigured",
+              "type": "=1"
+            },
+            {
+              "name": "BadSignalCount",
+              "type": "=2"
+            },
+            {
+              "name": "BadProofLen",
+              "type": "=3"
+            },
+            {
+              "name": "IssuerMismatch",
+              "type": "=4"
+            },
+            {
+              "name": "RootMismatch",
+              "type": "=5"
+            },
+            {
+              "name": "TokenTagMismatch",
+              "type": "=6"
+            },
+            {
+              "name": "NullifierSpent",
+              "type": "=7"
+            },
+            {
+              "name": "VkMissing",
+              "type": "=8"
+            }
+          ]
+        },
+        {
+          "kind": "union",
+          "name": "::kyc_verifier::DataKey",
+          "args": [
+            {
+              "name": "Vk",
+              "type": "tuple<address>"
+            },
+            {
+              "name": "Issuer",
+              "type": "tuple<address>"
+            },
+            {
+              "name": "Root",
+              "type": "tuple<address>"
+            },
+            {
+              "name": "Nullifier",
+              "type": "tuple<address,bytes_n<32>>"
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "is_spent",
+          "args": [
+            {
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "name": "nullifier",
+              "type": "bytes_n<32>"
+            }
+          ],
+          "outputs": [
+            "bool"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "is_eligible",
+          "args": [
+            {
+              "name": "account",
+              "type": "address"
+            },
+            {
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "name": "proof",
+              "type": "bytes"
+            },
+            {
+              "name": "public_signals",
+              "type": "vec<bytes_n<32>>"
+            }
+          ],
+          "outputs": [
+            "bool"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "set_token_config",
+          "args": [
+            {
+              "name": "token",
+              "type": "address"
+            },
+            {
+              "name": "vk",
+              "type": "bytes"
+            },
+            {
+              "name": "issuer_pk_hash",
+              "type": "bytes_n<32>"
+            },
+            {
+              "name": "allowed_root",
+              "type": "bytes_n<32>"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "union",
+          "name": "::soroban_sdk::ContractExecutable",
+          "args": [
+            {
+              "name": "Wasm",
+              "type": "tuple<bytes_n<32>>"
+            },
+            {
+              "name": "ExternalRef",
+              "type": "tuple<udt:::soroban_sdk::ContractExecutableRef>"
+            }
+          ]
+        },
+        {
+          "kind": "struct",
+          "name": "::soroban_sdk::ContractExecutableRef",
+          "args": [
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "tag",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "kind": "union",
+          "name": "::soroban_sdk::auth::Context",
+          "args": [
+            {
+              "name": "Contract",
+              "type": "tuple<udt:::soroban_sdk::auth::ContractContext>"
+            },
+            {
+              "name": "CreateContractHostFn",
+              "type": "tuple<udt:::soroban_sdk::auth::CreateContractHostFnContext>"
+            },
+            {
+              "name": "CreateContractWithCtorHostFn",
+              "type": "tuple<udt:::soroban_sdk::auth::CreateContractWithConstructorHostFnContext>"
+            }
+          ]
+        },
+        {
+          "kind": "struct",
+          "name": "::soroban_sdk::auth::ContractContext",
+          "args": [
+            {
+              "name": "args",
+              "type": "vec<val>"
+            },
+            {
+              "name": "contract",
+              "type": "address"
+            },
+            {
+              "name": "fn_name",
+              "type": "symbol"
+            }
+          ]
+        },
+        {
+          "kind": "struct",
+          "name": "::soroban_sdk::auth::SubContractInvocation",
+          "args": [
+            {
+              "name": "context",
+              "type": "udt:::soroban_sdk::auth::ContractContext"
+            },
+            {
+              "name": "sub_invocations",
+              "type": "vec<udt:::soroban_sdk::auth::InvokerContractAuthEntry>"
+            }
+          ]
+        },
+        {
+          "kind": "union",
+          "name": "::soroban_sdk::auth::InvokerContractAuthEntry",
+          "args": [
+            {
+              "name": "Contract",
+              "type": "tuple<udt:::soroban_sdk::auth::SubContractInvocation>"
+            },
+            {
+              "name": "CreateContractHostFn",
+              "type": "tuple<udt:::soroban_sdk::auth::CreateContractHostFnContext>"
+            },
+            {
+              "name": "CreateContractWithCtorHostFn",
+              "type": "tuple<udt:::soroban_sdk::auth::CreateContractWithConstructorHostFnContext>"
+            }
+          ]
+        },
+        {
+          "kind": "struct",
+          "name": "::soroban_sdk::auth::CreateContractHostFnContext",
+          "args": [
+            {
+              "name": "executable",
+              "type": "udt:::soroban_sdk::ContractExecutable"
+            },
+            {
+              "name": "salt",
+              "type": "bytes_n<32>"
+            }
+          ]
+        },
+        {
+          "kind": "struct",
+          "name": "::soroban_sdk::auth::CreateContractWithConstructorHostFnContext",
+          "args": [
+            {
+              "name": "constructor_args",
+              "type": "vec<val>"
+            },
+            {
+              "name": "executable",
+              "type": "udt:::soroban_sdk::ContractExecutable"
+            },
+            {
+              "name": "salt",
+              "type": "bytes_n<32>"
+            }
+          ]
+        },
+        {
+          "kind": "union",
+          "name": "::soroban_sdk::address::Executable",
+          "args": [
+            {
+              "name": "Wasm",
+              "type": "tuple<bytes_n<32>>"
+            },
+            {
+              "name": "StellarAsset",
+              "type": "void"
+            },
+            {
+              "name": "Account",
+              "type": "void"
+            }
+          ]
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "conformance": {
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 17.2.0 || 17.2.1",
+        "level": "spec",
+        "outcome": "reject",
+        "reference": "https://github.com/stellar/stellar-xdr/pull/312",
+        "finding": "F-0050",
+        "status": "fixed",
+        "fixed_in": "16.4.0, 17.3.0",
+        "observed": "executed",
+        "detail": "Built on XDR definitions before v30, whose UDT name bound is 60 bytes; the 63-byte qualified names refuse the whole interface.",
+        "match": {
+          "reason": "length_exceeds_max"
+        }
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": ">=0.7.1 <0.8.0",
+        "level": "spec",
+        "outcome": "reject",
+        "reference": "https://github.com/stellar/stellar-xdr/pull/312",
+        "finding": "F-0049",
+        "status": "fixed",
+        "fixed_in": "v0.8.0",
+        "observed": "executed",
+        "detail": "Built on XDR definitions before v30, whose UDT name bound is 60 bytes; the 63-byte qualified names refuse the whole interface.",
+        "match": {
+          "reason": "length_exceeds_max"
+        }
+      },
+      {
+        "target": "soroban-spec (crates.io)",
+        "versions": "29.0.1",
+        "level": "spec",
+        "outcome": "reject",
+        "reference": "https://github.com/stellar/stellar-xdr/pull/312",
+        "status": "fixed",
+        "fixed_in": "30.0.0-rc.1",
+        "observed": "executed",
+        "detail": "Built on XDR definitions before v30, whose UDT name bound is 60 bytes; the 63-byte qualified names refuse the whole interface. soroban-spec 29.0.1 decodes with stellar-xdr 28.0.0.",
+        "match": {
+          "reason": "length_exceeds_max"
+        }
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "network",
+  "notes": "Testnet resets on a schedule; the vendored blob is then the only copy."
+}

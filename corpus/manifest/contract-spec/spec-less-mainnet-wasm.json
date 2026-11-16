@@ -1,0 +1,54 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/spec-less-mainnet-wasm",
+  "title": "Mainnet contract code with no contractspecv0 section at all",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "shapes": [
+    "spec-absent",
+    "wasm-custom-section"
+  ],
+  "why": "Contract code need not carry a spec; a reader that reports a missing section as a parse failure conflates code without an interface with a broken interface and may stop on it.",
+  "variants": [
+    {
+      "network": "pubnet",
+      "passphrase": "Public Global Stellar Network ; September 2015",
+      "protocol": 20,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "blob": {
+        "sha256": "f5cbc8a921a08b4f34ef6f1adc99070eb5fa2fecb4f73e3065c4ae5d359cd759",
+        "bytes": 65,
+        "path": "blobs/f5/f5cbc8a921a08b4f34ef6f1adc99070eb5fa2fecb4f73e3065c4ae5d359cd759.wasm"
+      },
+      "source": {
+        "kind": "contract-code",
+        "network": "pubnet",
+        "wasm_hash": "f5cbc8a921a08b4f34ef6f1adc99070eb5fa2fecb4f73e3065c4ae5d359cd759",
+        "upload_ledger": 50574257,
+        "fetched_via": "stellar-rpc getLedgerEntries on the CONTRACT_CODE key",
+        "captured_at": "2026-11-14T00:00:00Z"
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 0,
+      "entries": [],
+      "clean_end": true
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "network",
+  "notes": "Uploaded on mainnet; the code has only a contractenvmetav0 section."
+}

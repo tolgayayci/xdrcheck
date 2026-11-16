@@ -1,0 +1,121 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-strict/bool-value-2",
+  "title": "ScVal Bool encoded as 2, outside the XDR boolean range",
+  "kind": "xdr",
+  "caps": [],
+  "caps_note": "A cross-cutting encoding rule rather than a CAP: it applies to every XDR value of every protocol",
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "bool-range",
+    "core-lenient"
+  ],
+  "shapes": [
+    "bool-range",
+    "scval-bare-value"
+  ],
+  "why": "An XDR bool is 0 or 1 (RFC 4506 section 4.4). stellar-core's decoder reads 2 as TRUE, a decoder that tests for 1 reads it as false, and a strict one refuses it; whichever value is read re-encodes to different bytes than the input.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70",
+        "bytes": 8,
+        "path": "blobs/cd/cd04a4754498e06db5a13c5f371f1f04ff6d2470f24aa9bd886540e5dce77f70.xdr"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/xdr-strict/bool-value-2.json",
+        "reason": "XDR booleans are 0 or 1 (RFC 4506 section 4.4); stellar-core re-serialises canonically, so a boolean of 2 is never in core output"
+      }
+    }
+  ],
+  "expect": {
+    "reject": {
+      "reason": "bool_range"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L0"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar-xdr (crates.io)",
+        "versions": "28.0.0 - 30.0.0",
+        "level": "L0",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 28.0.0, 28.0.1 and 30.0.0 under limits-default and limits-none: the value decodes as ScVal::Bool(false) and re-encodes as 0000000000000000, the opposite of stellar-core's reading. Reported upstream as rs-stellar-xdr#622.",
+        "reference": "https://github.com/stellar/rs-stellar-xdr/issues/622",
+        "status": "fixed_unreleased",
+        "observed": "executed",
+        "evidence": "probe vector 6a (evidence/sdk-matrix), executed on stellar-xdr 28.0.0, 28.0.1 and 30.0.0; xcc conform run --columns 'rust@*' --entries 'xdr-strict/bool-value-2'",
+        "finding": "F-0037"
+      },
+      {
+        "target": "stellar-sdk (PyPI)",
+        "versions": "17.0.0 || 17.0.1",
+        "level": "L0",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 17.0.0 and 17.0.1 (xdrlib3 0.1.1): xdr.SCVal.from_xdr_bytes decodes the value as True and re-encodes it as 0000000000000001, the same reading as stellar-core 30.0.0 (evidence/core-print-xdr/out/bool-2.txt). Status wont_fix: the SDK reads the value as the network does, so there is nothing to change; recorded so the cell is expected.",
+        "reference": "https://www.rfc-editor.org/rfc/rfc4506#section-4.4",
+        "status": "wont_fix",
+        "observed": "executed",
+        "evidence": "probe vector 6a (evidence/sdk-matrix), executed on python 17.0.0 and 17.0.1; xcc conform run --columns 'python@*' --entries 'xdr-strict/bool-value-2'",
+        "finding": "F-0041"
+      },
+      {
+        "target": "stellar-xdr (crates.io)",
+        "versions": "30.0.0",
+        "level": "json",
+        "outcome": "accepts_invalid",
+        "detail": "A bool encoded as 2 is accepted (read as false) and written to JSON; the binding embeds the crate, which does not check the value's range.",
+        "reference": "https://github.com/stellar/rs-stellar-xdr/issues/622",
+        "status": "fixed_unreleased",
+        "observed": "executed"
+      },
+      {
+        "target": "@stellar/stellar-xdr-json",
+        "versions": "30.0.0",
+        "level": "json",
+        "outcome": "accepts_invalid",
+        "detail": "A bool encoded as 2 is accepted (read as false) and written to JSON; the binding embeds the crate, which does not check the value's range.",
+        "reference": "https://github.com/stellar/rs-stellar-xdr/issues/622",
+        "status": "fixed_unreleased",
+        "observed": "executed"
+      },
+      {
+        "target": "github.com/stellar/go-stellar-xdr-json",
+        "versions": "v0.0.0-20261030210117-c68093a10a8a",
+        "level": "json",
+        "outcome": "accepts_invalid",
+        "detail": "A bool encoded as 2 is accepted (read as false) and written to JSON; the binding embeds the crate, which does not check the value's range.",
+        "reference": "https://github.com/stellar/rs-stellar-xdr/issues/622",
+        "status": "fixed_unreleased",
+        "observed": "executed"
+      }
+    ]
+  },
+  "related": [
+    "https://www.rfc-editor.org/rfc/rfc4506#section-4.4",
+    "https://github.com/stellar/rs-stellar-xdr/issues/622"
+  ],
+  "notes": "Probe vector 6a (evidence/sdk-matrix/vectors/vectors.json). stellar-core 30.0.0 print-xdr reads the same bytes as TRUE (core_behaviour), so the stellar-core column's acceptance is expected; the expectation for the SDKs follows the XDR rule, and the matrix reports the split. Built by xdrcheck-corpus synth from recipes/xdr-strict/bool-value-2.json.",
+  "reference": "spec",
+  "core_behaviour": {
+    "accepts": true,
+    "value": "TRUE",
+    "observed": "executed",
+    "evidence": "evidence/core-print-xdr/out/bool-2.txt"
+  }
+}

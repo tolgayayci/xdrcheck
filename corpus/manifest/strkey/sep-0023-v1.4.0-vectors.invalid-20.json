@@ -1,0 +1,45 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/sep-0023-v1.4.0-vectors.invalid-20",
+  "title": "SEP-0023 v1.4.0 invalid vector #20, muxed contract (W): Invalid checksum of a muxed contract",
+  "kind": "strkey",
+  "caps": [
+    84
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-checksum"
+  ],
+  "shapes": [
+    "strkey-muxed-contract",
+    "sep-0023-published-vector",
+    "strkey-invalid"
+  ],
+  "why": "A published SEP-0023 vector that every decoder must reject (invalid checksum of a muxed contract); a decoder that accepts it stores an address that is not the one the bytes say, or one that cannot exist.",
+  "strkey": {
+    "text": "WA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAAAWWA",
+    "type": "muxed_contract",
+    "origin": "SEP-0023 v1.4.0 invalid #20"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_checksum"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0084.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/sep-0023-v1.4.0-vectors.invalid-20.json. Copied verbatim from the Tests section of SEP-0023 v1.4.0 at stellar-protocol f2d364902615af726b3533021403c8b225aa6e5d (ecosystem/sep-0023.md). Executed in every probe column as vector 9I20 (evidence/sdk-matrix/vectors/vectors.json). A W address exists only from Protocol 30 (CAP-0084): columns whose XDR schema predates Protocol 30 refuse it cleanly, which is not a divergence.",
+  "reference": "spec"
+}

@@ -1,0 +1,71 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/sep-0023-v1.4.0-vectors.invalid-15",
+  "title": "SEP-0023 v1.4.0 invalid vector #15, claimable balance (B): Invalid claimable balance type (first byte of binary key is not 0)",
+  "kind": "strkey",
+  "caps": [],
+  "caps_note": "A pure encoding rule: SEP-0023 strkey text for a key type that no CAP in this entry's family introduced; the strkey group is cross-cutting",
+  "protocol": {
+    "introduced": 14
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-version"
+  ],
+  "shapes": [
+    "strkey-claimable-balance",
+    "sep-0023-published-vector",
+    "strkey-invalid"
+  ],
+  "why": "A published SEP-0023 vector that every decoder must reject (invalid claimable balance type (first byte of binary key is not 0)); a decoder that accepts it stores an address that is not the one the bytes say, or one that cannot exist.",
+  "strkey": {
+    "text": "BAAT6DBUX6J22DMZOHIEZTEQ64CVCHEDRKWZONFEUL5Q26QD7R76RGXACA",
+    "type": "claimable_balance",
+    "origin": "SEP-0023 v1.4.0 invalid #15"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_version",
+      "note": "The claimable-balance payload's first byte is its type (0 = V0); 1 is not a declared type. The schema has no dedicated reason, so the closest class is used."
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1580",
+        "finding": "F-0019",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9I15 (evidence/sdk-matrix), executed on js 16.3.0, js 16.3.1 and js 16.4.1"
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": "0.7.1 - 0.9.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on v0.7.1, v0.7.2, v0.7.3, v0.8.0 and v0.9.0: strkey.Decode with the claimable-balance version byte checks only the 33-byte length and returns the payload with the unknown type byte and no error; xdr.ClaimableBalanceId.DecodeFromStrkey rejects it.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/issues/6042",
+        "finding": "F-0036",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9I15 (evidence/sdk-matrix), executed on go v0.7.1, v0.7.2, v0.7.3 and v0.8.0; xcc conform run --columns 'go@*' --entries 'strkey/sep-0023-v1.4.0-vectors.invalid-15'"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/go-stellar-sdk/issues/6042",
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/sep-0023-v1.4.0-vectors.invalid-15.json. Copied verbatim from the Tests section of SEP-0023 v1.4.0 at stellar-protocol f2d364902615af726b3533021403c8b225aa6e5d (ecosystem/sep-0023.md). Executed in every probe column as vector 9I15 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

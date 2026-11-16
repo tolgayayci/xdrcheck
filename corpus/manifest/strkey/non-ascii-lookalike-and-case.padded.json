@@ -1,0 +1,43 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/non-ascii-lookalike-and-case.padded",
+  "title": "G-address with a trailing base32 padding character",
+  "kind": "strkey",
+  "caps": [],
+  "caps_note": "A pure encoding rule: SEP-0023 strkey text for a key type that no CAP in this entry's family introduced; the strkey group is cross-cutting",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-padding"
+  ],
+  "shapes": [
+    "strkey-account",
+    "strkey-malformed-text",
+    "strkey-invalid"
+  ],
+  "why": "SEP-0023 forbids base32 padding; a decoder built on a padding-tolerant base32 library accepts the string, so two strings name one account.",
+  "strkey": {
+    "text": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ=",
+    "type": "account",
+    "origin": "synthetic (probe vector 9S8)"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_padding"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/non-ascii-lookalike-and-case.padded.json. Executed in every probe column as vector 9S8 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

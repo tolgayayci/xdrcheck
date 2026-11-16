@@ -1,0 +1,476 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/token-with-renamed-parameters",
+  "title": "Testnet fungible token whose SEP-41 functions use other parameter names",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": false,
+  "validity": "valid",
+  "shapes": [
+    "sep-41",
+    "event-spec",
+    "wasm-custom-section"
+  ],
+  "why": "Soroban arguments are positional, so a token may name balance's parameter account and approve's live_until_ledger; readers that match SEP-41 by parameter names misclassify it.",
+  "variants": [
+    {
+      "network": "testnet",
+      "passphrase": "Test SDF Network ; September 2015",
+      "protocol": 29,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "blob": {
+        "sha256": "df3524d3a5964dc19401d759e890d38588a3c63aa7d4fc1893510769c640ed91",
+        "bytes": 10987,
+        "path": "blobs/df/df3524d3a5964dc19401d759e890d38588a3c63aa7d4fc1893510769c640ed91.wasm"
+      },
+      "source": {
+        "kind": "contract-code",
+        "network": "testnet",
+        "wasm_hash": "df3524d3a5964dc19401d759e890d38588a3c63aa7d4fc1893510769c640ed91",
+        "upload_ledger": 5360101,
+        "fetched_via": "stellar-rpc getLedgerEntries on the CONTRACT_CODE key",
+        "captured_at": "2026-11-14T00:00:00Z",
+        "perishable": true
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "error_enum",
+          "name": "ExampleContractError",
+          "args": [
+            {
+              "name": "Unauthorized",
+              "type": "=1"
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "burn",
+          "args": [
+            {
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "name": "amount",
+              "type": "i128"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "mint",
+          "args": [
+            {
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "name": "amount",
+              "type": "i128"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "name",
+          "args": [],
+          "outputs": [
+            "string"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "pause",
+          "args": [
+            {
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "paused",
+          "args": [],
+          "outputs": [
+            "bool"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "symbol",
+          "args": [],
+          "outputs": [
+            "string"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "approve",
+          "args": [
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "name": "amount",
+              "type": "i128"
+            },
+            {
+              "name": "live_until_ledger",
+              "type": "u32"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "balance",
+          "args": [
+            {
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            "i128"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "unpause",
+          "args": [
+            {
+              "name": "caller",
+              "type": "address"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "decimals",
+          "args": [],
+          "outputs": [
+            "u32"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "transfer",
+          "args": [
+            {
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "name": "to",
+              "type": "muxed_address"
+            },
+            {
+              "name": "amount",
+              "type": "i128"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "allowance",
+          "args": [
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "spender",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            "i128"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "burn_from",
+          "args": [
+            {
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "name": "amount",
+              "type": "i128"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "total_supply",
+          "args": [],
+          "outputs": [
+            "i128"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "__constructor",
+          "args": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "name": "initial_supply",
+              "type": "i128"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "function",
+          "name": "transfer_from",
+          "args": [
+            {
+              "name": "spender",
+              "type": "address"
+            },
+            {
+              "name": "from",
+              "type": "address"
+            },
+            {
+              "name": "to",
+              "type": "address"
+            },
+            {
+              "name": "amount",
+              "type": "i128"
+            }
+          ],
+          "outputs": []
+        },
+        {
+          "kind": "event",
+          "name": "Paused",
+          "args": []
+        },
+        {
+          "kind": "event",
+          "name": "Unpaused",
+          "args": []
+        },
+        {
+          "kind": "error_enum",
+          "name": "PausableError",
+          "args": [
+            {
+              "name": "EnforcedPause",
+              "type": "=1000"
+            },
+            {
+              "name": "ExpectedPause",
+              "type": "=1001"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "Burn",
+          "args": [
+            {
+              "name": "from",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "amount",
+              "type": "i128@data"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "Mint",
+          "args": [
+            {
+              "name": "to",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "amount",
+              "type": "i128@data"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "Approve",
+          "args": [
+            {
+              "name": "owner",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "spender",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "amount",
+              "type": "i128@data"
+            },
+            {
+              "name": "live_until_ledger",
+              "type": "u32@data"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "Transfer",
+          "args": [
+            {
+              "name": "from",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "to",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "amount",
+              "type": "i128@data"
+            }
+          ]
+        },
+        {
+          "kind": "event",
+          "name": "MuxedTransfer",
+          "args": [
+            {
+              "name": "from",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "to",
+              "type": "address@topic_list"
+            },
+            {
+              "name": "to_muxed_id",
+              "type": "option<u64>@data"
+            },
+            {
+              "name": "amount",
+              "type": "i128@data"
+            }
+          ]
+        },
+        {
+          "kind": "error_enum",
+          "name": "FungibleTokenError",
+          "args": [
+            {
+              "name": "InsufficientBalance",
+              "type": "=100"
+            },
+            {
+              "name": "InsufficientAllowance",
+              "type": "=101"
+            },
+            {
+              "name": "InvalidLiveUntilLedger",
+              "type": "=102"
+            },
+            {
+              "name": "LessThanZero",
+              "type": "=103"
+            },
+            {
+              "name": "MathOverflow",
+              "type": "=104"
+            },
+            {
+              "name": "UnsetMetadata",
+              "type": "=105"
+            },
+            {
+              "name": "ExceededCap",
+              "type": "=106"
+            },
+            {
+              "name": "InvalidCap",
+              "type": "=107"
+            },
+            {
+              "name": "CapNotSet",
+              "type": "=108"
+            },
+            {
+              "name": "SACNotSet",
+              "type": "=109"
+            },
+            {
+              "name": "SACAddressMismatch",
+              "type": "=110"
+            },
+            {
+              "name": "SACMissingFnParam",
+              "type": "=111"
+            },
+            {
+              "name": "SACInvalidFnParam",
+              "type": "=112"
+            },
+            {
+              "name": "UserNotAllowed",
+              "type": "=113"
+            },
+            {
+              "name": "UserBlocked",
+              "type": "=114"
+            }
+          ]
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "network",
+  "notes": "An OpenZeppelin-style fungible token. Testnet resets on a schedule; the vendored blob is then the only copy."
+}

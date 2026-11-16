@@ -1,0 +1,63 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-strict/length-prefix-exceeds-input.6h",
+  "title": "ScVal vector whose length prefix is 0xFFFFFFFF with no elements after it",
+  "kind": "xdr",
+  "caps": [],
+  "caps_note": "A cross-cutting encoding rule rather than a CAP: it applies to every XDR value of every protocol",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "length-exceeds-input"
+  ],
+  "shapes": [
+    "length-prefix-exceeds-input",
+    "scval-bare-value",
+    "allocation-before-read"
+  ],
+  "why": "The length prefix promises 4294967295 vector elements that the input does not contain. A decoder must compare the length with the remaining input before allocating; one that allocates first can be made to request a huge array by a few bytes of input.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "f33ffc3b00e60aaec5a9e89d1c0f7dcf3672b426e4e596bed593b25c84e5d6fe",
+        "bytes": 12,
+        "path": "blobs/f3/f33ffc3b00e60aaec5a9e89d1c0f7dcf3672b426e4e596bed593b25c84e5d6fe.xdr"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/xdr-strict/length-prefix-exceeds-input.6h.json",
+        "reason": "A vector length of 0xFFFFFFFF with no body; core checks the length against the input before allocating"
+      }
+    }
+  ],
+  "expect": {
+    "reject": {
+      "reason": "length_exceeds_input"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L0"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/go-xdr/pull/34"
+  ],
+  "notes": "Probe vector 6h (evidence/sdk-matrix/vectors/vectors.json); it was run under the 1 GiB memory cap and under an address-space cap.",
+  "reference": "spec",
+  "core_behaviour": {
+    "accepts": false,
+    "observed": "executed",
+    "evidence": "stellar-core 30.0.0 print-xdr --filetype scval on the blob, run by hand for this entry: \"Could not decode with type 'scval' : xvector overflow\""
+  }
+}

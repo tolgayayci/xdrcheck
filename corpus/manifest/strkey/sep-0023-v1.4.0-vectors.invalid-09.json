@@ -1,0 +1,45 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/sep-0023-v1.4.0-vectors.invalid-09",
+  "title": "SEP-0023 v1.4.0 invalid vector #9, muxed account (M): Padding bytes are not allowed",
+  "kind": "strkey",
+  "caps": [
+    27
+  ],
+  "protocol": {
+    "introduced": 13
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-padding"
+  ],
+  "shapes": [
+    "strkey-muxed-account",
+    "sep-0023-published-vector",
+    "strkey-invalid"
+  ],
+  "why": "A published SEP-0023 vector that every decoder must reject (padding bytes are not allowed); a decoder that accepts it stores an address that is not the one the bytes say, or one that cannot exist.",
+  "strkey": {
+    "text": "MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAACJUK===",
+    "type": "muxed_account",
+    "origin": "SEP-0023 v1.4.0 invalid #9"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_padding"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0027.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/sep-0023-v1.4.0-vectors.invalid-09.json. Copied verbatim from the Tests section of SEP-0023 v1.4.0 at stellar-protocol f2d364902615af726b3533021403c8b225aa6e5d (ecosystem/sep-0023.md). Executed in every probe column as vector 9I9 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

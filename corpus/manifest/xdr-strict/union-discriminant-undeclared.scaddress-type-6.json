@@ -1,0 +1,63 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-strict/union-discriminant-undeclared.scaddress-type-6",
+  "title": "ScVal address whose ScAddressType (6) is one past the last arm declared at Protocol 30",
+  "kind": "xdr",
+  "caps": [],
+  "caps_note": "A cross-cutting encoding rule rather than a CAP: it applies to every XDR value of every protocol",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "union-arm-undeclared"
+  ],
+  "shapes": [
+    "union-discriminant-undeclared",
+    "scval-bare-value",
+    "scaddress"
+  ],
+  "why": "ScAddressType 5 (muxed contract) is the last arm at Protocol 30; 6 selects nothing. A decoder that accepts it, or reads its body as some other address type, produces an address that does not exist.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "12ff7cc446536089ffb0711ff5489ef3ceaa16091952d7c7edca7a3fc3517aac",
+        "bytes": 48,
+        "path": "blobs/12/12ff7cc446536089ffb0711ff5489ef3ceaa16091952d7c7edca7a3fc3517aac.xdr"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/xdr-strict/union-discriminant-undeclared.scaddress-type-6.json",
+        "reason": "ScAddressType 6 is one past the highest declared arm at Protocol 30; core's decoder rejects it"
+      }
+    }
+  ],
+  "expect": {
+    "reject": {
+      "reason": "union_arm_undeclared"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L0"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-contract.x"
+  ],
+  "notes": "Probe vector 6g. The committed core transcript uses ScAddressType 9 (\"bad value of type in SCAddress\"); stellar-core 30.0.0 print-xdr --filetype scval on these exact bytes (type 6) gives the same error (run by hand for this entry).",
+  "reference": "spec",
+  "core_behaviour": {
+    "accepts": false,
+    "observed": "executed",
+    "evidence": "evidence/core-print-xdr/out/union-undeclared-scaddresstype.txt"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-strict/union-discriminant-undeclared.no-arm",
+  "title": "ScVal whose union discriminant (99) names no arm in the Protocol 30 XDR definitions",
+  "kind": "xdr",
+  "caps": [],
+  "caps_note": "A cross-cutting encoding rule rather than a CAP: it applies to every XDR value of every protocol",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "union-arm-undeclared"
+  ],
+  "shapes": [
+    "union-discriminant-undeclared",
+    "scval-bare-value"
+  ],
+  "why": "A union discriminant must select a declared arm; 99 is past SCV_EXECUTABLE_TAG (22), the last ScValType at Protocol 30. A decoder that maps unknown arms to a default or skips them reads a value that is not there.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "ScVal",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "a40fb80ad4287819ecda5efac01c74c78d7cb00ca5f9eb5f6c0f19bd09936ac1",
+        "bytes": 4,
+        "path": "blobs/a4/a40fb80ad4287819ecda5efac01c74c78d7cb00ca5f9eb5f6c0f19bd09936ac1.xdr"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/xdr-strict/union-discriminant-undeclared.no-arm.json",
+        "reason": "ScVal discriminant 99 has no arm in the XDR definitions; core's decoder rejects undeclared union arms"
+      }
+    }
+  ],
+  "expect": {
+    "reject": {
+      "reason": "union_arm_undeclared"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L0"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-contract.x"
+  ],
+  "notes": "Probe vector 6f. The committed core transcript uses discriminant 23 (\"bad value of type in SCVal\"); stellar-core 30.0.0 print-xdr --filetype scval on these exact bytes (discriminant 99) gives the same error (run by hand for this entry).",
+  "reference": "spec",
+  "core_behaviour": {
+    "accepts": false,
+    "observed": "executed",
+    "evidence": "evidence/core-print-xdr/out/union-undeclared-scvaltype-bare.txt"
+  }
+}

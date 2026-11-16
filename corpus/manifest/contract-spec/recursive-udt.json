@@ -1,0 +1,92 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/recursive-udt",
+  "title": "Contract spec whose struct and union refer to themselves",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "recursive-type"
+  ],
+  "why": "Readers and binding generators that resolve user-defined types eagerly recurse without end on a struct holding an option of itself or a union holding a vector of itself.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "daabc28341575e12d1c354916a4ee4dfaabc0afe0a17440c08dbf31b3565c239",
+        "bytes": 234,
+        "path": "blobs/da/daabc28341575e12d1c354916a4ee4dfaabc0afe0a17440c08dbf31b3565c239.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/recursive-udt.json",
+        "reason": "A contract interface built from SEP-51 JSON by the oracle and wrapped in a header-only Wasm module; stellar-core never builds contract code, it stores the uploaded bytes unchanged."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "struct",
+          "name": "Node",
+          "args": [
+            {
+              "name": "value",
+              "type": "u32"
+            },
+            {
+              "name": "next",
+              "type": "option<udt:Node>"
+            }
+          ]
+        },
+        {
+          "kind": "union",
+          "name": "Tree",
+          "args": [
+            {
+              "name": "Leaf",
+              "type": "void"
+            },
+            {
+              "name": "Branch",
+              "type": "tuple<vec<udt:Tree>>"
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "depth",
+          "args": [
+            {
+              "name": "t",
+              "type": "udt:Tree"
+            }
+          ],
+          "outputs": [
+            "u32"
+          ]
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

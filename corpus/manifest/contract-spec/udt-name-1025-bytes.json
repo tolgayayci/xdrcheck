@@ -1,0 +1,57 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/udt-name-1025-bytes",
+  "title": "Contract spec with a 1025-byte struct name, one past SC_SPEC_TYPE_NAME_LIMIT",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "length-exceeds-max"
+  ],
+  "shapes": [
+    "name-length-boundary"
+  ],
+  "why": "A reader that does not enforce the declared maximum of a name accepts a spec the definitions forbid.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "b786c1e4501d066e18d5c3b835c4714edc60ce2546a701476767abe30eb83808",
+        "bytes": 1090,
+        "path": "blobs/b7/b786c1e4501d066e18d5c3b835c4714edc60ce2546a701476767abe30eb83808.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/udt-name-1025-bytes.json",
+        "reason": "A struct name of 1025 bytes, one over SC_SPEC_TYPE_NAME_LIMIT (1024): built from the 1024-byte name by raising its length by one, since the oracle refuses to encode it."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [],
+      "clean_end": false
+    },
+    "reject": {
+      "reason": "length_exceeds_max"
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

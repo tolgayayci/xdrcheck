@@ -1,0 +1,73 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/sep-0023-v1.4.0-vectors.invalid-13",
+  "title": "SEP-0023 v1.4.0 invalid vector #13, signed payload (P): No zero padding in signed payload",
+  "kind": "strkey",
+  "caps": [
+    40
+  ],
+  "protocol": {
+    "introduced": 19
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-length"
+  ],
+  "shapes": [
+    "strkey-signed-payload",
+    "sep-0023-published-vector",
+    "strkey-invalid"
+  ],
+  "why": "A published SEP-0023 vector that every decoder must reject (no zero padding in signed payload); a decoder that accepts it stores an address that is not the one the bytes say, or one that cannot exist.",
+  "strkey": {
+    "text": "PA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAOQCAQDAQCQMBYIBEFAWDANBYHRAEISCMKBKFQXDAMRUGY4DXFH6",
+    "type": "signed_payload",
+    "origin": "SEP-0023 v1.4.0 invalid #13"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_length",
+      "note": "The SEP names it 'no zero padding'; read from the bytes, the 29-byte payload is followed by nothing, so the body is 65 bytes where the declared length needs 68: a length error."
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": ">=0.7.1 <0.7.2",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed: v0.7.1 strkey.Decode returns the unpadded payload instead of an error; v0.7.2 rejects it. Earlier versions were not run.",
+        "reference": "https://github.com/stellar/go-stellar-sdk/pull/5977",
+        "finding": "F-0024",
+        "fixed_in": "v0.7.2",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "probe vector 9I13 (evidence/sdk-matrix), executed on go v0.7.1; xcc conform run --columns 'go@v0.7.1' --entries 'strkey/sep-0023-v1.4.0-vectors.invalid-13'"
+      },
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector.",
+        "reference": "https://github.com/stellar/js-stellar-sdk/pull/1580",
+        "finding": "F-0019",
+        "status": "open",
+        "observed": "executed",
+        "evidence": "probe vector 9I13 (evidence/sdk-matrix), executed on js 16.3.0, js 16.3.1 and js 16.4.1"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0040.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/sep-0023-v1.4.0-vectors.invalid-13.json. Copied verbatim from the Tests section of SEP-0023 v1.4.0 at stellar-protocol f2d364902615af726b3533021403c8b225aa6e5d (ecosystem/sep-0023.md). Executed in every probe column as vector 9I13 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

@@ -1,0 +1,70 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-strict/api-float-union-discriminant-custom-schema",
+  "title": "Custom XDR union switched on a float, with discriminant 0.1, must be refused",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "An XDR language rule (RFC 4506 section 4.15: a union discriminant is int, unsigned int, enum or bool), not a CAP; Stellar's own unions never switch on a float.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "invalid",
+  "flags": [
+    "discriminant-type"
+  ],
+  "shapes": [
+    "custom-xdr-schema",
+    "union-discriminant-float",
+    "invalid-input"
+  ],
+  "why": "RFC 4506 allows only integer, enum and bool union discriminants; an XDR runtime that lets a schema switch on a float encodes a discriminant that does not round-trip (0.1 decodes as 0.10000000149011612).",
+  "api": {
+    "op": "xdr.custom_union_encode",
+    "input": {
+      "switch_on": "float",
+      "cases": [
+        {
+          "discriminant": {
+            "native": "number",
+            "value": "0.1"
+          },
+          "arm": "void"
+        }
+      ],
+      "discriminant": {
+        "native": "number",
+        "value": "0.1"
+      }
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1 || 17.2.0 || 17.2.1 || 17.3.0 || 17.4.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed against the js-xdr each SDK version installs (4.0.0 for 16.x, 5.0.0 for 17.x): a union with switchOn float() and a case 0.1 is accepted, encodes the discriminant as 3dcccccd, and decoding those bytes fails ('no case for union discriminator 0.10000000149011612'). Fixed in js-xdr by pull request #171 (906a0aae), not released; no conformance driver offers this op yet, so the runner lists it as not exercised.",
+        "reference": "https://github.com/stellar/js-xdr/issues/162",
+        "finding": "F-0021",
+        "fixed_in": "js-xdr 906a0aaeb627429caffdf27f87a11bdd5b923b3c (unreleased)",
+        "status": "fixed_unreleased",
+        "observed": "executed",
+        "evidence": "hand run of js-xdr union('U', {switchOn: float(), cases: [unionCase('a', 0.1, void())]}) with encode({type: 0.1}) then decode, in each JavaScript column's installed js-xdr"
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/js-xdr/issues/162",
+    "https://github.com/stellar/js-xdr/pull/171",
+    "https://www.rfc-editor.org/rfc/rfc4506#section-4.15"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/xdr-strict/api-float-union-discriminant-custom-schema.json. Origin: js-xdr#162. Arguments of xdr.custom_union_encode, defined by this entry: switch_on is the XDR type the union switches on (here float); cases lists the union's arms as {discriminant (tagged number), arm (an XDR type name, here void)}; discriminant is the value to encode, then decode. Conforming: the runtime refuses the schema or the value. This is \"union discriminants that accept floats\" taken literally; it cannot occur with Stellar's own types or in wire bytes. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "spec"
+}

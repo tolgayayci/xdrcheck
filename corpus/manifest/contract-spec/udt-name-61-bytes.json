@@ -1,0 +1,117 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/udt-name-61-bytes",
+  "title": "Contract spec with a 61-byte struct name, one past the pre-v30 bound",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "name-length-boundary"
+  ],
+  "why": "XDR v30 raised SC_SPEC_TYPE_NAME_LIMIT from 60 to 1024 (soroban-sdk 30 writes fully qualified names); a reader on older definitions refuses the whole interface over one name.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "224f95ee72c277db3510d49382244b0b5d28d5500cd2b8d0f44e6977b60012f2",
+        "bytes": 222,
+        "path": "blobs/22/224f95ee72c277db3510d49382244b0b5d28d5500cd2b8d0f44e6977b60012f2.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/udt-name-61-bytes.json",
+        "reason": "A contract interface built from SEP-51 JSON by the oracle and wrapped in a header-only Wasm module; stellar-core never builds contract code, it stores the uploaded bytes unchanged. The struct name is 61 bytes (the bound was 60 before XDR v30, 1024 since)."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "struct",
+          "name": "SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS",
+          "args": [
+            {
+              "name": "v",
+              "type": "u32"
+            }
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "get",
+          "args": [],
+          "outputs": [
+            "udt:SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS"
+          ]
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "conformance": {
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 17.2.0 || 17.2.1",
+        "level": "spec",
+        "outcome": "reject",
+        "reference": "https://github.com/stellar/stellar-xdr/pull/312",
+        "finding": "F-0050",
+        "status": "fixed",
+        "fixed_in": "16.4.0, 17.3.0",
+        "observed": "executed",
+        "detail": "Built on XDR definitions before v30 (UDT name bound 60 bytes).",
+        "match": {
+          "reason": "length_exceeds_max"
+        }
+      },
+      {
+        "target": "github.com/stellar/go-stellar-sdk",
+        "versions": ">=0.7.1 <0.8.0",
+        "level": "spec",
+        "outcome": "reject",
+        "reference": "https://github.com/stellar/stellar-xdr/pull/312",
+        "finding": "F-0049",
+        "status": "fixed",
+        "fixed_in": "v0.8.0",
+        "observed": "executed",
+        "detail": "Built on XDR definitions before v30 (UDT name bound 60 bytes).",
+        "match": {
+          "reason": "length_exceeds_max"
+        }
+      },
+      {
+        "target": "soroban-spec (crates.io)",
+        "versions": "29.0.1",
+        "level": "spec",
+        "outcome": "reject",
+        "reference": "https://github.com/stellar/stellar-xdr/pull/312",
+        "status": "fixed",
+        "fixed_in": "30.0.0-rc.1",
+        "observed": "executed",
+        "detail": "Built on XDR definitions before v30 (UDT name bound 60 bytes). soroban-spec 29.0.1 decodes with stellar-xdr 28.0.0.",
+        "match": {
+          "reason": "length_exceeds_max"
+        }
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

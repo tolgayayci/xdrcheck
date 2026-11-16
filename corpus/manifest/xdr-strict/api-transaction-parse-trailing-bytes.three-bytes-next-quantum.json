@@ -1,0 +1,44 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-strict/api-transaction-parse-trailing-bytes.three-bytes-next-quantum",
+  "title": "Transaction envelope followed by three zero bytes must be refused by the transaction parser",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "An XDR decoding rule (a value is the whole input: stellar-core refuses an envelope with bytes after it), not a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "malformed",
+  "flags": [
+    "trailing-bytes"
+  ],
+  "shapes": [
+    "transaction-envelope",
+    "trailing-bytes",
+    "base64-input",
+    "invalid-input"
+  ],
+  "why": "The control for the two members before it: three extra bytes after the 136-byte envelope start a new base64 quantum, so even a parser that counts base64 characters sees unread input and refuses. A reader that refuses this but accepts one or two extra bytes checks consumption in encoded characters, not decoded bytes.",
+  "api": {
+    "op": "transaction.parse",
+    "input": {
+      "xdr_hex": "00000002000000000a60b7832ed1b725d70ce5b6438d519055595a598f3515ffbf320cd60bb8a3de00000064000000000000000100000000000000010000000378636300000000010000000000000001000000009371890676ef79fd818aa1f5946d4e853686dd7d682b5daa484f37d4be3886850000000000000000009896800000000000000000000000",
+      "passphrase": "Test SDF Network ; September 2015"
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/go-stellar-sdk/issues/6039",
+    "https://github.com/stellar/go-stellar-sdk/pull/6041",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/xdr-strict/api-transaction-parse-trailing-bytes.three-bytes-next-quantum.json. Origin: go-stellar-sdk#6039. The envelope is hand-encoded: ENVELOPE_TYPE_TX, an ed25519 source, fee 100, sequence 1, PRECOND_NONE, MEMO_TEXT \"xcc\", one native payment of 1 XLM, no signatures; 136 bytes. xdr_hex is that envelope followed by three zero bytes. The driver passes the bytes to the SDK the way an application receives an envelope (base64 for go-stellar-sdk's txnbuild.TransactionFromXDR). Expected values were computed from the XDR definitions and the rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "protocol-rule"
+}

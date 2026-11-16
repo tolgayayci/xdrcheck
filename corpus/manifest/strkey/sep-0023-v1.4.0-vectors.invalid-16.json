@@ -1,0 +1,45 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/sep-0023-v1.4.0-vectors.invalid-16",
+  "title": "SEP-0023 v1.4.0 invalid vector #16, muxed contract (W): The unused trailing bit must be zero in the encoding of the last three bytes (24 bit",
+  "kind": "strkey",
+  "caps": [
+    84
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-noncanonical"
+  ],
+  "shapes": [
+    "strkey-muxed-contract",
+    "sep-0023-published-vector",
+    "strkey-invalid"
+  ],
+  "why": "A published SEP-0023 vector that every decoder must reject (the unused trailing bit must be zero in the encoding of the last three bytes (24 bits) as five base-32 symbols (25 bits) of a muxed contract); a decoder that accepts it stores an address that is not the one the bytes say, or one that cannot exist.",
+  "strkey": {
+    "text": "WA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAAAAWWD",
+    "type": "muxed_contract",
+    "origin": "SEP-0023 v1.4.0 invalid #16"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_noncanonical"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0084.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/sep-0023-v1.4.0-vectors.invalid-16.json. Copied verbatim from the Tests section of SEP-0023 v1.4.0 at stellar-protocol f2d364902615af726b3533021403c8b225aa6e5d (ecosystem/sep-0023.md). Executed in every probe column as vector 9I16 (evidence/sdk-matrix/vectors/vectors.json). A W address exists only from Protocol 30 (CAP-0084): columns whose XDR schema predates Protocol 30 refuse it cleanly, which is not a divergence.",
+  "reference": "spec"
+}

@@ -1,0 +1,169 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "xdr-json/vector-longer-than-declared-max",
+  "title": "XDR-JSON transaction envelope with 21 signatures (declared maximum 20) must be refused",
+  "kind": "api",
+  "caps": [],
+  "caps_note": "A rule of SEP-0051 XDR-JSON and the XDR definitions (signatures<20>), not of a CAP.",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "validity": "malformed",
+  "flags": [
+    "length-exceeds-max"
+  ],
+  "shapes": [
+    "xdr-json",
+    "vector-over-declared-max",
+    "invalid-input"
+  ],
+  "why": "TransactionV1Envelope.signatures is DecoratedSignature<20>; a JSON deserialiser that does not enforce the declared maximum builds a value no XDR decoder accepts and may encode bytes the network refuses.",
+  "api": {
+    "op": "xdrjson.decode",
+    "input": {
+      "xdr_type": "TransactionEnvelope",
+      "json": {
+        "tx": {
+          "tx": {
+            "source_account": "GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ",
+            "fee": 100,
+            "seq_num": "1",
+            "cond": "none",
+            "memo": "none",
+            "operations": [
+              {
+                "source_account": null,
+                "body": {
+                  "bump_sequence": {
+                    "bump_to": "2"
+                  }
+                }
+              }
+            ],
+            "ext": "v0"
+          },
+          "signatures": [
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            },
+            {
+              "hint": "01020304",
+              "signature": "55555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555555"
+            }
+          ]
+        }
+      }
+    },
+    "expect_reject": true
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ],
+    "known_divergences": [
+      {
+        "target": "stellar-xdr (crates.io)",
+        "versions": "28.0.0",
+        "level": "L4",
+        "outcome": "accepts_invalid",
+        "detail": "Executed on 28.0.0: serde deserialisation of the JSON accepts 21 signatures into a DecoratedSignature<20> and the encoder writes bytes the library's own decoder refuses; 28.0.1 refuses the JSON ('xdr value max length exceeded').",
+        "reference": "https://github.com/stellar/rs-stellar-xdr/security/advisories/GHSA-3xhm-p452-9wjh",
+        "finding": "F-0030",
+        "fixed_in": "28.0.1",
+        "status": "fixed",
+        "observed": "executed",
+        "evidence": "xcc conform run --columns 'rust@*' --entries 'xdr-json/vector-longer-than-declared-max'",
+        "match": {
+          "reason": "own_output_rejected"
+        }
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/rs-stellar-xdr/issues/598",
+    "https://github.com/stellar/rs-stellar-xdr/security/advisories/GHSA-3xhm-p452-9wjh",
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0051.md",
+    "https://github.com/stellar/stellar-xdr/blob/4f524bbac80c781c06e4fb5fc93a2d0d331d6705/Stellar-transaction.x"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/xdr-json/vector-longer-than-declared-max.json. Origin: rs-stellar-xdr#598. The SEP-0051 JSON of a valid TransactionEnvelope (v1, one bump-sequence operation, 20 identical signatures) with one more signature appended; the XDR form of the same value is the negative entry xdr-strict/vector-one-over-declared-max.signatures-21. Expected values were computed from the XDR definitions, the CAP or SEP text and the stellar-core rule cited under related, with an independent encoder; no SDK output was used.",
+  "reference": "spec"
+}

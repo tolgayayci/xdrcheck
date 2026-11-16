@@ -1,0 +1,43 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/sep-0023-v1.4.0-vectors.invalid-05",
+  "title": "SEP-0023 v1.4.0 invalid vector #5, account (G): Invalid algorithm (low 3 bits of version byte are 7)",
+  "kind": "strkey",
+  "caps": [],
+  "caps_note": "A pure encoding rule: SEP-0023 strkey text for a key type that no CAP in this entry's family introduced; the strkey group is cross-cutting",
+  "protocol": {
+    "introduced": 1
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "strkey-version"
+  ],
+  "shapes": [
+    "strkey-account",
+    "sep-0023-published-vector",
+    "strkey-invalid"
+  ],
+  "why": "A published SEP-0023 vector that every decoder must reject (invalid algorithm (low 3 bits of version byte are 7)); a decoder that accepts it stores an address that is not the one the bytes say, or one that cannot exist.",
+  "strkey": {
+    "text": "G47QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVP2I",
+    "type": "account",
+    "origin": "SEP-0023 v1.4.0 invalid #5"
+  },
+  "expect": {
+    "reject": {
+      "reason": "strkey_version"
+    }
+  },
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/sep-0023-v1.4.0-vectors.invalid-05.json. Copied verbatim from the Tests section of SEP-0023 v1.4.0 at stellar-protocol f2d364902615af726b3533021403c8b225aa6e5d (ecosystem/sep-0023.md). Executed in every probe column as vector 9I5 (evidence/sdk-matrix/vectors/vectors.json).",
+  "reference": "spec"
+}

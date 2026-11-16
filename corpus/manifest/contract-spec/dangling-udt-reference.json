@@ -1,0 +1,64 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/dangling-udt-reference",
+  "title": "Contract spec whose function names user-defined types the spec never defines",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "dangling-reference"
+  ],
+  "why": "Spec shaking can drop type definitions a function still names; a reader that resolves every UDT at parse time refuses the whole interface, while the XDR itself is valid.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "b534495333839ac416add7dd20b033f16115f3db44d53d83147238a53c29a39b",
+        "bytes": 97,
+        "path": "blobs/b5/b534495333839ac416add7dd20b033f16115f3db44d53d83147238a53c29a39b.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/dangling-udt-reference.json",
+        "reason": "A spec whose function names user-defined types the spec does not define (spec shaking can drop them); stellar-core does not read custom sections."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "function",
+          "name": "take",
+          "args": [
+            {
+              "name": "x",
+              "type": "udt:Missing"
+            }
+          ],
+          "outputs": [
+            "udt:AlsoMissing"
+          ]
+        }
+      ],
+      "clean_end": true
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

@@ -1,0 +1,85 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/trailing-bytes-after-entries",
+  "title": "Wasm spec section with three bytes after its last whole entry",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "malformed",
+  "flags": [
+    "trailing-bytes"
+  ],
+  "shapes": [
+    "trailing-bytes",
+    "wasm-custom-section"
+  ],
+  "why": "A stream reader that stops at the first incomplete entry without an error accepts bytes that are not a spec; the section must decode to whole entries with nothing left over.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "e1efd0158c50bc6178072bfe7732ce6c11491c47b283c56efa2a02f3e66b7235",
+        "bytes": 124,
+        "path": "blobs/e1/e1efd0158c50bc6178072bfe7732ce6c11491c47b283c56efa2a02f3e66b7235.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/trailing-bytes-after-entries.json",
+        "reason": "A spec section whose whole entries are followed by three bytes that start no entry; stellar-core does not read custom sections."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 1,
+      "entries": [
+        {
+          "kind": "function",
+          "name": "first",
+          "args": [
+            {
+              "name": "a",
+              "type": "u32"
+            }
+          ],
+          "outputs": [
+            "u32"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "second",
+          "args": [
+            {
+              "name": "b",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            "i128"
+          ]
+        }
+      ],
+      "clean_end": false
+    },
+    "reject": {
+      "reason": "trailing_bytes"
+    }
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}

@@ -1,0 +1,38 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "strkey/synthetic-gap-vectors.muxed-contract-zero",
+  "title": "Muxed-contract strkey for the all-zero contract id with muxed id 0",
+  "kind": "strkey",
+  "caps": [
+    84
+  ],
+  "protocol": {
+    "introduced": 30
+  },
+  "synthetic": true,
+  "validity": "valid",
+  "shapes": [
+    "strkey-muxed-contract",
+    "sep-0023-gap-vector",
+    "strkey-valid"
+  ],
+  "why": "An all-zero payload is the degenerate W address; a reader that treats zero bytes as 'absent' or normalises the contract id drops or changes it.",
+  "strkey": {
+    "text": "WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADCKU",
+    "type": "muxed_contract",
+    "payload_hex": "00000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "origin": "synthetic SEP-0023 gap vector"
+  },
+  "expect": {},
+  "conformance": {
+    "levels": [
+      "L4"
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md",
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0084.md"
+  ],
+  "notes": "Built by xdrcheck-corpus synth from corpus/recipes/strkey/synthetic-gap-vectors.muxed-contract-zero.json. The text was encoded from the stated payload with an independent SEP-0023 encoder (version byte, payload, CRC16-XModem little-endian, RFC 4648 base32 without padding) and decoded back by the same rules; no SDK output was used. Not a probe vector; first executed by the conformance drivers. A W address exists only from Protocol 30 (CAP-0084): columns whose XDR schema predates Protocol 30 refuse it cleanly, which is not a divergence.",
+  "reference": "spec"
+}

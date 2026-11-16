@@ -1,0 +1,101 @@
+{
+  "schema": "xcc.manifest.entry/v1",
+  "id": "contract-spec/two-spec-sections",
+  "title": "Wasm with two contractspecv0 custom sections, one function in each",
+  "kind": "spec",
+  "caps": [
+    46
+  ],
+  "protocol": {
+    "introduced": 20
+  },
+  "synthetic": true,
+  "negative": true,
+  "validity": "invalid",
+  "flags": [
+    "spec-sections"
+  ],
+  "shapes": [
+    "duplicate-section",
+    "wasm-custom-section"
+  ],
+  "why": "SEP-48 stores the interface in one contractspecv0 section, but the network never checks custom sections; readers that take the first section, the last, or both show different interfaces for the same code, so a second section can hide functions from one tool and show them in another.",
+  "variants": [
+    {
+      "network": "none",
+      "passphrase": "",
+      "protocol": 30,
+      "xdr_type": "SCSpecEntry",
+      "container": "wasm",
+      "requires": [],
+      "xdr_definitions": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705)",
+      "blob": {
+        "sha256": "8e7963c2ff7bde6a7c8500ee5a9b72e791deebb554875f3b540dc3add6c52a58",
+        "bytes": 138,
+        "path": "blobs/8e/8e7963c2ff7bde6a7c8500ee5a9b72e791deebb554875f3b540dc3add6c52a58.wasm"
+      },
+      "source": {
+        "kind": "synthetic",
+        "recipe": "recipes/contract-spec/two-spec-sections.json",
+        "reason": "SEP-48 stores the interface in one contractspecv0 section; the network does not check custom sections, so an uploader can add a second one and readers that take the first, the last or both disagree."
+      }
+    }
+  ],
+  "expect": {
+    "spec": {
+      "sections": 2,
+      "entries": [
+        {
+          "kind": "function",
+          "name": "first",
+          "args": [
+            {
+              "name": "a",
+              "type": "u32"
+            }
+          ],
+          "outputs": [
+            "u32"
+          ]
+        },
+        {
+          "kind": "function",
+          "name": "second",
+          "args": [
+            {
+              "name": "b",
+              "type": "address"
+            }
+          ],
+          "outputs": [
+            "i128"
+          ]
+        }
+      ],
+      "clean_end": true
+    },
+    "reject": {
+      "reason": "spec_sections"
+    }
+  },
+  "conformance": {
+    "known_divergences": [
+      {
+        "target": "@stellar/stellar-sdk",
+        "versions": "16.3.0 || 16.3.1 || 16.4.1 || 17.2.0 || 17.2.1",
+        "level": "spec",
+        "outcome": "accepts_invalid",
+        "reference": "https://github.com/stellar/js-stellar-sdk/issues/1826",
+        "finding": "F-0051",
+        "status": "fixed",
+        "fixed_in": "17.3.0",
+        "observed": "executed",
+        "detail": "Spec.fromWasm reads the first contractspecv0 section and ignores the second; 17.3.0 refuses more than one section. The 16.x line still reads the first."
+      }
+    ]
+  },
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md"
+  ],
+  "reference": "spec"
+}
