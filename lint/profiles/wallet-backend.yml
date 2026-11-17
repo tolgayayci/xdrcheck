@@ -1,0 +1,27 @@
+# xdrlint profile for github.com/stellar/wallet-backend.
+#
+# Used by `make lint-wallet-backend` (the pinned commit) and `make lint-before-after` (the commits of the
+# before/after table), each run with the frozen expected list and suppression file of its commit under
+# lint/expected/wallet-backend/. Every name below resolves at every commit of that table: xdrlint refuses a
+# profile name that a loaded package does not define, so a name added upstream later (for example the SEP-41
+# address normaliser types.StorableAddressString) is not listed. That normaliser does not need to be: it
+# switches on the address kind before rendering, which XDR102 accepts on its own.
+rules: [XDR101, XDR102, XDR103, XDR201, XDR202, XDR203, XDR205, XDR206, XDR207, XDR301, XDR302, XDR303, XDR304, XDR401, XDR402, XDR403, XDR404, XDR405, XDR000]
+
+# wallet-backend fails the whole ledger when one transaction's processing returns an error.
+overflowpolicy: halt-ledger
+
+# Account columns: a strkey stored in these types is the account's identity.
+sinksaccountkey:
+  - github.com/stellar/wallet-backend/internal/indexer/types.AddressBytea
+  - github.com/stellar/wallet-backend/internal/indexer/types.NullAddressBytea
+  - github.com/stellar/wallet-backend/internal/utils.NullAddressBytea
+
+# State changes are written to the history of the account (WithAccount) and of the deployer (WithCreator)
+# they name, so both act as participant sinks.
+sinksparticipant:
+  - github.com/stellar/wallet-backend/internal/indexer/processors.StateChangeBuilder.WithAccount
+  - github.com/stellar/wallet-backend/internal/indexer/processors.StateChangeBuilder.WithCreator
+
+targetname: github.com/stellar/wallet-backend
+targetkind: pipeline
