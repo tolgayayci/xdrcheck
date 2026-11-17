@@ -1,0 +1,12 @@
+{
+  "name": "shape-emitter",
+  "wasm": "corpus/contracts/shape-emitter.wasm",
+  "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+  "source_tree_sha256": "5e5b508dd61a750190229cefdb9f2aec4f1dcade090d91fc5bad227e1385b726",
+  "source_tree_files": 14,
+  "source_tree_rule": "sha256 of the LC_ALL=C-sorted sha256sum listing of every file under contracts/ except target directories, paths relative to contracts/",
+  "toolchain": {"rustc": "1.98.1", "commit": "48a229ceaefd4985c50990b14116b6d856af0985", "target": "wasm32v1-none"},
+  "soroban_sdk": "29.0.1",
+  "build_command": "SOROBAN_SDK_BUILD_SYSTEM_SUPPORTS_SPEC_SHAKING_V2=1 CARGO_ENCODED_RUSTFLAGS='--remap-path-prefix=$CARGO_HOME=/cargo --remap-path-prefix=<contracts>=/contracts' cargo build --locked --release --target wasm32v1-none -p shape-emitter -p custom-account -p token-shape; wasm-post shake <built>.wasm <name>.wasm",
+  "wasm_info": {"wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8", "wasm_bytes": 24753, "interface_version": {"protocol": 29, "pre_release": 0}, "contract_meta": {"rsver": "1.98.1", "rssdkver": "29.0.1#e1671a0cb58d4b8c0bb8de115caf080ca01676e8", "rssdk_spec_shaking": "2"}, "spec_entries": 22, "functions": ["get", "put", "burn", "echo", "emit", "mint", "approve", "clawback", "transfer", "bytes_len", "nested_vec", "raw_string", "auth_nested", "topic_count", "address_echo", "int_extremes", "__constructor", "colliding_keys", "fail_after_emit", "forged_sac_event", "transfer_lookalike", "address_from_strkey"]}
+}
