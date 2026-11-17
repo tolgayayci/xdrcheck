@@ -1,0 +1,80 @@
+{
+  "schema": "xcc.capture/v1",
+  "network": "testnet",
+  "passphrase": "Test SDF Network ; September 2015",
+  "ledger_seq": 4372196,
+  "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+  "key": "FFBD97FF--4352000-4415999/FFBD491B--4372196.xdr.zst",
+  "url": "https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFBD97FF--4352000-4415999/FFBD491B--4372196.xdr.zst",
+  "object_file": "FFBD491B--4372196.xdr.zst",
+  "object_sha256": "531f7a3b7fda4a07b33be09ab2bd584e137c59c5032804cbe9686540efde4734",
+  "object_bytes": 12991,
+  "decompressed_sha256": "9706e543cd14359edc5153ffc801ec5ef6ca881795e993f310e37bc29300523b",
+  "decompressed_bytes": 100780,
+  "batch_index": 0,
+  "blob_offset": 12,
+  "blob_sha256": "84593d003090448ae0b3b0bd1e01ba61ff161f6e5d09867f51c7d8aa2ed5272c",
+  "blob_bytes": 100768,
+  "written_by": "stellar-core 28.0.0 (a9b8613218e141ddb89d621e5f04d4c75a149d36); exporter a94b31e",
+  "regenerated": false,
+  "perishable": true,
+  "object_metadata": {
+    "compression-type": "zst",
+    "core-version": "stellar-core 28.0.0 (a9b8613218e141ddb89d621e5f04d4c75a149d36)",
+    "end-ledger": "4372196",
+    "end-ledger-close-time": "1787884567",
+    "network-passphrase": "Test SDF Network ; September 2015",
+    "protocol-version": "28",
+    "start-ledger": "4372196",
+    "start-ledger-close-time": "1787884567",
+    "version": "a94b31e"
+  },
+  "object_last_modified": "2026-08-28T02:36:09Z",
+  "object_etag": "\"fc2863c049085c69a0c5a64c2de60a9b\"",
+  "ledger": {
+    "protocol": 28,
+    "ledger_close_meta_version": 2,
+    "header_hash": "31a51da94896fef3f65c304ab265a9e80d456d39cc123e6c8c0007e7b0f9722f",
+    "close_time": 1787884567,
+    "close_time_utc": "2026-08-28T02:36:07Z",
+    "tx_count": 14,
+    "transaction_meta_versions": {
+      "v4": 14
+    },
+    "tx_hashes_recomputed": true
+  },
+  "captured_at": "2026-11-12T10:05:00Z",
+  "captured_with": "aws s3 cp --no-sign-request (aws-cli)",
+  "verified_at": "2026-11-12T13:04:51Z",
+  "refetch": "curl -fsS -o FFBD491B--4372196.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFBD97FF--4352000-4415999/FFBD491B--4372196.xdr.zst",
+  "shapes": [
+    {
+      "claim": "creation of contract CBZKN44R… whose instance uses CONTRACT_EXECUTABLE_EXTERNAL_REF{owner CATF2IK7…, tag pocket} (found from the STATE lastModified 4372196 seen in 4372314)",
+      "source_of_claim": "locator research by the project, 2026-11-12, verified by decoding this object",
+      "status": "CONFIRMED",
+      "tx_hash": "e20eff37b29f0d334eeae53920fd0a111369bf5eff3964b7c1657566e5590546",
+      "tx_apply_index_0based": 12,
+      "toid_tx_order_1based": 13,
+      "txset_position": ".ledger_close_metas[0].v2.tx_set.v1.phases[1].v1.execution_stages[0][0][9]",
+      "evidence": [
+        {
+          "what": "invoke (factory create_account)",
+          "json_path": ".ledger_close_metas[0].v2.tx_set.v1.phases[1].v1.execution_stages[0][0][9].tx.tx.operations[0].body.invoke_host_function.host_function.invoke_contract",
+          "excerpt": [
+            "{\"contract_address\":\"CATF2IK7TVCUHK4KMGNKBN2OBBAT5NA3JAPXY2DHS2U5QMFPDUWL5DTJ\",\"function_name\":\"create_account\",\"args\"",
+            ":[{\"bytes\":\"0456b328b30c8bf5839e24058747879408bdb36241dc9c2e7c619faa12b2920967ab7cd9ff8ea7fd4f421b1e19f52e955d497a2c83",
+            "285a6a8ff72c577d6c2fd490\"},{\"vec\":[{\"symbol\":\"Secp256k1\"}]},{\"vec\":[{\"symbol\":\"Managed\"}]}]}"
+          ]
+        },
+        {
+          "what": "meta CREATED instance executable",
+          "json_path": ".ledger_close_metas[0].v2.tx_processing[12].tx_apply_processing.v4.operations[0].changes[0].created.data.contract_data.val.contract_instance.executable",
+          "excerpt": [
+            "{\"external_ref\":{\"executable_owner\":\"CATF2IK7TVCUHK4KMGNKBN2OBBAT5NA3JAPXY2DHS2U5QMFPDUWL5DTJ\",\"tag\":\"pocket\"}}"
+          ]
+        }
+      ]
+    }
+  ],
+  "shapes_note": "excerpts are compact XDR-JSON (SEP-51 style, stellar-xdr 30.0.0 serde) of the value at json_path in `stellar-xdr decode --type LedgerCloseMetaBatch --input single --output json`; ledger_close_metas[0] is the only element"
+}

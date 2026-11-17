@@ -1,0 +1,80 @@
+{
+  "schema": "xcc.capture/v1",
+  "network": "pubnet",
+  "passphrase": "Public Global Stellar Network ; September 2015",
+  "ledger_seq": 52419504,
+  "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+  "key": "FCE031FF--52416000-52479999/FCE0244F--52419504.xdr.zst",
+  "url": "https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FCE031FF--52416000-52479999/FCE0244F--52419504.xdr.zst",
+  "object_file": "FCE0244F--52419504.xdr.zst",
+  "object_sha256": "29cc3de551dff2d0fff331bd0544e655562c8b088cf5fee6ec7b9db29b30540c",
+  "object_bytes": 137176,
+  "decompressed_sha256": "363af6780c9a0aaa39e0c579b195c4a55f9b2152aa119657a71d652271289eb5",
+  "decompressed_bytes": 1170460,
+  "batch_index": 0,
+  "blob_offset": 12,
+  "blob_sha256": "bdafc00c247efc157e35ac9246b1dadf10b9acfdb17c219429167774a32c791d",
+  "blob_bytes": 1170448,
+  "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+  "regenerated": true,
+  "perishable": false,
+  "object_metadata": {
+    "compression-type": "zst",
+    "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+    "end-ledger": "52419504",
+    "end-ledger-close-time": "1720103370",
+    "file-mtime": "1757655737000",
+    "network-passphrase": "Public Global Stellar Network ; September 2015",
+    "protocol-version": "21",
+    "start-ledger": "52419504",
+    "start-ledger-close-time": "1720103370",
+    "version": "develop"
+  },
+  "object_last_modified": "2025-09-18T20:40:56Z",
+  "object_etag": "\"4197e871a8b55ff5333ade922a941765\"",
+  "ledger": {
+    "protocol": 21,
+    "ledger_close_meta_version": 1,
+    "header_hash": "dc296417fb73bd30b4cbdaefe476f9aebf6b7c5074b96ecb0c6e1f436b7535b0",
+    "close_time": 1720103370,
+    "close_time_utc": "2024-07-04T14:29:30Z",
+    "tx_count": 170,
+    "transaction_meta_versions": {
+      "v4": 170
+    },
+    "tx_hashes_recomputed": true
+  },
+  "captured_at": "2026-11-12T10:02:05Z",
+  "captured_with": "aws s3 cp --no-sign-request (aws-cli)",
+  "verified_at": "2026-11-12T13:04:27Z",
+  "refetch": "curl -fsS -o FCE0244F--52419504.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FCE031FF--52416000-52479999/FCE0244F--52419504.xdr.zst",
+  "shapes": [
+    {
+      "claim": "fee-bump with muxed FEE source",
+      "source_of_claim": "locator research by the project, verified by decoding this object",
+      "status": "WRONG",
+      "tx_hash": "a261c12d4d400c2954d1e234103907178f4f0767b69a868bf9cf0e2d27cb41a6",
+      "tx_apply_index_0based": 102,
+      "toid_tx_order_1based": 103,
+      "txset_position": ".ledger_close_metas[0].v1.tx_set.v1.phases[0].v0[0].txset_comp_txs_maybe_discounted_fee.txs[0]",
+      "evidence": [
+        {
+          "what": "fee-bump envelope fee_source/fee",
+          "json_path": ".ledger_close_metas[0].v1.tx_set.v1.phases[0].v0[0].txset_comp_txs_maybe_discounted_fee.txs[0].tx_fee_bump.tx.fee_source",
+          "excerpt": [
+            "\"GCUCLPMVO4Q4M32VCPDPQBYCRCTZDA4RYGXZCL7ZA3TOUFPM6ROQRDMI\""
+          ]
+        },
+        {
+          "what": "inner source",
+          "json_path": ".ledger_close_metas[0].v1.tx_set.v1.phases[0].v0[0].txset_comp_txs_maybe_discounted_fee.txs[0].tx_fee_bump.tx.inner_tx.tx.tx.source_account",
+          "excerpt": [
+            "\"MA5ZPIVPAXEG5LMHTKF4PJZ52K5YFUUBSHL746TINKJ7GNMG4KYF2AAACOBCKABHCTRYY\""
+          ]
+        }
+      ],
+      "note": "fee_source is G (GCUCLPMV…RDMI); the INNER tx source is muxed MA5ZPIVP… (id 21449687443220); inner op source is the fee source; result tx_fee_bump_inner_success / path_payment_strict_receive through 3+ pools. Matches stellar-etl note."
+    }
+  ],
+  "shapes_note": "excerpts are compact XDR-JSON (SEP-51 style, stellar-xdr 30.0.0 serde) of the value at json_path in `stellar-xdr decode --type LedgerCloseMetaBatch --input single --output json`; ledger_close_metas[0] is the only element"
+}

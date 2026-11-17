@@ -1,0 +1,97 @@
+{
+  "schema": "xcc.capture/v1",
+  "network": "pubnet",
+  "passphrase": "Public Global Stellar Network ; September 2015",
+  "ledger_seq": 34861066,
+  "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet",
+  "key": "FDECBFFF--34816000-34879999/FDEC0FF5--34861066.xdr.zst",
+  "url": "https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FDECBFFF--34816000-34879999/FDEC0FF5--34861066.xdr.zst",
+  "object_file": "FDEC0FF5--34861066.xdr.zst",
+  "object_sha256": "93c0f48034269c364ac2eb50608d72f8d1d8113bea62bc6ccf0e3ca189b97bf9",
+  "object_bytes": 76294,
+  "decompressed_sha256": "2e9e3306452aa1d9c640b46a40e7ad77270c742f653be104b62d49cc14a42fbb",
+  "decompressed_bytes": 412600,
+  "batch_index": 0,
+  "blob_offset": 12,
+  "blob_sha256": "8df669f63e273c868c4865782ed6f2a3f6eefc5703cb9fcac4b2ec033496c767",
+  "blob_bytes": 412588,
+  "written_by": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f); exporter develop",
+  "regenerated": true,
+  "perishable": false,
+  "object_metadata": {
+    "compression-type": "zst",
+    "core-version": "stellar-core 23.0.1 (050eacf11a15afb2e95560dfb5723dfdcf78070f)",
+    "end-ledger": "34861066",
+    "end-ledger-close-time": "1618066809",
+    "file-mtime": "1757706533000",
+    "network-passphrase": "Public Global Stellar Network ; September 2015",
+    "protocol-version": "16",
+    "start-ledger": "34861066",
+    "start-ledger-close-time": "1618066809",
+    "version": "develop"
+  },
+  "object_last_modified": "2025-09-19T08:28:07Z",
+  "object_etag": "\"7855c05fa176cf325b3f226379d39ef9\"",
+  "ledger": {
+    "protocol": 16,
+    "protocol_upgrade": 16,
+    "ledger_close_meta_version": 0,
+    "header_hash": "733eceebfea558beb0bede4a2bc62f98756aaabe70f219d94f9911bf38df559b",
+    "close_time": 1618066809,
+    "close_time_utc": "2021-04-10T15:00:09Z",
+    "tx_count": 232,
+    "transaction_meta_versions": {
+      "v4": 232
+    },
+    "tx_hashes_recomputed": true
+  },
+  "captured_at": "2026-11-12T10:02:16Z",
+  "captured_with": "aws s3 cp --no-sign-request (aws-cli)",
+  "verified_at": "2026-11-12T13:04:19Z",
+  "refetch": "curl -fsS -o FDEC0FF5--34861066.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/pubnet/FDECBFFF--34816000-34879999/FDEC0FF5--34861066.xdr.zst",
+  "shapes": [
+    {
+      "claim": "P16 upgrade strips sponsorship from offer 289733046 (entry ext v1 -> v0 in UPDATED)",
+      "source_of_claim": "locator research by the project, 2026-11-12, verified by decoding this object",
+      "status": "CONFIRMED",
+      "evidence": [
+        {
+          "what": "STATE ext (sponsoring_id)",
+          "json_path": ".ledger_close_metas[0].v0.upgrades_processing[0].changes[0].state.ext",
+          "excerpt": [
+            "{\"v1\":{\"sponsoring_id\":\"GAS3CQSW3HE27IF5KDWKCM7K6FG6AHRHWOUVBUWIRV4ZGTJMPBXNGATF\",\"ext\":\"v0\"}}"
+          ]
+        },
+        {
+          "what": "UPDATED ext",
+          "json_path": ".ledger_close_metas[0].v0.upgrades_processing[0].changes[1].updated.ext",
+          "excerpt": [
+            "\"v0\""
+          ]
+        }
+      ]
+    },
+    {
+      "claim": "fee-bump whose inner tx failed: txFEE_BUMP_INNER_FAILED -> path_payment_strict_receive OVER_SENDMAX",
+      "source_of_claim": "locator research by the project, 2026-11-12, verified by decoding this object",
+      "status": "CONFIRMED",
+      "tx_hash": "6d448f79b8eff9febdf9c545215b650fb9201f71dcbc5804915ed6cde4d6e27f",
+      "tx_apply_index_0based": 203,
+      "toid_tx_order_1based": 204,
+      "txset_position": ".ledger_close_metas[0].v0.tx_set.txs[92]",
+      "evidence": [
+        {
+          "what": "result",
+          "json_path": ".ledger_close_metas[0].v0.tx_processing[203].result.result",
+          "excerpt": [
+            "{\"fee_charged\":\"200\",\"result\":{\"tx_fee_bump_inner_failed\":{\"transaction_hash\":\"4e4b2b7d6d6527efd4114161baa3caa43d4468c",
+            "3757dd56374c7e2808e55ec94\",\"result\":{\"fee_charged\":\"10\",\"result\":{\"tx_failed\":[{\"op_inner\":{\"path_payment_strict_recei",
+            "ve\":\"over_sendmax\"}}]},\"ext\":\"v0\"}}},\"ext\":\"v0\"}"
+          ]
+        }
+      ],
+      "note": "outer fee 2000, inner fee 10, outer fee_charged 200, inner 10, inner hash 4e4b2b7d…ec94"
+    }
+  ],
+  "shapes_note": "excerpts are compact XDR-JSON (SEP-51 style, stellar-xdr 30.0.0 serde) of the value at json_path in `stellar-xdr decode --type LedgerCloseMetaBatch --input single --output json`; ledger_close_metas[0] is the only element"
+}

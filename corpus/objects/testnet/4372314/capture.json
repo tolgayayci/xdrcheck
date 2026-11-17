@@ -1,0 +1,79 @@
+{
+  "schema": "xcc.capture/v1",
+  "network": "testnet",
+  "passphrase": "Test SDF Network ; September 2015",
+  "ledger_seq": 4372314,
+  "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+  "key": "FFBD97FF--4352000-4415999/FFBD48A5--4372314.xdr.zst",
+  "url": "https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFBD97FF--4352000-4415999/FFBD48A5--4372314.xdr.zst",
+  "object_file": "FFBD48A5--4372314.xdr.zst",
+  "object_sha256": "5eb41ef603cbbb5c14cadd3d180b730c8166514f69a10118c8241240b6cd4729",
+  "object_bytes": 11005,
+  "decompressed_sha256": "cd09c48675188566e1e8c43a2b5283dcf41b783b42a0644b92e4b4fdeb069756",
+  "decompressed_bytes": 78984,
+  "batch_index": 0,
+  "blob_offset": 12,
+  "blob_sha256": "b590bab785f382d72cc3e3209ab4af520accf4154e9a37948f64b761ad59176b",
+  "blob_bytes": 78972,
+  "written_by": "stellar-core 28.0.0 (a9b8613218e141ddb89d621e5f04d4c75a149d36); exporter a94b31e",
+  "regenerated": false,
+  "perishable": true,
+  "object_metadata": {
+    "compression-type": "zst",
+    "core-version": "stellar-core 28.0.0 (a9b8613218e141ddb89d621e5f04d4c75a149d36)",
+    "end-ledger": "4372314",
+    "end-ledger-close-time": "1787885157",
+    "network-passphrase": "Test SDF Network ; September 2015",
+    "protocol-version": "28",
+    "start-ledger": "4372314",
+    "start-ledger-close-time": "1787885157",
+    "version": "a94b31e"
+  },
+  "object_last_modified": "2026-08-28T02:45:59Z",
+  "object_etag": "\"52447b6ce3bfcf7aba3ad3c7af048b77\"",
+  "ledger": {
+    "protocol": 28,
+    "ledger_close_meta_version": 2,
+    "header_hash": "c90afe51a2bcfe9670fd2765a79214a2f77f58bb474be344529082ab41c1c26a",
+    "close_time": 1787885157,
+    "close_time_utc": "2026-08-28T02:45:57Z",
+    "tx_count": 9,
+    "transaction_meta_versions": {
+      "v4": 9
+    },
+    "tx_hashes_recomputed": true
+  },
+  "captured_at": "2026-11-12T10:01:47Z",
+  "captured_with": "aws s3 cp --no-sign-request (aws-cli)",
+  "verified_at": "2026-11-12T13:04:53Z",
+  "refetch": "curl -fsS -o FFBD48A5--4372314.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFBD97FF--4352000-4415999/FFBD48A5--4372314.xdr.zst",
+  "shapes": [
+    {
+      "claim": "ContractInstance with ExternalRef executable last modified here (henyey#3941 second entry); tx is an UPDATE (set_owner) with Secp256k1 custom-account auth, not the creation",
+      "source_of_claim": "locator research by the project, 2026-11-12, verified by decoding this object",
+      "status": "CONFIRMED",
+      "tx_hash": "9584306bf52f1bac3b2642977cfd2ad6cbf8a3bbd87d66a6f648fce8bcef4ddd",
+      "tx_apply_index_0based": 3,
+      "toid_tx_order_1based": 4,
+      "txset_position": ".ledger_close_metas[0].v2.tx_set.v1.phases[1].v1.execution_stages[0][0][0]",
+      "evidence": [
+        {
+          "what": "invoke",
+          "json_path": ".ledger_close_metas[0].v2.tx_set.v1.phases[1].v1.execution_stages[0][0][0].tx.tx.operations[0].body.invoke_host_function.host_function.invoke_contract",
+          "excerpt": [
+            "{\"contract_address\":\"CBZKN44ROE3F2P6XDIUQ675I2MTMVIQPMFKM75AZNS3MJ6VFMYVBESXW\",\"function_name\":\"set_owner\",\"args\":[{\"a",
+            "ddress\":\"GCFAZLCNLX5IQEBZT5WNIQD5H77QCIS5N7KTC2EIMSK6ZPMTTQGEEN2O\"}]}"
+          ]
+        },
+        {
+          "what": "meta UPDATED instance executable",
+          "json_path": ".ledger_close_metas[0].v2.tx_processing[3].tx_apply_processing.v4.operations[0].changes[3].updated.data.contract_data.val.contract_instance.executable",
+          "excerpt": [
+            "{\"external_ref\":{\"executable_owner\":\"CATF2IK7TVCUHK4KMGNKBN2OBBAT5NA3JAPXY2DHS2U5QMFPDUWL5DTJ\",\"tag\":\"pocket\"}}"
+          ]
+        }
+      ]
+    }
+  ],
+  "shapes_note": "excerpts are compact XDR-JSON (SEP-51 style, stellar-xdr 30.0.0 serde) of the value at json_path in `stellar-xdr decode --type LedgerCloseMetaBatch --input single --output json`; ledger_close_metas[0] is the only element"
+}

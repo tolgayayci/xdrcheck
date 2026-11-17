@@ -1,0 +1,84 @@
+{
+  "schema": "xcc.capture/v1",
+  "network": "testnet",
+  "passphrase": "Test SDF Network ; September 2015",
+  "ledger_seq": 4627410,
+  "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+  "key": "FFB9AFFF--4608000-4671999/FFB9642D--4627410.xdr.zst",
+  "url": "https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFB9AFFF--4608000-4671999/FFB9642D--4627410.xdr.zst",
+  "object_file": "FFB9642D--4627410.xdr.zst",
+  "object_sha256": "24480c4b794801d22c57ecf59856b22d2cdaa1491ab466adfc647e4fb9310d88",
+  "object_bytes": 5326,
+  "decompressed_sha256": "c9ba69abf969af805c0537d6ab7e3e425001ab9ffd45e36bfefe394386b83642",
+  "decompressed_bytes": 30620,
+  "batch_index": 0,
+  "blob_offset": 12,
+  "blob_sha256": "3b55999294033bb1ac918367bee9e82939c70495ba7a9bb397d81a664de84f00",
+  "blob_bytes": 30608,
+  "written_by": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021); exporter 72ee2a9",
+  "regenerated": false,
+  "perishable": true,
+  "object_metadata": {
+    "compression-type": "zst",
+    "core-version": "stellar-core 28.0.1 (947aad8413c189d85504acf72207e85eeda9b021)",
+    "end-ledger": "4627410",
+    "end-ledger-close-time": "1789160637",
+    "network-passphrase": "Test SDF Network ; September 2015",
+    "protocol-version": "28",
+    "start-ledger": "4627410",
+    "start-ledger-close-time": "1789160637",
+    "version": "72ee2a9"
+  },
+  "object_last_modified": "2026-09-11T21:03:59Z",
+  "object_etag": "\"1584666350cbabeaac38b3a7ad596e3a\"",
+  "ledger": {
+    "protocol": 28,
+    "ledger_close_meta_version": 2,
+    "header_hash": "6cfa9d4a4d962c5243cf8be2f72d840880a30b650ab0a7b43130eb255e97a39f",
+    "close_time": 1789160637,
+    "close_time_utc": "2026-09-11T21:03:57Z",
+    "tx_count": 6,
+    "transaction_meta_versions": {
+      "v4": 6
+    },
+    "tx_hashes_recomputed": true
+  },
+  "captured_at": "2026-11-12T10:01:47Z",
+  "captured_with": "aws s3 cp --no-sign-request (aws-cli)",
+  "verified_at": "2026-11-12T17:25:59Z",
+  "refetch": "curl -fsS -o FFB9642D--4627410.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFB9AFFF--4608000-4671999/FFB9642D--4627410.xdr.zst",
+  "shapes": [
+    {
+      "claim": "6 txs; 2 custom contract events (exposure_synced) next to fee events",
+      "source_of_claim": "third-party indexer operator's report, verified against the public lake",
+      "status": "CONFIRMED",
+      "tx_hash": "8434b9db0d30267b09150b8ba359babc68e78adef1677c3ec7ca78da93afe501",
+      "tx_apply_index_0based": 0,
+      "toid_tx_order_1based": 1,
+      "txset_position": ".ledger_close_metas[0].v2.tx_set.v1.phases[1].v1.execution_stages[0][0][3]",
+      "evidence": [
+        {
+          "what": "custom event",
+          "json_path": ".ledger_close_metas[0].v2.tx_processing[0].tx_apply_processing.v4.operations[0].events[0].body.v0",
+          "excerpt": [
+            "{\"topics\":[{\"symbol\":\"exposure_synced\"},{\"symbol\":\"HYPE\"}],\"data\":{\"vec\":[{\"i128\":\"0\"},{\"i128\":\"162757399591\"},{\"i128\"",
+            ":\"0\"}]}}"
+          ]
+        },
+        {
+          "what": "tx-level fee events",
+          "json_path": ".ledger_close_metas[0].v2.tx_processing[0].tx_apply_processing.v4.events",
+          "excerpt": [
+            "[{\"stage\":\"before_all_txs\",\"event\":{\"ext\":\"v0\",\"contract_id\":\"CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "\",\"type\":\"contract\",\"body\":{\"v0\":{\"topics\":[{\"symbol\":\"fee\"},{\"address\":\"GCDGUVMCSH74BF5DZL4KNFOFOCUF3INDNAIMKGKK436CN",
+            "IXXTJRJ3SSO\"}],\"data\":{\"i128\":\"26925\"}}}}},{\"stage\":\"after_all_txs\",\"event\":{\"ext\":\"v0\",\"contract_id\":\"CDLZFC3SYJYDZT7",
+            "K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC\",\"type\":\"contract\",\"body\":{\"v0\":{\"topics\":[{\"symbol\":\"fee\"},{\"address\":\"GCDG",
+            "UVMCSH74BF5DZL4KNFOFOCUF3INDNAIMKGKK436CNIXXTJRJ3SSO\"}],\"data\":{\"i128\":\"-9741\"}}}}}]"
+          ]
+        }
+      ],
+      "note": "second exposure_synced event in tx a8f126dc9971a8b96a9f06b943975fd3571061bde9bb61cbe26fd867945158c7 (apply index 2); every tx has a before_all_txs fee event and an after_all_txs refund event"
+    }
+  ],
+  "shapes_note": "excerpts are compact XDR-JSON (SEP-51 style, stellar-xdr 30.0.0 serde) of the value at json_path in `stellar-xdr decode --type LedgerCloseMetaBatch --input single --output json`; ledger_close_metas[0] is the only element"
+}

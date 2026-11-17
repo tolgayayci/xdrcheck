@@ -1,0 +1,79 @@
+{
+  "schema": "xcc.capture/v1",
+  "network": "testnet",
+  "passphrase": "Test SDF Network ; September 2015",
+  "ledger_seq": 5545000,
+  "store": "s3://aws-public-blockchain/v1.1/stellar/ledgers/testnet/2025-12-18",
+  "key": "FFAC03FF--5504000-5567999/FFAB63D7--5545000.xdr.zst",
+  "url": "https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFAC03FF--5504000-5567999/FFAB63D7--5545000.xdr.zst",
+  "object_file": "FFAB63D7--5545000.xdr.zst",
+  "object_sha256": "8cc6554c6f931510b64fe1507221c71044f54c4e76226cd6b898f7adaf8a1dc9",
+  "object_bytes": 10861,
+  "decompressed_sha256": "003afd0efc1d3f162612b38dee47eb3b9a172a219278c498d810c71c99d0bc93",
+  "decompressed_bytes": 69940,
+  "batch_index": 0,
+  "blob_offset": 12,
+  "blob_sha256": "e0eb3c882bac57b93c7a0ff12013b275442fd636f6ddc4ffaaadf779a6b739a0",
+  "blob_bytes": 69928,
+  "written_by": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1); exporter 4d89b44",
+  "regenerated": false,
+  "perishable": true,
+  "object_metadata": {
+    "compression-type": "zst",
+    "core-version": "stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1)",
+    "end-ledger": "5545000",
+    "end-ledger-close-time": "1793748640",
+    "network-passphrase": "Test SDF Network ; September 2015",
+    "protocol-version": "30",
+    "start-ledger": "5545000",
+    "start-ledger-close-time": "1793748640",
+    "version": "4d89b44"
+  },
+  "object_last_modified": "2026-11-03T23:30:43Z",
+  "object_etag": "\"d8fcf21a7f79977570bab6b1f4dbf442\"",
+  "ledger": {
+    "protocol": 30,
+    "ledger_close_meta_version": 2,
+    "header_hash": "c408350e7da19b78a0cacdc5ee6e7971084af77ef6b983473322a19285d41ab7",
+    "close_time": 1793748640,
+    "close_time_utc": "2026-11-03T23:30:40Z",
+    "tx_count": 11,
+    "transaction_meta_versions": {
+      "v4": 11
+    },
+    "tx_hashes_recomputed": true
+  },
+  "captured_at": "2026-11-12T10:12:40Z",
+  "captured_with": "aws s3 cp --no-sign-request (aws-cli)",
+  "verified_at": "2026-11-12T17:26:00Z",
+  "refetch": "curl -fsS -o FFAB63D7--5545000.xdr.zst https://aws-public-blockchain.s3.us-east-2.amazonaws.com/v1.1/stellar/ledgers/testnet/2025-12-18/FFAC03FF--5504000-5567999/FFAB63D7--5545000.xdr.zst",
+  "shapes": [
+    {
+      "claim": "P30 muxed-contract ScAddress (W strkey, id 42) as a contract-call argument",
+      "source_of_claim": "bounded lake scan (this capture set)",
+      "status": "FOUND",
+      "tx_hash": "fd43f4a6299a5d7656edccd204c6e94a92e348531ca50f2ff66dc70bfc7fcc18",
+      "tx_apply_index_0based": 7,
+      "toid_tx_order_1based": 8,
+      "txset_position": ".ledger_close_metas[0].v2.tx_set.v1.phases[1].v1.execution_stages[0][0][5]",
+      "evidence": [
+        {
+          "what": "invoke_contract args",
+          "json_path": ".ledger_close_metas[0].v2.tx_set.v1.phases[1].v1.execution_stages[0][0][5].tx.tx.operations[0].body.invoke_host_function.host_function.invoke_contract",
+          "excerpt": [
+            "{\"contract_address\":\"CCGU5KUWVWJUKAAK5PBB5VDVIHEZ7W4WBKEAPDQLBZJMZW4HABUFSQYT\",\"function_name\":\"muxed_id\",\"args\":[{\"ad",
+            "dress\":\"WCGU5KUWVWJUKAAK5PBB5VDVIHEZ7W4WBKEAPDQLBZJMZW4HABUFSAAAAAAAAAAAFIUOA\"}]}"
+          ]
+        },
+        {
+          "what": "return value",
+          "json_path": ".ledger_close_metas[0].v2.tx_processing[7].tx_apply_processing.v4.soroban_meta.return_value",
+          "excerpt": [
+            "{\"u64\":\"42\"}"
+          ]
+        }
+      ]
+    }
+  ],
+  "shapes_note": "excerpts are compact XDR-JSON (SEP-51 style, stellar-xdr 30.0.0 serde) of the value at json_path in `stellar-xdr decode --type LedgerCloseMetaBatch --input single --output json`; ledger_close_metas[0] is the only element"
+}
