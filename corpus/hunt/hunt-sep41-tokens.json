@@ -1,0 +1,1566 @@
+{
+ "scenario": "hunt-sep41-tokens",
+ "caps": [
+  46,
+  67
+ ],
+ "protocols": [
+  30
+ ],
+ "networks": [
+  "testnet"
+ ],
+ "profile": "lake",
+ "actors": [
+  "A",
+  "B",
+  "C",
+  "Ghost",
+  "Phantom"
+ ],
+ "contracts": {
+  "tok_a": {
+   "wasm": "contracts/token-shape.wasm",
+   "wasm_sha256": "cf3e3dd5336fecdb519923b5fa7a94fee6dffab66a45df475075ab1edcfe52c8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "address": "${acct.A}"
+    },
+    {
+     "u32": 7
+    },
+    {
+     "bytes": "5265666572656e636520546f6b656e"
+    },
+    {
+     "bytes": "524546"
+    }
+   ]
+  },
+  "tok_b": {
+   "wasm": "contracts/token-shape.wasm",
+   "wasm_sha256": "cf3e3dd5336fecdb519923b5fa7a94fee6dffab66a45df475075ab1edcfe52c8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "address": "${acct.A}"
+    },
+    {
+     "u32": 7
+    },
+    {
+     "bytes": "4c6564676572205472757468"
+    },
+    {
+     "bytes": "4c5452"
+    }
+   ]
+  },
+  "tok_c0": {
+   "wasm": "contracts/token-shape.wasm",
+   "wasm_sha256": "cf3e3dd5336fecdb519923b5fa7a94fee6dffab66a45df475075ab1edcfe52c8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "address": "${acct.A}"
+    },
+    {
+     "u32": 0
+    },
+    {
+     "bytes": "5553004443c328"
+    },
+    {
+     "bytes": "00ff"
+    }
+   ]
+  },
+  "tok_c255": {
+   "wasm": "contracts/token-shape.wasm",
+   "wasm_sha256": "cf3e3dd5336fecdb519923b5fa7a94fee6dffab66a45df475075ab1edcfe52c8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "address": "${acct.A}"
+    },
+    {
+     "u32": 255
+    },
+    {
+     "bytes": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    {
+     "bytes": "00"
+    }
+   ]
+  },
+  "tok_cmax": {
+   "wasm": "contracts/token-shape.wasm",
+   "wasm_sha256": "cf3e3dd5336fecdb519923b5fa7a94fee6dffab66a45df475075ab1edcfe52c8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "address": "${acct.A}"
+    },
+    {
+     "u32": 4294967295
+    },
+    {
+     "bytes": "eda080f8888080806e616d651b5b306d"
+    },
+    {
+     "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
+    }
+   ]
+  }
+ },
+ "setup": [
+  {
+   "fund": {
+    "A": "10000",
+    "B": "10000",
+    "C": "10000"
+   }
+  },
+  {
+   "deploy_contract": "tok_a"
+  },
+  {
+   "deploy_contract": "tok_b"
+  },
+  {
+   "deploy_contract": "tok_c0"
+  },
+  {
+   "deploy_contract": "tok_c255"
+  },
+  {
+   "deploy_contract": "tok_cmax"
+  }
+ ],
+ "steps": [
+  {
+   "id": "a-mint",
+   "notes": "(a) honest: admin mints 1,000,000 to B; event [mint, B] and balance agree.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_a)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "1000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/a-mint"
+  },
+  {
+   "id": "a-transfer",
+   "notes": "(a) honest: B transfers 1,000 to C.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_a)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/a-transfer"
+  },
+  {
+   "id": "a-approve",
+   "notes": "(a) honest: B approves C for 500.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_a)}",
+          "function_name": "approve",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "500"
+           },
+           {
+            "u32": 100000
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/a-approve"
+  },
+  {
+   "id": "a-transfer-from",
+   "notes": "(a) honest: C spends 200 of B's allowance (transfer event B -> C).",
+   "tx": {
+    "source_account": "${acct.C}",
+    "fee": 1000,
+    "seq_num": "${seq.C}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_a)}",
+          "function_name": "transfer_from",
+          "args": [
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "200"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "C"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/a-transfer-from"
+  },
+  {
+   "id": "a-burn",
+   "notes": "(a) honest: B burns 10.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_a)}",
+          "function_name": "burn",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "10"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/a-burn"
+  },
+  {
+   "id": "a-burn-from",
+   "notes": "(a) honest: C burns 5 of B's balance through the allowance.",
+   "tx": {
+    "source_account": "${acct.C}",
+    "fee": 1000,
+    "seq_num": "${seq.C}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_a)}",
+          "function_name": "burn_from",
+          "args": [
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "5"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "C"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/a-burn-from"
+  },
+  {
+   "id": "b-mint-seed",
+   "notes": "(b) setup: honest mint of 1,000,000 to B.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "1000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-mint-seed"
+  },
+  {
+   "id": "b-event-transfer-no-balance-change",
+   "notes": "(b) transfer event Ghost -> Phantom of 1,000; no storage change, no authorization; Ghost and Phantom never held the token.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "fake_transfer",
+          "args": [
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-event-transfer-no-balance-change"
+  },
+  {
+   "id": "b-event-mint-no-balance-change",
+   "notes": "(b) mint event of 2^63 to Ghost; no storage change.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "fake_mint",
+          "args": [
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "i128": "9223372036854775808"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-event-mint-no-balance-change"
+  },
+  {
+   "id": "b-balance-change-no-event",
+   "notes": "(b) C's stored balance becomes 777 with no event.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "silent_set",
+          "args": [
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "777"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-balance-change-no-event"
+  },
+  {
+   "id": "b-event-amount-differs",
+   "notes": "(b) storage moves 10 from B to C; the transfer event says 1,000.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "skewed_transfer",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "10"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-event-amount-differs"
+  },
+  {
+   "id": "b-event-amount-negative",
+   "notes": "(b) storage moves 10; the event says -10.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "skewed_transfer",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "10"
+           },
+           {
+            "i128": "-10"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-event-amount-negative"
+  },
+  {
+   "id": "b-event-fake-transfer-negative",
+   "notes": "(b) transfer event with amount -1, no storage change.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "fake_transfer",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "-1"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-event-fake-transfer-negative"
+  },
+  {
+   "id": "b-event-fake-transfer-zero",
+   "notes": "(b) transfer event with amount 0, no storage change.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "fake_transfer",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "0"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-event-fake-transfer-zero"
+  },
+  {
+   "id": "b-event-fake-transfer-i128-max",
+   "notes": "(b) transfer event of i128 max from never-funded Phantom.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "fake_transfer",
+          "args": [
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "170141183460469231731687303715884105727"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-event-fake-transfer-i128-max"
+  },
+  {
+   "id": "b-transfer-from-equals-to",
+   "notes": "(b) transfer with from = to (storage nets to zero; one event).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "50"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-transfer-from-equals-to"
+  },
+  {
+   "id": "b-mint-negative",
+   "notes": "(b) mint of -50 to never-funded Phantom: event and stored balance -50.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "-50"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-mint-negative"
+  },
+  {
+   "id": "b-mint-zero",
+   "notes": "(b) mint of zero.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "0"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-mint-zero"
+  },
+  {
+   "id": "b-mint-above-2-pow-63",
+   "notes": "(b) mint of 2^64 (stored balance above int64).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "18446744073709551616"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-mint-above-2-pow-63"
+  },
+  {
+   "id": "b-burn-more-than-held",
+   "notes": "(b) burn of 5 from Ghost, who holds nothing (balance goes to -5); needs Ghost's authorization, so expected to fail (recorded).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_b)}",
+          "function_name": "burn",
+          "args": [
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "i128": "5"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/b-burn-more-than-held"
+  },
+  {
+   "id": "c-c0-name",
+   "notes": "(c) name() of tok_c0: arbitrary bytes returned as SCString.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c0)}",
+          "function_name": "name",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c0-name"
+  },
+  {
+   "id": "c-c0-symbol",
+   "notes": "(c) symbol() of tok_c0.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c0)}",
+          "function_name": "symbol",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c0-symbol"
+  },
+  {
+   "id": "c-c0-decimals",
+   "notes": "(c) decimals() of tok_c0.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c0)}",
+          "function_name": "decimals",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c0-decimals"
+  },
+  {
+   "id": "c-c0-mint",
+   "notes": "(c) honest mint from tok_c0.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c0)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c0-mint"
+  },
+  {
+   "id": "c-c255-name",
+   "notes": "(c) name() of tok_c255: arbitrary bytes returned as SCString.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c255)}",
+          "function_name": "name",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c255-name"
+  },
+  {
+   "id": "c-c255-symbol",
+   "notes": "(c) symbol() of tok_c255.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c255)}",
+          "function_name": "symbol",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c255-symbol"
+  },
+  {
+   "id": "c-c255-decimals",
+   "notes": "(c) decimals() of tok_c255.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c255)}",
+          "function_name": "decimals",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c255-decimals"
+  },
+  {
+   "id": "c-c255-mint",
+   "notes": "(c) honest mint from tok_c255.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c255)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-c255-mint"
+  },
+  {
+   "id": "c-cmax-name",
+   "notes": "(c) name() of tok_cmax: arbitrary bytes returned as SCString.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_cmax)}",
+          "function_name": "name",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-cmax-name"
+  },
+  {
+   "id": "c-cmax-symbol",
+   "notes": "(c) symbol() of tok_cmax.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_cmax)}",
+          "function_name": "symbol",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-cmax-symbol"
+  },
+  {
+   "id": "c-cmax-decimals",
+   "notes": "(c) decimals() of tok_cmax.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_cmax)}",
+          "function_name": "decimals",
+          "args": []
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-cmax-decimals"
+  },
+  {
+   "id": "c-cmax-mint",
+   "notes": "(c) honest mint from tok_cmax.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_cmax)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-cmax-mint"
+  },
+  {
+   "id": "c-transfer-tagged-nul-ff",
+   "notes": "(c) honest transfer whose event has a fourth topic SCString with NUL and 0xff (SAC-style asset string).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c0)}",
+          "function_name": "transfer_tagged",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "1"
+           },
+           {
+            "bytes": "55530044433afffe"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-transfer-tagged-nul-ff"
+  },
+  {
+   "id": "c-transfer-tagged-1024",
+   "notes": "(c) the same with a 1,024-byte SCString of 0xc3 (invalid UTF-8: lone lead bytes).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok_c255)}",
+          "function_name": "transfer_tagged",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "address": "${acct.C}"
+           },
+           {
+            "i128": "1"
+           },
+           {
+            "bytes": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/c-transfer-tagged-1024"
+  }
+ ]
+}

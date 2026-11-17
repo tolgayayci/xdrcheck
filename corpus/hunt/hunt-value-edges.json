@@ -1,0 +1,863 @@
+{
+ "scenario": "hunt-value-edges",
+ "caps": [
+  1,
+  21,
+  33,
+  35,
+  38
+ ],
+ "protocols": [
+  30
+ ],
+ "networks": [
+  "testnet"
+ ],
+ "profile": "lake",
+ "actors": [
+  "A",
+  "B",
+  "IX",
+  "IY",
+  "LP",
+  "LP2",
+  "BIG",
+  "MG",
+  "SUB",
+  "SP"
+ ],
+ "assets": {
+  "X": {
+   "credit_alphanum4": {
+    "asset_code": "XX",
+    "issuer": "${acct.IX}"
+   }
+  },
+  "Y": {
+   "credit_alphanum4": {
+    "asset_code": "YY",
+    "issuer": "${acct.IY}"
+   }
+  }
+ },
+ "contracts": {
+  "emitter": {
+   "wasm": "contracts/shape-emitter.wasm",
+   "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "symbol": "xcc"
+    }
+   ]
+  }
+ },
+ "setup": [
+  {
+   "fund": {
+    "A": "100000",
+    "B": "10000",
+    "IX": "10000",
+    "IY": "10000",
+    "LP": "10000",
+    "LP2": "10000",
+    "BIG": "10000",
+    "MG": "100",
+    "SUB": "100",
+    "SP": "100"
+   }
+  },
+  {
+   "trust": {
+    "LP": [
+     "X",
+     "Y"
+    ],
+    "LP2": [
+     "X",
+     "Y"
+    ],
+    "BIG": "X",
+    "SUB": "X"
+   }
+  },
+  {
+   "tx": {
+    "source_account": "${acct.LP}",
+    "fee": 500,
+    "seq_num": "${seq.LP}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "change_trust": {
+        "line": {
+         "pool_share": {
+          "liquidity_pool_constant_product": {
+           "asset_a": "${asset.X}",
+           "asset_b": "${asset.Y}",
+           "fee": 30
+          }
+         }
+        },
+        "limit": "9223372036854775807"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   }
+  },
+  {
+   "tx": {
+    "source_account": "${acct.LP2}",
+    "fee": 500,
+    "seq_num": "${seq.LP2}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "change_trust": {
+        "line": {
+         "pool_share": {
+          "liquidity_pool_constant_product": {
+           "asset_a": "${asset.X}",
+           "asset_b": "${asset.Y}",
+           "fee": 30
+          }
+         }
+        },
+        "limit": "9223372036854775807"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   }
+  },
+  {
+   "pay": {
+    "from": "IX",
+    "to": "LP",
+    "asset": "X",
+    "amount": "100"
+   }
+  },
+  {
+   "pay": {
+    "from": "IY",
+    "to": "LP",
+    "asset": "Y",
+    "amount": "1000000"
+   }
+  },
+  {
+   "pay": {
+    "from": "IX",
+    "to": "LP2",
+    "asset": "X",
+    "amount": "100"
+   }
+  },
+  {
+   "pay": {
+    "from": "IY",
+    "to": "LP2",
+    "asset": "Y",
+    "amount": "100"
+   }
+  },
+  {
+   "deploy_contract": "emitter"
+  }
+ ],
+ "steps": [
+  {
+   "id": "pool-first-deposit-skewed",
+   "notes": "First deposit into a pool at a ratio of 1 : 10^9 stroops.",
+   "tx": {
+    "source_account": "${acct.LP}",
+    "fee": 300,
+    "seq_num": "${seq.LP}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "liquidity_pool_deposit": {
+        "liquidity_pool_id": "${pool(X, Y)}",
+        "max_amount_a": "1",
+        "max_amount_b": "1000000000",
+        "min_price": {
+         "n": 1,
+         "d": 2147483647
+        },
+        "max_price": {
+         "n": 2147483647,
+         "d": 1
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "LP"
+    }
+   ],
+   "entry": "explore/pool-first-deposit-skewed"
+  },
+  {
+   "id": "pool-tiny-deposit-zero-leg",
+   "notes": "Deposit of at most 1 stroop of each asset into the skewed pool: rounding may make one leg zero (outcome recorded).",
+   "tx": {
+    "source_account": "${acct.LP2}",
+    "fee": 301,
+    "seq_num": "${seq.LP2}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "liquidity_pool_deposit": {
+        "liquidity_pool_id": "${pool(X, Y)}",
+        "max_amount_a": "1",
+        "max_amount_b": "1",
+        "min_price": {
+         "n": 1,
+         "d": 2147483647
+        },
+        "max_price": {
+         "n": 2147483647,
+         "d": 1
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "LP2"
+    }
+   ],
+   "entry": "explore/pool-tiny-deposit-zero-leg"
+  },
+  {
+   "id": "pool-tiny-withdraw-zero-leg",
+   "notes": "Withdraw 1 pool share with minimums 0: the X leg rounds to zero (outcome recorded).",
+   "tx": {
+    "source_account": "${acct.LP}",
+    "fee": 302,
+    "seq_num": "${seq.LP}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "liquidity_pool_withdraw": {
+        "liquidity_pool_id": "${pool(X, Y)}",
+        "amount": "1",
+        "min_amount_a": "0",
+        "min_amount_b": "0"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "LP"
+    }
+   ],
+   "entry": "explore/pool-tiny-withdraw-zero-leg"
+  },
+  {
+   "id": "path-send-rounds-to-zero",
+   "notes": "Strict-send of 1 stroop of Y through the pool into X: output rounds to zero (expected UNDER_DESTMIN; recorded).",
+   "tx": {
+    "source_account": "${acct.LP2}",
+    "fee": 303,
+    "seq_num": "${seq.LP2}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "path_payment_strict_send": {
+        "send_asset": "${asset.Y}",
+        "send_amount": "1",
+        "destination": "${acct.LP2}",
+        "dest_asset": "${asset.X}",
+        "dest_min": "1",
+        "path": []
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "LP2"
+    }
+   ],
+   "entry": "explore/path-send-rounds-to-zero"
+  },
+  {
+   "id": "payment-int64-max-issued",
+   "notes": "Issuer pays INT64_MAX of an issued asset into a trustline with the maximum limit.",
+   "tx": {
+    "source_account": "${acct.IX}",
+    "fee": 304,
+    "seq_num": "${seq.IX}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.BIG}",
+        "asset": "${asset.X}",
+        "amount": "9223372036854775807"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "IX"
+    }
+   ],
+   "entry": "explore/payment-int64-max-issued"
+  },
+  {
+   "id": "payment-into-full-line",
+   "notes": "One more stroop into the full trustline (expected LINE_FULL).",
+   "tx": {
+    "source_account": "${acct.IX}",
+    "fee": 305,
+    "seq_num": "${seq.IX}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.BIG}",
+        "asset": "${asset.X}",
+        "amount": "1"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "IX"
+    }
+   ],
+   "entry": "explore/payment-into-full-line"
+  },
+  {
+   "id": "time-bounds-max-u64",
+   "notes": "Time bounds [0, 2^64-1] (maxTime above 2^63).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 100,
+    "seq_num": "${seq.A}",
+    "cond": {
+     "time": {
+      "min_time": "0",
+      "max_time": "18446744073709551615"
+     }
+    },
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "1"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/time-bounds-max-u64"
+  },
+  {
+   "id": "time-bounds-max-2-pow-63",
+   "notes": "Time bounds [1, 2^63].",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 100,
+    "seq_num": "${seq.A}",
+    "cond": {
+     "time": {
+      "min_time": "1",
+      "max_time": "9223372036854775808"
+     }
+    },
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "2"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/time-bounds-max-2-pow-63"
+  },
+  {
+   "id": "ledger-bounds-0-0",
+   "notes": "PRECOND_V2 with ledger bounds [0, 0] (0 = no upper bound).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 100,
+    "seq_num": "${seq.A}",
+    "cond": {
+     "v2": {
+      "time_bounds": null,
+      "ledger_bounds": {
+       "min_ledger": 0,
+       "max_ledger": 0
+      },
+      "min_seq_num": null,
+      "min_seq_age": "0",
+      "min_seq_ledger_gap": 0,
+      "extra_signers": []
+     }
+    },
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "3"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/ledger-bounds-0-0"
+  },
+  {
+   "id": "ledger-bounds-max-u32",
+   "notes": "Ledger bounds [1, 2^32-1], time bounds [0,0], minSeqNum 0 present.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 100,
+    "seq_num": "${seq.A}",
+    "cond": {
+     "v2": {
+      "time_bounds": {
+       "min_time": "0",
+       "max_time": "0"
+      },
+      "ledger_bounds": {
+       "min_ledger": 1,
+       "max_ledger": 4294967295
+      },
+      "min_seq_num": "0",
+      "min_seq_age": "0",
+      "min_seq_ledger_gap": 0,
+      "extra_signers": []
+     }
+    },
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "4"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/ledger-bounds-max-u32"
+  },
+  {
+   "id": "fee-bump-of-soroban",
+   "notes": "A fee bump (fee source A) wrapping a simulated Soroban invocation.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "topic_count",
+          "args": [
+           {
+            "u32": 2
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "fee_bump": {
+    "fee_source": "A",
+    "fee": "300000000"
+   },
+   "entry": "explore/fee-bump-of-soroban"
+  },
+  {
+   "id": "failed-soroban-with-events",
+   "notes": "A Soroban call that emits an event and then fails: the fee is charged, the contract event survives only as a diagnostic event (inSuccessfulContractCall false).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 90001000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "fail_after_emit",
+          "args": [
+           {
+            "u32": 7
+           }
+          ]
+         }
+        },
+        "auth": []
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "contract_code": {
+           "hash": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8"
+          }
+         }
+        ],
+        "read_write": []
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/failed-soroban-with-events"
+  },
+  {
+   "id": "failed-classic-fee-charged",
+   "notes": "A classic payment larger than the balance: fails at apply (UNDERFUNDED), fee charged.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 100,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "90000000000000000"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/failed-classic-fee-charged"
+  },
+  {
+   "id": "merge-into-muxed-max-id",
+   "notes": "AccountMerge into a muxed destination with id 2^64-1.",
+   "tx": {
+    "source_account": "${acct.MG}",
+    "fee": 100,
+    "seq_num": "${seq.MG}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "account_merge": "${muxed(B, 18446744073709551615)}"
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "MG"
+    }
+   ],
+   "entry": "explore/merge-into-muxed-max-id"
+  },
+  {
+   "id": "merge-with-subentries",
+   "notes": "AccountMerge of an account that still has a trustline (expected HAS_SUB_ENTRIES).",
+   "tx": {
+    "source_account": "${acct.SUB}",
+    "fee": 100,
+    "seq_num": "${seq.SUB}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "account_merge": "${acct.B}"
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "SUB"
+    }
+   ],
+   "entry": "explore/merge-with-subentries"
+  },
+  {
+   "id": "claimable-every-predicate-arm",
+   "notes": "One claimable balance whose claimants use every predicate arm (unconditional, and, or, not, before_absolute_time incl. 0 and INT64_MAX, before_relative_time 0 and INT64_MAX).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 100,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "create_claimable_balance": {
+        "asset": "native",
+        "amount": "10000000",
+        "claimants": [
+         {
+          "claimant_type_v0": {
+           "destination": "${acct.B}",
+           "predicate": "unconditional"
+          }
+         },
+         {
+          "claimant_type_v0": {
+           "destination": "${acct.LP}",
+           "predicate": {
+            "and": [
+             {
+              "before_absolute_time": "9223372036854775807"
+             },
+             {
+              "not": {
+               "before_relative_time": "0"
+              }
+             }
+            ]
+           }
+          }
+         },
+         {
+          "claimant_type_v0": {
+           "destination": "${acct.LP2}",
+           "predicate": {
+            "or": [
+             {
+              "before_relative_time": "9223372036854775807"
+             },
+             {
+              "not": "unconditional"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "claimant_type_v0": {
+           "destination": "${acct.IX}",
+           "predicate": {
+            "before_absolute_time": "0"
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/claimable-every-predicate-arm"
+  },
+  {
+   "id": "sponsor-revoke-trustline",
+   "notes": "Sponsorship sandwich creating SP's trustline, then the sponsor revokes the sponsorship in the same transaction (another account's entry changes sponsor).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 400,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "begin_sponsoring_future_reserves": {
+        "sponsored_id": "${acct.SP}"
+       }
+      }
+     },
+     {
+      "source_account": "${acct.SP}",
+      "body": {
+       "change_trust": {
+        "line": "${asset.X}",
+        "limit": "1000"
+       }
+      }
+     },
+     {
+      "source_account": "${acct.SP}",
+      "body": "end_sponsoring_future_reserves"
+     },
+     {
+      "source_account": null,
+      "body": {
+       "revoke_sponsorship": {
+        "ledger_entry": {
+         "trustline": {
+          "account_id": "${acct.SP}",
+          "asset": "${asset.X}"
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    },
+    {
+     "key": "SP"
+    }
+   ],
+   "entry": "explore/sponsor-revoke-trustline"
+  }
+ ]
+}

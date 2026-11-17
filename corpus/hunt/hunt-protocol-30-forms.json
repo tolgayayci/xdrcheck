@@ -1,0 +1,877 @@
+{
+ "scenario": "hunt-protocol-30-forms",
+ "caps": [
+  84,
+  87,
+  88
+ ],
+ "protocols": [
+  30
+ ],
+ "networks": [
+  "testnet"
+ ],
+ "profile": "lake",
+ "actors": [
+  "A",
+  "B",
+  "H",
+  "I"
+ ],
+ "assets": {
+  "USDC": {
+   "credit_alphanum4": {
+    "asset_code": "USDC",
+    "issuer": "${acct.I}"
+   }
+  }
+ },
+ "contracts": {
+  "emitter": {
+   "wasm": "contracts/shape-emitter.wasm",
+   "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "symbol": "xcc"
+    }
+   ]
+  },
+  "recipient": {
+   "wasm": "contracts/shape-emitter.wasm",
+   "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+   "deployer": "A"
+  }
+ },
+ "setup": [
+  {
+   "fund": {
+    "A": "10000",
+    "B": "10000",
+    "H": "10000",
+    "I": "10000"
+   }
+  },
+  {
+   "trust": {
+    "H": "USDC",
+    "B": "USDC"
+   }
+  },
+  {
+   "pay": {
+    "from": "I",
+    "to": "H",
+    "asset": "USDC",
+    "amount": "1000"
+   }
+  },
+  {
+   "deploy_sac": "USDC"
+  },
+  {
+   "deploy_sac": "native"
+  },
+  {
+   "deploy_contract": "emitter"
+  }
+ ],
+ "steps": [
+  {
+   "id": "w-native-sac-id-0",
+   "notes": "Native SAC transfer to a muxed contract address (W..., id 0): the event `to` topic is the plain C... address, the id is `to_muxed_id` (u64) in a map data.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(native)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.A}"
+           },
+           {
+            "address": "${muxed_contract(recipient, 0)}"
+           },
+           {
+            "i128": "100000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-native-sac-id-0"
+  },
+  {
+   "id": "w-usdc-id-2-pow-53",
+   "notes": "Issued-asset SAC transfer to W... with muxed id 9007199254740992; the recorded authorization entry carries the W... address in its invocation arguments.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${muxed_contract(recipient, 9007199254740992)}"
+           },
+           {
+            "i128": "1000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-usdc-id-2-pow-53"
+  },
+  {
+   "id": "w-usdc-id-2-pow-63",
+   "notes": "Issued-asset SAC transfer to W... with muxed id 9223372036854775808; the recorded authorization entry carries the W... address in its invocation arguments.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${muxed_contract(recipient, 9223372036854775808)}"
+           },
+           {
+            "i128": "1000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-usdc-id-2-pow-63"
+  },
+  {
+   "id": "w-usdc-id-u64-max",
+   "notes": "Issued-asset SAC transfer to W... with muxed id 18446744073709551615; the recorded authorization entry carries the W... address in its invocation arguments.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${muxed_contract(recipient, 18446744073709551615)}"
+           },
+           {
+            "i128": "1000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-usdc-id-u64-max"
+  },
+  {
+   "id": "w-issuer-transfer-emits-mint",
+   "notes": "Issuer as `from`: the SAC emits `mint` (not `transfer`) with to_muxed_id 7 for a W... recipient.",
+   "tx": {
+    "source_account": "${acct.I}",
+    "fee": 1000,
+    "seq_num": "${seq.I}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.I}"
+           },
+           {
+            "address": "${muxed_contract(recipient, 7)}"
+           },
+           {
+            "i128": "5000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "I"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-issuer-transfer-emits-mint"
+  },
+  {
+   "id": "w-to-deployed-contract",
+   "notes": "W... whose contract exists on the ledger (the emitter instance).",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${muxed_contract(emitter, 1)}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-to-deployed-contract"
+  },
+  {
+   "id": "w-in-event-topic-and-data",
+   "notes": "A contract parses a W... strkey and emits the MuxedAddress as an event topic and as event data, and returns it: SC_ADDRESS_TYPE_MUXED_CONTRACT inside a contract event.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "address_from_strkey",
+          "args": [
+           {
+            "string": "${muxed_contract(recipient, 42)}"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-in-event-topic-and-data"
+  },
+  {
+   "id": "w-echo-argument",
+   "notes": "A W... address passed as a contract argument (Val), emitted in topics/data and returned.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "address_echo",
+          "args": [
+           {
+            "address": "${muxed_contract(recipient, 18446744073709551615)}"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-echo-argument"
+  },
+  {
+   "id": "w-in-contract-data-value",
+   "notes": "Store a W... address as a persistent contract-data value (outcome recorded: host may refuse).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "put",
+          "args": [
+           {
+            "u32": 1
+           },
+           {
+            "symbol": "wval"
+           },
+           {
+            "address": "${muxed_contract(recipient, 9)}"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/w-in-contract-data-value"
+  },
+  {
+   "id": "w-in-contract-data-key",
+   "notes": "A W... address as a contract-data key: CAP-0084 says the host refuses it. Declared footprint so the outcome is a closed ledger (or a submission refusal).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 90001000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "put",
+          "args": [
+           {
+            "u32": 1
+           },
+           {
+            "address": "${muxed_contract(recipient, 9)}"
+           },
+           {
+            "u32": 1
+           }
+          ]
+         }
+        },
+        "auth": []
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "contract_code": {
+           "hash": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8"
+          }
+         }
+        ],
+        "read_write": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": {
+            "address": "${muxed_contract(recipient, 9)}"
+           },
+           "durability": "persistent"
+          }
+         }
+        ]
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/w-in-contract-data-key"
+  },
+  {
+   "id": "w-as-transfer-from",
+   "notes": "A W... address where the contract declares `Address` (custom-token transfer `from`): the host's type check decides.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 90001000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${muxed_contract(recipient, 3)}"
+           },
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "i128": "1"
+           },
+           {
+            "bool": false
+           },
+           "void"
+          ]
+         }
+        },
+        "auth": []
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "contract_code": {
+           "hash": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8"
+          }
+         }
+        ],
+        "read_write": []
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/w-as-transfer-from"
+  },
+  {
+   "id": "w-unmatched-auth-credential",
+   "notes": "An authorization entry whose credential address is W... (never matched, so never verified): the W... form in SorobanAddressCredentials.address and in the declared invocation.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 90001000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "topic_count",
+          "args": [
+           {
+            "u32": 1
+           }
+          ]
+         }
+        },
+        "auth": [
+         {
+          "credentials": {
+           "address": {
+            "address": "${muxed_contract(recipient, 5)}",
+            "nonce": "11",
+            "signature_expiration_ledger": 1,
+            "signature": "void"
+           }
+          },
+          "root_invocation": {
+           "function": {
+            "contract_fn": {
+             "contract_address": "${contract.sac(USDC)}",
+             "function_name": "transfer",
+             "args": [
+              {
+               "address": "${muxed_contract(recipient, 5)}"
+              },
+              {
+               "address": "${acct.B}"
+              },
+              {
+               "i128": "1"
+              }
+             ]
+            }
+           },
+           "sub_invocations": []
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "contract_code": {
+           "hash": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8"
+          }
+         }
+        ],
+        "read_write": []
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/w-unmatched-auth-credential"
+  },
+  {
+   "id": "w-as-invoked-contract",
+   "notes": "InvokeContractArgs.contract_address set to a W... address (outcome recorded).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 90001000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${muxed_contract(emitter, 2)}",
+          "function_name": "topic_count",
+          "args": [
+           {
+            "u32": 1
+           }
+          ]
+         }
+        },
+        "auth": []
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "contract_code": {
+           "hash": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8"
+          }
+         }
+        ],
+        "read_write": []
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/w-as-invoked-contract"
+  },
+  {
+   "id": "ml-dsa-87-signature-size-bytes",
+   "notes": "A 4,627-byte SCV_BYTES argument (the ML-DSA-87 signature size, CAP-0087).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "bytes_len",
+          "args": [
+           {
+            "bytes": "ababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababababab"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/ml-dsa-87-signature-size-bytes"
+  },
+  {
+   "id": "ml-dsa-87-key-size-bytes",
+   "notes": "A 2,592-byte SCV_BYTES argument (the ML-DSA-87 verifying-key size).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "bytes_len",
+          "args": [
+           {
+            "bytes": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/ml-dsa-87-key-size-bytes"
+  }
+ ]
+}

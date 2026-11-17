@@ -1,0 +1,423 @@
+{
+ "scenario": "hunt-protocol-29-to-30-upgrade",
+ "caps": [
+  84,
+  87,
+  88
+ ],
+ "protocols": [
+  29
+ ],
+ "networks": [
+  "testnet"
+ ],
+ "profile": "lake",
+ "actors": [
+  "A",
+  "B",
+  "H",
+  "I"
+ ],
+ "assets": {
+  "USDC": {
+   "credit_alphanum4": {
+    "asset_code": "USDC",
+    "issuer": "${acct.I}"
+   }
+  }
+ },
+ "contracts": {
+  "recipient": {
+   "wasm": "contracts/shape-emitter.wasm",
+   "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+   "deployer": "A"
+  }
+ },
+ "setup": [
+  {
+   "fund": {
+    "A": "10000",
+    "B": "10000",
+    "H": "10000",
+    "I": "10000"
+   }
+  },
+  {
+   "trust": {
+    "H": "USDC",
+    "A": "USDC"
+   }
+  },
+  {
+   "pay": {
+    "from": "I",
+    "to": "H",
+    "asset": "USDC",
+    "amount": "1000"
+   }
+  },
+  {
+   "deploy_sac": "USDC"
+  }
+ ],
+ "steps": [
+  {
+   "id": "p29-payment",
+   "notes": "Classic payment on the last Protocol 29 ledgers (STELLAR_VALUE_SIGNED, whole seconds).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 100,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "10000000"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/p29-payment"
+  },
+  {
+   "id": "p29-sac-transfer",
+   "notes": "SAC transfer at Protocol 29.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${acct.A}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/p29-sac-transfer"
+  },
+  {
+   "id": "upgrade-ledger-payment",
+   "notes": "A payment in the upgrade ledger: applied under Protocol 29 rules, the header already says 30, StellarValue.ext is still STELLAR_VALUE_SIGNED, and upgradesProcessing extends the cost-parameter arrays (createCostTypesForV30).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 101,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "20000000"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "upgrade": {
+    "protocolversion": 30
+   },
+   "entry": "explore/upgrade-ledger-payment"
+  },
+  {
+   "id": "upgrade-ledger-w-transfer-at-29",
+   "notes": "A W... transfer submitted while the network is still at Protocol 29 (same ledger as the upgrade): does core admit it, and how does the Protocol 29 host treat it?",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 90001200,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${muxed_contract(recipient, 1)}"
+           },
+           {
+            "i128": "1"
+           }
+          ]
+         }
+        },
+        "auth": [
+         {
+          "credentials": "source_account",
+          "root_invocation": {
+           "function": {
+            "contract_fn": {
+             "contract_address": "${contract.sac(USDC)}",
+             "function_name": "transfer",
+             "args": [
+              {
+               "address": "${acct.H}"
+              },
+              {
+               "address": "${muxed_contract(recipient, 1)}"
+              },
+              {
+               "i128": "1"
+              }
+             ]
+            }
+           },
+           "sub_invocations": []
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.sac(USDC)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "account": {
+           "account_id": "${acct.I}"
+          }
+         }
+        ],
+        "read_write": [
+         {
+          "trustline": {
+           "account_id": "${acct.H}",
+           "asset": "${asset.USDC}"
+          }
+         },
+         {
+          "contract_data": {
+           "contract": "${contract.sac(USDC)}",
+           "key": {
+            "vec": [
+             {
+              "symbol": "Balance"
+             },
+             {
+              "address": "${contract.id(recipient)}"
+             }
+            ]
+           },
+           "durability": "persistent"
+          }
+         }
+        ]
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "soroban_resources": "declared",
+   "same_ledger_as": "upgrade-ledger-payment",
+   "entry": "explore/upgrade-ledger-w-transfer-at-29"
+  },
+  {
+   "id": "upgrade-ledger-sac-transfer",
+   "notes": "A Soroban transaction (SAC transfer, simulated on the Protocol 29 host) in the upgrade ledger.",
+   "tx": {
+    "source_account": "${acct.I}",
+    "fee": 1300,
+    "seq_num": "${seq.I}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.I}"
+           },
+           {
+            "address": "${acct.A}"
+           },
+           {
+            "i128": "7"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "I"
+    }
+   ],
+   "simulate": true,
+   "same_ledger_as": "upgrade-ledger-payment",
+   "entry": "explore/upgrade-ledger-sac-transfer"
+  },
+  {
+   "id": "p30-first-ledger-payment",
+   "notes": "First ledger after the upgrade: StellarValue.ext becomes STELLAR_VALUE_SIGNED_MS.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 102,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "payment": {
+        "destination": "${acct.B}",
+        "asset": "native",
+        "amount": "30000000"
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "entry": "explore/p30-first-ledger-payment"
+  },
+  {
+   "id": "p30-first-w-transfer",
+   "notes": "First W... transfer after the upgrade (simulated on the Protocol 30 host).",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${muxed_contract(recipient, 9223372036854775808)}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/p30-first-w-transfer"
+  },
+  {
+   "id": "p30-close-1",
+   "notes": "Empty ledgers after the upgrade.",
+   "close": {
+    "ledgers": 2
+   },
+   "entry": "explore/p30-close-1"
+  }
+ ]
+}

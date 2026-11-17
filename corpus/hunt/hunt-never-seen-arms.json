@@ -1,0 +1,254 @@
+{
+ "scenario": "hunt-never-seen-arms",
+ "caps": [
+  46
+ ],
+ "protocols": [
+  30
+ ],
+ "networks": [
+  "testnet"
+ ],
+ "profile": "lake",
+ "actors": [
+  "A",
+  "B"
+ ],
+ "contracts": {
+  "emitter": {
+   "wasm": "contracts/shape-emitter.wasm",
+   "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "symbol": "xcc"
+    }
+   ]
+  }
+ },
+ "setup": [
+  {
+   "fund": {
+    "A": "10000",
+    "B": "10000"
+   }
+  },
+  {
+   "deploy_contract": "emitter"
+  }
+ ],
+ "steps": [
+  {
+   "id": "scv-duration-return",
+   "notes": "An SCV_DURATION argument echoed as the return value (arm never seen on mainnet).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "echo",
+          "args": [
+           {
+            "duration": "86400"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/scv-duration-return"
+  },
+  {
+   "id": "scv-duration-in-event",
+   "notes": "SCV_DURATION 0 as a topic and u64 max as event data.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "emit",
+          "args": [
+           {
+            "vec": [
+             {
+              "symbol": "d"
+             },
+             {
+              "duration": "0"
+             }
+            ]
+           },
+           {
+            "duration": "18446744073709551615"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/scv-duration-in-event"
+  },
+  {
+   "id": "scv-vec-none-argument",
+   "notes": "SCV_VEC with an absent body (Option none) as an argument: the host refuses it; closed as a failed transaction, so the arm is in a closed envelope.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 90001000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "echo",
+          "args": [
+           {
+            "vec": null
+           }
+          ]
+         }
+        },
+        "auth": []
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "contract_code": {
+           "hash": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8"
+          }
+         }
+        ],
+        "read_write": []
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/scv-vec-none-argument"
+  },
+  {
+   "id": "extend-ttl-insufficient-refundable-fee",
+   "notes": "ExtendFootprintTTL far ahead with a resource fee too small for the rent (expected EXTEND_FOOTPRINT_TTL_INSUFFICIENT_REFUNDABLE_FEE).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 2000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "extend_footprint_ttl": {
+        "ext": "v0",
+        "extend_to": 2000000
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.id(emitter)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "contract_code": {
+           "hash": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8"
+          }
+         }
+        ],
+        "read_write": []
+       },
+       "instructions": 0,
+       "disk_read_bytes": 0,
+       "write_bytes": 0
+      },
+      "resource_fee": "1000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/extend-ttl-insufficient-refundable-fee"
+  }
+ ]
+}

@@ -1,0 +1,1563 @@
+{
+ "scenario": "hunt-token-event-lookalikes",
+ "caps": [
+  46,
+  67
+ ],
+ "protocols": [
+  30
+ ],
+ "networks": [
+  "testnet"
+ ],
+ "profile": "lake",
+ "actors": [
+  "A",
+  "B",
+  "H",
+  "I",
+  "Ghost",
+  "Phantom"
+ ],
+ "assets": {
+  "USDC": {
+   "credit_alphanum4": {
+    "asset_code": "USDC",
+    "issuer": "${acct.I}"
+   }
+  }
+ },
+ "contracts": {
+  "emitter": {
+   "wasm": "contracts/shape-emitter.wasm",
+   "wasm_sha256": "b53305d9913b679f137ae4d44f1ea2d32f57502f1b12aaa26406168ef4daaed8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "symbol": "xcc"
+    }
+   ]
+  },
+  "tok": {
+   "wasm": "contracts/token-shape.wasm",
+   "wasm_sha256": "cf3e3dd5336fecdb519923b5fa7a94fee6dffab66a45df475075ab1edcfe52c8",
+   "deployer": "A",
+   "constructor_args": [
+    {
+     "address": "${acct.A}"
+    },
+    {
+     "u32": 7
+    },
+    {
+     "bytes": "55534420436f696e"
+    },
+    {
+     "bytes": "55534443"
+    }
+   ]
+  }
+ },
+ "setup": [
+  {
+   "fund": {
+    "A": "10000",
+    "B": "10000",
+    "H": "10000",
+    "I": "10000"
+   }
+  },
+  {
+   "tx": {
+    "source_account": "${acct.I}",
+    "fee": 500,
+    "seq_num": "${seq.I}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "set_options": {
+        "inflation_dest": null,
+        "clear_flags": null,
+        "set_flags": 10,
+        "master_weight": null,
+        "low_threshold": null,
+        "med_threshold": null,
+        "high_threshold": null,
+        "home_domain": null,
+        "signer": null
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   }
+  },
+  {
+   "trust": {
+    "H": "USDC",
+    "B": "USDC"
+   }
+  },
+  {
+   "pay": {
+    "from": "I",
+    "to": "H",
+    "asset": "USDC",
+    "amount": "1000"
+   }
+  },
+  {
+   "deploy_sac": "USDC"
+  },
+  {
+   "deploy_contract": "emitter"
+  },
+  {
+   "deploy_contract": "tok"
+  }
+ ],
+ "steps": [
+  {
+   "id": "forged-sac-transfer-zero",
+   "notes": "Custom contract emits [transfer, Ghost, Phantom, \"USDC:<issuer>\"] (the SAC layout naming the real classic asset) with i128 0; Ghost and Phantom never existed and never held USDC.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "transfer"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Ghost}"
+             },
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "0"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-transfer-zero"
+  },
+  {
+   "id": "forged-sac-transfer-negative",
+   "notes": "Custom contract emits [transfer, Ghost, Phantom, \"USDC:<issuer>\"] (the SAC layout naming the real classic asset) with i128 -1; Ghost and Phantom never existed and never held USDC.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "transfer"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Ghost}"
+             },
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "-1"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-transfer-negative"
+  },
+  {
+   "id": "forged-sac-transfer-above-2-pow-63",
+   "notes": "Custom contract emits [transfer, Ghost, Phantom, \"USDC:<issuer>\"] (the SAC layout naming the real classic asset) with i128 9223372036854775808; Ghost and Phantom never existed and never held USDC.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "transfer"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Ghost}"
+             },
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "9223372036854775808"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-transfer-above-2-pow-63"
+  },
+  {
+   "id": "forged-sac-transfer-i128-max",
+   "notes": "Custom contract emits [transfer, Ghost, Phantom, \"USDC:<issuer>\"] (the SAC layout naming the real classic asset) with i128 170141183460469231731687303715884105727; Ghost and Phantom never existed and never held USDC.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "transfer"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Ghost}"
+             },
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "170141183460469231731687303715884105727"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-transfer-i128-max"
+  },
+  {
+   "id": "forged-sac-transfer-i128-min",
+   "notes": "Custom contract emits [transfer, Ghost, Phantom, \"USDC:<issuer>\"] (the SAC layout naming the real classic asset) with i128 -170141183460469231731687303715884105728; Ghost and Phantom never existed and never held USDC.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "transfer"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Ghost}"
+             },
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "-170141183460469231731687303715884105728"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-transfer-i128-min"
+  },
+  {
+   "id": "forged-sac-mint",
+   "notes": "Custom contract emits the SAC `mint` layout [mint, <addr>, \"USDC:<issuer>\"] for a never-funded holder, amount 2^63.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "mint"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Ghost}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "9223372036854775808"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-mint"
+  },
+  {
+   "id": "forged-sac-burn",
+   "notes": "Custom contract emits the SAC `burn` layout [burn, <addr>, \"USDC:<issuer>\"] for a never-funded holder, amount 2^63.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "burn"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "9223372036854775808"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-burn"
+  },
+  {
+   "id": "forged-sac-clawback",
+   "notes": "Custom contract emits the SAC `clawback` layout [clawback, <addr>, \"USDC:<issuer>\"] for a never-funded holder, amount 2^63.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "clawback"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "9223372036854775808"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-clawback"
+  },
+  {
+   "id": "forged-sac-mint-legacy-admin",
+   "notes": "Pre-CAP-67 SAC mint layout [mint, admin, to, asset] from a custom contract (4 topics).",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "mint"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.I}"
+             },
+             {
+              "address": "${acct.Ghost}"
+             }
+            ]
+           },
+           {
+            "string": "USDC:${acct.I}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-mint-legacy-admin"
+  },
+  {
+   "id": "forged-sac-transfer-native",
+   "notes": "Custom contract emits a transfer naming \"native\" (XLM) as its asset.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "forged_sac_event",
+          "args": [
+           {
+            "symbol": "transfer"
+           },
+           {
+            "vec": [
+             {
+              "address": "${acct.Ghost}"
+             },
+             {
+              "address": "${acct.Phantom}"
+             }
+            ]
+           },
+           {
+            "string": "native"
+           },
+           {
+            "i128": "50000000000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-transfer-native"
+  },
+  {
+   "id": "forged-sac-approve",
+   "notes": "Custom contract emits the SAC approve layout [approve, from, spender, asset] with [amount, live_until_ledger] data.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "emit",
+          "args": [
+           {
+            "vec": [
+             {
+              "symbol": "approve"
+             },
+             {
+              "address": "${acct.Ghost}"
+             },
+             {
+              "address": "${acct.Phantom}"
+             },
+             {
+              "string": "USDC:${acct.I}"
+             }
+            ]
+           },
+           {
+            "vec": [
+             {
+              "i128": "9223372036854775808"
+             },
+             {
+              "u32": 1000000
+             }
+            ]
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/forged-sac-approve"
+  },
+  {
+   "id": "sep41-transfer-3-topic",
+   "notes": "SEP-41 3-topic transfer [transfer, from, to] with a negative i128 amount, from a contract that is no SAC.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "-5"
+           },
+           {
+            "bool": false
+           },
+           "void"
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/sep41-transfer-3-topic"
+  },
+  {
+   "id": "sep41-transfer-muxed-id-map",
+   "notes": "SEP-41 transfer with map data {amount: 2^64, to_muxed_id: u64 max}.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "18446744073709551616"
+           },
+           {
+            "bool": true
+           },
+           {
+            "u64": "18446744073709551615"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/sep41-transfer-muxed-id-map"
+  },
+  {
+   "id": "sep41-mint-2-topic",
+   "notes": "SEP-41 mint [mint, to] with amount zero.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "mint",
+          "args": [
+           "void",
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "i128": "0"
+           },
+           {
+            "bool": false
+           },
+           "void"
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/sep41-mint-2-topic"
+  },
+  {
+   "id": "sep41-burn-map",
+   "notes": "SEP-41 burn [burn, from] with map data {amount: i128 max}.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "burn",
+          "args": [
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "170141183460469231731687303715884105727"
+           },
+           {
+            "bool": true
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/sep41-burn-map"
+  },
+  {
+   "id": "sep41-clawback-admin",
+   "notes": "Clawback layout [clawback, admin, from] from a non-SAC contract.",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "clawback",
+          "args": [
+           {
+            "address": "${acct.I}"
+           },
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "1"
+           },
+           {
+            "bool": false
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/sep41-clawback-admin"
+  },
+  {
+   "id": "sep41-approve-vec",
+   "notes": "SEP-41 approve [approve, from, spender] with data [-1, 0].",
+   "tx": {
+    "source_account": "${acct.B}",
+    "fee": 1000,
+    "seq_num": "${seq.B}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(emitter)}",
+          "function_name": "approve",
+          "args": [
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "-1"
+           },
+           {
+            "u32": 0
+           },
+           {
+            "bool": false
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "B"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/sep41-approve-vec"
+  },
+  {
+   "id": "custom-token-negative-mint",
+   "notes": "A token-shaped contract (full SEP-41 interface) mints a negative amount to a never-funded Ghost and stores balance -1000.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.Ghost}"
+           },
+           {
+            "i128": "-1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/custom-token-negative-mint"
+  },
+  {
+   "id": "custom-token-zero-mint",
+   "notes": "The same token mints zero.",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.Phantom}"
+           },
+           {
+            "i128": "0"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/custom-token-zero-mint"
+  },
+  {
+   "id": "custom-token-mint-above-2-pow-63",
+   "notes": "The same token mints 2^63 to B (balance stored as i128 above int64).",
+   "tx": {
+    "source_account": "${acct.A}",
+    "fee": 1000,
+    "seq_num": "${seq.A}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.id(tok)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "9223372036854775808"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "A"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/custom-token-mint-above-2-pow-63"
+  },
+  {
+   "id": "real-sac-transfer",
+   "notes": "Real SAC transfer H -> B of the same asset (comparison).",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "100"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/real-sac-transfer"
+  },
+  {
+   "id": "real-sac-mint",
+   "notes": "Real SAC mint by the issuer (admin) to H.",
+   "tx": {
+    "source_account": "${acct.I}",
+    "fee": 1000,
+    "seq_num": "${seq.I}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "mint",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "i128": "1000"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "I"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/real-sac-mint"
+  },
+  {
+   "id": "real-sac-burn",
+   "notes": "Real SAC burn by H.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "burn",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "i128": "10"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/real-sac-burn"
+  },
+  {
+   "id": "real-sac-approve",
+   "notes": "Real SAC approve H -> B.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "approve",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "77"
+           },
+           {
+            "u32": 100000
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/real-sac-approve"
+  },
+  {
+   "id": "real-sac-clawback",
+   "notes": "Real SAC clawback by the issuer from H (asset has clawback enabled).",
+   "tx": {
+    "source_account": "${acct.I}",
+    "fee": 1000,
+    "seq_num": "${seq.I}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "clawback",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "i128": "5"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "I"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/real-sac-clawback"
+  },
+  {
+   "id": "real-sac-transfer-zero",
+   "notes": "Real SAC transfer of zero (outcome recorded).",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "0"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/real-sac-transfer-zero"
+  },
+  {
+   "id": "real-sac-transfer-negative-declared",
+   "notes": "Real SAC transfer of -1 with a declared footprint: the SAC refuses negative amounts; closed as a failed transaction.",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 90001000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "-1"
+           }
+          ]
+         }
+        },
+        "auth": [
+         {
+          "credentials": "source_account",
+          "root_invocation": {
+           "function": {
+            "contract_fn": {
+             "contract_address": "${contract.sac(USDC)}",
+             "function_name": "transfer",
+             "args": [
+              {
+               "address": "${acct.H}"
+              },
+              {
+               "address": "${acct.B}"
+              },
+              {
+               "i128": "-1"
+              }
+             ]
+            }
+           },
+           "sub_invocations": []
+          }
+         }
+        ]
+       }
+      }
+     }
+    ],
+    "ext": {
+     "v1": {
+      "ext": "v0",
+      "resources": {
+       "footprint": {
+        "read_only": [
+         {
+          "contract_data": {
+           "contract": "${contract.sac(USDC)}",
+           "key": "ledger_key_contract_instance",
+           "durability": "persistent"
+          }
+         },
+         {
+          "account": {
+           "account_id": "${acct.I}"
+          }
+         }
+        ],
+        "read_write": [
+         {
+          "trustline": {
+           "account_id": "${acct.H}",
+           "asset": "${asset.USDC}"
+          }
+         },
+         {
+          "trustline": {
+           "account_id": "${acct.B}",
+           "asset": "${asset.USDC}"
+          }
+         }
+        ]
+       },
+       "instructions": 100000000,
+       "disk_read_bytes": 20000,
+       "write_bytes": 20000
+      },
+      "resource_fee": "90000000"
+     }
+    }
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "soroban_resources": "declared",
+   "entry": "explore/real-sac-transfer-negative-declared"
+  },
+  {
+   "id": "real-sac-transfer-negative",
+   "notes": "Real SAC transfer of -1 (expected host refusal; recorded).",
+   "tx": {
+    "source_account": "${acct.H}",
+    "fee": 1000,
+    "seq_num": "${seq.H}",
+    "cond": "none",
+    "memo": "none",
+    "operations": [
+     {
+      "source_account": null,
+      "body": {
+       "invoke_host_function": {
+        "host_function": {
+         "invoke_contract": {
+          "contract_address": "${contract.sac(USDC)}",
+          "function_name": "transfer",
+          "args": [
+           {
+            "address": "${acct.H}"
+           },
+           {
+            "address": "${acct.B}"
+           },
+           {
+            "i128": "-1"
+           }
+          ]
+         }
+        }
+       }
+      }
+     }
+    ],
+    "ext": "v0"
+   },
+   "sign": [
+    {
+     "key": "H"
+    }
+   ],
+   "simulate": true,
+   "entry": "explore/real-sac-transfer-negative"
+  }
+ ]
+}
