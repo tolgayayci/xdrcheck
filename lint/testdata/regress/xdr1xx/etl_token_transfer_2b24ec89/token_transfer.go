@@ -1,0 +1,258 @@
+package transform
+
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/stellar/go-stellar-sdk/processors/token_transfer"
+	"github.com/stellar/go-stellar-sdk/strkey"
+	"github.com/stellar/go-stellar-sdk/xdr"
+	"github.com/tolgayayci/xdrcheck/lint/testdata/regress/xdr1xx/stub/null"
+	"github.com/tolgayayci/xdrcheck/lint/testdata/regress/xdr1xx/stub/toid"
+)
+
+func TransformTokenTransfer(ledgerCloseMeta xdr.LedgerCloseMeta, networkPassphrase string) ([]TokenTransferOutput, error) {
+	eventsProcessor := token_transfer.NewEventsProcessorForUnifiedEvents(networkPassphrase)
+
+	events, err := eventsProcessor.EventsFromLedger(ledgerCloseMeta)
+	if err != nil {
+		return []TokenTransferOutput{}, err
+	}
+
+	err = token_transfer.VerifyEvents(ledgerCloseMeta, networkPassphrase, true)
+	if err != nil {
+		return []TokenTransferOutput{}, err
+	}
+
+	var transformedTTP []TokenTransferOutput
+
+	transformedTTP, err = transformEvents(events, ledgerCloseMeta)
+	if err != nil {
+		return []TokenTransferOutput{}, err
+	}
+
+	return transformedTTP, nil
+}
+
+func transformEvents(events []*token_transfer.TokenTransferEvent, ledgerCloseMeta xdr.LedgerCloseMeta) ([]TokenTransferOutput, error) {
+	var transformedTTP []TokenTransferOutput
+
+	closedAtMs, err := ledgerCloseTimeMs(ledgerCloseMeta)
+	if err != nil {
+		return []TokenTransferOutput{}, err
+	}
+
+	for _, event := range events {
+		var assetType, asset string
+		var assetCode, assetIssuer null.String
+		var from, to null.String
+		var amount string
+		var amountFloat float64
+
+		switch evt := event.Event.(type) {
+		case *token_transfer.TokenTransferEvent_Transfer:
+			from = null.StringFrom(evt.Transfer.From)
+			to = null.StringFrom(evt.Transfer.To)
+			amount = evt.Transfer.Amount
+			amountFloat, _ = strconv.ParseFloat(amount, 64)
+			amountFloat = amountFloat * 0.0000001
+		case *token_transfer.TokenTransferEvent_Mint:
+			to = null.StringFrom(evt.Mint.To)
+			amount = evt.Mint.Amount
+			amountFloat, _ = strconv.ParseFloat(amount, 64)
+			amountFloat = amountFloat * 0.0000001
+		case *token_transfer.TokenTransferEvent_Burn:
+			from = null.StringFrom(evt.Burn.From)
+			amount = evt.Burn.Amount
+			amountFloat, _ = strconv.ParseFloat(amount, 64)
+			amountFloat = amountFloat * 0.0000001
+		case *token_transfer.TokenTransferEvent_Clawback:
+			from = null.StringFrom(evt.Clawback.From)
+			amount = evt.Clawback.Amount
+			amountFloat, _ = strconv.ParseFloat(amount, 64)
+			amountFloat = amountFloat * 0.0000001
+		case *token_transfer.TokenTransferEvent_Fee:
+			from = null.StringFrom(evt.Fee.From)
+			amount = evt.Fee.Amount
+			amountFloat, _ = strconv.ParseFloat(amount, 64)
+			amountFloat = amountFloat * 0.0000001
+		default:
+			return []TokenTransferOutput{}, fmt.Errorf("unknown event type in ledger sequence: %d", event.Meta.LedgerSequence)
+		}
+
+		var opID int64
+		var opIndex int32
+		var operationID null.Int
+
+		eventMeta := event.GetMeta()
+		ledgerSequence := eventMeta.LedgerSequence
+		transactionIndex := eventMeta.TransactionIndex
+		transactionID := toid.New(int32(ledgerSequence), int32(transactionIndex), 0).ToInt64()
+		operationIndex := eventMeta.OperationIndex
+		if operationIndex != nil {
+			opIndex = int32(*operationIndex)
+			opID = toid.New(int32(ledgerSequence), int32(transactionIndex), opIndex).ToInt64()
+			operationID = null.IntFrom(opID)
+		}
+
+		asset, assetType, assetCode, assetIssuer = getAssetFromEvent(event)
+
+		var toMuxedID null.String
+		var toMuxed null.String
+
+		if event.Meta.ToMuxedInfo != nil {
+			muxedAddress, muxedID, err := encodeMuxedDestination(to.String, event.Meta.ToMuxedInfo)
+			if err != nil {
+				return []TokenTransferOutput{}, err
+			}
+			toMuxed = null.StringFrom(muxedAddress)
+			toMuxedID = null.StringFrom(muxedID)
+		}
+
+		transformedTTP = append(transformedTTP, TokenTransferOutput{
+			TransactionHash: eventMeta.TxHash,
+			TransactionID:   transactionID,
+			OperationID:     operationID,
+			EventTopic:      event.GetEventType(),
+			From:            from,
+			To:              to,
+			Asset:           asset,
+			AssetType:       assetType,
+			AssetCode:       assetCode,
+			AssetIssuer:     assetIssuer,
+			AmountRaw:       amount,
+			Amount:          amountFloat,
+			ContractID:      eventMeta.ContractAddress,
+			LedgerSequence:  ledgerSequence,
+			ClosedAt:        ledgerCloseMeta.ClosedAt(),
+			ClosedAtMs:      closedAtMsToTime(closedAtMs),
+			ToMuxed:         toMuxed,
+			ToMuxedID:       toMuxedID,
+		})
+	}
+
+	return transformedTTP, nil
+}
+
+func getAssetFromEvent(event *token_transfer.TokenTransferEvent) (assetConcat, assetType string, assetCode, assetIssuer null.String) {
+	if event.GetAsset().GetNative() {
+		assetType = "native"
+		assetConcat = "native"
+	}
+	asset := event.GetAsset().GetIssuedAsset()
+	if asset != nil {
+		if len(asset.AssetCode) > 4 {
+			assetType = "credit_alphanum12"
+		} else {
+			assetType = "credit_alphanum4"
+		}
+
+		assetCode = null.StringFrom(asset.AssetCode)
+		assetIssuer = null.StringFrom(asset.Issuer)
+		assetConcat = fmt.Sprintf("%s:%s:%s", assetType, assetCode.String, assetIssuer.String)
+	}
+
+	return assetConcat, assetType, assetCode, assetIssuer
+}
+
+// encodeMuxedDestination rebuilds the multiplexed destination address that the
+// event reported in two separate pieces.
+//
+// A transfer to a multiplexed destination never travels as one address. The
+// Stellar Asset Contract puts the plain underlying address in the event topics
+// and the multiplexing id in the data map under to_muxed_id, so the muxed form
+// only exists if we reassemble it. That makes this the one place in the repo
+// that has to know which kind of address it is holding.
+//
+// CAP-67 gave accounts an M strkey (G plus a uint64). CAP-84 gives contracts a
+// W strkey (C plus a uint64) with an identical 40 byte layout. The builders are
+// not interchangeable: strkey.MuxedAccount.SetAccountID rejects a C address, so
+// before this branch existed a muxed contract destination produced an empty
+// to_muxed and two discarded errors.
+func encodeMuxedDestination(to string, muxedInfo *token_transfer.MuxedInfo) (string, string, error) {
+	var id uint64
+	switch info := muxedInfo.Content.(type) {
+	case *token_transfer.MuxedInfo_Id:
+		id = info.Id
+
+	case *token_transfer.MuxedInfo_Text, *token_transfer.MuxedInfo_Hash:
+		// A memo, not a multiplexing id. MuxedInfo.GetId() reports 0 for these
+		// variants, and 0 is what every text and hash memo has been written as
+		// since this column existed. That is wrong, but it is deliberately left
+		// alone here: changing it would silently restate millions of rows a day
+		// as a side effect of a dated protocol release. stellar/hubble#726 owns
+		// the fix and the backfill decision.
+		id = 0
+
+	default:
+		// Unreachable with the current pin: every MuxedInfo the SDK builds sets
+		// Content, and the memo constructor returns nil rather than an empty
+		// one for MEMO_NONE. It is an error rather than a fallback because an
+		// unrecognised variant means a multiplexing scheme whose meaning we do
+		// not know, and guessing would write a plausible wrong id. That is the
+		// opposite of the destination switch below, where "cannot be
+		// multiplexed" is a known and benign shape with no value to lose.
+		return "", "", fmt.Errorf("unknown muxed info variant %T for destination %q", info, to)
+	}
+
+	idString := strconv.FormatUint(id, 10)
+
+	switch {
+	case strkey.IsValidContractAddress(to):
+		// CAP-84: a contract destination multiplexes into a W strkey. This is
+		// the case the event splits apart and only we can put back together,
+		// so a failure here is a real loss and is reported. Encode has no
+		// failure mode for a 40 byte payload, so it should not be reachable.
+		muxedContract := strkey.MuxedContract{}
+		if err := muxedContract.SetContractID(to); err != nil {
+			return "", "", fmt.Errorf("could not encode muxed contract destination %q: %w", to, err)
+		}
+		muxedContract.SetID(id) // want `XDR101 \(error\): memo-derived value from the token_transfer.MuxedInfo_Text arm of a type switch \(line 178\)`
+		address, err := muxedContract.Address()
+		if err != nil {
+			return "", "", fmt.Errorf("could not encode muxed contract destination %q: %w", to, err)
+		}
+		return address, idString, nil
+
+	case strkey.IsValidEd25519PublicKey(to):
+		// CAP-67: an account destination multiplexes into an M strkey.
+		muxedAccount := strkey.MuxedAccount{}
+		if err := muxedAccount.SetAccountID(to); err != nil {
+			return "", "", fmt.Errorf("could not encode muxed account destination %q: %w", to, err)
+		}
+		muxedAccount.SetID(id) // want `XDR101 \(error\): memo-derived value from the token_transfer.MuxedInfo_Text arm of a type switch \(line 178\)`
+		address, err := muxedAccount.Address()
+		if err != nil {
+			// The null account GAAAA...WHF is a valid strkey whose ed25519 key
+			// is 32 zero bytes, which Address rejects: an account that is not a
+			// key has no multiplexed form. 446 rows in production history are
+			// transfers to it, across 296 separate days.
+			return "", idString, nil
+		}
+		return address, idString, nil
+
+	default:
+		// Not a destination that can be multiplexed. Reached by an empty "to",
+		// which burn, clawback and fee events produce because the SDK attaches
+		// ToMuxedInfo before it knows the event type while those events never
+		// carry a destination, and by a liquidity pool, claimable balance or
+		// already muxed strkey from a custom token contract.
+		//
+		// The already muxed case is worth spelling out, because it leaves the
+		// same destination in two different shapes in token_transfers_raw
+		// depending only on which contract emitted the event. The Stellar
+		// Asset Contract always splits a muxed destination, so it reaches this
+		// function as to = C... and is reassembled above into to_muxed = W....
+		// A custom SEP-41 token is free to put the finished W or M strkey
+		// straight into the topic, and that lands in to verbatim with to_muxed
+		// left empty. from is never reassembled in either case, because there
+		// is no from_muxed column to hold the id.
+		//
+		// No multiplexed form exists for any of them, so report none, which is
+		// what this code has always written. Returning an error instead would
+		// abort transformEvents and drop every token transfer in the ledger,
+		// and Airflow always passes --strict-export, so that is a fatal export
+		// that a retry cannot clear.
+		return "", idString, nil
+	}
+}

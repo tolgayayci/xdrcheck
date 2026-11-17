@@ -1,0 +1,94 @@
+# Frozen suppressions for stellar-etl 7e3fc9af95359dad6ba939fa88791f49cdf531ae (v2.8.35).
+# Reviewed against this commit only; moving the pin means a new file, reviewed from empty. From v2.8.34 to v2.8.35
+# only go.mod, go.sum and workflows changed, so every site below is the same code at the same line.
+# Every entry names the finding record that accounts for its reports (findings/<id>/finding.json).
+- rule: XDR101
+  file: internal/transform/token_transfer.go
+  function: encodeMuxedDestination
+  line: 210
+  reason: "A text or hash memo is turned into a muxed destination with ID 0 (both SetID calls, lines 210 and 223). Reported upstream as stellar/stellar-etl#450, which is open (re-checked 2026-11-18); upstream keeps the behaviour on purpose and pins it in a test."
+  finding: F-0015
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-18
+- rule: XDR101
+  file: internal/transform/token_transfer.go
+  function: encodeMuxedDestination
+  line: 223
+  reason: "A text or hash memo is turned into a muxed destination with ID 0 (both SetID calls, lines 210 and 223). Reported upstream as stellar/stellar-etl#450, which is open (re-checked 2026-11-18); upstream keeps the behaviour on purpose and pins it in a test."
+  finding: F-0015
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-18
+- rule: XDR103
+  file: internal/transform/transaction.go
+  function: TransformTransaction
+  line: 247
+  reason: "A text memo is written into the JSON export without a UTF-8 check, so invalid bytes become U+FFFD while tx_envelope keeps them. Reported upstream as stellar/stellar-etl#504, which is open (re-checked 2026-11-18)."
+  finding: F-0044
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-18
+- rule: XDR405
+  file: internal/transform/operation.go
+  function: transactionOperationWrapper.parseAssetBalanceChangesFromContractEvents
+  line: 1889
+  reason: "asset_balance_changes are built from GetDiagnosticEvents() with no check that the transaction succeeded, here or in any caller (filterEvents keeps InSuccessfulContractCall, the call's outcome, not the transaction's), so a failed Soroban transaction gets rows for rolled-back transfers. Recorded upstream as stellar/stellar-etl#488, opened by a stellar-etl maintainer and open (checked 2026-11-19)."
+  finding: F-0086
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-19
+- rule: XDR405
+  file: internal/transform/operation.go
+  function: parseAssetBalanceChangesFromContractEvents
+  line: 1924
+  reason: "asset_balance_changes are built from GetDiagnosticEvents() with no check that the transaction succeeded, here or in any caller (filterEvents keeps InSuccessfulContractCall, the call's outcome, not the transaction's), so a failed Soroban transaction gets rows for rolled-back transfers. Recorded upstream as stellar/stellar-etl#488, opened by a stellar-etl maintainer and open (checked 2026-11-19)."
+  finding: F-0086
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-19
+- rule: XDR402
+  file: internal/transform/token_transfer.go
+  function: transformEvents
+  line: 57
+  reason: "strconv.ParseFloat into float64 and a 0.0000001 scaling for TokenTransferOutput.Amount: an amount above 2^53 raw units loses digits and the scaling is inexact; amount_raw keeps the exact value. Recorded upstream as stellar/stellar-etl#454, opened by a stellar-etl maintainer and open (checked 2026-11-19)."
+  finding: F-0087
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-19
+- rule: XDR402
+  file: internal/transform/token_transfer.go
+  function: transformEvents
+  line: 62
+  reason: "strconv.ParseFloat into float64 and a 0.0000001 scaling for TokenTransferOutput.Amount: an amount above 2^53 raw units loses digits and the scaling is inexact; amount_raw keeps the exact value. Recorded upstream as stellar/stellar-etl#454, opened by a stellar-etl maintainer and open (checked 2026-11-19)."
+  finding: F-0087
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-19
+- rule: XDR402
+  file: internal/transform/token_transfer.go
+  function: transformEvents
+  line: 67
+  reason: "strconv.ParseFloat into float64 and a 0.0000001 scaling for TokenTransferOutput.Amount: an amount above 2^53 raw units loses digits and the scaling is inexact; amount_raw keeps the exact value. Recorded upstream as stellar/stellar-etl#454, opened by a stellar-etl maintainer and open (checked 2026-11-19)."
+  finding: F-0087
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-19
+- rule: XDR402
+  file: internal/transform/token_transfer.go
+  function: transformEvents
+  line: 72
+  reason: "strconv.ParseFloat into float64 and a 0.0000001 scaling for TokenTransferOutput.Amount: an amount above 2^53 raw units loses digits and the scaling is inexact; amount_raw keeps the exact value. Recorded upstream as stellar/stellar-etl#454, opened by a stellar-etl maintainer and open (checked 2026-11-19)."
+  finding: F-0087
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-19
+- rule: XDR402
+  file: internal/transform/token_transfer.go
+  function: transformEvents
+  line: 77
+  reason: "strconv.ParseFloat into float64 and a 0.0000001 scaling for TokenTransferOutput.Amount: an amount above 2^53 raw units loses digits and the scaling is inexact; amount_raw keeps the exact value. Recorded upstream as stellar/stellar-etl#454, opened by a stellar-etl maintainer and open (checked 2026-11-19)."
+  finding: F-0087
+  commit: 7e3fc9af95359dad6ba939fa88791f49cdf531ae
+  reviewer: kit maintainer
+  date: 2026-11-19

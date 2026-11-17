@@ -1,0 +1,302 @@
+# Frozen suppressions for wallet-backend 79ea2acd1dc65a07166133cc04b12e76db314db0.
+# Reviewed against this commit only; moving a pin means a new file, reviewed from empty.
+# Every entry names the finding record that accounts for its reports (findings/<id>/finding.json).
+- rule: XDR102
+  file: internal/indexer/processors/contract_deploy.go
+  function: ContractDeployProcessor.ProcessOperation
+  line: 67
+  reason: "Fixed upstream by wallet-backend PR #745 (ce0820d7): a deployer address of a kind the account column cannot store was recorded. Pre-fix side of the before/after table."
+  finding: F-0010
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_deploy.go
+  function: ContractDeployProcessor.ProcessOperation
+  line: 67
+  reason: "Fixed upstream by wallet-backend PR #739 (80121f3a, issue #746): a nested deploy declared in the authorization tree was recorded without meta showing that it happened. Pre-fix side of the before/after table."
+  finding: F-0006
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR303
+  file: internal/indexer/processors/contract_deploy.go
+  function: ContractDeployProcessor.ProcessOperation
+  line: 36
+  reason: "Fixed upstream by wallet-backend PR #739 (80121f3a, issue #746): a nested deploy declared in the authorization tree was recorded without meta showing that it happened. Pre-fix side of the before/after table."
+  finding: F-0006
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contract_operations.go
+  function: CreateContractV1OpProcessor.Participants
+  anchor: "p.op.SourceAccount().Address()"
+  line: 256
+  reason: "Fixed upstream by wallet-backend PR #753 (bb0b162b): a Soroban operation's source account was stored in its muxed M form. Pre-fix side of the before/after table."
+  finding: F-0007
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: CreateContractV1OpProcessor.Participants
+  anchor: "MustInvokeHostFunctionOp().Auth"
+  line: 266
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: CreateContractV1OpProcessor.Participants
+  anchor: "createContractOp.ContractIdPreimage"
+  line: 259
+  reason: "Top-level CreateContract of a successful transaction (the caller checks success first): the host requires the deployer's authorization (require_auth on the FromAddress) for the deploy to succeed, so the deployer and the derived contract ID are corroborated by the result."
+  finding: F-0001
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contract_operations.go
+  function: CreateContractV2OpProcessor.Participants
+  anchor: "p.op.SourceAccount().Address()"
+  line: 300
+  reason: "Fixed upstream by wallet-backend PR #753 (bb0b162b): a Soroban operation's source account was stored in its muxed M form. Pre-fix side of the before/after table."
+  finding: F-0007
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: CreateContractV2OpProcessor.Participants
+  anchor: "MustInvokeHostFunctionOp().Auth"
+  line: 310
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: CreateContractV2OpProcessor.Participants
+  anchor: "createContractOp.ContractIdPreimage"
+  line: 303
+  reason: "Top-level CreateContract of a successful transaction (the caller checks success first): the host requires the deployer's authorization (require_auth on the FromAddress) for the deploy to succeed, so the deployer and the derived contract ID are corroborated by the result."
+  finding: F-0001
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contract_operations.go
+  function: InvokeContractOpProcessor.Participants
+  anchor: "invokeContractOp.ContractAddress.String()"
+  line: 347
+  reason: "Invoked contract of a successful transaction (the caller checks success first): the host fails an invocation whose address is not a deployed contract, so this address is a contract. It comes from the host function, not from the authorization tree."
+  finding: F-0003
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contract_operations.go
+  function: InvokeContractOpProcessor.Participants
+  anchor: "p.op.SourceAccount().Address()"
+  line: 344
+  reason: "Fixed upstream by wallet-backend PR #753 (bb0b162b): a Soroban operation's source account was stored in its muxed M form. Pre-fix side of the before/after table."
+  finding: F-0007
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: InvokeContractOpProcessor.Participants
+  anchor: "MustInvokeHostFunctionOp().Auth"
+  line: 356
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: InvokeContractOpProcessor.Participants
+  anchor: "invokeContractOp.ContractAddress.String()"
+  line: 347
+  reason: "Invoked contract of a successful transaction (the caller checks success first): the host fails an invocation whose address is not a deployed contract, so this address is a contract. It comes from the host function, not from the authorization tree."
+  finding: F-0003
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsForAuthEntries
+  line: 113
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsForAuthEntries
+  line: 113
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsForAuthEntries
+  line: 120
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsForSorobanOp
+  anchor: "op.SourceAccount().Address()"
+  line: 156
+  reason: "Fixed upstream by wallet-backend PR #753 (bb0b162b): a Soroban operation's source account was stored in its muxed M form. Pre-fix side of the before/after table."
+  finding: F-0007
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsFromInvocationAndSubInvocations
+  line: 66
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR201
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsFromInvocationAndSubInvocations
+  line: 98
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsFromInvocationAndSubInvocations
+  line: 66
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsFromInvocationAndSubInvocations
+  line: 78
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsFromInvocationAndSubInvocations
+  line: 90
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR301
+  file: internal/indexer/processors/contract_operations.go
+  function: participantsFromInvocationAndSubInvocations
+  line: 97
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): participants were taken from the declared authorization tree, which the host never checks for entries that no require_auth call matched (this includes the contract address of an unmatched entry). Pre-fix side of the before/after table."
+  finding: F-0004
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/indexer/processors/contracts/utils.go
+  function: extractAddressFromScVal
+  line: 15
+  reason: "Fixed upstream by wallet-backend PR #756 (666a64d4, audit finding #752): claimable-balance and liquidity-pool address kinds reached an account column. Pre-fix side of the before/after table."
+  finding: F-0008
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR302
+  file: internal/indexer/processors/participants.go
+  function: ParticipantsProcessor.GetOperationParticipants
+  line: 167
+  reason: "Fixed upstream by wallet-backend PR #739 (9538b3ca): operation participants were added before the success check, so a failed transaction attributed the accounts its operations named. Pre-fix side of the before/after table."
+  finding: F-0005
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR103
+  file: internal/services/contract_metadata.go
+  function: contractMetadataService.fetchSACMetadataForContract
+  line: 220
+  reason: "Best-effort SAC metadata enrichment (reached at startup and after a checkpoint load at this commit): a failed write, invalid bytes included, is logged and the rows keep their ledger-derived defaults, so the site cannot halt ingestion; PR #695 made the path unreachable and PR #723 (ce332e70) removed it."
+  finding: F-0011
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR103
+  file: internal/services/contract_metadata.go
+  function: contractMetadataService.fetchSACMetadataForContract
+  line: 221
+  reason: "Best-effort SAC metadata enrichment (reached at startup and after a checkpoint load at this commit): a failed write, invalid bytes included, is logged and the rows keep their ledger-derived defaults, so the site cannot halt ingestion; PR #695 made the path unreachable and PR #723 (ce332e70) removed it."
+  finding: F-0011
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR103
+  file: internal/services/contract_metadata.go
+  function: contractMetadataService.fetchSACMetadataForContract
+  line: 222
+  reason: "Best-effort SAC metadata enrichment (reached at startup and after a checkpoint load at this commit): a failed write, invalid bytes included, is logged and the rows keep their ledger-derived defaults, so the site cannot halt ingestion; PR #695 made the path unreachable and PR #723 (ce332e70) removed it."
+  finding: F-0011
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR103
+  file: internal/services/contract_metadata.go
+  function: contractMetadataService.fetchSACMetadataForContract
+  line: 223
+  reason: "Best-effort SAC metadata enrichment (reached at startup and after a checkpoint load at this commit): a failed write, invalid bytes included, is logged and the rows keep their ledger-derived defaults, so the site cannot halt ingestion; PR #695 made the path unreachable and PR #723 (ce332e70) removed it."
+  finding: F-0011
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR102
+  file: internal/services/sep41/events.go
+  function: extractAddressFromScVal
+  line: 307
+  reason: "Fixed upstream by wallet-backend PR #693 (6e5a5910, issue #716): a muxed address reached an account column; the claimable-balance and liquidity-pool kinds stayed reachable until PR #756."
+  finding: F-0009
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-12
+- rule: XDR402
+  file: internal/indexer/processors/effects.go
+  function: EffectsProcessor.parseSigners
+  line: 587
+  reason: "A signer weight above 32,767 wraps when narrowed to int16 for signer_weight_old (only a signer added before protocol 10 can hold one). Reported upstream as stellar/wallet-backend#825, which is open (re-checked 2026-11-19); parseSigners is the same here as at 3e22515a apart from its receiver type."
+  finding: F-0067
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-19
+- rule: XDR201
+  file: internal/indexer/processors/contract_deploy.go
+  function: ContractDeployProcessor.ProcessOperation
+  line: 98
+  reason: "Hardening note, not a defect: walkInvocation recurses once per sub-invocation with no explicit depth bound, but the tree was decoded by go-stellar-sdk, whose decoder stops at 1500 depth units (go-xdr DecodeDefaultMaxDepth), stellar-core admits an envelope only within its own decoder depth, and Go stacks grow, so no decodable depth can overflow the walk; no level merges its children's results. At this commit the walk also runs for failed transactions (ProcessOperation has no success check yet), whose envelopes pass the same decoder limit; the warning stands as advice to add an explicit cap (HC-201) and is not counted as a pipeline failure."
+  finding: F-0068
+  commit: 79ea2acd1dc65a07166133cc04b12e76db314db0
+  reviewer: kit maintainer
+  date: 2026-11-19

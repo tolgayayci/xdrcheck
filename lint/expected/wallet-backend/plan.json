@@ -1,0 +1,203 @@
+{
+  "schema": "xdrlint.plan/v1",
+  "target": "github.com/stellar/wallet-backend",
+  "profile": "wallet-backend",
+  "packages": [
+    "./internal/...",
+    "./pkg/...",
+    "./cmd/..."
+  ],
+  "commits": [
+    "79ea2acd1dc65a07166133cc04b12e76db314db0",
+    "6e5a59101158dc2996295450190142366062cd05",
+    "71625b21f832478aece23c2212ddf458c8a2f134",
+    "ce0820d75073d232fcbd9cb44faf9ca40751a1c8",
+    "f8e5786d22c04adad16318f2e126728beec5aac9",
+    "bb0b162b072583c7dabffbdee664d1c117e5ba56",
+    "ba8215796d8118d3c7d302395b901eec925894ab",
+    "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+    "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+    "80121f3abe0fcdf6487d123e940de2631c1210b2",
+    "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+  ],
+  "rows": [
+    {
+      "id": "pr739-auth-tree",
+      "change": "PR #739 (9538b3ca): Soroban participants from executed meta, not the authorization tree",
+      "rule": "XDR301",
+      "file": "internal/indexer/processors/contract_operations.go",
+      "before": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 12
+      },
+      "after": {
+        "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+        "reports": 3
+      },
+      "note": "The three reports left at the fixed commit are the invoked contract and the top-level deploy, both of successful transactions (suppressed with their own findings)."
+    },
+    {
+      "id": "pr739-auth-entries",
+      "change": "PR #739 (9538b3ca): authorization-entry credentials no longer participants",
+      "rule": "XDR301",
+      "file": "internal/indexer/processors/contract_operations.go",
+      "function": "participantsForAuthEntries",
+      "before": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 2
+      },
+      "after": {
+        "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr739-auth-entry-address-kind",
+      "change": "PR #739 (9538b3ca): the same site, address kind",
+      "rule": "XDR102",
+      "file": "internal/indexer/processors/contract_operations.go",
+      "function": "participantsForAuthEntries",
+      "before": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 1
+      },
+      "after": {
+        "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr739-unmatched-contract",
+      "change": "PR #739 (9538b3ca): contract address of an unmatched authorization entry",
+      "rule": "XDR102",
+      "file": "internal/indexer/processors/contract_operations.go",
+      "function": "participantsFromInvocationAndSubInvocations",
+      "before": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 1
+      },
+      "after": {
+        "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr739-walk",
+      "change": "PR #739 (9538b3ca): recursive walk with a per-level merge removed",
+      "rule": "XDR201",
+      "file": "internal/indexer/processors/contract_operations.go",
+      "function": "participantsFromInvocationAndSubInvocations",
+      "before": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 1
+      },
+      "after": {
+        "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr739-failed-tx",
+      "change": "PR #739 (9538b3ca): operation participants only after the success check",
+      "rule": "XDR302",
+      "file": "internal/indexer/processors/participants.go",
+      "before": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 1
+      },
+      "after": {
+        "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr739-declared-deploys",
+      "change": "PR #739 (80121f3a, issue #746): a declared nested deploy recorded only when meta shows it",
+      "rule": "XDR303",
+      "file": "internal/indexer/processors/contract_deploy.go",
+      "before": {
+        "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+        "reports": 1
+      },
+      "after": {
+        "commit": "80121f3abe0fcdf6487d123e940de2631c1210b2",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr753-muxed-source",
+      "change": "PR #753 (bb0b162b): a Soroban operation's source reduced to its base account",
+      "rule": "XDR102",
+      "file": "internal/indexer/processors/contract_operations.go",
+      "before": {
+        "commit": "f8e5786d22c04adad16318f2e126728beec5aac9",
+        "reports": 7
+      },
+      "after": {
+        "commit": "bb0b162b072583c7dabffbdee664d1c117e5ba56",
+        "reports": 3
+      },
+      "note": "Four sites go silent; the three left are the authorization-tree sites fixed by PR #739 and the invoked contract."
+    },
+    {
+      "id": "pr756-sep41-kinds",
+      "change": "PR #756 (666a64d4, audit finding #752): SEP-41 addresses kind-checked",
+      "rule": "XDR102",
+      "file": "internal/services/sep41/events.go",
+      "before": {
+        "commit": "ba8215796d8118d3c7d302395b901eec925894ab",
+        "reports": 1
+      },
+      "after": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr756-sac-kinds",
+      "change": "PR #756 (666a64d4): SAC event addresses kind-checked",
+      "rule": "XDR102",
+      "file": "internal/indexer/processors/contracts/utils.go",
+      "before": {
+        "commit": "ba8215796d8118d3c7d302395b901eec925894ab",
+        "reports": 1
+      },
+      "after": {
+        "commit": "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+        "reports": 0
+      }
+    },
+    {
+      "id": "pr693-sep41-muxed",
+      "change": "PR #693 (6e5a5910, issue #716): SEP-41 muxed addresses reduced",
+      "rule": "XDR102",
+      "file": "internal/services/sep41/events.go",
+      "before": {
+        "commit": "79ea2acd1dc65a07166133cc04b12e76db314db0",
+        "reports": 1
+      },
+      "after": {
+        "commit": "6e5a59101158dc2996295450190142366062cd05",
+        "reports": 1
+      },
+      "note": "Narrowing, not silence: the muxed kind is handled after the fix, the claimable-balance and pool kinds only after PR #756 (row pr756-sep41-kinds), so the rule reports both commits."
+    },
+    {
+      "id": "pr745-deployer-kinds",
+      "change": "PR #745 (ce0820d7): deploys from address kinds the account column cannot store skipped",
+      "rule": "XDR102",
+      "file": "internal/indexer/processors/contract_deploy.go",
+      "before": {
+        "commit": "71625b21f832478aece23c2212ddf458c8a2f134",
+        "reports": 1
+      },
+      "after": {
+        "commit": "ce0820d75073d232fcbd9cb44faf9ca40751a1c8",
+        "reports": 0
+      }
+    }
+  ],
+  "suppression_ceiling": {
+    "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7": 3
+  }
+}
