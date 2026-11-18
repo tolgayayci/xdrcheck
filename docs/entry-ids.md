@@ -1,0 +1,103 @@
+# Entry IDs
+
+This page gives the rules for entry IDs. `corpus/plan.json` holds them and `scripts/py/check_ids.py` enforces them.
+The manifest format that uses them is specified in [`manifest.md`](manifest.md); how to write an entry is in
+[`authoring-entries.md`](authoring-entries.md).
+
+## 1. The rule
+
+**An entry ID is born in `corpus/plan.json` and nowhere else.** Every other document, schema example, fixture, rule
+page, checklist item and CI job cites an ID that already exists there. A document that needs an entry that is not in
+the plan adds a row to the plan first (section 5).
+
+As the corpus is built the plan becomes the manifest: one manifest file per canonical ID, at
+`corpus/manifest/<group>/<slug>.json` (for example `corpus/manifest/cap-0040/signed-payload-signer-added.json`).
+From then on the manifest directory is the registry and the plan is its history.
+
+## 2. Grammar
+
+```
+entry-id   = group "/" slug [ "." member ]
+group      = "cap-" 4DIGIT | "protocol-" 2DIGIT | "classic" | "ledger" | "limits" | "strkey" | "xdr-strict" | "xdr-json"
+slug       = lower-case words joined by "-"; may contain "." inside a version (sep-0023-v1.4.0-vectors)
+member     = lower-case words joined by "-", or a 16-hex golden file key, or a vector label (9e1)
+```
+
+Every ID matches the manifest schema's pattern `^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+([.-][a-z0-9]+)*)+$`
+(`corpus/schema/manifest-entry.schema.json`). An ID never encodes a network, a protocol version of a variant, or a
+source: those are variant properties. (`cap-0040/signed-payload-signer-added`, not `…-added-testnet`.)
+
+### Groups
+
+| Group | Holds | Plan rows today |
+|---|---|---|
+| `cap-NNNN` | A pattern introduced or changed by that CAP; four digits, as in the stellar-protocol file names. An entry touching several CAPs lives under the one that first made the shape possible and lists the others in `caps` | 155, in 36 CAP groups |
+| `protocol-NN` | Protocol-gated behaviour with no CAP (Protocol 29 shipped no CAPs but changed behaviour), and the ledgers at which a protocol or a meta version first appears (upgrade ledgers, including the cases where the header protocol and the applied protocol differ) | 12, in 10 groups |
+| `classic` | Classic-protocol patterns that predate the CAP process or belong to no single CAP (memo and offer-ID encoding, maximum-length vectors, result codes) | 16 |
+| `ledger` | Ledger-level shapes of a local chain: upgrade ledgers, configuration upgrades, header extensions, empty ledgers, meta flag profiles | 6 |
+| `limits` | Reader-limit boundaries (nesting depth); positive entries | 13 |
+| `xdr-strict` | Negative XDR: input a correct decoder must reject (plus the one `api` vector about refusing a non-integer discriminant) | 11 |
+| `strkey` | Text address vectors: the published SEP-0023 vectors and synthetic gap vectors | 5 |
+| `xdr-json` | XDR-JSON input vectors | 1 |
+
+Entries in the cross-cutting groups have `caps: []` with a `caps_note`; the coverage report lists them under their
+group so they are not read as uncovered CAPs.
+
+There is no `api/` group and no `meta/` group. An `api` entry is filed under the group of the pattern it tests, with
+`api-` at the start of its slug (`classic/api-offer-id-encoding`). A valid value is never filed under `xdr-strict`,
+even when readers mishandle it (`cap-0046/scstring-and-scsymbol-non-utf8`).
+
+There is no group for ledgers located by a census either (`docs/manifest.md` §4.4, `selected_by`). A real ledger
+chosen because it holds several arms at once goes under `ledger/`, slug `real-arms-<network>-<sequence>`
+(`ledger/real-arms-pubnet-30379767`); one that shows a single pattern is a `history` variant of that pattern's
+existing entry.
+
+## 3. Families
+
+Some plan rows stand for several closely related vectors: the 30 published SEP-0023 vectors, six offer-ID inputs,
+five golden files of one stellar-core test. One manifest entry is one pattern, and the manifest has no `vectors[]`
+construct. So:
+
+- A plan row with `vector_count` greater than 1 is a **family**. It lists its `members`.
+- Each member becomes its own manifest entry with the ID `<family-id>.<member>`, generated from one source file.
+  Examples: `strkey/sep-0023-v1.4.0-vectors.invalid-15`; `xdr-strict/trailing-bytes.transaction-envelope`;
+  `cap-0058/create-contract-v2-constructor-golden.c2190f875f6f59fd`.
+- The family ID itself is canonical and may be cited when every member is meant ("all SEP-0023 vectors"). It does
+  not name a manifest file.
+- Member names are: a descriptive slug where the member has an obvious one; the 16-hex file key for stellar-core
+  goldens (the key changes with every protocol, so the manifest also records the human test name);
+  `pubnet-<sequence>` or `testnet-<sequence>` for members captured from network history; the vector label of the
+  cross-SDK matrix in `evidence/sdk-matrix/` where the family was imported from it and no better name exists
+  (`cap-0084/api-muxed-address-field-order.9e1`).
+- Member names of `cap-0046/scval-integer-extremes` (`v01`…`v06`) are placeholders until the recipe is written.
+
+Today: 219 plan rows, of which 45 are families with 161 members. A row that is not a family is one entry. The corpus
+therefore has 219 − 45 + 161 = **335 planned manifest entries**, and 380 canonical IDs (every row ID plus every
+member ID; `python3 scripts/py/check_ids.py --list` prints them).
+
+In prose, a glob over canonical IDs is allowed (`limits/scvec-nesting-*`, `strkey/sep-0023-v1.4.0-vectors.invalid-*`).
+In data files (manifest, the guide's field table, fixtures, CI configuration) only exact canonical IDs appear.
+
+## 4. Stability
+
+- A canonical ID is permanent once an entry with that ID has shipped in a corpus release. Before the first release a
+  rename is allowed only in a change that also updates every citation of the old ID.
+- The bytes of a shipped entry never change. A corrected pattern gets a new ID; the old entry stays and is superseded
+  in its `notes`.
+- A golden member's 16-hex key changes at a protocol bump. The upgrade procedure adds new members for the new files
+  and keeps the old ones; it does not rename.
+
+## 5. Requesting a new ID
+
+1. Search `corpus/plan.json` (and the member lists) first: the pattern may already exist under another name.
+2. If it is new, add a row to `corpus/plan.json` with every key the plan schema (`corpus/schema/plan.schema.json`)
+   requires: `id`, `kind`, `negative`, `caps`, `protocol_min`, `source`, `locator` (or the route to obtain one),
+   `networks`, `synthetic`, `serves`, `pins`, `levels`, `replayable`, `priority`, `scenario`, `shape`,
+   `vector_count`, `members`, `evidence`; `note` is optional. Say honestly what has been executed and what has not.
+3. Run `make repo-checks`; the coverage report (`make verify-coverage`) picks the row up from the plan.
+4. Only then cite the ID.
+
+`scripts/py/check_ids.py` (part of `make repo-checks`) validates every plan row against the plan schema, rejects
+duplicate IDs, and checks that every manifest file's `id` is canonical and equals its path and that every entry ID a
+manifest file cites (`slice_of.entry`, `source.base_entry`) is canonical. The same rule binds the documentation,
+the guide, the linter rule pages, the fixtures and the CI configuration: any entry ID they cite must be canonical.

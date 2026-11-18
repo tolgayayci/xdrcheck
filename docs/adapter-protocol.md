@@ -1,0 +1,448 @@
+# Replay adapter protocol — `xcc.adapter/1`
+
+For indexer authors who write or debug an adapter: the program that lets `xdrcheck replay` drive one indexer. After
+this page you can implement every message, report every ingest outcome correctly, and pass `--selftest`.
+
+The message shapes are fixed by two JSON Schemas (2020-12): `corpus/schema/adapter-protocol.schema.json` and
+`corpus/schema/observation.schema.json`. The messages quoted below are in `corpus/schema/examples/adapter-protocol/`
+and validate against them. Where this page and the schemas disagree, the schemas win. How the harness plans, matches
+and scores a run is in [replay-harness.md](replay-harness.md).
+
+## 1. What an adapter is
+
+The harness knows nothing about any particular indexer. An **adapter** is a small program that knows one. On
+request it puts the indexer in a clean state, makes it ingest a range of ledgers from an input the harness serves,
+and reports what the indexer then holds, in a neutral vocabulary.
+
+An adapter never judges. It reports machine-observable facts; the harness compares them with the corpus manifest
+and does all scoring. Process signals alone cannot tell a bug halt from a deliberate stop on unsupported input, so
+the decision combines the adapter's facts with what the manifest says about the entry.
+
+```
+harness (xdrcheck replay) ── stdin: one JSON request per line ──▶ adapter process ──▶ indexer under test
+                     ◀─ stdout: one JSON response per line ─                 ◀── reads ledgers from the
+                        stderr: free-form logs (captured, never parsed)          harness's ledger server
+```
+
+Adapters shipped in this repository: `go/adapters/walletbackend` (the reference adapter),
+`go/adapters/stellaretl`, `go/adapters/baseline` (a minimal correct indexer and the complete example adapter;
+see its README), and `go/adapters/minimal`, the template for new adapters (§8).
+
+## 2. Transport and framing
+
+| Rule | Requirement |
+|---|---|
+| Start | The harness starts the adapter as a child process with the user's command line (`xdrcheck replay --adapter "<command>"`) and adds no arguments |
+| Channels | **stdin** carries requests, **stdout** responses: UTF-8, one JSON object per line, `\n`-terminated. **stderr** is for humans; the harness stores it with the report and never parses it |
+| Stdout is responses only | Output from child processes must be redirected |
+| Ordering | One request, one response, in order. The next request is sent only after the previous response is read. An adapter that can run sessions concurrently declares `concurrency.max_parallel_sessions` and the harness starts that many adapter processes |
+| Envelope fields | Every message carries `"xcc": "xcc.adapter/1"`, the request `id` (echoed) and the `method` (echoed, so each line of a saved transcript is self-describing). A response has either `result` or `error` |
+| Exit | The harness closes stdin to ask the adapter to exit. The adapter stops everything it started and exits 0 within 10 s; after that the harness kills its process group |
+
+## 3. Versioning and capability negotiation
+
+- The protocol name carries a major version. Within `xcc.adapter/1` changes are additive (new optional fields; new
+  enum values only where the schema leaves a field open). Adapters ignore unknown request fields; the harness is
+  strict about responses wherever the schema forbids additional properties, so typos are caught.
+- `describe` is always the first call. The harness lists the protocol versions it speaks; the adapter answers
+  with one, or with the error `unsupported_protocol_version`.
+- **Capabilities are declared, not discovered.** `describe` states the inputs the indexer can read, the replay
+  units the adapter can run, the observation kinds the indexer models (with `subkinds` and `modelling` choices),
+  and the **envelope**: the protocols and meta versions the indexer at this version claims to handle. The harness
+  plans the run from these declarations and records them in `describe.json` next to the report.
+
+### 3.1 The envelope, and why "refused" is narrow
+
+A deliberate fail-closed stop is safe and is not scored like a crash. A halt on valid input is a bug. From outside
+the process the two look the same, so the adapter declares its limits up front:
+
+| `envelope.enforcement` | Meaning | An entry outside the envelope |
+|---|---|---|
+| `indexer_gate` | The indexer itself checks a limit and stops on purpose before writing anything | Run (unless `--out-of-envelope skip`); a clean stop attributed to the declared gate is `dropped · refused` |
+| `sdk_limit` | The indexer has no gate of its own; the limit is what its pinned SDK can decode | Not run; reported `not_applicable` |
+| `none` | Nothing declared | Every entry is in scope; any stop is a halt |
+
+Rules the harness enforces whatever the adapter says:
+
+1. A stop on an entry **inside** the envelope is a halt (`mishandled · halt`). An adapter cannot turn it into a
+   refusal.
+2. `refused` is accepted only if the gate named in the response was declared in `describe`, the manifest confirms
+   the entry really is outside that gate, the indexer wrote nothing for the refused ledger, and the process did
+   not crash.
+3. Gates are a closed list, each with a predicate the harness checks against the manifest: `min_protocol`,
+   `max_protocol`, `min_protocol_with_transactions`, `ledger_close_meta_version`, `transaction_meta_version`,
+   `operation_type`.
+
+## 4. Messages
+
+Five methods, in this order within a session: `describe` (once per adapter process) → `prepare` → `ingest` →
+`observe` → `teardown`. A **session** is one replay unit: one fresh indexer state, one ledger range. Messages are
+shown wrapped where long; on the wire each is one line.
+
+### 4.1 `describe`
+
+```json
+{"xcc":"xcc.adapter/1","id":1,"method":"describe","params":{"harness_version":"0.1.0","protocol_versions":["xcc.adapter/1"],"target_version":"2c873353c1f0f3c9b145e25a7d009023ad104a1c"}}
+```
+
+```json
+{"xcc":"xcc.adapter/1","id":1,"method":"describe","result":{
+  "adapter":{"name":"wallet-backend","version":"0.1.0"},
+  "target":{"name":"stellar/wallet-backend","version":"2c873353c1f0f3c9b145e25a7d009023ad104a1c","version_kind":"commit"},
+  "protocol_version":"xcc.adapter/1",
+  "inputs":["sep54-s3","rpc"],
+  "units":["single","chain"],
+  "envelope":{"enforcement":"sdk_limit","max_protocol":29,"min_protocol_with_transactions":10,"ledger_close_meta_versions":[0,1,2],"basis":"go.mod pins go-stellar-sdk v0.7.3 (XDR for Protocol 28; Protocol 29 changed no XDR); no gate in wallet-backend at this commit"},
+  "observations":{
+    "receipts":{"supported":true,"subkinds":["transactions","operations"]},
+    "transactions":{"supported":true},
+    "participants":{"supported":true,"muxed":"base_only"},
+    "state_changes":{"supported":true,"subkinds":["signer_added","signer_removed","signer_changed","trustline_created","trustline_removed","trustline_flags_changed","balance_changed","account_created","account_removed","thresholds_changed","contract_deployed"],"modelling":["initial_authorization_separate"]},
+    "movements":{"supported":false,"reason":"adapter v0.1 maps state changes only; balance movements are derived from them in a later version"},
+    "addresses":{"supported":true,"address_encoding":"version_byte_payload_hex"}
+  },
+  "concurrency":{"max_parallel_sessions":8},
+  "requirements":{"network":"none","services":["timescale/timescaledb:2.28.2-pg17@sha256:909e2c7577c074517c8936b6d8799294b33f25fb5bad978a2199250665f1ce1a","chrislusf/seaweedfs:4.46@sha256:08d516132314207d10c8e37cbffc1f32b147d870169688734cc61c6231625b62"],"tools":["go>=1.25.9","git","docker"]},
+  "timing":{"prepare_cold_ms":25000,"ingest_per_ledger_ms":300,"slowest_failure_ms":{"sep54-s3":16000,"rpc":152000}}
+}}
+```
+
+`timing` sizes the harness's ingest deadlines. `participants.muxed` is `base_only` (the indexer stores the base
+account) or `base_and_alias` (it also stores the muxed form beside it). `address_encoding` says how stored
+addresses are passed (`strkey_text`, `version_byte_payload_hex`, `xdr_hex`, `raw_key_hex`).
+
+### 4.2 `prepare`
+
+Puts the indexer at `target_version` into a clean state for one session. It may reuse anything in `cachedir`
+(built binaries, database templates) but nothing from another session's data.
+
+```json
+{"xcc":"xcc.adapter/1","id":2,"method":"prepare","params":{"session":"s-0007","target_version":"2c873353c1f0f3c9b145e25a7d009023ad104a1c","network":{"name":"testnet","passphrase":"Test SDF Network ; September 2015"},"workdir":"/tmp/xdrcheck/run-41/s-0007","cachedir":"/cache/xdrcheck/wallet-backend","port_range":{"first":58100,"count":4},"limits":{"memory_max_bytes":1073741824,"pids_max":512},"resolve_ranges":["..2a0a84ea12523b6c92e278c0c84b443041240095","..79ea2acd1dc65a07166133cc04b12e76db314db0"]}}
+```
+
+```json
+{"xcc":"xcc.adapter/1","id":2,"method":"prepare","result":{"ready":true,"target_version":"2c873353c1f0f3c9b145e25a7d009023ad104a1c","build":{"cached":true,"artifact_sha256":"0f3a9c1e5b7d2a4c6e8f00112233445566778899aabbccddeeff001122334455","wall_ms":1500},"state":"clean","ranges":[{"range":"..2a0a84ea12523b6c92e278c0c84b443041240095","contains":false},{"range":"..79ea2acd1dc65a07166133cc04b12e76db314db0","contains":false}],"notes":["database cloned from template tmpl_2c873353 in 160 ms"]}}
+```
+
+`resolve_ranges` exists because some targets have no release tags: the manifest's known divergences then name
+commit ranges, and only the adapter holds the repository that decides whether the version under test lies inside
+one (`A..B` is every commit from A to B on B's first-parent history, `..B` everything up to B). For tagged
+packages the harness evaluates ranges itself and omits the field. (`artifact_sha256` above is a placeholder.)
+
+### 4.3 `ingest`
+
+Makes the indexer ingest `range` from `input` and returns when it has finished the range, has stopped, or the
+deadline has passed.
+
+```json
+{"xcc":"xcc.adapter/1","id":3,"method":"ingest","params":{"session":"s-0007","input":{"kind":"sep54-s3","endpoint_url":"http://127.0.0.1:58090","bucket_path":"ledgers/testnet/2025-12-18","region":"us-east-1","access_key_id":"test","secret_access_key":"test","schema":{"ledgers_per_batch":1,"batches_per_partition":64000,"compression":"zstd"}},"range":{"start":4437357,"end":4437357},"network":{"name":"testnet","passphrase":"Test SDF Network ; September 2015"},"unit":"single","deadline_ms":30000}}
+```
+
+Completed — wallet-backend at the commit that fixed wallet-backend#729:
+
+```json
+{"xcc":"xcc.adapter/1","id":3,"method":"ingest","result":{"status":"completed","last_ledger":4437357,"signals":{"cursor_before":4437356,"cursor_after":4437357,"process_exited":false,"exit_code":0,"term_signal":null,"stopped_by_adapter":true,"wall_ms":303,"failing_ledger":null,"phase":null,"runtime_panic":false,"rows_for_failing_ledger":null,"attempts":null,"stderr_tail":"shutdown requested; exiting cleanly"}}}
+```
+
+Halted — the same ledger at the commit before that fix:
+
+```json
+{"xcc":"xcc.adapter/1","id":3,"method":"ingest","result":{"status":"halted","last_ledger":4437356,"signals":{"cursor_before":4437356,"cursor_after":4437356,"process_exited":true,"exit_code":2,"term_signal":null,"stopped_by_adapter":false,"wall_ms":15420,"failing_ledger":4437357,"phase":"persist","runtime_panic":false,"rows_for_failing_ledger":0,"attempts":5,"stderr_tail":"panic: executing root command: running ingest: running 'ingest' from 0 to 0: processing ledger 4437357: ingesting processed data failed after 5 attempts: batch inserting state changes: ... stellar address PBCK2RYY...MS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014)"}}}
+```
+
+Refused — an indexer with a real gate (the baseline indexer built with a maximum protocol of 28) given the first
+Protocol 30 testnet ledger:
+
+```json
+{"xcc":"xcc.adapter/1","id":3,"method":"ingest","result":{"status":"refused","last_ledger":null,"signals":{"cursor_before":null,"cursor_after":null,"process_exited":true,"exit_code":3,"term_signal":null,"stopped_by_adapter":false,"wall_ms":41,"failing_ledger":5540313,"phase":"decode","runtime_panic":false,"rows_for_failing_ledger":0,"attempts":1,"stderr_tail":"refusing ledger 5540313: protocol 30 is newer than the maximum supported protocol 28"},"refusal":{"gate":"max_protocol","reason":"protocol 30 is newer than the maximum supported protocol 28","ledger":5540313,"observed":30}}}
+```
+
+#### Input descriptor
+
+| `kind` | Fields | What the harness serves |
+|---|---|---|
+| `sep54-dir` | `path`, `schema` | A directory: `.config.json` plus `<partition>/<object>.xdr.zst` keys exactly as go-stellar-sdk's datastore builds them |
+| `sep54-s3` | `endpoint_url` (loopback), `bucket_path`, `region`, dummy `access_key_id` / `secret_access_key`, `schema` | The same layout behind an S3-compatible endpoint, path-style |
+| `sep54-gcs` | `emulator_host` (loopback), `bucket_path`, `schema` | The same layout behind a GCS-compatible endpoint (`STORAGE_EMULATOR_HOST`). Defined by the schema; `xdrcheck replay` does not serve it yet, so an adapter that needs GCS takes `sep54-dir` and runs its own emulator (the stellar-etl adapter does) |
+| `rpc` | `url` (loopback) | A mock JSON-RPC endpoint answering `getHealth` and `getLedgers` with stellar-rpc's field types |
+
+`range` is inclusive and names real ledger sequences as served. `network.passphrase` is the passphrase of every
+ledger in the range: one harness pass per passphrase, because readers verify transaction hashes against it.
+`schema` mirrors the store's `.config.json` (`ledgersPerBatch`, `batchesPerPartition`). The dummy credentials
+matter: without them an AWS client probes the instance-metadata address, which is an outbound request.
+
+#### Ingest statuses and the facts that justify each
+
+The adapter chooses the first row whose facts hold. `stderr_tail` is for the report only; no status may rest on
+matching log text.
+
+| `status` | Required facts |
+|---|---|
+| `completed` | The indexer's own progress marker (`cursor_after`) is **at or past** `range.end` (an indexer can run past the end between two polls), and the process is still running and was stopped cleanly by the adapter, or exited 0. Says nothing about correctness |
+| `refused` | `envelope.enforcement` is `indexer_gate`; the indexer returned a structured refusal naming a declared gate (an exit code or status record the indexer defines, not a log phrase); `cursor_after` is below the refused ledger; `rows_for_failing_ledger` is 0; `runtime_panic` is false; `refusal` is filled in. The harness re-checks every one of these (§3.1) |
+| `crashed` | The process ended by a signal (`term_signal`, including an out-of-memory kill) or an uncaught runtime fault (`runtime_panic: true`), with `cursor_after` below `range.end`. How a runtime fault is recognised is indexer-specific and belongs in the adapter's own documentation; an adapter that cannot tell sets `runtime_panic: null` and reports `halted` |
+| `halted` | The process exited on its own with `cursor_after` below `range.end`, and no row above applies (including retry loops that give up) |
+| `timeout` | At `deadline_ms` the process is still running and `cursor_after` is below `range.end`; the adapter stops it and reports. If the adapter itself does not answer, the harness kills its process group and records the timeout |
+
+`last_ledger` is always the indexer's own account of how far it got. `rows_for_failing_ledger` lets the harness see
+partial writes.
+
+### 4.4 `observe`
+
+Returns what the indexer holds for a range as an observation set (`xcc.observation/v1`). It is called after
+`ingest` whatever the status, so partial progress is visible.
+
+```json
+{"xcc":"xcc.adapter/1","id":4,"method":"observe","params":{"session":"s-0007","range":{"start":4437357,"end":4437357},"kinds":["receipts","transactions","participants","state_changes","movements","addresses"],"tx_hashes":["d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed"]}}
+```
+
+```json
+{"xcc":"xcc.adapter/1","id":4,"method":"observe","result":{
+  "schema":"xcc.observation/v1",
+  "range":{"start":4437357,"end":4437357},
+  "kinds":{
+    "receipts":{"status":"provided","subkinds":["transactions","operations"]},
+    "transactions":{"status":"provided"},
+    "participants":{"status":"provided"},
+    "state_changes":{"status":"provided"},
+    "movements":{"status":"not_applicable","reason":"adapter v0.1 maps state changes only"},
+    "addresses":{"status":"provided"}
+  },
+  "ledgers":[{
+    "ledger_seq":4437357,
+    "receipt":{"transactions":12,"operations":12},
+    "transactions":[{"hash":"d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed","index":0,"successful":true,"result_code":"tx_success","native_label":"TransactionResultCodeTxSuccess"}],
+    "participants":[{"tx_hash":"d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed","account":{"address":"GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B","as_stored":{"encoding":"version_byte_payload_hex","value":"3044ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b20"}}}],
+    "state_changes":[{
+      "tx_hash":"d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed",
+      "kind":"signer_added",
+      "account":{"address":"GBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBB7B","as_stored":{"encoding":"version_byte_payload_hex","value":"3044ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b20"}},
+      "signer":{"weight":1,"as_stored":{"encoding":"version_byte_payload_hex","value":"7844ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b2000000003deadbe00"}},
+      "native_label":"SIGNER/ADD"
+    }],
+    "addresses":[{"tx_hash":"d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed","field":"state_changes.signer_account_id","as_stored":{"encoding":"version_byte_payload_hex","value":"7844ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b2000000003deadbe00"}}]
+  }],
+  "errors":[]
+}}
+```
+
+That is wallet-backend at the commit that fixed wallet-backend#716. At the commit before it, the same call returns
+the signer as `7844ad…879b20` — 33 bytes, the signed payload dropped — and nothing else differs. The harness decodes
+the stored bytes itself and finds they are not the expected `P…` key.
+
+#### Observation rules
+
+- **Report what is stored, exactly.** Every address-bearing value has an `as_stored` form: the literal text or
+  bytes the indexer keeps. Interpreted fields (`address`, `signer.key`, `on_chain_form`) are filled only when the
+  indexer itself holds that form. An adapter never computes a base account from a muxed one, re-derives a strkey,
+  pads, trims or rounds on the indexer's behalf: that would hide exactly the bugs under test.
+- **Amounts and 64-bit IDs are decimal strings.** A value that is not an exact integer in the indexer (a JSON
+  float, a decimal with a fraction) goes literally into `amount_as_stored`; `amount` is left out.
+- **One stored record is one fact.** An adapter maps each record to at most one fact of the closest neutral kind,
+  never merging or splitting records or filling a field the record lacks. Differences between indexers' models are
+  absorbed by the declarations in `describe` (`subkinds`, `modelling`, `muxed`), not by the adapter. An indexer
+  that writes one balance row per event (per mint, transfer or path hop) is reported row by row; the harness
+  compares those rows with the reference's net change by their sum ([manifest.md §6.6](manifest.md), S-7).
+- **State-change `detail` keys are closed per kind**, the same list as the manifest's
+  ([manifest.md §6.6](manifest.md)), enforced by the observation schema. A value the indexer holds in another
+  representation goes under `<key>_as_stored` as the literal token, which is evidence only.
+- **Result codes use XDR-JSON names** (`tx_success`, `tx_failed`, …) mapped from the indexer's labels through a
+  fixed table; the original may be kept in `native_label`.
+- **Kinds are optional; absence is declared.** Each kind is `provided` or `not_applicable` with a reason. An
+  expected fact whose sub-kind is not listed is `not_applicable` for that fact. A provided kind that comes back
+  empty means the indexer holds nothing — that is how drops are seen. A ledger missing from `ledgers` was not seen.
+- **Locators.** Facts carry `tx_hash` wherever the indexer can supply one, and `tx_index` / `op_index` when it has
+  them. Facts without a transaction locator are matched at ledger scope.
+
+### 4.5 `teardown`
+
+```json
+{"xcc":"xcc.adapter/1","id":5,"method":"teardown","params":{"session":"s-0007"}}
+```
+
+```json
+{"xcc":"xcc.adapter/1","id":5,"method":"teardown","result":{"ok":true}}
+```
+
+Stops the indexer if it is still running and removes the session's state (databases, buckets, temporary files).
+With `keep_state: true` (`xdrcheck replay --keep-state`) the adapter leaves everything in place and lists it in
+`left_behind`.
+
+### 4.6 Errors
+
+An error response means the **adapter or its environment** failed; it is never a statement about how the indexer
+handled a ledger. The harness records the affected entries as `harness_fault`.
+
+```json
+{"xcc":"xcc.adapter/1","id":3,"method":"ingest","error":{"code":"unsupported_input","message":"this indexer cannot read input kind sep54-dir; supported: sep54-s3, rpc","retryable":false}}
+```
+
+| `code` | When |
+|---|---|
+| `unsupported_protocol_version` | No common protocol version |
+| `unknown_method`, `invalid_params` | Malformed request |
+| `unknown_session` | `ingest`, `observe` or `teardown` for a session that was not prepared |
+| `unsupported_input`, `unsupported_unit` | The request asks for something `describe` did not declare |
+| `unsupported_target_version` | The adapter cannot build or run that version |
+| `prepare_failed` | Build, migration or service start failed |
+| `environment` | A required tool or service is missing or unreachable |
+| `internal` | Anything else |
+
+## 5. Determinism
+
+- No wall-clock values in results except `wall_ms`, a duration used for reporting and deadline sizing, never for
+  scoring.
+- Arrays in an observation set are ordered: `ledgers` by `ledger_seq`; within a ledger, facts by transaction,
+  then operation, then the fact's JSON text. Two runs on the same input give byte-identical observation sets once
+  `wall_ms` is removed.
+- The adapter keeps the system clock out of observations: where the indexer stamps rows (`ingested_at`), that
+  column is left out.
+- Session IDs, ports and directories come from the harness; the adapter invents none.
+
+## 6. Resource limits — owned by the harness
+
+- **Time.** Deadlines per call:
+
+  | Call | Deadline |
+  |---|---|
+  | `describe` | 10 s |
+  | `prepare` | 10 minutes (cold builds) |
+  | `ingest` | `deadline_ms` from the request, plus 10 s of grace before the harness kills the process group |
+  | `observe` | 60 s |
+  | `teardown` | 60 s |
+
+- **Response size.** `xdrcheck replay` refuses a response line longer than 64 MiB (a `harness_fault` for that unit)
+  and asks for observations in windows of consecutive ledgers, so an adapter never returns a long unit in one line.
+- **Memory and processes.** The harness starts the adapter as the leader of a new process group inside its own
+  cgroup v2 scope (`MemoryMax`, swap off, `TasksMax`; `xdrcheck replay --memory-max`, `--pids-max`), so everything
+  the adapter spawns is inside it. Where no user cgroup is available it falls back to an address-space limit plus
+  polling of resident memory, and the report says which mechanism was used. An out-of-memory kill of the indexer
+  surfaces as `crashed`; one of the adapter itself is recorded by the harness as `mishandled · crash`.
+- Services an adapter runs in containers are outside that group. The adapter receives the limits in
+  `prepare.limits` and passes them on.
+
+## 7. Security rules
+
+1. **No network.** Adapter and indexer must work with outbound networking disabled; `make verify-replay
+   OFFLINE=1` runs the whole harness in a network namespace with loopback only. Every URL in a request is a
+   loopback address (the schema enforces it). The adapter sets every endpoint of the indexer explicitly, because
+   defaults may point at public infrastructure.
+2. **No credentials.** The protocol carries no secrets; object-store credentials are dummy values for the local
+   endpoint. The indexer is started with a scrubbed environment.
+3. **No production data.** An adapter works on a fresh store it creates in the session.
+4. **No disclosure required.** Nothing in the protocol needs the indexer's source, schema or internal names;
+   `field` and `native_label` are optional, so an adapter for a private indexer can leave them out. `xdrcheck report
+   redact` strips evidence strings from a report before it is shared.
+5. **Corpus bytes are untrusted input** from the indexer's point of view (some entries are built to stress
+   readers). Adapters do not pre-validate or filter them.
+6. Telemetry in dependencies is switched off (the wallet-backend adapter disables TimescaleDB's telemetry job).
+
+## 8. Writing an adapter
+
+Start from a template:
+
+- **Go:** [`go/adapters/minimal`](../go/adapters/minimal) — about 150 lines, receipts and transactions, every
+  place to change marked `REPLACE`. It is built on the public package
+  [`adapterkit`](../go/adapterkit) (`github.com/tolgayayci/xdrcheck/go/adapterkit`,
+  standard library only): the message types, `Main`/`Serve` (the stdio transport, the version check, error
+  responses, the refusal of undeclared inputs and units), `RunChild` (an indexer process with a deadline),
+  `ProvidedKinds` and `SortFacts`, the embedded schemas with the harness's own response check, and `kittest`,
+  the selftest's checks in process for your own `go test`. Copy `main.go` and `protocol_test.go` into your own
+  module; nothing under `internal/` is needed (a test builds the copy as a module of its own).
+- **Any other language:** [`examples/adapter-ts`](../examples/adapter-ts) is the same template in TypeScript.
+  The contract is only the two schemas, `corpus/schema/adapter-protocol.schema.json` and
+  `observation.schema.json`.
+- **Every kind:** [`go/adapters/baseline`](../go/adapters/baseline) is the complete example: an indexer that is a
+  separate process with its own store, and all six kinds.
+
+`scripts/demo.sh` runs the Go template with one planted bug and prints what the report says about it.
+
+For any indexer:
+
+1. **Choose the input.** An indexer that reads a data lake through go-stellar-sdk's datastore takes `sep54-dir`
+   or `sep54-s3`; one that polls stellar-rpc takes `rpc`. Nothing else in the indexer changes: it is pointed at a
+   loopback endpoint instead of the real one.
+2. **Write `describe`.** Name, target version, inputs, units (`single` first; `chain` if the indexer can start at
+   ledger 2 of a fresh network), the envelope (`none` if there is no gate), and the observation kinds you can
+   report. `receipts` and `transactions` alone already catch drops, crashes, hangs and halts for the whole corpus.
+3. **Write `prepare`.** Create an empty store. If the indexer needs a starting cursor, set it to `range.start − 1`.
+4. **Write `ingest`.** Start the indexer on the given input and range, poll its progress marker, stop it when the
+   marker reaches `range.end`, and fill in the signals.
+5. **Write `observe`.** One query per kind, mapped onto the neutral names; pass stored values through as
+   `as_stored`.
+6. **Write `teardown`.** Drop the store.
+7. **Run the self-check:** `xdrcheck replay --adapter "./my-adapter" --target-version <v> --selftest` (in Go, also
+   `kittest.Check` in your own tests).
+8. **Replay:** `xdrcheck replay --adapter "./my-adapter" --target-version <v> --input sep54-dir --report DIR`.
+   `DIR/REPORT.md` starts with the failures: for each, the entry and its CAPs, what the ledger holds against
+   what the indexer held, and the `xdrcheck replay --entries <id> …` command that replays that entry alone.
+9. **Add kinds as you go.** Each new kind switches on the expectations of that kind for every entry; kinds you
+   do not model stay `not_applicable` and cost nothing.
+
+An indexer with no query interface can still be adapted: have it write its records somewhere in your own format
+and translate them in `observe`.
+
+### 8.1 wallet-backend's declared scope
+
+An indexer is judged against what it states it indexes, not against everything the ledger shows. The
+wallet-backend adapter (`go/adapters/walletbackend/scope.go`) declares, in the open `out_of_scope` property of
+the `participants`, `addresses` and `state_changes` capabilities, the facts wallet-backend does not claim, each
+rule with a `basis` that cites wallet-backend's own source or documentation at the commit it was read at
+(`f0c00cf52420`, the pinned current commit). It declares them at that commit and at any other commit where every
+file the rules cite is byte-identical to the one read (so the cited statements and line numbers still hold, as at the
+previous pins `3e22515a` and `18db88f4`); other commits, including every older pinned one, declare none.
+
+| Kind | Not claimed | wallet-backend's own statement (at `f0c00cf52420`) |
+|---|---|---|
+| participants | liquidity pools and claimable balances (`L…`, `B…`) | `internal/indexer/processors/participants.go:49` takes participants from account entries only; `token_transfer.go:260-261`: pool and balance IDs are not recorded as accounts |
+| participants | an invoked contract whose only role is `contract` | `docs/architecture/state-changes.md:130`: a Soroban operation's participants are its source and its verified authorisers (a contract is one only as the account of a state change it writes, line 126) |
+| participants | a counterparty whose only movements are of a SEP-41 (non-SAC) contract token | `docs/architecture/state-changes.md:134`: SEP-41 rows add no participants; `:100`: token transfer events of a contract call count only for the native asset or its SAC; `:130`: a Soroban operation's participants are its source and its verified authorisers (the same text at `3e22515a` and `18db88f4`) |
+| addresses | muxed `M…` and `W…` addresses | `docs/architecture/token-tracking.md:160`: stored as the `G…`/`C…` base, with the mux ID as `toMuxedId` |
+| addresses | pool and claimable balance IDs | `token_transfer.go:260-261` |
+| state_changes | `balance_changed` of a pool share | `docs/architecture/state-changes.md:100` (BALANCE rows come from token transfer events) and `token-tracking.md:29,55` (pool shares live in the balance tables) |
+| state_changes | `contract_deployed` of a Stellar Asset Contract | `internal/indexer/processors/contract_deploy.go:158-159`: SAC deploys have no creator and are not recorded |
+
+The harness (`go/internal/match/scope.go`) applies a rule to an expected fact when the fact meets every
+criterion the rule names:
+
+| Criterion | Kinds | Matches when |
+|---|---|---|
+| `address_types` | participants, addresses | the expected address's type is listed (`account`, `muxed_account`, `contract`, `muxed_contract`, `liquidity_pool`, `claimable_balance`; for addresses the manifest's `type`) |
+| `roles` | participants | every role the manifest gives the participant is listed (a participant without roles never matches) |
+| `movement_asset_types` | participants | the participant sends or receives at least one expected movement, and every such movement's asset type is listed (`native`, `credit`, `liquidity_pool`, or `contract`: a token named by its contract address, not a classic asset's Stellar Asset Contract) |
+| `kinds` | state_changes | the change's kind is listed |
+| `asset_types` | state_changes | its asset's type is listed (`native`, `credit`, `liquidity_pool`) |
+| `detail` | state_changes | each named detail key has the given value |
+| `cause` | state_changes | its cause equals the given one |
+
+Such a fact is `not_applicable` with "outside the adapter's declared scope: <basis>" as its reason. A rule needs
+a `basis` and at least one criterion of its kind; anything else makes the match fail. Negative facts
+(`must_not_include`) and extras are never excused.
+
+Facts wallet-backend does claim (for example a pool-share trustline removed by a revocation, a participant that
+is the counterparty of a transfer, a contract deployed from an address) are not listed and fail when missing. A
+statement of wallet-backend that the ledger contradicts is not a scope either: its code says a failed transaction
+changes no state beyond its fee (`internal/indexer/processors/participants.go:167`), but a failed transaction
+removes the pre-authorized transaction signers it carries (CAP-28), so a signer removal of a failed transaction
+stays in scope and fails when it is missing.
+
+Nor is behaviour reported upstream as a defect: wallet-backend writes ACCOUNT/CREATE for the `create_account`
+operation only (`internal/indexer/processors/token_transfer.go:289-298`), so an account created by a native Stellar
+Asset Contract transfer (CAP-73) gets no `account_created`. That defect is reported upstream and recorded as a known
+divergence of the entries that show it, not declared as scope.
+
+## 9. Conformance of an adapter
+
+`xdrcheck replay --selftest` checks an adapter without scoring its indexer. It runs the adapter twice:
+
+- Process A: `describe`; `prepare`; an `ingest` with an input kind the adapter did not declare (must answer
+  `unsupported_input`) and one with an undeclared unit (`unsupported_unit`); with a probe unit, a real `ingest`,
+  `observe` and `teardown`; then stdin is closed and the adapter must exit 0 within the grace period.
+- Process B: `describe` again, which must equal A's; with a probe unit, a second session over the same unit, whose
+  observation set must equal A's.
+
+Every response is validated against the schemas, so a broken message ends the self-check with the protocol
+error's reason. Two checks need the ledger server or a network namespace — a ledger deliberately withheld must end
+in `timeout` at the deadline, and no connection may leave loopback — and are reported as skipped by
+`--selftest`. The harness's own test, `make harness-selftest`, is different: it replays the corpus through the
+seeded-bug indexers and checks that each lands in its documented class ([replay-harness.md §12](replay-harness.md)).
