@@ -1,0 +1,368 @@
+# Maintenance and upgrade plan
+
+For SDK maintainers and indexer operators who pin the kit, and for whoever maintains it. After this page you know
+how corpus versions and releases work, what happens to the corpus and the tools at each protocol upgrade and in
+what order, which upstream sources are watched, and how a wrong entry is corrected. Each statement names the file,
+command or job that shows it holds.
+
+## 1. What is kept current
+
+| Part | What "current" means | Checked by |
+|---|---|---|
+| Corpus and manifest | New entries for every protocol upgrade; corrections; the coverage report without unexplained gaps | `make verify-corpus`, `make verify-coverage` |
+| Generator and oracle | Pins moved to each new stable stellar-core and rs-stellar-xdr; scenarios keep regenerating under the reproducibility rule | `make verify-generate` |
+| Replay harness and adapters | `xcc.adapter/1` kept backward compatible within the major version; the reference adapter kept working on current wallet-backend | `make verify-replay`, `make harness-selftest` |
+| Conformance runner and drivers | A driver column for each new SDK release; known divergences kept current | `make verify-conformance` |
+| Linter | Rules kept working on each new go-stellar-sdk release; the wallet-backend profile and expected lists kept current | `make verify-lint` |
+| Guide | Field table regenerated for each stellar-core release; changed claims re-verified at the new tag | `make verify-guide` |
+
+## 2. Maintainer and support period
+
+| Item | Commitment |
+|---|---|
+| Maintainer | Tolga Yaycı ([@tolgayayci](https://github.com/tolgayayci)) |
+| Duration | 1 year from the first stable release, and in any case through the first protocol upgrade after it (section 5) |
+| Response targets | A new issue acknowledged within 5 working days. A security report about the kit: as [SECURITY.md](../SECURITY.md) says (private report, acknowledged within 5 working days). A corpus correction released within 10 working days of being confirmed. A new protocol's XDR changes triaged (step 1 of section 5: the list of new union arms and decode failures) between the XDR shape freeze and the testnet upgrade; a protocol-upgrade release before the mainnet vote on that protocol. For an upgrade announced with less than two weeks' notice (section 5.5) the release is best effort: the number-only path of section 5.2 is the plan, and the tools keep reading the network meanwhile |
+| After the period | The repository stays public under Apache-2.0. The corpus format and both protocols are specified in `docs/` and the corpus is plain files, so another maintainer can take it over without the current maintainer; a hand-over note is published at the end of the period |
+
+Sizing: Stellar protocol upgrades have come about every two months (six mainnet upgrades in the twelve months to
+November 2026). Testnet has led mainnet by 1 to 20 days, and the stable stellar-core release has led the mainnet
+vote by 26 to 45 days when the upgrade added XDR, by about 2 days for Protocol 24 and not at all for Protocol 29
+(section 5.5). A one-year period spans several upgrades, not one; the procedure in section 5 is written to be
+repeated, with a one-day path for upgrades that change no XDR (section 5.2).
+
+## 3. Versioning and releases
+
+| Thing | Scheme |
+|---|---|
+| Corpus | `MAJOR.MINOR.PATCH`. MAJOR = highest protocol covered (`30.x.y` covers Protocol 30; `corpus.json` `corpus_version`). MINOR = new entries or variants. PATCH = corrections to expectations or metadata |
+| Manifest schema | Its own version (`xcc.manifest.entry/v1`, `corpus/schema/SCHEMA_VERSION`); a breaking change is a new schema version and at least a corpus MINOR |
+| Adapter and driver protocols | Their own major versions (`xcc.adapter/1`, `xcc.driver/1`), negotiated in `describe`; changes within a major version are additive |
+| Tools | Versioned independently of the corpus; each refuses a corpus above the protocol and meta versions it was built for |
+| Entry stability | An entry ID is permanent once released ([entry-ids.md §4](entry-ids.md)). The bytes of a released entry never change, and a released entry is never removed (section 9) |
+
+Release procedure:
+
+1. Every job of the full CI (`.github/workflows/full.yml`) green on the release commit. On a `v*` tag the same
+   workflow runs every check and refuses a tag that is not on the default branch.
+2. A `CHANGELOG.md` entry: new entries, superseded entries, pin changes, known-divergence changes.
+3. A release archive: manifest, blobs, decoded sidecars, schemas, coverage report, checksums and build provenance.
+   Entries built to stress a reader (the `limits/` group, and entries whose
+   known behaviour is a crash, a hang or a memory-capped run) sit in a separate `stress/` directory of the archive
+   and are excluded from a default run, because the archive is meant to run inside other projects' CI. Small
+   negative vectors stay in the default set: a reader must refuse them, and refusing them costs nothing
+   ([release.md](release.md)).
+4. The archive is built from the committed tree only (`git archive`), and `make release` scans the extracted
+   archive for machine paths and private names ([release.md §4](release.md)).
+5. Thin per-language packages that carry the archive and check its hash before use, so an SDK's CI can run the
+   corpus without a submodule ([use-in-sdk-ci.md](use-in-sdk-ci.md)). None is on a package registry yet.
+6. A status update (section 11).
+
+## 4. The kit's own fail-closed gates
+
+The kit follows the rule it recommends: it refuses what it does not know instead of guessing. The oracle refuses a
+ledger above `corpus.json` `max_protocol` (equal to `pins.toml` `protocol.max_supported`, 30 today) or above
+`max_ledger_close_meta_version`, with a typed error naming the value found and the maximum; `corpus.json` can lower
+that gate but never raise it above the protocol the build was made for (a higher `max_protocol` is refused with an
+error); drivers report an XDR arm their SDK does not know as `union_arm_undeclared` or `enum_undeclared`; `xdrcheck pins
+check` fails on any version named outside `pins.toml` and on any protocol or oracle-version constant in the kit's
+own code that differs from it. Raising a gate is the procedure in section 5, never a one-line change. Details:
+[architecture.md](architecture.md#fail-closed-gates-in-the-kit-itself).
+
+One deliberate exception: the tools that read the live network (`xdrcheck-corpus capture` and `xdrcheck-corpus mine`)
+read a ledger above `max_protocol` instead of refusing it, so a protocol upgrade made with little notice does not
+stop them on the day it matters (section 5.2). They warn, never make a corpus entry from such a ledger, and name
+any shape the pinned definitions cannot decode. The meta-version gate stays closed for them too.
+
+## 5. Procedure for a protocol upgrade
+
+Worked as Protocol 30 → 31; the same steps repeat for every upgrade. Each step has an output that can be inspected. The watch and nightly workflows named
+below run by hand only (`workflow_dispatch`); none has a schedule, so nothing runs unattended. Run them when a
+step calls for it, or `make <target>` on a workstation.
+
+| Step | When | Action | Output |
+|---|---|---|---|
+| 0 | Continuously | Watch the sources in section 6 (the XDR watch, section 5.6, run by hand, does the XDR ones); record each announced vote or reset as a `[[schedule]]` event in `pins.toml` (section 5.5) | A watch-log entry per change, with the expected reader impact; the "Protocol N: XDR watch" tracking issue; the dated events `xdrcheck pins check` enforces |
+| 1 | XDR shape freeze: the stellar-xdr ungate commit and `vNN.0` tag, and stellar-core's re-recorded next-protocol goldens (stellar-core has published no release candidate since Protocol 25) | Decode stellar-core's next-protocol goldens (`test-lcm-next`) through the oracle; run the generator against the next-protocol build (section 5.4); run the conformance matrix with the SDK releases built from the new XDR and compare it with the pinned one (`xdrcheck conform diff`) | A list of new union arms and decode failures; a first readiness matrix |
+| 2 | Stable stellar-core release | Move the pins: stellar-core tag and package hashes, XDR definitions commit, rs-stellar-xdr, then each SDK as it releases. One pull request per pin move, each with its differential report | `pins.toml` updated; `xdrcheck pins check` green |
+| 3 | Same | Import the new golden set by human test name (golden file names change with every protocol): `xdrcheck-corpus fetch-goldens <tag>`, `xdrcheck-corpus import-golden <tag> "<test name>"`; re-run the golden checks (`xdrcheck-corpus verify`, checks `ag1` and `ag3`); review every golden whose structural skeleton changed (`xdrcheck-corpus skeleton`) | Updated golden entries and a skeleton diff |
+| 4 | Same | Read each new CAP's XDR diff at the tag, not the CAP prose, and list the new shapes | New rows in `corpus/caps.toml` and `corpus/plan.json`; `make verify-coverage` lists any row still without an entry and its reason |
+| 5 | Same | Add scenario files for the new shapes and run them at the new protocol on both passphrases; add golden-mirror scenarios where stellar-core's tests cover the shape | New `local-core` entries with twins; `make verify-generate` |
+| 6 | Testnet upgrade | Capture the upgrade ledger and the first ledger after it from the public lake (`xdrcheck-corpus capture testnet <ledger>`) | New `history` entries, marked perishable |
+| 7 | Same | Update `corpus/fields.yaml` for any field whose validation changed; regenerate the guide table; re-verify changed claims at the new tag | `make verify-guide` |
+| 8 | Same | Teach the linter the new types (new authorization or recursive structures feed the XDR2xx and XDR3xx rules); extend the wallet-backend profile | `make verify-lint` |
+| 9 | Before the mainnet vote | Run the full conformance matrix and the harness against the pipelines' new versions; publish the readiness matrix (`xdrcheck conform readiness --protocol 31`): which SDK versions and pipeline commits read the new protocol | Readiness matrix published; new divergences recorded in the entries |
+| 10 | After the vote | Raise the gates (section 4); release corpus `31.0.0`; status update | Release |
+
+Rules that hold throughout: released entries are never edited; entries at older protocols stay in the corpus and
+keep being verified; an expectation whose meaning changes at the new protocol becomes a new entry, with the
+protocol range stated on both.
+
+A `LedgerCloseMeta` version 3 has been discussed publicly and drafted on the stellar-xdr branch
+`lcm_v3`, but is in no stellar-core release. Meta versions are not protocol-gated, so it could arrive with or
+without a protocol bump. The kit is prepared: the meta-version gate refuses it until reviewed, the manifest records
+the meta version per variant, record framing is parsed by the kit's own code, not by a library default, and the
+XDR watch reports the branch as a standing item on every run (section 5.6).
+
+### 5.1 Protocol 31: what fails, and in what order to update
+
+Every place where the kit encodes Protocol 30 fails loudly when the new protocol arrives; none passes silently.
+
+| Where | How it fails | Fix |
+|---|---|---|
+| `pins.toml` `protocol.max_supported` raised to 31 | `xdrcheck pins check` names every constant still at 30: the oracle gate (`DEFAULT_MAX_PROTOCOL` in `crates/xdrcheck-xdr`), `corpus/corpus.json` `max_protocol`, the generator's simulation and bring-up ranges (`crates/xdrcheck-gen`), the baseline indexer's default gate, and each conformance driver's known protocol (marked `pin:protocol.max_supported`) | Update each site in the same change; each needs more than the number (below) |
+| `rust.stellar_xdr` moved | `xdrcheck pins check` names the oracle version the verify report and the sidecar provenance state | Update both |
+| `corpus.json` `max_protocol` raised without a new build | Every corpus command refuses: `max_protocol 31 is above 30, the highest protocol this build supports` | Rebuild against the new pins first |
+| rs-stellar-xdr with new union arms or entry types | `crates/xdrcheck-meta` no longer compiles: its matches over `TransactionMeta`, `LedgerEntryData` and `OperationBody` name every arm and have no catch-all | Decide, per new arm, what fact it carries |
+| An SDK whose generated XDR is newer than Protocol 30 | Its driver reports no `xdr_schema.protocol` (it declares a member above the Protocol 30 value of a sentinel enum), so the conformance verdict judges its refusals of Protocol 31 variants instead of excusing them as beyond reach; the driver's own tests fail on the pinned version | Add the Protocol 31 probes to the driver's `reach` module; the enum ceilings are generated (`make xdr-ceilings`, section 5.6) |
+| `stellar_xdr_definitions` moved without regenerating the ceilings | `make test` fails: `xdrcheck xdr ceilings --check` names each driver value that differs from the definitions, and the label on each block | `make xdr-ceilings` |
+| stellar-core 31 | Its column reports the ledger protocol the binary prints, so its reach follows the binary | Nothing beyond the pin move |
+| `scripts/release.sh` | Refuses a release whose MAJOR version is not `protocol.max_supported` | Release `31.0.0` at step 10 |
+
+Order, mapped onto the steps of section 5:
+
+1. **Now, before anything moves.** The stellar-core runtime libraries are fetched from snapshot.ubuntu.com URLs,
+   with the plain archive pool as the fallback, so a superseded Ubuntu `-updates` build cannot break `make fetch`.
+   The testnet lake prefix in `pins.toml` `[public_lake]` (`testnet/2025-12-18`) goes stale at the testnet reset
+   on **2026-12-16**. It is a `[[schedule]]` event: `xdrcheck pins check` warns from two weeks before and fails from
+   the day after until the prefix moves, and the network-state job fails as soon as testnet's ledger sequence
+   restarts. Move the prefix to the new epoch's and run `xdrcheck-corpus refetch` (section 8).
+2. **Step 1, shape freeze.** Run the SDK releases built from the Protocol 31 XDR through `xdrcheck conform run` and
+   `xdrcheck conform diff`. Such a release reports no protocol, so its refusals of Protocol 31 variants appear as
+   failures in the diff: that is the readiness signal, not noise to suppress.
+3. **Step 2, pin moves.** Move the XDR definitions commit and rs-stellar-xdr first: fix the `crates/xdrcheck-meta`
+   matches the compiler names, then the oracle-version constants `xdrcheck pins check` names. `soroban_sdk` is pinned at
+   29.0.1 for the test contracts (30.0.0 existed only as a release candidate when the pin was set): move it to the release
+   that matches the new soroban-env-host, rebuild the contracts and confirm their hashes, or record why it stays.
+4. **Step 10, raising the gates.** In one change: `protocol.max_supported = 31` and every constant `xdrcheck pins
+   check` names. Each driver also needs a probe for a Protocol 31 feature (with its protocol in the probe table)
+   and the Protocol 31 maximum of each sentinel enum, read from the XDR definitions at the new tag, not from an
+   SDK: `make xdr-ceilings` writes them into all five drivers from the vendored definitions (or
+   `xdrcheck xdr ceilings --write --defs <tag>` straight from stellar-xdr); the generator needs the Protocol 31
+   network settings and host before its ranges are raised.
+5. **SDK pin moves.** Each driver's tests assert the protocol every pinned version reports (31 for a version with
+   the Protocol 31 probes, 30 for one without), so a pin move that the driver cannot bound fails there first.
+
+### 5.2 Number-only upgrades: the one-day path
+
+Some upgrades change no XDR: Protocol 24 (a fix, about two days between the stable stellar-core release and the
+mainnet vote) and Protocol 29 (a security release, published after the vote). Section 5 is weeks of work; these
+need a day, and may need it with no notice.
+
+**What the tools do before anyone acts.** A ledger above `max_protocol` is read, not refused, by the tools that
+read the live network:
+
+- `xdrcheck-corpus capture` keeps the object and prints `warning: ledger protocol 31 is above the supported maximum
+  30 ...`. With `--entry` it refuses before writing anything, because the corpus gate would refuse the entry.
+- `xdrcheck-corpus mine` decides such ledgers like any other, marks each kept one `above_max_protocol`, and counts
+  them in `mined.json`.
+- A ledger that does not decode with the pinned definitions is a shape change, not a number-only upgrade. `mine`
+  lists it under `undecoded` with the definition and value the bytes leave (for example `TransactionMeta: no
+  arm for 5`) and goes on. `capture` keeps the object, as served, under `<cache>/beyond-gate/` (a testnet upgrade
+  ledger does not stay available), and fails with that same message. Follow section 5.
+- The network-state job (`make watch-network`, section 5.5) fails the night a network's
+  `current_protocol_version` passes `protocol.max_supported`.
+
+**The path, once the upgrade is known to change no XDR.** The upgrade changes no XDR when the stellar-xdr
+repository has no new tag and no change on its `curr` branch since the pinned tag, and a ledger at the new
+protocol decodes (the warnings above, with nothing `undecoded`):
+
+1. Move `[stellar_core]` to the release that supports the new protocol (version, commit, package URL and
+   hashes, images) and run `make fetch`.
+2. Raise `protocol.max_supported` and every constant `xdrcheck pins check` names (section 5.1). With no new shapes, the
+   drivers need only the new protocol number in their probe tables and enum ceilings; the generator needs the
+   new protocol's network settings and soroban-env-host, which the stellar-core release names.
+3. Regenerate (`make verify-generate`, then `xdrcheck-corpus gen` for the scenarios that run at the top protocol), and
+   capture the upgrade ledger on both networks (`xdrcheck-corpus capture <network> <ledger> --entry ...`, now
+   accepted).
+4. `make verify-static verify-corpus verify-conformance`, then release `31.0.0` (the release MAJOR is the
+   protocol, section 3).
+
+If step 2 needs a new probe because the release changed behaviour without changing XDR, the upgrade is not
+number-only: continue with section 5.
+
+### 5.3 Pin moves and the latest-SDK canary
+
+The pins that follow an upstream release carry a `# renovate: datasource=... depName=...` comment in `pins.toml`.
+Two things read that list:
+
+- `renovate.json`: a Renovate regex manager over `pins.toml` that opens one pull request per pin move, weekly;
+  the Go modules move together with `go/go.mod` and `lint/go.mod`. The conformance driver directories are
+  historical columns and are never bumped. Some moves need hand steps, which the pull request body lists
+  (stellar-core's package hashes and images, a crate's `Cargo.lock`, a new driver column for an SDK).
+- `xdrcheck pins latest`: the same list against the newest stable release on npm, PyPI, the Go module proxy,
+  crates.io and git tags, with no bot. `--list` prints the list offline.
+
+The canary (`make nightly-canary`, workflow `watch-canary.yml`, run by hand) runs `xdrcheck pins latest` and reports each pin
+behind upstream. For each SDK family with a driver (JavaScript, Go, Python, Rust), when the newest release is not
+yet a pinned conformance column, it builds a throw-away canary column for that release outside the working tree,
+from the newest pinned column's driver code, runs the curated corpus through both, and lists the cells whose
+verdict differs (`xdrcheck conform diff`). It reports drift and fails only when it cannot run, so it never blocks a
+pull request; its summary is the input to the pin-move pull request. `XDRCHECK_CANARY_PLAN=1` stops after the plan.
+
+### 5.4 The next-protocol stellar-core build
+
+stellar-core's next protocol exists on its master branch behind the configure flag
+`--enable-next-protocol-version-unsafe-for-production`, weeks before a release. The job (`make vnext-core`, run by hand,
+workflow `vnext-core.yml`) builds master that way in the pinned build container (`pins.toml` `[images]
+vnext_build_base`, with the toolchain stellar-core's own testing Dockerfile uses), checks that the binary supports
+a ledger protocol above `protocol.max_supported`, and keeps the result by commit under
+`${XDRCHECK_CACHE:-~/.cache/xdrcheck}/stellar-core-vnext/<commit>/`: `pkg/usr/bin/stellar-core`, its C++ runtime libraries
+in `pkg/usr/lib/x86_64-linux-gnu/`, and `manifest.json` (commit, flags, binary sha256, `stellar-core version`
+output, ledger protocol). The run uploads the same as its artefact. `VNEXT_PLAN=1` prints the plan without
+building; the build itself takes about an hour.
+
+To emit next-protocol entries early with it, on a working branch that is never merged as it is:
+
+1. Point `[stellar_core]` at the build: `binary_sha256` from `manifest.json`, `version` and `commit` from its
+   commit. The generator checks the binary against `binary_sha256` and takes it from `XDRCHECK_STELLAR_CORE` (its
+   libraries from `../lib/x86_64-linux-gnu` beside it), so export
+   `XDRCHECK_STELLAR_CORE=<cache>/stellar-core-vnext/<commit>/pkg/usr/bin/stellar-core`.
+2. Raise `protocol.max_supported` to the build's ledger protocol and every constant `xdrcheck pins check` names, and
+   move rs-stellar-xdr to a version built from the stellar-xdr `next` branch: the oracle cannot read shapes the
+   pinned definitions lack.
+3. Write the scenarios for the arms the next protocol adds and run `xdrcheck-corpus gen` on them. The entries made
+   this way are drafts for the upgrade (section 5, step 5); they become corpus entries when the release they
+   were made against is pinned.
+
+### 5.5 Signals, lead times and dated events
+
+Measured over Protocols 22 to 30, earliest first. Section 6 lists every watched source; these are the ones with
+a measurable lead before the testnet upgrade.
+
+| Signal | Lead before testnet | What the kit does with it |
+|---|---|---|
+| New feature-gated XDR on the stellar-xdr `main` branch (`#ifdef CAP_...`) | 6 to 14 weeks | Section 6 watch |
+| stellar-core's next-protocol goldens re-recorded with the new arms | 4 to 7 weeks | The early warning (`make nightly-early-warning`) decodes them |
+| stellar-core master building the next protocol | from the previous release | Next-protocol build (section 5.4) |
+| XDR shape freeze: the ungate commit and `vNN.0` tag; rs-stellar-xdr follows within a day | 2 to 4 weeks | Step 1; `xdrcheck pins latest` and Renovate see the tag and the crate |
+| Stable stellar-core release | 1 to 30 days (26 to 45 days before the mainnet vote when XDR changed) | Step 2 pin moves |
+| Status page scheduled maintenance and the SDF upgrade guide (the developer Discord's protocol-next channel coordinates) | 14 to 23 days (34 to 38 days before the mainnet vote) | Recorded as `[[schedule]]` events; `xdrcheck pins check --network` warns about one that is missing |
+| SDK releases (JavaScript, Go, Python, Java) | 0 to 4 weeks; community SDKs up to two weeks after testnet | Latest-SDK canary (section 5.3) |
+| Testnet and mainnet `current_protocol_version` on Horizon | 0 | Network-state job fails above `max_supported`, warns when a network pin is stale |
+| Testnet reset (2 to 4 times a year, 17:00 UTC, announced at least two weeks ahead) | announced 14 days ahead | `[[schedule]]` event; the network-state job detects the restart of the ledger sequence |
+
+Upgrades without XDR changes come with the least notice: about two days for Protocol 24, none for Protocol 29.
+
+**Dated events in `pins.toml`.** Each announced mainnet vote and testnet reset is a `[[schedule]]` table: the
+event, its date (UTC), the source of the date, the pin it changes (`pin`), the value that pin holds until then
+(`until`) and what to do afterwards (`action`). `xdrcheck pins check`, offline in every pull request, reads them
+against today: from 14 days before it warns, after the day it fails until the pin has moved, then reports the
+event as done until it is removed. `--today YYYY-MM-DD` shows what a given day will say. With `--network` (the
+network-state job, `make watch-network`, workflow `watch-drift.yml`) it also reads the Horizon root of mainnet and testnet and the
+status page's scheduled maintenances: a network above `protocol.max_supported` or a reset testnet fails; a stale
+`protocol.network_*` pin, validators ready for a newer protocol, a status-page vote or reset that is not a
+`[[schedule]]` event, and an event less than 10 days away that the status page does not yet list each warn.
+
+### 5.6 Upgrade tooling: `xdrcheck xdr`
+
+Four commands turn the XDR definitions into data, so the steps above start from a list instead of a reading
+([cli.md](cli.md) has every flag):
+
+| Command | What it answers | Where it runs |
+|---|---|---|
+| `xdrcheck xdr diff <base> <head>` | What changed between two definition sets, structurally: types added or removed, enum members and values, struct fields (added, removed, retyped, made optional, re-bounded, reordered), union arms including numeric cases (`case 1:` extension arms, `LedgerCloseMeta` v3), discriminants, constants and typedefs. Each change carries its `#ifdef` gate and that gate's CAP (`CAP_0084_MUXED_CONTRACT` → CAP-0084; `MS_CLOSE_TIME` → CAP-0088), and the readers it reaches (`LedgerCloseMetaBatch` for indexers, `TransactionEnvelope` for SDKs); a change no root reaches, such as a new `ContractCostType`, is listed but not reader-visible. The report also lists the new arm identifiers `xdrcheck-corpus coverage --arms` will count, with the class `corpus/arms.toml`'s default rule gives each | By hand at every step that reads XDR; inside the XDR watch job below |
+| `xdrcheck xdr watch` | Every source of unreleased XDR against the pins: main with every feature on (the next protocol as gated today), every other branch and open pull request against its merge base with main (what each would add), the XDR diff inside every CAP document that is not yet Implemented or Final, applied to the commit the document names, and the standing items (`lcm_v3`) with their state | `make nightly-xdr-watch` |
+| `xdrcheck xdr candidates` | Candidate rows for `corpus/caps.toml` (the CAP made reader-visible, or a new record), `corpus/arms.toml` (one record per new arm, with the default class) and `corpus/plan.json` (one planned `local-core` row per new arm a ledger can hold), every one marked CANDIDATE | The XDR watch job's draft pull request; by hand with `--write` |
+| `xdrcheck xdr ceilings` | The conformance drivers' sentinel-enum ceilings, generated into each driver's own language from the pinned definitions | `make xdr-ceilings` writes; `make test` checks |
+
+Inputs to `diff` are a directory of `.x` files, a definitions JSON (`.json` or `.json.zst`, as rs-stellar-xdr's
+generator writes it, e.g. the vendored `crates/xdrcheck-corpus/data/xdr-definitions-v30.0.0.json.zst`), `pinned`, or any
+stellar-xdr git ref (`main`, `lcm_v3`, a tag, a commit, `refs/pull/N/head`), fetched read-only into a blobless
+clone under `$XDRCHECK_CACHE/src`. `--base-features`/`--head-features` choose which gates are on (`none`, `all`, or a
+list; the defaults compare the release with the next protocol). Examples:
+
+```sh
+xdrcheck xdr diff pinned main                         # what main's gated blocks add over the pins
+xdrcheck xdr diff pinned lcm_v3 --base-features all   # the LedgerCloseMeta v3 branch
+xdrcheck xdr diff v30.0 v31.0 --head-features none    # two releases
+xdrcheck xdr diff pinned main --json d.json && xdrcheck xdr candidates d.json   # rows it would propose
+```
+
+The XDR watch (`make nightly-xdr-watch`) runs by hand on a workstation. It never fails on what it finds. It writes
+one digest per upcoming protocol under `reports-nightly/xdr-watch/` (`digest-p<N>.md`: standing items first, then every source with its status, CAPs, change and new-arm
+counts, and "new" when its result changed since the previous run), and `candidates.patch` with the candidate rows
+from main and the CAP documents. A CAP whose document names a protocol files under that protocol's digest;
+everything else under the next one. The log (`watch-log.jsonl`, one line per source per run) is kept in the cache
+(`XDRCHECK_XDR_WATCH_LOG`) and copied beside the digests. The candidate patch is expected to fail `make verify-coverage` until the pinned definitions
+include its arms: it is the shopping list for steps 4 and 5, not a change to merge as it is.
+
+Reading the digest at each step:
+
+- **Step 0, continuously.** A new gated block on main appears under its CAP with the arms it adds, 6 to 14 weeks
+  before testnet; a CAP document's diff appears as soon as it is written. Changes that reach no root (contract
+  cost types, peer-network messages) need no corpus work.
+- **Step 1, core ships the protocol.** `make nightly-early-warning` names, on its `arms` line, the arms
+  stellar-core's own XDR submodule has that the pins lack; a `decode` failure there is explained by that list. A
+  `fetch` or `layout` failure is stellar-core's repository moving, not a decode problem.
+- **Steps 2 and 4, pins and CAP rows.** After the XDR pin moves, `xdrcheck xdr diff <old commit> pinned` is the
+  authoritative list of new shapes; merge the candidate rows that hold, with reasons, and `make xdr-ceilings`.
+- **No XDR change.** When `xdrcheck xdr diff <old tag> <new tag>` is empty (Protocol 24, Protocol 29), the upgrade is
+  the number-only path: raise the gates, regenerate nothing.
+
+## 6. Watch list
+
+| Watched | Signal |
+|---|---|
+| The XDR definitions repository, `main` (the only branch people commit to; `curr` and `next` are generated from it with no feature and with every feature) | A new `#ifdef CAP_…` block: the first sign of a new shape, typically 6 to 14 weeks before testnet. Watched by `xdrcheck xdr watch` (run by hand) with every feature on |
+| The XDR definitions repository's other branches and open pull requests | Shapes not yet merged, such as `LedgerCloseMeta` v3 on `lcm_v3` (a standing item, reported on every run) or a new peer-network message; neither `curr` nor `next` shows them |
+| The protocol repository's CAP documents | A CAP's own XDR diff, months before it reaches stellar-xdr, and a CAP moving from Draft to Accepted to Implemented. The XDR diffs of pending CAPs are applied and diffed on every watch run; a diff that no longer applies is listed as such |
+| stellar-core releases | Breaking changes, and protocol-gated behaviour without a CAP |
+| stellar-core's `test-lcm-next` goldens and XDR submodule | A decode failure in the oracle, and the arms stellar-core's XDR adds over the pins, named; a moved or renamed golden tree is a `layout` failure, not a decode one |
+| SDK releases (Go, JavaScript, Rust, Python, Java) | A changed cell in the differential matrix |
+| SEP-23, SEP-51, SEP-54 | New strkey forms, XDR-JSON changes, data-lake layout changes |
+| wallet-backend and stellar-etl | New commits and releases that move the reference pins |
+
+## 7. Differential mode
+
+Differential review is two ordinary runs and a comparison: `xdrcheck conform run` on the pinned and on the candidate
+SDK version, then `xdrcheck conform diff <matrix-a> <matrix-b>`; or `xdrcheck replay` at two commits of an indexer, then
+`xdrcheck report diff <report-a> <report-b>`. The comparison lists only what changed: entries that newly pass, newly
+fail, or change class. It is how a pin move is reviewed before it is merged, how the readiness matrix is built
+before a mainnet vote, and how a maintainer sees exactly which entries a fix changed.
+
+## 8. Testnet resets
+
+Testnet is reset on a published schedule (the next one, 2026-12-16, is a `pins.toml` `[[schedule]]` event:
+section 5.5). A reset removes every testnet ledger from the network, and the public lake may drop the old epoch's
+prefix. After the reset, `xdrcheck pins check` fails until `[public_lake] testnet` names the new epoch, and the
+network-state job fails as soon as testnet's ledger sequence is below the highest ledger vendored from the
+pinned epoch.
+
+- Every testnet `history` entry is vendored with its lake key, object hash, object metadata and capture time
+  (`corpus/objects/testnet/`), so the corpus stays complete after a reset.
+- Testnet sources are marked `perishable: true` with their epoch ([manifest.md §4.4](manifest.md)); ledger
+  sequences repeat across epochs, so a locator from an old epoch is never reused as if current.
+- After a reset `xdrcheck-corpus refetch` reports a perishable object whose source has disappeared as `gone` without
+  failing (a missing non-perishable object fails). The entry
+  stays valid: its bytes, hashes and provenance are in the corpus. Captures from the new epoch are new variants.
+- After a reset every testnet sequence number starts again, so envelopes signed under the testnet passphrase may
+  become valid on the new testnet for a while. Only test funds can be involved ([threat-model.md](threat-model.md)).
+
+## 9. Correcting and superseding entries
+
+| Case | Action |
+|---|---|
+| Wrong expectation, correct bytes | PATCH release correcting `expect`; the changelog names the entry and the reason |
+| Wrong bytes or wrong provenance | A new entry with a new ID; the old entry stays, with a note naming what was wrong and which entry supersedes it |
+| stellar-core can no longer emit the shape | The entry stays; `protocol.removed` is set |
+| Duplicate pattern | The less minimal entry is superseded by the other, in the same way |
+
+A superseded entry keeps being verified by the oracle, since its bytes and hashes are still true statements. The
+manifest has no machine-readable supersession field yet, so harness and conformance runs do not skip superseded
+entries automatically.
+
+## 10. Growing the corpus
+
+A new CAP is a scenario file (or another sourcing route), manifest entries and a coverage row; the workflow and
+review checklist are in [CONTRIBUTING.md](../CONTRIBUTING.md) and [authoring-entries.md](authoring-entries.md).
+
+## 11. Support channels and status updates
+
+| Item | Commitment |
+|---|---|
+| Issues and questions | The repository's public issue tracker |
+| Status updates | A dated public status update in the repository at least every two weeks until the first stable release, then once per protocol cycle; a dated entry in [CHANGELOG.md](../CHANGELOG.md) and the release notes with every release; for each protocol upgrade, the readiness matrix before the mainnet vote (section 5, step 9) and the release after it (step 10) |
+| Upgrade notices | The readiness matrix, published before each mainnet vote (section 5, step 9) |
+| Security reports about this kit | [SECURITY.md](../SECURITY.md) |
+| Security-relevant defects found in other projects | Reported privately through each project's own channel before anything is public ([SECURITY.md](../SECURITY.md)) |

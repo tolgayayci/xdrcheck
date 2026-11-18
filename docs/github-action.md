@@ -1,0 +1,223 @@
+# The GitHub Action
+
+For indexer authors, SDK maintainers and Go teams who use GitHub Actions. One step in your workflow runs XDRCheck
+against your code from the prebuilt tools and corpus of one pinned release, with nothing to build and nothing of
+this repository to vendor:
+
+| `mode` | For | Runs |
+|---|---|---|
+| `replay` | indexer authors | `xdrcheck replay`: the corpus's ledgers through your indexer via its adapter ([replay-harness.md](replay-harness.md), [adapter-protocol.md](adapter-protocol.md)) |
+| `conform` | SDK maintainers | `xdrcheck conform`: the corpus through an SDK's conformance driver ([conformance-protocol.md](conformance-protocol.md)) |
+| `lint` | Go indexer teams | `xdrlint` over your packages, with a SARIF file for code scanning ([lint/README.md](../lint/README.md)) |
+
+The action is `action.yml` at the repository root; `action/run.sh` does the work. Below, `OWNER/REPO` is this
+repository on GitHub.
+
+## 1. What it does
+
+1. Downloads the release's `SHA256SUMS` and, when you give `sha256sums`, checks its sha256 against your pin.
+2. Downloads the tools for the runner's platform (and, for `replay`, the corpus archive) from the GitHub release
+   `v<corpus-version>`, checks each against `SHA256SUMS` before extracting it, and the extracted corpus against
+   its own `SHA256SUMS` ([release.md §9](release.md#9-release-assets-prebuilt-binaries-and-the-pin-helper)). A
+   mismatch stops the step before anything runs.
+3. Runs the mode, writes `SUMMARY.md` beside the tool's own reports and appends it to the job summary: the
+   result, the expected-failure check, and the failures with what the ledger holds, what your reader did and the
+   command that reproduces each one.
+4. Uploads the report directory as an artifact (`xdrcheck-<mode>` by default), on failure too.
+
+The step passes when the check passes. `replay` and `conform` need a Linux runner (`xdrcheck` is Linux-only);
+`lint` runs on Linux and macOS.
+
+## 2. Indexer authors: replay
+
+Your adapter is a small program that drives your indexer for the harness; start from the template
+[`go/adapters/minimal`](../go/adapters/minimal/README.md) (or [`examples/adapter-ts`](../examples/adapter-ts) for
+other languages) and keep it in your repository. Then:
+
+```yaml
+name: xdrcheck
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  replay:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: xdrcheck-adapter/go.mod
+      - name: Build the adapter
+        run: cd xdrcheck-adapter && go build -o "$RUNNER_TEMP/my-adapter" .
+      - uses: OWNER/REPO@v30.0.0
+        with:
+          mode: replay
+          corpus-version: 30.0.0
+          sha256sums: 0000000000000000000000000000000000000000000000000000000000000000  # the release's SHA256SUMS sha256
+          adapter: ${{ runner.temp }}/my-adapter
+          target-version: ${{ github.sha }}
+          expected-failures: .xdrcheck/replay.failures
+          require-all-read: "true"
+```
+
+To see it work before writing anything, run the template itself: the release ships it, and the tools' directory
+is on `PATH` during the step, so `adapter: minimal` replays the template indexer (and `adapter: demo` the
+template with a planted bug, which fails with its repro commands in the job summary).
+
+The default input is `sep54-dir`: ledgers as a SEP-54 layout in a plain directory, no Docker and no network.
+`input: sep54-s3` or `rpc` serve them through an S3-compatible store or a mock `getLedgers` instead, if that is
+how your indexer reads.
+
+## 3. SDK maintainers: conform
+
+```yaml
+jobs:
+  conform:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: OWNER/REPO@v30.0.0
+        with:
+          mode: conform
+          corpus-version: 30.0.0
+          columns: js@17.4.0
+          expected-failures: conformance/js.failures
+          require-all-read: "true"
+```
+
+`conform` runs from the action's own checkout, which holds the driver tree and the corpus of that release; it
+fetches and builds the column's driver (`xdrcheck conform fetch`, `build`) and runs it. The runner needs the driver's
+toolchain (Node for `js`, Go for `go`, Rust for `rust`, Python for `python`). `columns` names columns of the
+driver sets ([driver-protocol.md](driver-protocol.md)): the pinned SDK releases. The expected-failure list is the
+file `xdrcheck conform run --write-expected-failures` writes, with the rules of
+[use-in-sdk-ci.md §7](use-in-sdk-ci.md#7-an-expected-failure-list-and-the-all-read-check);
+without one, the corpus's declared divergences are the baseline (`xdrcheck conform check`).
+
+A JavaScript SDK that wants to test its own build rather than a released version uses the npm package instead
+([use-in-sdk-ci.md](use-in-sdk-ci.md)), downloaded with the pin helper (`fetch-release.sh --npm`,
+[release.md §9](release.md#9-release-assets-prebuilt-binaries-and-the-pin-helper)).
+
+## 4. The expected-failure list for replay
+
+An indexer keeps, in its own repository, the entry variants it is known to get wrong; the run then passes only
+when its failures are exactly that list:
+
+```text
+# <entry> <variant or -> [unread]
+cap-0015/fee-bump-inner-failed pubnet
+cap-0027/muxed-source-id-zero -
+cap-0003/p10-upgrade-liabilities-50936-changes pubnet unread
+```
+
+| Line | Means |
+|---|---|
+| `<entry> <variant>` | this entry variant is expected to fail (any row of it with `failure: true` in `report.json`) |
+| `<entry> -` | every variant of the entry |
+| `… unread` | an entry variant your indexer never reads (every row not applicable, not reached, flaky or a harness fault) |
+
+| Status | Fails the run | When |
+|---|---|---|
+| `NEW-FAILURE` | yes | a failing entry variant the list does not name: a regression |
+| `UNEXPECTED-PASS` | yes | a listed entry variant that now passes: remove its line in the same change |
+| `NOT-RUN` | yes | a listed entry the run has no row for: a misspelt or stale line (lines outside `entries` are ignored) |
+| `NEW-UNREAD`, `MISSING` | with `require-all-read` | an entry variant never read, or an entry the harness plans with no row at all |
+| `UNEXPECTED-READ` | with `require-all-read` | a line marked `unread` that is now read |
+
+Write the first list from a run and review it before committing it:
+
+```sh
+python3 action/replay_expect.py write REPORT_DIR/report.json --unread > .xdrcheck/replay.failures
+python3 action/replay_expect.py check REPORT_DIR/report.json --expected .xdrcheck/replay.failures --require-all-read
+```
+
+`require-all-read` makes an adapter that declares an envelope too narrow, or a harness that silently plans
+nothing, fail instead of passing on fewer entries.
+
+## 5. Go teams: lint
+
+```yaml
+jobs:
+  xdrlint:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - id: xdrcheck
+        uses: OWNER/REPO@v30.0.0
+        with:
+          mode: lint
+          corpus-version: 30.0.0
+          lint-paths: ./...
+      - if: always() && steps.xdrcheck.outputs.sarif != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.xdrcheck.outputs.sarif }}
+```
+
+`xdrlint` loads your packages with the Go toolchain, so the runner needs Go. Its diagnostics link to the rule
+pages of the same release. `lint-args: -fail-on warning` fails on warnings too.
+
+## 6. Inputs and outputs
+
+| Input | Default | Meaning |
+|---|---|---|
+| `mode` | required | `replay`, `conform` or `lint` |
+| `corpus-version` | the action's ref when it is a full version | the release, for example `30.0.0`, or a `-next` release such as `31.0.0-rc.1` ([release.md §8](release.md#8-channels-stable-and--next)) |
+| `sha256sums` | none | the sha256 of the release's `SHA256SUMS`: pins every downloaded byte to a value in your repository |
+| `adapter` | | `replay`: your adapter's command line, run from `working-directory` |
+| `target-version` | the commit | `replay`: the indexer version recorded in the report |
+| `input` | `sep54-dir` | `replay`: `sep54-dir`, `sep54-s3` or `rpc` |
+| `entries` | every entry | comma-separated entry ID globs (`*` crosses `/`) |
+| `expected-failures` | none | your expected-failure list (section 4 for `replay`; `xdrcheck conform`'s format for `conform`) |
+| `require-all-read` | `false` | fail on an entry variant never read unless the list names it `unread` |
+| `columns` | | `conform`: column globs, for example `js@17.4.0` |
+| `lint-paths` | `./...` | `lint`: package patterns |
+| `lint-args` | none | `lint`: extra `xdrlint` flags |
+| `working-directory` | `.` | where relative paths, the adapter and `xdrlint` run |
+| `report-dir` | under the runner's temp directory | where the reports go |
+| `artifact-name` | `xdrcheck-<mode>` | the uploaded artifact's name |
+| `repository` | the action's own repository | `OWNER/REPO` whose release holds the assets (a fork's) |
+| `release-base` | none | a URL prefix or local directory to read the release from instead (a mirror, or `dist/` of a local build) |
+
+| Output | Meaning |
+|---|---|
+| `result` | `pass` or `fail` |
+| `report-dir` | the directory with `SUMMARY.md`, `REPORT.md` and the machine-readable reports |
+| `sarif` | `lint`: the SARIF file |
+
+## 7. Pinning
+
+`uses: OWNER/REPO@v30.0.0` fixes the action and, by default, the release. `uses: OWNER/REPO@v30` follows the
+newest `30.x` action (the major tag moves with each release, [release.md §9](release.md#9-release-assets-prebuilt-binaries-and-the-pin-helper));
+then set `corpus-version`, so a new corpus reaches your CI only when you change the pin. For a supply-chain pin,
+use the action at a full commit SHA and set `sha256sums`. Moving to the next protocol's corpus (`v31`) is always a
+change of your pin, never a surprise.
+
+## 8. Testing the action
+
+`make action-selftest` runs `action.yml` step by step against the release in `dist/` (`make release`, then
+`make dist-bin`) through `action/simulate.py`, a local stand-in for the runner that executes the composite steps
+as written (the expressions they use, the runner's output and summary files, the artifact upload as a copy).
+Every mode and failure path is a case: a passing and a failing replay, the expected-failure list and each status
+that fails it, the all-read check, a corrupted asset and a wrong `SHA256SUMS` pin refused before anything runs,
+lint's SARIF output, and, with `SELFTEST_CONFORM=1` after `make fetch-sdk`, a conformance run.
+
+## 9. When the step fails
+
+| Job summary or log says | Meaning | Do |
+|---|---|---|
+| a sha256 mismatch on `SHA256SUMS` or an asset | the download is not the release you pinned | check `sha256sums` against the release page; a mirror (`release-base`) must serve the same files |
+| `NEW-FAILURE` | a regression, or new entries in a newer corpus | read the failure's repro command in the summary and run it locally |
+| `UNEXPECTED-PASS` | a listed failure now passes | remove its line in the same change |
+| `NOT-RUN`, `MISSING` | a stale line, or an entry with no row | fix or remove the line; check the adapter's envelope |
+| every row `harness_fault` | the adapter did not start or broke the protocol | run `xdrcheck replay --adapter … --selftest` locally |
+| `xdrlint` exit 2 | no package imports go-stellar-sdk's `xdr` package, or a package does not load | check `lint-paths` and `working-directory` |
+
+The uploaded artifact (`xdrcheck-<mode>`) holds the full reports, including the adapter's stderr.

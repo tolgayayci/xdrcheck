@@ -1,0 +1,299 @@
+# Measured run times
+
+For SDK maintainers and indexer operators who plan CI time and disk for the kit: how long each fetch step, CI job
+and `make` target took, and how much disk it used. Use the numbers to size runners and timeouts.
+
+Unless a section says otherwise, times were measured on one machine: 8 vCPUs, 46 GiB (2026-11-13) and 60 GiB
+(2026-11-14) RAM, Linux 6.12, local SSD, with other work running at the same time. Each section gives its date; the
+kit and the corpus have grown since the older measurements, so read those as orders of magnitude. Caches were warm
+(`make fetch` had run before) unless a row says otherwise, and every `verify` target ran under
+`scripts/offline-run.sh` with the network unreachable. On a CI runner with cold caches the fetch step takes longer;
+the rest is similar.
+
+## Fetch and build
+
+### Fetch parts (measured 2026-11-18)
+
+`make fetch` is the sum of the parts below (`scripts/fetch.sh` lists them; `make fetch FETCH_ONLY="PART..."` fetches
+only some). Each was fetched cold into an empty home directory (kit cache, Go module cache, cargo registry), one part
+at a time, so a module set two parts share is counted in both. Together they are about 17 GB on disk, plus about
+3.3 GB of container images.
+
+| Part | What | Cold | Disk |
+|---|---|---|---|
+| `py` | Python packages of the repository checks (`.venv`) | 4 s | 50 MB |
+| `cargo` | the workspace crates | 6 s | 335 MB |
+| `gomod` | the Go modules of `go/` and `lint/` | 35 s | 1.2 GB each, mostly shared |
+| `core` | the stellar-core package and runtime libraries | 6 s | 53 MB |
+| `goldens` | stellar-core's golden tree at the pinned tag | 2 min (builds `xdrcheck-corpus` unless given) | 153 MB |
+| `conform` | driver packages of the `public` column set | 1 min 32 s | 3.0 GB (Go drivers 2.7 GB) and the Go modules to build `xdrcheck` |
+| `conform-pr` | driver packages of the `pr` column set | under `conform` | about 3.0 GB (go v0.7.1 to v0.9.0 2.7 GB, rust 238 MB, js 38 MB, python 30 MB) |
+| `drivers` | every driver directory's packages (`make test`): `conform` plus the spec, XDR-JSON and stub drivers | `conform` plus 15 s | `conform` plus 416 MB |
+| `wallet-backend` | the seven wallet-backend builds, the clone, their module and build cache, the images | 4 min 14 s | builds 653 MB, clone 186 MB, module and build cache 3.7 GB; TimescaleDB 1.85 GB and SeaweedFS 0.73 GB images |
+| `lint-sources` | the wallet-backend and stellar-etl trees xdrlint runs on, their modules and stellar-etl's Go toolchain | 2 min 13 s | trees 366 MB, modules and toolchain 3.9 GB |
+| `docs` | the documentation repository and its packages | 1 min 47 s | 1.3 GB |
+| `golangci` | golangci-lint with the xdrlint plugin (`make lint-plugin` only) | 2 min 31 s | 313 MB of modules and the build |
+
+### Fetch targets and the build (measured 2026-11-14)
+
+Each fetch target pulls only what one kind of user needs. "Cold" is a run
+into new, empty caches: the kit's cache (`XDRCHECK_CACHE`), the Go module cache, the cargo registry, the pip cache
+and the adapters' cache (`XDG_CACHE_HOME`). Container images were already present, so their download time is not
+in the cold times; their sizes are listed separately.
+
+| Target | For | Cold | Warm | Disk after a cold run |
+|---|---|---|---|---|
+| `make fetch-replay` | indexer authors (`xdrcheck replay`) | 22 s | 1 s | 1.5 GB (Go modules 1.3 GB, crates 225 MB, `.venv` 42 MB) and the SeaweedFS image (195 MB) |
+| `make fetch-lint` | `xdrlint` and golangci-lint users | 56 s | 1 s | 2.6 GB (Go modules 2.3 GB, golangci-lint build 120 MB, crates 225 MB) |
+| `make fetch-sdk` | SDK maintainers (`xdrcheck conform`, `make release`) | 1 min 27 s | 57 s | 4.4 GB (driver packages 3.0 GB, Go modules 1.3 GB, crates 225 MB) |
+| `make fetch` | everything, every target | 10 min 45 s | 2 min 13 s | 15 GB (Go modules 5.1 GB, wallet-backend clone and per-commit builds 4.5 GB, driver packages 3.0 GB, documentation repository 1.3 GB, lint pipeline sources 357 MB, goldens 166 MB, stellar-core 53 MB, crates 225 MB) and the TimescaleDB (470 MB) and SeaweedFS (195 MB) images |
+| `make build` | everyone | 2 min 47 s (empty `target/`, warm Go build cache) | about 1 s when nothing changed | `target/` about 2 GB |
+
+The build dependencies (Python packages, crates, the Go modules of `go/` and `lint/`) are common to every fetch
+target. `make fetch-nightly` (the nightly jobs' extra driver packages and the stellar-core test image) is not
+included above. A cache that has been used for development for a while grows well beyond these sizes (old driver
+versions, scratch builds); deleting `~/.cache/xdrcheck` and fetching again brings it back to them.
+
+## CI tiers: what each job runs and fetches
+
+Two workflows, one `make` target per job. The build job builds the tools once; a job that needs them downloads them
+and names them on its make command line. Each job fetches only its parts and restores only its own caches; nothing
+else is downloaded, and no job downloads a data set. Jobs marked "no" under "needs build" need nothing the build
+job makes and start with it: the Rust tests build their own test binaries, and the other make targets build
+`xdrcheck` or `xdrlint` themselves.
+
+The runners are GitHub's standard ones for this repository: 2 vCPUs, 7.7 GiB of memory and about 13 GB of free
+disk (35 GB after `free-disk` removes the preinstalled SDKs no target uses, about 75 s). Timeouts are sized for a
+cold cache (the first run after a lock file or `Cargo.toml` changes) at about twice the measured time; every
+cache a job builds in its own step is saved with `if: always()`, so a job that fails or times out still leaves it
+for the next run.
+
+**Pull-request CI** (`.github/workflows/pr.yml`): every pull request, every push to a branch other than main, and
+by hand. `make verify-pr` runs the same targets locally.
+
+| Job | Target | Needs build | Fetch parts | Cached across runs | Timeout |
+|---|---|---|---|---|---|
+| P0 build | `make build` | | `cargo gomod` | cargo registry, release `target/`, Go modules, Go build cache | 40 min |
+| P1 static | `make verify-static` | yes | `py` | nothing (tools from P0) | 20 min |
+| P2 corpus | `make verify-corpus` | yes | `goldens` | the golden tree | 20 min |
+| P3 generate | `make verify-generate` | yes | `core` | the stellar-core package | 30 min |
+| P4a unit-rust | `make test-rust-fast` | no | `cargo goldens` (and `free-disk`) | test `target/` (without `target/tmp` and `target/release`), shared with the full CI's P4a | 45 min |
+| P4b unit-go | `make test-go-fast GO_MODULES=go` | no | `py gomod seaweedfs` | its Go build cache, shared with the full CI's P4b | 25 min |
+| P4e unit-lint | `make test-go-fast GO_MODULES=lint` | no | `py gomod` | its Go build cache, shared with the full CI's P4e | 25 min |
+| P4c unit-drivers-a to -e | `make test-drivers DRIVERS=...`, five groups (below) | no | `py` and each group's `driver:` parts | the driver packages, shared with the full CI's same job; the drivers themselves are built in every run | 30 min each |
+| P4d cli | `make test-cli` | yes | none | nothing | 6 min |
+| P7 replay | `make verify-replay-pr` | no | `gomod wallet-backend` | the wallet-backend builds and clone, shared with the full CI's P7 | 25 min |
+| P8 conformance-js | `make verify-conformance-js` | no | `gomod driver:js` | the JavaScript driver packages | 10 min |
+| P9 lint | `make verify-lint-pr` | no | `py gomod lint-sources-wb` | the wallet-backend tree with its own module cache | 20 min |
+| P10 guide | `make verify-guide` | yes | `py gomod docs` | the documentation repository | 30 min |
+| P11 coverage | `make verify-coverage` | yes | none | nothing | 15 min |
+| P12 findings, P13 run-summary | `make verify-findings`, `make acceptance-report-pr` | yes | none | nothing (reports from the jobs above) | 15 min each |
+
+P4a fetches the golden tree: the tests that run the default `xdrcheck-corpus verify` (`tests/verify.rs`,
+`tests/render.rs`) include the ag1 and ag3 checks, which read it (without it they fail, as on 2026-11-18). Without
+the stellar-core package the tests that run stellar-core (`tests/gen*.rs`) skip here; the full CI fetches it and
+sets `XDRCHECK_REQUIRE_CORE=1`, so they run there or fail.
+
+Each job appends the key lines of its own reports to its job summary (`scripts/ci/job-summary.py`): corpus
+verification and round-trip counts, golden agreement, replay result classes per wallet-backend commit, the
+conformance matrix and its cross-SDK divergences, linter results, the guide table check, the findings link check,
+mainnet tier coverage, test results. P13 run-summary prints one table of every job's result with those key numbers.
+It also runs `make acceptance-report-pr` (`make acceptance-report` in the full CI) for the report files it
+uploads, and prints nothing from them.
+
+The driver groups, the same in both workflows (`scripts/ci/check-workflows.sh` fails when the groups of a
+workflow leave out a driver directory or one of its versions): a, Python (`python@17.0.0,python@17.0.1`); b,
+JavaScript and stellar-core (`js,js16,core,stub`); c, Go v0.7.x (`go@v0.7.1,go@v0.7.2,go@v0.7.3`); d, Go v0.8.0
+and v0.9.0 and soroban-spec; e, Rust and XDR-JSON (`rust,rs-xdr-json@30.0.0,rs-xdr-json@main`).
+
+GitHub lets a run read the caches of its own branch and of main, so the pull-request jobs that share a cache with
+a full-CI job (same name and parts) start warm on a new branch once main has run; P8 and P9 fill their own small
+caches on a branch's first run.
+
+**Full CI** (`.github/workflows/full.yml`): by hand (workflow_dispatch) and on release tags (`v*`); no schedule and
+no run on a push. `make verify` and `make test` run the same targets locally. Every job needs the build, and the unit jobs keep the old unit job's
+tools and fetch parts.
+
+| Job | Target | Fetch parts | Cached across runs | Timeout |
+|---|---|---|---|---|
+| P0 to P3, P10, P11 | as in the pull-request CI | | | |
+| P4a unit-rust | `make test-rust` with `XDRCHECK_REQUIRE_CORE=1` | `deps seaweedfs goldens core` (and `free-disk`) | test `target/`, the golden tree, the stellar-core package | 50 min |
+| P4b unit-go | `make test-go GO_MODULES=go` | `deps seaweedfs goldens` | its Go build cache | 25 min |
+| P4e unit-lint | `make test-go GO_MODULES=lint` | `py gomod` | its Go build cache | 25 min |
+| P4c unit-drivers-a to -e, P4d cli | as in the pull-request CI | as in the pull-request CI | | 30 min each, 6 min |
+| P5 harness-selftest | `make harness-selftest` | `gomod driver:go/v0.9.0` | the go v0.9.0 driver packages | 30 min |
+| P6 memory | `make verify-memory` | `gomod goldens` | the golden tree (the memory test replays goldens) | 30 min |
+| P7 replay | `make verify-replay` | `gomod wallet-backend` | the wallet-backend builds and clone (not their 3.7 GB module and build cache); the images are pulled by digest | 40 min |
+| P8 conformance | `make verify-conformance` | `conform-pr` | the `pr` driver packages | 45 min |
+| P9 lint | `make verify-lint` | `py gomod lint-sources` | the trees with their own module cache | 30 min |
+| P14 replay-full | `make replay-full` | `gomod wallet-backend` (and `free-disk`) | P7's fetch output (restored, not saved) | 60 min |
+| P15 replay-etl-known | `make replay-etl-known` | `gomod replay-etl` | the stellar-etl adapter's clone and build | 45 min |
+| P16 conformance-public | `make verify-conformance-public` | `conform` (and `free-disk`) | the `public` driver packages, stellar-core's decoder among them | 60 min |
+| P17 sdk-ci-recipes | `make sdk-ci-recipes` | `sdk` (and `free-disk`) | the pinned SDKs' packages and the Rust example's crates | 40 min |
+| P18 mainnet | `make verify-mainnet` | `mainnet` | the mainnet tier's 6,150 public-lake objects, about 1 GB; a tier change fetches only the objects it adds | 40 min |
+| P12 findings, P12b findings-check-strict, P13 run-summary | `make verify-findings`, `make verify-findings-acceptance`, `make acceptance-report` | none | nothing (reports from the jobs above) | 15 min each |
+
+P14 to P16 are the full-size runs only this tier makes; the findings checks P12 and P12b read their reports. In a
+manual run P12b runs `make verify-findings-acceptance PENDING_OK=1`: when the only failure is rows awaiting finding
+review (they wait on the maintainers' decisions) it passes with a warning annotation and the job summary line
+"N failure rows have no linked issue"; any other failure (a failure row with no finding ID
+and no pending entry, a stale or expired pending entry, a record not filed, a missing report, a tool error) fails it.
+A release tag (`v*`) runs the full CI without `PENDING_OK`, so there the pending rows fail P12b and block the
+release. The linter jobs write `<target>.tally.json` beside their reports: the withhold step deletes
+every linter report that names a site pending finding review, and P12 and P12b count such a run from its tally
+(row and failure counts, the findings it names, the pending entries it holds), so those runs are checked rather than
+missing. `make verify-goldens-nightly` (stellar-core's own test binary over the goldens) stays in the manual
+`nightly-goldens` workflow: its test-binary part took 20 min 38 s on 8 CPUs (2026-11-13), too long for this tier on
+2 CPUs.
+
+## CI job times
+
+### On GitHub and on two pinned CPUs (measured 2026-11-19)
+
+The first runs of both tiers on GitHub (2026-11-18) and runs on this machine pinned to two CPUs (`taskset`), the
+size of a GitHub runner, with the driver package caches copied without their build outputs (so every driver is
+built, as in CI). "Cold": no cargo or Go build cache; "warm": the job's caches from an earlier run.
+
+| Job | Measured | Expected on GitHub, cold | warm |
+|---|---|---|---|
+| P0 build | 7 to 8 min (CI) | about 10 min | about 8 min |
+| P4a `make test-rust-fast` | 20 min 2 s cold on 2 CPUs (target peak 9.3 GB: 3 GB of build, 6.2 GB of the tests' scratch copies of the corpus); 6 min 32 s with the test build made | about 24 min | about 12 min (the workspace's own crates rebuild after a checkout) |
+| P4b `make test-go-fast` | in CI: `go/` 7 min, then `lint/` (cut off at 10 min) | about 13 min | about 10 min |
+| P4c-a Python | 6 min 37 s on 2 CPUs | about 9 min | the same |
+| P4c-b JavaScript, stellar-core | 6 min 34 s on 2 CPUs (js 5 min 18 s in CI) | about 9 min | the same |
+| P4c-c Go v0.7.x | about 8 min on 2 CPUs (4 min 20 s to 7 min 20 s a version) | about 11 min | the same |
+| P4c-d Go v0.8.0, v0.9.0, soroban-spec | about 10 min on 2 CPUs | about 13 min | the same |
+| P4c-e Rust, XDR-JSON | about 10 min on 2 CPUs (rust 9 min 8 s, rs-xdr-json 10 min 2 s for both versions) | about 13 min | the same |
+| P7 `make verify-replay-pr` | 13 min in CI with a cold wallet-backend fetch; 1 min 39 s for the run itself | about 13 min | about 5 min |
+| P8 `make verify-conformance-js` | 1.2 min (CI) | | |
+| P9 `make verify-lint-pr` | 8 min (CI, cold) | about 8 min | about 5 min |
+| P10 guide, P2 corpus, P3 generate, P1 static, P11 coverage, P4d cli | 3, 2.2, 1.1, 1.3, 0.5, 0.6 min (CI) | | |
+| P12 findings, P13 run-summary | under 1 min each (CI) | | |
+
+The pull-request CI's longest path is P4a: about 24 minutes cold and 12 warm. The jobs that need the build finish
+by about 13 minutes (build, then guide, then findings and the run summary, which wait for every job). So the
+pull-request CI takes about 15 minutes warm and about 25 minutes cold. Before the split, the pull-request run took
+47 minutes and its unit job hit its 45-minute limit. The full CI's longest jobs are P4a (`cargo test`, binaries one
+after another: about 25 minutes cold) and P8 conformance (17 to 22 minutes).
+
+`cargo test --locked --workspace` on this machine, 8 vCPUs, test binaries one after another: 13 min 32 s with an
+unoptimised test build; 5 min 46 s after the test build optimises the dependencies (`Cargo.toml`
+`[profile.dev.package."*"]`). A cold test build with full debug information is 13 GB, which filled the first CI
+run's disk; with line tables for the workspace's crates and none for the dependencies it is 3 GB.
+
+### Both tiers emulated locally from cold caches (measured 2026-11-19)
+
+`make ci-local` (`scripts/ci/run-local.sh`) ran every job of both workflows on this machine, not on GitHub: each job
+from a fresh clone, with an empty home holding only the fetch parts its setup declares, on 2 CPUs with 7 GiB, the
+workflow's run lines as written, two jobs at a time. No cache is restored, so these are cold, first-run numbers;
+GitHub's cache steps and the free-disk step are not emulated. "Disk" is the job directory's peak size (clone, home,
+caches, build). Every job passed, apart from the full CI's P12b, which at the time failed on the rows pending
+finding review (since then it passes on main with a warning while those rows are the only failure). (P4a ran at the next commit, after a corpus test fix; the other jobs at the commit before.)
+
+| Job | Pull-request CI: wall (fetch), disk | Full CI: wall (fetch), disk |
+|---|---|---|
+| P0 build | 7 min 42 s (20 s), 6.2 GB | 9 min 20 s (23 s), 6.2 GB |
+| P1 static, P2 corpus, P11 coverage, P4d cli | under 2 min each | under 2 min each |
+| P3 generate | 9 min 6 s, 1.1 GB | 7 min 12 s, 1.1 GB |
+| P4a unit-rust | 19 min 38 s (6 min 36 s), 12.0 GB | 19 min 33 s (37 s), 12.0 GB |
+| P4b unit-go | 4 min 30 s, 2.5 GB | 4 min 14 s, 3.9 GB |
+| P4e unit-lint | 5 min 0 s, 2.2 GB | 4 min 33 s, 3.0 GB |
+| P4c unit-drivers-a to -e | 3 min 23 s to 9 min 1 s, at most 6.1 GB (-d) | 3 min 28 s to 9 min 21 s, at most 7.0 GB (-d) |
+| P5 harness-selftest, P6 memory | | 5 min 22 s, 7 min 9 s |
+| P7 replay | 6 min 25 s (4 min 34 s), 6.8 GB | 10 min 55 s (5 min 14 s), 7.8 GB |
+| P8 conformance | 1 min 33 s (JavaScript only) | 13 min 42 s, 7.7 GB |
+| P9 lint | 5 min 13 s, 3.9 GB | 11 min 9 s, 6.7 GB |
+| P10 guide | 2 min 41 s, 3.6 GB | 3 min 44 s, 3.6 GB |
+| P14 replay-full | | 12 min 42 s (5 min 58 s), 7.8 GB |
+| P15 replay-etl-known | | 4 min 15 s (4 min 10 s), 6.3 GB |
+| P16 conformance-public | | 15 min 6 s, 8.3 GB |
+| P17 sdk-ci-recipes | | 6 min 39 s (3 min 5 s), 6.4 GB |
+| P18 mainnet | | 11 min 21 s (2 min 38 s), 2.0 GB, of which the check step 8 min 41 s (at the commit that added the job) |
+| P12, P12b, P13 | under 1 min each | under 1 min each |
+
+On GitHub, where jobs run side by side, the cold pull-request CI's longest path is P4a, about 20 minutes, and the
+cold full CI's is P0 then P4a, about 29 minutes, plus queueing. Warm caches shorten the fetch and build steps (the
+cargo and Go caches, the fetch output); the earlier estimates of about 15 and 25 minutes warm still stand, and have
+not been measured on GitHub since the split.
+
+## `make verify` and `make verify-acceptance`, target by target
+
+Two runs on 8 CPUs, warm caches, every target with `OFFLINE=1`, other work running at the same time: `make
+verify-acceptance` on 2026-11-19 and `make verify` on 2026-11-13 (`verify-conformance` re-measured on 2026-11-14).
+In the 2026-11-19 run the corpus check failed on a mirror-map gap fixed since: a local-core entry missing from
+`corpus/mirrors.json`. Every other target passed, apart from `verify-findings-acceptance`, which fails by design while
+rows await a finding review.
+
+| Target | 2026-11-19 | 2026-11-13 |
+|---|---|---|
+| `verify-static` | 51 s | 7 s |
+| `verify-corpus` | 2 min 34 s (fail, since fixed) | 11 s |
+| `verify-generate` | 3 min 9 s | 2 min 35 s |
+| `harness-selftest` | 1 min 37 s | 55 s |
+| `verify-memory` | 4 min 19 s | 5 min 20 s |
+| `verify-replay` | 3 min 48 s | 2 min 6 s |
+| `replay-full` | 4 min 30 s | |
+| `replay-etl-known` | 3 s | |
+| `verify-conformance` | 2 min 33 s | 3 min 22 s (2026-11-14; 1 min 49 s on 2026-11-13) |
+| `verify-conformance-public` | 3 min 48 s | 2 min 39 s |
+| `verify-lint` | 1 min 34 s (with the tallies) | 2 min 45 s |
+| `verify-guide` | 55 s | 1 min |
+| `verify-coverage` | 1 s | under 1 s |
+| `verify-findings` | 4 s | 1 s |
+| `acceptance-report` | 3 s | 3 s |
+| `verify-findings-acceptance` | 2 s, fails while rows await a finding review | 1 s, same |
+| **`make verify`, whole** | | **14 min 34 s, pass** (with the 2026-11-13 `verify-conformance` time) |
+
+The stellar-core tests of the full CI's P4a (`XDRCHECK_REQUIRE_CORE=1 cargo test -p xdrcheck-corpus --test gen --test
+gen_features --test gen_soroban`, offline): 2 min 1 s, six tests, none skipped. `make fetch FETCH_ONLY=replay-etl`
+into an empty kit cache (Go modules already downloaded): 24 s, 364 MB.
+
+The XDR-JSON converters' comparison with the manifest (`xdrcheck conform build --set json`, then `xdrcheck conform
+run --set json`: the `json` level on rs-stellar-xdr 30.0.0 and main) is run by hand; no make target or CI job runs
+that set. Measured on 2 CPUs with its two drivers already built: 10 s, 1,468 cells, none unexpected. In CI it would
+first build both drivers, which P4c-e does in about 8 minutes, so it is not in the full CI.
+
+## Release dry run (measured 2026-11-19)
+
+From a fresh clone of the commit, 4 CPUs, warm caches; what `release.yml` runs, published nowhere.
+
+| Target | Time | Result |
+|---|---|---|
+| `make release` (after `make build`) | 1 min 12 s | pass: the corpus archive built twice and compared, verified offline, the npm package checked |
+| `make dist-bin DIST_STRICT=1 DIST_PLATFORMS="linux-amd64 darwin-amd64 darwin-arm64"` | 6 min 1 s | pass: three archives of 45 to 61 MB |
+| `make release-assets` | 20 s | pass: SHA256SUMS over six assets, the provenance, the image smoke test |
+
+`make release` measured earlier (2026-11-14, 8 CPUs, warm caches; both archive builds, the offline verify of both roots
+and the npm package check): 1 min 54 s.
+
+`linux-arm64` needs an arm64 runner (the workflow's second matrix row) and was not built here.
+
+## Cache budget (measured 2026-11-19)
+
+GitHub keeps 10 GB of caches per repository and evicts the least recently used beyond that. After the first runs of
+both tiers the repository held 11.4 GB in 28 caches, about 3.3 GB of them stale keys of jobs since renamed. The
+driver jobs build their drivers in every run; their build outputs would add, uncompressed, about 0.4 GB per Go
+v0.7.x driver, 1.5 GB each for Go v0.8.0 and v0.9.0, 0.3 GB for Rust and soroban-spec and 0.6 GB per XDR-JSON
+version: about 6 GB. They are not cached: that would push the budget further over and evict the caches the longest
+jobs need.
+
+The full CI's P18 mainnet caches the mainnet tier's lake objects, about 1 GB that does not compress further (they
+are zstd already). Fetching them cold takes about 2 to 3 minutes from the public lake, but a cached copy keeps the
+check independent of the lake between runs and spares the lake 6,150 GETs per push. With the stale keys gone the
+live caches are about 8 GB, so the tier's 1 GB keeps them under the 10 GB limit. The cache key is P18's fetch key
+(the fetch scripts, pins and lock files), not `corpus/mainnet/tier.jsonl`: after a change of the tier, the restored
+cache serves the unchanged objects and the fetch step gets only the new ones.
+
+## Nightly targets (measured 2026-11-13)
+
+The targets of the manual `nightly-goldens` workflow.
+
+| Target | Time | Result |
+|---|---|---|
+| `nightly-regenerate` | 3 min 58 s | pass |
+| `verify-goldens-nightly`: stellar-core's test binary (`test '[tx]' --check-lcm` in the pinned test image) | 20 min 38 s | pass |
+| `verify-goldens-nightly`: bulk tier through the oracle | 9 s | pass |
+| `verify-goldens-nightly`: bulk tier through every public driver | 6 min 27 s | pass |
+| `nightly-differential` | 3 min 21 s | pass |
+| `nightly-early-warning` | 9 s (plus a 6 s fetch) | pass |
+| `nightly-refetch` | 7 min 30 s | pass |
