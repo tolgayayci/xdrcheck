@@ -1,0 +1,29 @@
+# emulator check, 2026-11-12
+stellar-etl: stellar-etl v2.8.34 at 2b24ec89ddce7fc0beb7795de982c93e6895eaf3, binary sha256 bf0d60839c98536f39d9adae1b139fb2f212cf85d0bc3387bed3787850d104b2
+fake-gcs-server v1.49.2; lake object corpus/objects/pubnet/64558277/FC26EB3A--64558277.xdr.zst sha256 ec9d2e73dc9754e1d65492f55e6563ff52181f0fcf83e0ed746f8d507a031d82
+
+$ fake-gcs-server -scheme http -host 127.0.0.1 -port 47443 -public-host 127.0.0.1:47443 -data $WORK/gcs -backend memory
+$ env -i PATH=/usr/bin:/bin HOME=$WORK STORAGE_EMULATOR_HOST=127.0.0.1:47443 stellar-etl export_ledgers -s 64558277 -e 64558277 -o $WORK/out/export_ledgers/ --datastore-path xcc/lake
+exit 0; 1 rows in 64558277-64558277-ledgers.txt
+msg="{"attempted_transforms":1,"failed_transforms":0,"successful_transforms":1}
+$ env -i PATH=/usr/bin:/bin HOME=$WORK STORAGE_EMULATOR_HOST=127.0.0.1:47443 stellar-etl export_transactions -s 64558277 -e 64558277 -o $WORK/out/export_transactions/ --datastore-path xcc/lake
+exit 0; 382 rows in 64558277-64558277-transactions.txt
+msg="{"attempted_transforms":382,"failed_transforms":0,"successful_transforms":382}
+$ env -i PATH=/usr/bin:/bin HOME=$WORK STORAGE_EMULATOR_HOST=127.0.0.1:47443 stellar-etl export_operations -s 64558277 -e 64558277 -o $WORK/out/export_operations/ --datastore-path xcc/lake
+exit 0; 649 rows in 64558277-64558277-operations.txt
+msg="{"attempted_transforms":649,"failed_transforms":0,"successful_transforms":649}
+$ env -i PATH=/usr/bin:/bin HOME=$WORK STORAGE_EMULATOR_HOST=127.0.0.1:47443 stellar-etl export_effects -s 64558277 -e 64558277 -o $WORK/out/export_effects/ --datastore-path xcc/lake
+exit 0; 615 rows in 64558277-64558277-effects.txt
+msg="{"attempted_transforms":382,"failed_transforms":0,"successful_transforms":382}
+$ env -i PATH=/usr/bin:/bin HOME=$WORK STORAGE_EMULATOR_HOST=127.0.0.1:47443 stellar-etl export_token_transfer -s 64558277 -e 64558277 -o $WORK/out/export_token_transfer/ --datastore-path xcc/lake
+exit 0; 970 rows in 64558277-64558277-token_transfer.txt
+msg="{"attempted_transforms":1,"failed_transforms":0,"successful_transforms":1}
+
+# requests the emulator answered
+      5 "GET /storage/v1/b/xcc?alt=json&prettyPrint=false&projection=full HTTP/1.1" 200
+      5 "GET /storage/v1/b/xcc/o?alt=json&delimiter=&endOffset=&fields=nextPageToken%2Cprefixes%2Citems%28name%29&includeFoldersAsPrefixes=false&includeTrailingDelimiter=false&matchGlob=&pageToken=&prefix=lake%2Fpubnet%2F&prettyPrint=false&projection=full&startOffset=&versions=false HTTP/1.1" 200
+      5 "GET /xcc/lake%2Fpubnet%2F.config.json HTTP/1.1" 200
+      5 "GET /xcc/lake%2Fpubnet%2FFC279FFF--64512000-64575999%2FFC26EB3A--64558277.xdr.zst HTTP/1.1" 200
+
+# token-transfer rows of the mint of 6591994c… (to_muxed_id is the text memo "psp:160886906" in the event)
+{"transaction_hash":"6591994cebe12b87e6ca9175769bbaefeb45c7082be221ba3ed23d6042fe9474","transaction_id":277275688401420288,"operation_id":277275688401420289,"event_topic":"mint","from":null,"to":"GBN32NH6TMWE4ZD4G245CF3UVOQRXD4FK3FDCLZ4DE5642HWFKSLLRMB","asset":"credit_alphanum12:APSBPOUSD:GADYGHULIQ35Z53MQ5UFKNVFRTWN2GE4SBEGN4BOBECNWSURX352IV42","asset_type":"credit_alphanum12","asset_code":"APSBPOUSD","asset_issuer":"GADYGHULIQ35Z53MQ5UFKNVFRTWN2GE4SBEGN4BOBECNWSURX352IV42","amount":80.72,"amount_raw":"807200000","contract_id":"CB5R5ERYZQLWGJIWDZU3GR43O6XKTP7Y7AKDHADUPTR5GTAKV7XS5IZX","ledger_sequence":64558277,"closed_at":"2026-09-22T11:39:23Z","closed_at_ms":"2026-09-22T11:39:23Z","to_muxed":"MBN32NH6TMWE4ZD4G245CF3UVOQRXD4FK3FDCLZ4DE5642HWFKSLKAAAAAAAAAAAAATXO","to_muxed_id":"0"}

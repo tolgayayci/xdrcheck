@@ -1,0 +1,495 @@
+# transcript: wallet-backend#731 (head), wallet-backend e967ce8b, local stellar-core v30.0.0 chain at protocol 28, testnet passphrase
+# date: 2026-11-12T10:53:35Z; go: go1.25.14; binary sha256: a0167ab38ecdab54353b515ca2a1f21b29aa3f71606e658febebd207800d230d
+# commit: e967ce8b7362b79c277e700e789181d76fbb5967  go-stellar-sdk: v0.8.0
+# chain: out/p28-testnet/run-1/meta.xdr sha256 108c358829bc9fd665ce7236d92bcb74652a150a66688144a90c6b5612067005; trigger = L15 tx 8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 (SAC trust(B))
+# ledgers of interest: 14 deploy SAC USDC:I | 15 SAC trust(B) | 16 SAC mint(B) | 17 control ChangeTrust(C) | 18 classic pay I->C | 19 SAC transfer B->C | 20 SAC trust(D) via D's address credentials (src A) | 21 J sets AUTH_REQUIRED | 22 deploy SAC EURT:J | 23 SAC trust(B) on EURT:J (flags 0) | 24 empty
+
+################ case: datastore, chain (cursor seeded to 1, wait for 24)
+# lake: s3://ledgers/local/p28-testnet (SEP-54, .config.json {ledgersPerBatch 1, batchesPerPartition 64000, zstd})
+$ wallet-backend-e967ce8b ingest --database-url postgres://postgres@127.0.0.1:55931/run_tr_head_datastore_chain?sslmode=disable --network-passphrase Test SDF Network ; September 2015 --ingestion-mode live --ledger-backend-type datastore --archive-url http://127.0.0.1:1/ --ingest-server-port 58881 --log-level INFO --rpc-url http://127.0.0.1:1 --datastore-bucket-path ledgers/local/p28-testnet --datastore-region us-east-1 --datastore-endpoint-url http://127.0.0.1:58343 --datastore-buffer-size 1 --datastore-num-workers 1 --datastore-retry-limit 1 --datastore-retry-wait 1s
+  fresh DB from tmpl_e967ce8b, cursor latest=1 oldest=2; wait for latest=24
+  t+1ms cursor=1
+  t+153ms cursor=15
+  t+300ms cursor=24
+  state=advanced at t+347ms; still running 3s later: yes; SIGTERM -> rc=0 in 6ms
+  fresh_db=167ms final cursor=24 log=evidence/wallet-backend-731/logs/ingest-tr-head-datastore-chain.log
+  log: 1 error/warning lines; 0 panic lines
+    time="2026-11-12T13:53:36.167+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: sending POST request to RPC: Post \"http://127.0.0.1:1\": dial tcp 127.0.0.1:1: connect: connection refused" pid=972098
+## process log (filtered: warnings/errors, per-ledger 'Ingested' lines 13-24, start/shutdown)
+13:53:36.167+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: sending POST request to RPC: Post \"http://127.0.0.1:1\": dial tcp 127.
+13:53:36.168+03:00" level=info msg="Starting ingestion from ledger: 2"
+13:53:36.292+03:00" level=info msg="Ingested ledger 13 in 0.0105s"
+13:53:36.303+03:00" level=info msg="Ingested ledger 14 in 0.0117s"
+13:53:36.313+03:00" level=info msg="Ingested ledger 15 in 0.0099s"
+13:53:36.322+03:00" level=info msg="Ingested ledger 16 in 0.0091s"
+13:53:36.329+03:00" level=info msg="Ingested ledger 17 in 0.0076s"
+13:53:36.337+03:00" level=info msg="Ingested ledger 18 in 0.0074s"
+13:53:36.346+03:00" level=info msg="Ingested ledger 19 in 0.0089s"
+13:53:36.354+03:00" level=info msg="Ingested ledger 20 in 0.0077s"
+13:53:36.360+03:00" level=info msg="Ingested ledger 21 in 0.0066s"
+13:53:36.367+03:00" level=info msg="Ingested ledger 22 in 0.0065s"
+13:53:36.374+03:00" level=info msg="Ingested ledger 23 in 0.0073s"
+13:53:36.376+03:00" level=info msg="Ingested ledger 24 in 0.0019s"
+13:53:39.471+03:00" level=info msg="shutdown requested; exiting cleanly: live ingestion pipeline: pipeline cancelled: context canceled"
+## observation (observe.py; addresses rendered by the harness, not by wallet-backend)
+-- ingest_store
+   latest_ingest_ledger 24
+   oldest_ingest_ledger 2
+-- row counts per ledger (tx, ops, state_changes) (12)
+  l=13 | tx=1 | ops=6 | sc=25
+  l=14 | tx=1 | ops=1 | sc=1
+  l=15 | tx=1 | ops=1 | sc=3
+  l=16 | tx=1 | ops=1 | sc=3
+  l=17 | tx=1 | ops=1 | sc=3
+  l=18 | tx=1 | ops=1 | sc=3
+  l=19 | tx=1 | ops=1 | sc=3
+  l=20 | tx=1 | ops=1 | sc=3
+  l=21 | tx=1 | ops=1 | sc=2
+  l=22 | tx=1 | ops=1 | sc=1
+  l=23 | tx=1 | ops=1 | sc=3
+  l=24 | tx=0 | ops=0 | sc=0
+-- transactions ledger>=13 (11)
+  ledger_number=13 | to_id=55834578944 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | result_code=TransactionResultCodeTxSuccess | fee_charged=600
+  ledger_number=14 | to_id=60129546240 | hash=41809b58e462b3ad99971aeff8fe1766794c100b6b0bf33e5b26394a3504871a | result_code=TransactionResultCodeTxSuccess | fee_charged=116707
+  ledger_number=15 | to_id=64424513536 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | result_code=TransactionResultCodeTxSuccess | fee_charged=74541
+  ledger_number=16 | to_id=68719480832 | hash=cbe8a2f0d7cf11967076e3453b92e5ddaf7c62d0b342cdf70976aab33e3247b3 | result_code=TransactionResultCodeTxSuccess | fee_charged=71420
+  ledger_number=17 | to_id=73014448128 | hash=244f36fe52f78ef5cc509c12883950da3d48a131d6d088e45898b0941d00e193 | result_code=TransactionResultCodeTxSuccess | fee_charged=100
+  ledger_number=18 | to_id=77309415424 | hash=af795cdd0280adf7ded25cfa100b548f26183aea72360ac282fa6dde10a069bc | result_code=TransactionResultCodeTxSuccess | fee_charged=100
+  ledger_number=19 | to_id=81604382720 | hash=89f8d64bc86edf6ac27f7d1c2040ef74c5ebeab50ae97e15d5f139b6c9ae2ae9 | result_code=TransactionResultCodeTxSuccess | fee_charged=76502
+  ledger_number=20 | to_id=85899350016 | hash=4505dae04e8fe33999a385000808f5ebbff7cd523225d49af451dca433cfcf66 | result_code=TransactionResultCodeTxSuccess | fee_charged=80870
+  ledger_number=21 | to_id=90194317312 | hash=0987447afa94df062b933847d2076015ea703deac403053b0614ef00b0d06567 | result_code=TransactionResultCodeTxSuccess | fee_charged=100
+  ledger_number=22 | to_id=94489284608 | hash=358488f2dd76c9e6c0078911acd27cd9873a770ae2d674f9fec88848c56d8fad | result_code=TransactionResultCodeTxSuccess | fee_charged=116707
+  ledger_number=23 | to_id=98784251904 | hash=d771f9bef0ca32fd0b5b30d152be952f941e45714c4eb7099bd9f01e05fdd91f | result_code=TransactionResultCodeTxSuccess | fee_charged=74541
+-- operations ledger>=13 (16)
+  ledger_number=13 | id=55834578945 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578946 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578947 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578948 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578949 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578950 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=14 | id=60129546241 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=15 | id=64424513537 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=16 | id=68719480833 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=17 | id=73014448129 | operation_type=CHANGE_TRUST | result_code=op_success | successful=t
+  ledger_number=18 | id=77309415425 | operation_type=PAYMENT | result_code=op_success | successful=t
+  ledger_number=19 | id=81604382721 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=20 | id=85899350017 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=21 | id=90194317313 | operation_type=SET_OPTIONS | result_code=op_success | successful=t
+  ledger_number=22 | id=94489284609 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=23 | id=98784251905 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+-- state_changes ledger>=13 (50)
+  ledger_number=13 | to_id=55834578944 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=600
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | signer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | signer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | signer=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | signer=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | signer=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | signer=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=14 | to_id=60129546240 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=116707
+  ledger_number=15 | to_id=64424513536 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=74541
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | flags=1
+  ledger_number=16 | to_id=68719480832 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=71420
+  ledger_number=16 | to_id=68719480832 | operation_id=68719480833 | state_change_id=1 | cat=BALANCE | reason=MINT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=16 | to_id=68719480832 | operation_id=68719480833 | state_change_id=2 | cat=BALANCE | reason=CREDIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=17 | to_id=73014448128 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100
+  ledger_number=17 | to_id=73014448128 | operation_id=73014448129 | state_change_id=268435457 | cat=TRUSTLINE | reason=ADD | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=17 | to_id=73014448128 | operation_id=73014448129 | state_change_id=268435458 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807 | flags=1
+  ledger_number=18 | to_id=77309415424 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100
+  ledger_number=18 | to_id=77309415424 | operation_id=77309415425 | state_change_id=1 | cat=BALANCE | reason=MINT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=18 | to_id=77309415424 | operation_id=77309415425 | state_change_id=2 | cat=BALANCE | reason=CREDIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=19 | to_id=81604382720 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=76502
+  ledger_number=19 | to_id=81604382720 | operation_id=81604382721 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1000
+  ledger_number=19 | to_id=81604382720 | operation_id=81604382721 | state_change_id=2 | cat=BALANCE | reason=CREDIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1000
+  ledger_number=20 | to_id=85899350016 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=80870
+  ledger_number=20 | to_id=85899350016 | operation_id=85899350017 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=20 | to_id=85899350016 | operation_id=85899350017 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | flags=1
+  ledger_number=21 | to_id=90194317312 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100
+  ledger_number=21 | to_id=90194317312 | operation_id=90194317313 | state_change_id=268435457 | cat=FLAGS | reason=SET | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | flags=6
+  ledger_number=22 | to_id=94489284608 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=116707
+  ledger_number=23 | to_id=98784251904 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=74541
+  ledger_number=23 | to_id=98784251904 | operation_id=98784251905 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDPLVZ66EMTLSAN4NNTBKJJLBC2WXBKHDC3IDRGTXGL7SZJ5LBEPCQAB | trustline_limit_new=922337203685.4775807
+  ledger_number=23 | to_id=98784251904 | operation_id=98784251905 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDPLVZ66EMTLSAN4NNTBKJJLBC2WXBKHDC3IDRGTXGL7SZJ5LBEPCQAB | flags=0
+-- transactions_accounts ledger>=13 (21)
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=14 | hash=41809b58e462b3ad99971aeff8fe1766794c100b6b0bf33e5b26394a3504871a | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=15 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | hash=cbe8a2f0d7cf11967076e3453b92e5ddaf7c62d0b342cdf70976aab33e3247b3 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | hash=cbe8a2f0d7cf11967076e3453b92e5ddaf7c62d0b342cdf70976aab33e3247b3 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=17 | hash=244f36fe52f78ef5cc509c12883950da3d48a131d6d088e45898b0941d00e193 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | hash=af795cdd0280adf7ded25cfa100b548f26183aea72360ac282fa6dde10a069bc | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | hash=af795cdd0280adf7ded25cfa100b548f26183aea72360ac282fa6dde10a069bc | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=19 | hash=89f8d64bc86edf6ac27f7d1c2040ef74c5ebeab50ae97e15d5f139b6c9ae2ae9 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=19 | hash=89f8d64bc86edf6ac27f7d1c2040ef74c5ebeab50ae97e15d5f139b6c9ae2ae9 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=20 | hash=4505dae04e8fe33999a385000808f5ebbff7cd523225d49af451dca433cfcf66 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=20 | hash=4505dae04e8fe33999a385000808f5ebbff7cd523225d49af451dca433cfcf66 | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=21 | hash=0987447afa94df062b933847d2076015ea703deac403053b0614ef00b0d06567 | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=22 | hash=358488f2dd76c9e6c0078911acd27cd9873a770ae2d674f9fec88848c56d8fad | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=23 | hash=d771f9bef0ca32fd0b5b30d152be952f941e45714c4eb7099bd9f01e05fdd91f | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- operations_accounts ledger>=13 (26)
+  ledger_number=13 | id=55834578945 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578945 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=13 | id=55834578946 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578946 | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=13 | id=55834578947 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=13 | id=55834578947 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578948 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=13 | id=55834578948 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578949 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578949 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=13 | id=55834578950 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578950 | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=14 | id=60129546241 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=15 | id=64424513537 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | id=68719480833 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | id=68719480833 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=17 | id=73014448129 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | id=77309415425 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | id=77309415425 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=19 | id=81604382721 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=19 | id=81604382721 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=20 | id=85899350017 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=20 | id=85899350017 | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=21 | id=90194317313 | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=22 | id=94489284609 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=23 | id=98784251905 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- trustline_balances (current state) (4)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | code=EURT | issuer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | balance=0 | trust_limit=9223372036854775807 | flags=0 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=23
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=1233567 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=19
+  account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=1235567 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=19
+  account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=0 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=20
+-- trustline_assets (2)
+  code=EURT | issuer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+-- contract_tokens (2)
+  contract_id=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | type=SAC | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | name=USDC:GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | symbol=USDC | decimals=7
+  contract_id=CDPLVZ66EMTLSAN4NNTBKJJLBC2WXBKHDC3IDRGTXGL7SZJ5LBEPCQAB | type=SAC | code=EURT | issuer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | name=EURT:GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | symbol=EURT | decimals=7
+-- sac_balances (0)
+-- native_balances modified ledger>=13 (7)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | balance=99999774416 | num_subentries=2 | last_modified_ledger=23
+  account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | balance=99999685716 | num_subentries=0 | last_modified_ledger=22
+  account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | balance=999999399989963890 | num_subentries=0 | last_modified_ledger=13
+  account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | balance=99999999900 | num_subentries=1 | last_modified_ledger=17
+  account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | balance=100000000000 | num_subentries=1 | last_modified_ledger=20
+  account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | balance=99999999900 | num_subentries=0 | last_modified_ledger=21
+  account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=99999928480 | num_subentries=0 | last_modified_ledger=18
+
+################ case: datastore, only15 (cursor seeded to 14, wait for 15)
+# lake: s3://ledgers/local/p28-testnet-only15 (SEP-54, .config.json {ledgersPerBatch 1, batchesPerPartition 64000, zstd})
+$ wallet-backend-e967ce8b ingest --database-url postgres://postgres@127.0.0.1:55931/run_tr_head_datastore_only15?sslmode=disable --network-passphrase Test SDF Network ; September 2015 --ingestion-mode live --ledger-backend-type datastore --archive-url http://127.0.0.1:1/ --ingest-server-port 58528 --log-level INFO --rpc-url http://127.0.0.1:1 --datastore-bucket-path ledgers/local/p28-testnet-only15 --datastore-region us-east-1 --datastore-endpoint-url http://127.0.0.1:58343 --datastore-buffer-size 1 --datastore-num-workers 1 --datastore-retry-limit 1 --datastore-retry-wait 1s
+  fresh DB from tmpl_e967ce8b, cursor latest=14 oldest=15; wait for latest=15
+  t+1ms cursor=14
+  t+149ms cursor=15
+  state=advanced at t+192ms; still running 3s later: yes; SIGTERM -> rc=0 in 5ms
+  fresh_db=168ms final cursor=15 log=evidence/wallet-backend-731/logs/ingest-tr-head-datastore-only15.log
+  log: 1 error/warning lines; 0 panic lines
+    time="2026-11-12T13:53:40.393+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: sending POST request to RPC: Post \"http://127.0.0.1:1\": dial tcp 127.0.0.1:1: connect: connection refused" pid=973116
+## process log (filtered: warnings/errors, per-ledger 'Ingested' lines 13-24, start/shutdown)
+13:53:40.393+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: sending POST request to RPC: Post \"http://127.0.0.1:1\": dial tcp 127.
+13:53:40.395+03:00" level=info msg="Starting ingestion from ledger: 15"
+13:53:40.425+03:00" level=info msg="Ingested ledger 15 in 0.0263s"
+13:53:43.539+03:00" level=info msg="shutdown requested; exiting cleanly: live ingestion pipeline: pipeline cancelled: context canceled"
+## observation (observe.py; addresses rendered by the harness, not by wallet-backend)
+-- ingest_store
+   latest_ingest_ledger 15
+   oldest_ingest_ledger 15
+-- row counts per ledger (tx, ops, state_changes) (10)
+  l=15 | tx=1 | ops=1 | sc=3
+  l=16 | tx=0 | ops=0 | sc=0
+  l=17 | tx=0 | ops=0 | sc=0
+  l=18 | tx=0 | ops=0 | sc=0
+  l=19 | tx=0 | ops=0 | sc=0
+  l=20 | tx=0 | ops=0 | sc=0
+  l=21 | tx=0 | ops=0 | sc=0
+  l=22 | tx=0 | ops=0 | sc=0
+  l=23 | tx=0 | ops=0 | sc=0
+  l=24 | tx=0 | ops=0 | sc=0
+-- transactions ledger>=15 (1)
+  ledger_number=15 | to_id=64424513536 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | result_code=TransactionResultCodeTxSuccess | fee_charged=74541
+-- operations ledger>=15 (1)
+  ledger_number=15 | id=64424513537 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+-- state_changes ledger>=15 (3)
+  ledger_number=15 | to_id=64424513536 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=74541
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | flags=1
+-- transactions_accounts ledger>=15 (1)
+  ledger_number=15 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- operations_accounts ledger>=15 (1)
+  ledger_number=15 | id=64424513537 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- trustline_balances (current state) (1)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=0 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=15
+-- trustline_assets (1)
+  code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+-- contract_tokens (0)
+-- sac_balances (0)
+-- native_balances modified ledger>=15 (1)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | balance=99999925459 | num_subentries=1 | last_modified_ledger=15
+
+################ case: rpc, chain (cursor seeded to 1, wait for 24)
+# mock getLedgers on 127.0.0.1:58010
+$ wallet-backend-e967ce8b ingest --database-url postgres://postgres@127.0.0.1:55931/run_tr_head_rpc_chain?sslmode=disable --network-passphrase Test SDF Network ; September 2015 --ingestion-mode live --ledger-backend-type rpc --archive-url http://127.0.0.1:1/ --ingest-server-port 58438 --log-level INFO --rpc-url http://127.0.0.1:58010 --get-ledgers-limit 1
+  fresh DB from tmpl_e967ce8b, cursor latest=1 oldest=2; wait for latest=24
+  t+1ms cursor=1
+  t+145ms cursor=17
+  t+303ms cursor=24
+  state=advanced at t+345ms; still running 3s later: yes; SIGTERM -> rc=0 in 5ms
+  fresh_db=142ms final cursor=24 log=evidence/wallet-backend-731/logs/ingest-tr-head-rpc-chain.log
+  log: 1 error/warning lines; 0 panic lines
+    time="2026-11-12T13:53:44.277+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: response {\"jsonrpc\": \"2.0\", \"id\": 1, \"error\": {\"code\": -32601, \"message\": \"method 'getLedgerEntries' not found\"}} missing result field" pid=
+## process log (filtered: warnings/errors, per-ledger 'Ingested' lines 13-24, start/shutdown)
+13:53:44.277+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: response {\"jsonrpc\": \"2.0\", \"id\": 1, \"error\": {\"code\": -32601
+13:53:44.279+03:00" level=info msg="Starting ingestion from ledger: 2"
+13:53:44.394+03:00" level=info msg="Ingested ledger 13 in 0.0086s"
+13:53:44.405+03:00" level=info msg="Ingested ledger 14 in 0.0106s"
+13:53:44.413+03:00" level=info msg="Ingested ledger 15 in 0.0084s"
+13:53:44.421+03:00" level=info msg="Ingested ledger 16 in 0.0081s"
+13:53:44.429+03:00" level=info msg="Ingested ledger 17 in 0.0075s"
+13:53:44.437+03:00" level=info msg="Ingested ledger 18 in 0.0084s"
+13:53:44.445+03:00" level=info msg="Ingested ledger 19 in 0.0080s"
+13:53:44.453+03:00" level=info msg="Ingested ledger 20 in 0.0072s"
+13:53:44.459+03:00" level=info msg="Ingested ledger 21 in 0.0064s"
+13:53:44.467+03:00" level=info msg="Ingested ledger 22 in 0.0078s"
+13:53:44.475+03:00" level=info msg="Ingested ledger 23 in 0.0080s"
+13:53:44.477+03:00" level=info msg="Ingested ledger 24 in 0.0019s"
+13:53:47.583+03:00" level=info msg="shutdown requested; exiting cleanly: live ingestion pipeline: pipeline cancelled: context canceled"
+## observation (observe.py; addresses rendered by the harness, not by wallet-backend)
+-- ingest_store
+   latest_ingest_ledger 24
+   oldest_ingest_ledger 2
+-- row counts per ledger (tx, ops, state_changes) (12)
+  l=13 | tx=1 | ops=6 | sc=25
+  l=14 | tx=1 | ops=1 | sc=1
+  l=15 | tx=1 | ops=1 | sc=3
+  l=16 | tx=1 | ops=1 | sc=3
+  l=17 | tx=1 | ops=1 | sc=3
+  l=18 | tx=1 | ops=1 | sc=3
+  l=19 | tx=1 | ops=1 | sc=3
+  l=20 | tx=1 | ops=1 | sc=3
+  l=21 | tx=1 | ops=1 | sc=2
+  l=22 | tx=1 | ops=1 | sc=1
+  l=23 | tx=1 | ops=1 | sc=3
+  l=24 | tx=0 | ops=0 | sc=0
+-- transactions ledger>=13 (11)
+  ledger_number=13 | to_id=55834578944 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | result_code=TransactionResultCodeTxSuccess | fee_charged=600
+  ledger_number=14 | to_id=60129546240 | hash=41809b58e462b3ad99971aeff8fe1766794c100b6b0bf33e5b26394a3504871a | result_code=TransactionResultCodeTxSuccess | fee_charged=116707
+  ledger_number=15 | to_id=64424513536 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | result_code=TransactionResultCodeTxSuccess | fee_charged=74541
+  ledger_number=16 | to_id=68719480832 | hash=cbe8a2f0d7cf11967076e3453b92e5ddaf7c62d0b342cdf70976aab33e3247b3 | result_code=TransactionResultCodeTxSuccess | fee_charged=71420
+  ledger_number=17 | to_id=73014448128 | hash=244f36fe52f78ef5cc509c12883950da3d48a131d6d088e45898b0941d00e193 | result_code=TransactionResultCodeTxSuccess | fee_charged=100
+  ledger_number=18 | to_id=77309415424 | hash=af795cdd0280adf7ded25cfa100b548f26183aea72360ac282fa6dde10a069bc | result_code=TransactionResultCodeTxSuccess | fee_charged=100
+  ledger_number=19 | to_id=81604382720 | hash=89f8d64bc86edf6ac27f7d1c2040ef74c5ebeab50ae97e15d5f139b6c9ae2ae9 | result_code=TransactionResultCodeTxSuccess | fee_charged=76502
+  ledger_number=20 | to_id=85899350016 | hash=4505dae04e8fe33999a385000808f5ebbff7cd523225d49af451dca433cfcf66 | result_code=TransactionResultCodeTxSuccess | fee_charged=80870
+  ledger_number=21 | to_id=90194317312 | hash=0987447afa94df062b933847d2076015ea703deac403053b0614ef00b0d06567 | result_code=TransactionResultCodeTxSuccess | fee_charged=100
+  ledger_number=22 | to_id=94489284608 | hash=358488f2dd76c9e6c0078911acd27cd9873a770ae2d674f9fec88848c56d8fad | result_code=TransactionResultCodeTxSuccess | fee_charged=116707
+  ledger_number=23 | to_id=98784251904 | hash=d771f9bef0ca32fd0b5b30d152be952f941e45714c4eb7099bd9f01e05fdd91f | result_code=TransactionResultCodeTxSuccess | fee_charged=74541
+-- operations ledger>=13 (16)
+  ledger_number=13 | id=55834578945 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578946 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578947 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578948 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578949 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=13 | id=55834578950 | operation_type=CREATE_ACCOUNT | result_code=op_success | successful=t
+  ledger_number=14 | id=60129546241 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=15 | id=64424513537 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=16 | id=68719480833 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=17 | id=73014448129 | operation_type=CHANGE_TRUST | result_code=op_success | successful=t
+  ledger_number=18 | id=77309415425 | operation_type=PAYMENT | result_code=op_success | successful=t
+  ledger_number=19 | id=81604382721 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=20 | id=85899350017 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=21 | id=90194317313 | operation_type=SET_OPTIONS | result_code=op_success | successful=t
+  ledger_number=22 | id=94489284609 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+  ledger_number=23 | id=98784251905 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+-- state_changes ledger>=13 (50)
+  ledger_number=13 | to_id=55834578944 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=600
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578945 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | signer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578946 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | signer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578947 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | signer=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578948 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | signer=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578949 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | signer=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=1 | cat=ACCOUNT | reason=CREATE | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | creator=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=2 | cat=BALANCE | reason=DEBIT | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=3 | cat=BALANCE | reason=CREDIT | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100000000000
+  ledger_number=13 | to_id=55834578944 | operation_id=55834578950 | state_change_id=268435457 | cat=SIGNER | reason=ADD | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | signer=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=14 | to_id=60129546240 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=116707
+  ledger_number=15 | to_id=64424513536 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=74541
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | flags=1
+  ledger_number=16 | to_id=68719480832 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=71420
+  ledger_number=16 | to_id=68719480832 | operation_id=68719480833 | state_change_id=1 | cat=BALANCE | reason=MINT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=16 | to_id=68719480832 | operation_id=68719480833 | state_change_id=2 | cat=BALANCE | reason=CREDIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=17 | to_id=73014448128 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100
+  ledger_number=17 | to_id=73014448128 | operation_id=73014448129 | state_change_id=268435457 | cat=TRUSTLINE | reason=ADD | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=17 | to_id=73014448128 | operation_id=73014448129 | state_change_id=268435458 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807 | flags=1
+  ledger_number=18 | to_id=77309415424 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100
+  ledger_number=18 | to_id=77309415424 | operation_id=77309415425 | state_change_id=1 | cat=BALANCE | reason=MINT | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=18 | to_id=77309415424 | operation_id=77309415425 | state_change_id=2 | cat=BALANCE | reason=CREDIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1234567
+  ledger_number=19 | to_id=81604382720 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=76502
+  ledger_number=19 | to_id=81604382720 | operation_id=81604382721 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1000
+  ledger_number=19 | to_id=81604382720 | operation_id=81604382721 | state_change_id=2 | cat=BALANCE | reason=CREDIT | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | amount=1000
+  ledger_number=20 | to_id=85899350016 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=80870
+  ledger_number=20 | to_id=85899350016 | operation_id=85899350017 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=20 | to_id=85899350016 | operation_id=85899350017 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | flags=1
+  ledger_number=21 | to_id=90194317312 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=100
+  ledger_number=21 | to_id=90194317312 | operation_id=90194317313 | state_change_id=268435457 | cat=FLAGS | reason=SET | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | flags=6
+  ledger_number=22 | to_id=94489284608 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=116707
+  ledger_number=23 | to_id=98784251904 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=74541
+  ledger_number=23 | to_id=98784251904 | operation_id=98784251905 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDPLVZ66EMTLSAN4NNTBKJJLBC2WXBKHDC3IDRGTXGL7SZJ5LBEPCQAB | trustline_limit_new=922337203685.4775807
+  ledger_number=23 | to_id=98784251904 | operation_id=98784251905 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDPLVZ66EMTLSAN4NNTBKJJLBC2WXBKHDC3IDRGTXGL7SZJ5LBEPCQAB | flags=0
+-- transactions_accounts ledger>=13 (21)
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=13 | hash=3ad31aa2c93a6bc8cd41e0392701fc2b239f90eda5bee0deed893e6f74e7c77e | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=14 | hash=41809b58e462b3ad99971aeff8fe1766794c100b6b0bf33e5b26394a3504871a | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=15 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | hash=cbe8a2f0d7cf11967076e3453b92e5ddaf7c62d0b342cdf70976aab33e3247b3 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | hash=cbe8a2f0d7cf11967076e3453b92e5ddaf7c62d0b342cdf70976aab33e3247b3 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=17 | hash=244f36fe52f78ef5cc509c12883950da3d48a131d6d088e45898b0941d00e193 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | hash=af795cdd0280adf7ded25cfa100b548f26183aea72360ac282fa6dde10a069bc | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | hash=af795cdd0280adf7ded25cfa100b548f26183aea72360ac282fa6dde10a069bc | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=19 | hash=89f8d64bc86edf6ac27f7d1c2040ef74c5ebeab50ae97e15d5f139b6c9ae2ae9 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=19 | hash=89f8d64bc86edf6ac27f7d1c2040ef74c5ebeab50ae97e15d5f139b6c9ae2ae9 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=20 | hash=4505dae04e8fe33999a385000808f5ebbff7cd523225d49af451dca433cfcf66 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=20 | hash=4505dae04e8fe33999a385000808f5ebbff7cd523225d49af451dca433cfcf66 | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=21 | hash=0987447afa94df062b933847d2076015ea703deac403053b0614ef00b0d06567 | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=22 | hash=358488f2dd76c9e6c0078911acd27cd9873a770ae2d674f9fec88848c56d8fad | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=23 | hash=d771f9bef0ca32fd0b5b30d152be952f941e45714c4eb7099bd9f01e05fdd91f | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- operations_accounts ledger>=13 (26)
+  ledger_number=13 | id=55834578945 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578945 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=13 | id=55834578946 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578946 | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=13 | id=55834578947 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=13 | id=55834578947 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578948 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=13 | id=55834578948 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578949 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578949 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=13 | id=55834578950 | account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H
+  ledger_number=13 | id=55834578950 | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=14 | id=60129546241 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=15 | id=64424513537 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | id=68719480833 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=16 | id=68719480833 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=17 | id=73014448129 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | id=77309415425 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=18 | id=77309415425 | account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+  ledger_number=19 | id=81604382721 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+  ledger_number=19 | id=81604382721 | account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL
+  ledger_number=20 | id=85899350017 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=20 | id=85899350017 | account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J
+  ledger_number=21 | id=90194317313 | account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  ledger_number=22 | id=94489284609 | account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5
+  ledger_number=23 | id=98784251905 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- trustline_balances (current state) (4)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | code=EURT | issuer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | balance=0 | trust_limit=9223372036854775807 | flags=0 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=23
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=1233567 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=19
+  account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=1235567 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=19
+  account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=0 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=20
+-- trustline_assets (2)
+  code=EURT | issuer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43
+  code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+-- contract_tokens (2)
+  contract_id=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | type=SAC | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | name=USDC:GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | symbol=USDC | decimals=7
+  contract_id=CDPLVZ66EMTLSAN4NNTBKJJLBC2WXBKHDC3IDRGTXGL7SZJ5LBEPCQAB | type=SAC | code=EURT | issuer=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | name=EURT:GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | symbol=EURT | decimals=7
+-- sac_balances (0)
+-- native_balances modified ledger>=13 (7)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | balance=99999774416 | num_subentries=2 | last_modified_ledger=23
+  account=GBEX74N24R4AYX7CHEOIFSUVKCIO633G3BAM4QDLCSJSWZMPV6TMYUB5 | balance=99999685716 | num_subentries=0 | last_modified_ledger=22
+  account=GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H | balance=999999399989963890 | num_subentries=0 | last_modified_ledger=13
+  account=GCLDDMZ3C622SYI7QED5YESSCJ5BKAL4Y7FNA7F5KD27WMGWNEJP5QDL | balance=99999999900 | num_subentries=1 | last_modified_ledger=17
+  account=GDKSOKHGJELQQOKMK7PT6GTRUNU43IIGQF7O4F7Q22Q35M7Q6B5TO77J | balance=100000000000 | num_subentries=1 | last_modified_ledger=20
+  account=GDPBCUQTDRDR2DYBI2XOXV65WTPIWGLHXWSI5BGNCFPM7PDCNWEW6M43 | balance=99999999900 | num_subentries=0 | last_modified_ledger=21
+  account=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=99999928480 | num_subentries=0 | last_modified_ledger=18
+
+################ case: rpc, only15 (cursor seeded to 14, wait for 15)
+# mock getLedgers on 127.0.0.1:58011
+$ wallet-backend-e967ce8b ingest --database-url postgres://postgres@127.0.0.1:55931/run_tr_head_rpc_only15?sslmode=disable --network-passphrase Test SDF Network ; September 2015 --ingestion-mode live --ledger-backend-type rpc --archive-url http://127.0.0.1:1/ --ingest-server-port 59112 --log-level INFO --rpc-url http://127.0.0.1:58011 --get-ledgers-limit 1
+  fresh DB from tmpl_e967ce8b, cursor latest=14 oldest=15; wait for latest=15
+  t+1ms cursor=14
+  t+155ms cursor=15
+  state=advanced at t+198ms; still running 3s later: yes; SIGTERM -> rc=0 in 6ms
+  fresh_db=166ms final cursor=15 log=evidence/wallet-backend-731/logs/ingest-tr-head-rpc-only15.log
+  log: 1 error/warning lines; 0 panic lines
+    time="2026-11-12T13:53:48.436+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: response {\"jsonrpc\": \"2.0\", \"id\": 1, \"error\": {\"code\": -32601, \"message\": \"method 'getLedgerEntries' not found\"}} missing result field" pid=
+## process log (filtered: warnings/errors, per-ledger 'Ingested' lines 13-24, start/shutdown)
+13:53:48.436+03:00" level=warning msg="blend: price snapshot pass failed: blend: price snapshot: comet leg: discovering backstop LP tokens: blend: fetchBackstopLPTokens: fetching ledger entries: sending getLedgerEntries request: response {\"jsonrpc\": \"2.0\", \"id\": 1, \"error\": {\"code\": -32601
+13:53:48.437+03:00" level=info msg="Starting ingestion from ledger: 15"
+13:53:48.464+03:00" level=info msg="Ingested ledger 15 in 0.0265s"
+13:53:51.594+03:00" level=info msg="shutdown requested; exiting cleanly: live ingestion pipeline: pipeline cancelled: context canceled"
+## observation (observe.py; addresses rendered by the harness, not by wallet-backend)
+-- ingest_store
+   latest_ingest_ledger 15
+   oldest_ingest_ledger 15
+-- row counts per ledger (tx, ops, state_changes) (10)
+  l=15 | tx=1 | ops=1 | sc=3
+  l=16 | tx=0 | ops=0 | sc=0
+  l=17 | tx=0 | ops=0 | sc=0
+  l=18 | tx=0 | ops=0 | sc=0
+  l=19 | tx=0 | ops=0 | sc=0
+  l=20 | tx=0 | ops=0 | sc=0
+  l=21 | tx=0 | ops=0 | sc=0
+  l=22 | tx=0 | ops=0 | sc=0
+  l=23 | tx=0 | ops=0 | sc=0
+  l=24 | tx=0 | ops=0 | sc=0
+-- transactions ledger>=15 (1)
+  ledger_number=15 | to_id=64424513536 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | result_code=TransactionResultCodeTxSuccess | fee_charged=74541
+-- operations ledger>=15 (1)
+  ledger_number=15 | id=64424513537 | operation_type=INVOKE_HOST_FUNCTION | result_code=op_success | successful=t
+-- state_changes ledger>=15 (3)
+  ledger_number=15 | to_id=64424513536 | operation_id=0 | state_change_id=1 | cat=BALANCE | reason=DEBIT | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC | amount=74541
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306369 | cat=TRUSTLINE | reason=ADD | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | trustline_limit_new=922337203685.4775807
+  ledger_number=15 | to_id=64424513536 | operation_id=64424513537 | state_change_id=805306370 | cat=BALANCE_AUTHORIZATION | reason=SET | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | token=CDIMMH4CNFBSU72EZCX6QVJVZ74APF4BESMFS47DELY6E2ZT2HW5BIF6 | flags=1
+-- transactions_accounts ledger>=15 (1)
+  ledger_number=15 | hash=8764718b70f14a572c9beb660460ba0485da1c7aa6f6960a8851f951e6be44e5 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- operations_accounts ledger>=15 (1)
+  ledger_number=15 | id=64424513537 | account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6
+-- trustline_balances (current state) (1)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N | balance=0 | trust_limit=9223372036854775807 | flags=1 | buying_liabilities=0 | selling_liabilities=0 | last_modified_ledger=15
+-- trustline_assets (1)
+  code=USDC | issuer=GD7SJCVLFVJEJZ6LU4TV4PRZ34SPS7JAGX7CGNHNQH4S4QA7AJVSI43N
+-- contract_tokens (0)
+-- sac_balances (0)
+-- native_balances modified ledger>=15 (1)
+  account=GBBHMRREN277K2C32QTUCYXWE4HFP6FBRT7NVS74UVP24VUCWZ7CNYI6 | balance=99999925459 | num_subentries=1 | last_modified_ledger=15

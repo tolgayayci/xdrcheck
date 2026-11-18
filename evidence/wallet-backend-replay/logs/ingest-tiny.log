@@ -1,0 +1,70 @@
+time="2026-11-12T13:32:22.375+03:00" level=info msg="📦 Git Commit: " pid=838146
+time="2026-11-12T13:32:22.375+03:00" level=info msg="📦 Version: 0.2.0" pid=838146
+time="2026-11-12T13:32:22.376+03:00" level=debug msg="Setting log level to: info" pid=838146
+time="2026-11-12T13:32:22.385+03:00" level=info msg="Set chunk interval \"1 day\" on transactions" pid=838146
+time="2026-11-12T13:32:22.385+03:00" level=info msg="Set chunk interval \"1 day\" on transactions_accounts" pid=838146
+time="2026-11-12T13:32:22.385+03:00" level=info msg="Set chunk interval \"1 day\" on operations" pid=838146
+time="2026-11-12T13:32:22.385+03:00" level=info msg="Set chunk interval \"1 day\" on operations_accounts" pid=838146
+time="2026-11-12T13:32:22.386+03:00" level=info msg="Set chunk interval \"1 day\" on state_changes" pid=838146
+time="2026-11-12T13:32:22.393+03:00" level=info msg="Using datastore backend with buffer size 1, 1 workers" pid=838146
+time="2026-11-12T13:32:22.400+03:00" level=info msg="protocol SEP41 history production disabled; cursor not initialized" pid=838146
+time="2026-11-12T13:32:22.400+03:00" level=info msg="protocol SEP41 current-state production disabled; cursor not initialized" pid=838146
+time="2026-11-12T13:32:22.401+03:00" level=info msg="Starting ingestion from ledger: 4437357" pid=838146
+time="2026-11-12T13:32:22.457+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 1/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 1s..." pid=838146
+time="2026-11-12T13:32:23.486+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 2/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 2s..." pid=838146
+time="2026-11-12T13:32:25.514+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 3/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 4s..." pid=838146
+time="2026-11-12T13:32:29.542+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 4/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 8s..." pid=838146
+time="2026-11-12T13:32:37.574+03:00" level=info msg="Shutting down servers..." pid=838146
+time="2026-11-12T13:32:37.574+03:00" level=info msg="Servers gracefully stopped" pid=838146
+Usage:
+  wallet-backend ingest [flags]
+
+Flags:
+      --admin-port int                         Port for admin server exposing pprof endpoints at /debug/pprof. Leave unset to disable. (ADMIN_PORT)
+      --archive-url string                     Archive URL for history archives (ARCHIVE_URL) (default "https://history.stellar.org/prd/core-testnet/core_testnet_001/")
+      --backfill-batch-size int                Number of ledgers per batch during backfill. Defaults to 250. Lower values reduce RAM usage at cost of more DB transactions. (BACKFILL_BATCH_SIZE) (default 250)
+      --backfill-db-insert-batch-size int      Number of ledgers to process before flushing buffer to DB during backfill. Defaults to 100. Lower values reduce RAM usage at cost of more DB transactions. (BACKFILL_DB_INSERT_BATCH_SIZE) (default 100)
+      --backfill-workers int                   Maximum concurrent workers for backfill processing. Defaults to number of CPUs. Lower values reduce RAM usage at cost of throughput. (BACKFILL_WORKERS)
+      --checkpoint-frequency int               Checkpoint frequency for history archive (number of ledgers between checkpoints). Use 64 for production usage, 8 for integration tests with accelerated time. (CHECKPOINT_FREQUENCY) (default 64)
+      --chunk-interval string                  TimescaleDB chunk time interval for hypertables. Only affects future chunks. Uses PostgreSQL INTERVAL syntax. (CHUNK_INTERVAL) (default "1 day")
+      --compression-compress-after string      How long after a chunk is closed before it becomes eligible for compression. Lower values reduce the number of uncompressed chunks. Empty skips configuration. Uses PostgreSQL INTERVAL syntax. (COMPRESSION_COMPRESS_AFTER)
+      --compression-max-chunks int             Maximum chunks compressed per job run (maxchunks_to_compress). 0 means unlimited (TimescaleDB default). Set to a small value (e.g. 10) during backfill to prevent job run overlap. (COMPRESSION_MAX_CHUNKS)
+      --compression-schedule-interval string   How frequently the TimescaleDB compression policy job checks for chunks to compress. Does not change which chunks are eligible (that's controlled by compress_after). Empty skips configuration. Uses PostgreSQL INTERVAL syntax. (COMPRESSION_SCHEDULE_INTERVAL)
+      --database-url string                    Database connection URL. (DATABASE_URL) (default "postgres://postgres@localhost:5432/wallet-backend?sslmode=disable")
+      --datastore-bucket-path string           Datastore bucket and path holding exported ledgers (S3 destination_bucket_path). Required. (DATASTORE_BUCKET_PATH) (default "aws-public-blockchain/v1.1/stellar/ledgers/pubnet")
+      --datastore-buffer-size uint32           Number of ledger files to prefetch into the datastore read buffer. (DATASTORE_BUFFER_SIZE) (default 100)
+      --datastore-endpoint-url string          Custom S3 endpoint URL (e.g. for minio). Leave empty to use the default AWS endpoint. (DATASTORE_ENDPOINT_URL)
+      --datastore-files-per-partition uint32   Files per datastore partition. 0 reads the schema from the datastore manifest (.config.json). (DATASTORE_FILES_PER_PARTITION)
+      --datastore-ledgers-per-file uint32      Ledgers per datastore file. 0 reads the schema from the datastore manifest (.config.json). (DATASTORE_LEDGERS_PER_FILE)
+      --datastore-num-workers uint32           Number of concurrent workers downloading ledger files from the datastore. (DATASTORE_NUM_WORKERS) (default 10)
+      --datastore-region string                AWS region of the datastore bucket. Leave empty to use the AWS default chain. (DATASTORE_REGION) (default "us-east-2")
+      --datastore-retry-limit uint32           Maximum retries for a failed (transient) ledger-file download. (DATASTORE_RETRY_LIMIT) (default 3)
+      --datastore-retry-wait string            Wait between datastore download retries (Go duration string, e.g. "5s"). (DATASTORE_RETRY_WAIT) (default "5s")
+      --db-max-conn-idle-time string           Maximum idle time for a DB connection (Go duration string, e.g. "10s"). (DB_MAX_CONN_IDLE_TIME) (default "10s")
+      --db-max-conn-lifetime string            Maximum lifetime of a DB connection (Go duration string, e.g. "5m"). (DB_MAX_CONN_LIFETIME) (default "5m0s")
+      --db-max-conns int                       Maximum number of connections in the DB pool. (DB_MAX_CONNS) (default 10)
+      --db-min-conns int                       Minimum number of idle connections kept in the DB pool. (DB_MIN_CONNS) (default 5)
+      --end-ledger int                         ledger number to end on (END_LEDGER)
+      --get-ledgers-limit int                  The limit for the number of ledgers to fetch from the RPC in a single "getLedgers" call. In production, don't go above 10 if unless your RPC instance has the MAX_GET_LEDGERS_EXECUTION_DURATION >= 5s. (GET_LEDGERS_LIMIT) (default 10)
+  -h, --help                                   help for ingest
+      --ingest-server-port int                 The port for the ingest server. (INGEST_SERVER_PORT) (default 8002)
+      --ingestion-mode string                  What mode to run ingestion in - live or backfill (INGESTION_MODE) (default "live")
+      --latest-ledger-cursor-name string       DEPRECATED: ignored. The latest ledger cursor name is now hard-coded and no longer configurable. (LATEST_LEDGER_CURSOR_NAME)
+      --ledger-backend-type string             Type of ledger backend to use for fetching ledgers. Options: 'rpc' or 'datastore' (default) (LEDGER_BACKEND_TYPE) (default "datastore")
+      --log-level string                       The log level used in this project. Options: "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", or "PANIC". (LOG_LEVEL) (default "TRACE")
+      --network string                         Stellar network to connect to (NETWORK) (default "testnet")
+      --network-passphrase string              Stellar Network Passphrase to connect. (NETWORK_PASSPHRASE) (default "Test SDF Network ; September 2015")
+      --oldest-ledger-cursor-name string       Name of the oldest ledger cursor, used to track the earliest ledger ingested by the service. Used for backfill operations to know where historical data begins. (OLDEST_LEDGER_CURSOR_NAME) (default "oldest_ingest_ledger")
+      --retention-period string                TimescaleDB data retention period. Chunks older than this are automatically dropped. Empty disables retention. Uses PostgreSQL INTERVAL syntax. (RETENTION_PERIOD)
+      --rpc-url string                         The URL of the RPC Server. (RPC_URL) (default "http://localhost:8000")
+      --start-ledger int                       ledger number from which ingestion should start. When not present, ingestion will resume from last synced ledger. (START_LEDGER)
+      --stellar-environment string             The Stellar Environment (STELLAR_ENVIRONMENT)
+      --tracker-dsn string                     The Sentry DSN (TRACKER_DSN)
+
+panic: executing root command: running ingest: running 'ingest' from 0 to 0: processing ledger 4437357: ingesting processed data failed after 5 attempts: persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014)
+
+goroutine 1 [running]:
+github.com/stellar/wallet-backend/cmd.Execute({{0x0?, 0xc0000a2740?}, {0x2996152?, 0xc000002380?}})
+	github.com/stellar/wallet-backend/cmd/root.go:35 +0x76
+main.main()
+	github.com/stellar/wallet-backend/main.go:15 +0x2d

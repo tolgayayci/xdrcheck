@@ -1,0 +1,46 @@
+# wallet-backend replay transcript: wallet-backend#716 pre-fix (truncation), wallet-backend 79ea2acd, ledger backend 'rpc', testnet ledger 4437357, tx d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed
+# date: 2026-11-12T10:31:16Z; go: go1.25.14; binary sha256: 33d4cdf7345c8ece…
+# fresh DB = CREATE DATABASE run_x TEMPLATE tmpl_79ea2acd; INSERT ingest_store latest=4437356, oldest=4437357
+$ wallet-backend-79ea2acd ingest --database-url postgres://postgres@127.0.0.1:55917/run_tr716_prefix_rpc?sslmode=disable --network testnet --network-passphrase Test SDF Network ; September 2015 --stellar-environment spike --ingestion-mode live --ledger-backend-type rpc --archive-url http://127.0.0.1:1/ --ingest-server-port 58388 --log-level INFO --rpc-url http://127.0.0.1:58000 --get-ledgers-limit 1
+  t+1ms cursor=4437356
+  t+304ms cursor=4437357
+  state=advanced at t+345ms; still running 5s later: yes; SIGTERM -> rc=0 in 5ms
+  fresh_db=162ms final cursor=4437357 log=evidence/wallet-backend-replay/logs/ingest-tr716-prefix-rpc.log
+
+## process log (trimmed: usage text and goroutine trace removed)
+13:31:16.924+03:00" level=info msg="📦 Git Commit: "
+13:31:16.924+03:00" level=info msg="📦 Version: 0.2.0"
+13:31:16.925+03:00" level=debug msg="Setting log level to: info"
+13:31:16.941+03:00" level=info msg="Using RPCLedgerBackend for ledger ingestion with buffer size 1"
+13:31:16.948+03:00" level=info msg="protocol SEP41 history production disabled; cursor not initialized"
+13:31:16.948+03:00" level=info msg="protocol SEP41 current-state production disabled; cursor not initialized"
+13:31:16.953+03:00" level=info msg="Starting ingestion from ledger: 4437357"
+13:31:16.987+03:00" level=info msg="Ingested ledger 4437357 in 0.0333s"
+13:31:22.256+03:00" level=warning msg="Error fetching ledger 4437358 (attempt 1/10): context canceled, retrying in 1s..."
+13:31:22.257+03:00" level=info msg="shutdown requested; exiting cleanly: fetching ledger 4437358: context cancelled during backoff: context canceled"
+13:31:22.257+03:00" level=info msg="Shutting down servers..."
+13:31:22.257+03:00" level=info msg="Servers gracefully stopped"
+
+## exit status as seen by the shell: see 'rc=' above
+
+## observation queries (observe.sh)
+-- cursors
+latest_ingest_ledger|4437357
+oldest_ingest_ledger|4437357
+-- row counts for ledger 4437357 (transactions / operations / state_changes / tx_accounts / op_accounts)
+12|12|17|23|23
+-- current-state tables (native_balances / trustline_balances / trustline_assets / contract_tokens / sac_balances)
+14|0|0|0|0
+-- target tx
+19058303195680768|d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed|TransactionResultCodeTxSuccess|4437357
+-- SIGNER state changes in the target tx (signer_account_id raw hex, length)
+SIGNER|ADD|3044ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b20|7844ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b20|33||1
+-- all state changes of the target tx
+BALANCE|DEBIT|33|
+SIGNER|ADD|33|33
+
+## round-trip of stored signer_account_id
+$ python3 -I strkey_roundtrip.py 7844ad47185a30e91c245e8b0582b191e27d99fb40f9ff48ca0d7e1264ec879b20 PBCK2RYY…MS
+bytes=33 version=0x78 strkey=PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSBYVM
+decode: FAIL (invalid payload length 32 for P)
+rc=1

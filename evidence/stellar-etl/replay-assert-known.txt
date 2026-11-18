@@ -1,0 +1,42 @@
+# xcc replay --assert-known, 2026-11-13
+$ xcc replay --corpus corpus --adapter stellaretl --target-version 2b24ec89ddce7fc0beb7795de982c93e6895eaf3 --assert-known --report $WORK/report
+cap-0067/sac-mint-three-topics                             pubnet       single  dropped·partial            expected
+cap-0067/to-muxed-id-text-from-memo.pubnet-64558277        pubnet       single  mishandled·wrong_value     expected
+cap-0067/to-muxed-id-bytes-from-memo-hash                  pubnet       single  mishandled·wrong_value     expected
+cap-0067/to-muxed-id-text-from-memo.pubnet-65437006        pubnet       single  mishandled·wrong_value     expected
+cap-0067/to-muxed-id-u64-from-muxed-destination-over-memo  pubnet       single  mishandled·wrong_value     expected
+xcc replay: 5 rows (dropped·partial 1, mishandled·wrong_value 4); 0 unexpected; 0 harness faults; input sep54-dir
+exit 0
+
+# facts per row
+cap-0067/sac-mint-three-topics  dropped·partial  expected
+  ingest completed, last ledger 64558277, exit 0
+  facts: matched 387, missing 3, wrong 0, not_applicable 4, extra_in_scope 0, forbidden 0
+  missing participant: participant GB237VS5BXDSGCPKVVBDRMRMCWHU7O7WR24RPZCFWZPTJ3PM4YCSQAH4 (no participant with this base address)
+  missing participant: participant CDL74RF5BLYR2YBLCCI7F5FB6TPSCLKEJUBSD2RSVWZ4YHF3VMFAIGWA (no participant with this base address)
+  missing state_change: balance_changed GB237VS5BXDSGCPKVVBDRMRMCWHU7O7WR24RPZCFWZPTJ3PM4YCSQAH4 KALE:GBDVX4VELCDSQ54KQJYTNHXAHFLBCA77ZY2USQBM4CSHTTV7DME7KALE (no balance_changed for this account and asset in the transaction)
+  known divergence: https://github.com/stellar/go-stellar-sdk/issues/6043 (open)
+cap-0067/to-muxed-id-text-from-memo.pubnet-64558277  mishandled·wrong_value  expected
+  ingest completed, last ledger 64558277, exit 0
+  facts: matched 386, missing 0, wrong 1, not_applicable 3, extra_in_scope 0, forbidden 0
+  wrong movement: mint 807200000 APSBPOUSD:GADYGHULIQ35Z53MQ5UFKNVFRTWN2GE4SBEGN4BOBECNWSURX352IV42 ×1 (0 matching records, want 1; other candidates differ) — routing expected text:psp:160886906, observed u64:0
+  known divergence: https://github.com/stellar/stellar-etl/issues/450 (open)
+cap-0067/to-muxed-id-bytes-from-memo-hash  mishandled·wrong_value  expected
+  ingest completed, last ledger 65437006, exit 0
+  facts: matched 145, missing 0, wrong 1, not_applicable 3, extra_in_scope 0, forbidden 0
+  wrong movement: transfer 1 native ×1 (0 matching records, want 1; other candidates differ) — routing expected bytes:0cc51ad235464ef27a5083a6f3d58f92ce723b18ffc7652e360b18dab6a84dad, observed u64:0
+  known divergence: https://github.com/stellar/stellar-etl/issues/450 (open)
+cap-0067/to-muxed-id-text-from-memo.pubnet-65437006  mishandled·wrong_value  expected
+  ingest completed, last ledger 65437006, exit 0
+  facts: matched 145, missing 0, wrong 5, not_applicable 3, extra_in_scope 0, forbidden 0
+  wrong movement: transfer 50110000000000 QESTATE:GC3K5MOTTPTTYCAEFKAQ2J7J2PW3CHXJBLRBT4U72QPTYBSQ4IMLB7BF ×1 (0 matching records, want 1; other candidates differ) — routing expected text:Daily 2026-11-12, observed u64:0
+  wrong movement: transfer 50110000000000 QFAMILY:GC3K5MOTTPTTYCAEFKAQ2J7J2PW3CHXJBLRBT4U72QPTYBSQ4IMLB7BF ×1 (0 matching records, want 1; other candidates differ) — routing expected text:Daily 2026-11-12, observed u64:0
+  wrong movement: transfer 50110000000000 QLIVING:GC3K5MOTTPTTYCAEFKAQ2J7J2PW3CHXJBLRBT4U72QPTYBSQ4IMLB7BF ×1 (0 matching records, want 1; other candidates differ) — routing expected text:Daily 2026-11-12, observed u64:0
+  wrong movement: transfer 50110000000000 QMOTION:GC3K5MOTTPTTYCAEFKAQ2J7J2PW3CHXJBLRBT4U72QPTYBSQ4IMLB7BF ×1 (0 matching records, want 1; other candidates differ) — routing expected text:Daily 2026-11-12, observed u64:0
+  wrong movement: transfer 50110000000000 QORIGIN:GC3K5MOTTPTTYCAEFKAQ2J7J2PW3CHXJBLRBT4U72QPTYBSQ4IMLB7BF ×1 (0 matching records, want 1; other candidates differ) — routing expected text:Daily 2026-11-12, observed u64:0
+  known divergence: https://github.com/stellar/stellar-etl/issues/450 (open)
+cap-0067/to-muxed-id-u64-from-muxed-destination-over-memo  mishandled·wrong_value  expected
+  ingest completed, last ledger 65437006, exit 0
+  facts: matched 150, missing 0, wrong 1, not_applicable 4, extra_in_scope 0, forbidden 0
+  wrong movement: transfer 1600862353 PYUSD:GDQE7IXJ4HUHV6RQHIUPRJSEZE4DRS5WY577O2FY6YQ5LVWZ7JZTU2V5 ×1 (0 matching records, want 1; other candidates differ) — routing expected text:SoroswapAggregator-5637e5344, observed u64:0
+  known divergence: https://github.com/stellar/stellar-etl/issues/450 (open)

@@ -1,0 +1,37 @@
+# wallet-backend replay transcript: wallet-backend#729 pre-fix, wallet-backend 2a0a84ea, ledger backend 'rpc', testnet ledger 4437357, tx d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed
+# date: 2026-11-12T10:30:42Z; go: go1.25.14; binary sha256: ebaf2d1eaf3cde76…
+# fresh DB = CREATE DATABASE run_x TEMPLATE tmpl_2a0a84ea; INSERT ingest_store latest=4437356, oldest=4437357
+$ wallet-backend-2a0a84ea ingest --database-url postgres://postgres@127.0.0.1:55917/run_tr_prefix_rpc?sslmode=disable --network testnet --network-passphrase Test SDF Network ; September 2015 --stellar-environment spike --ingestion-mode live --ledger-backend-type rpc --archive-url http://127.0.0.1:1/ --ingest-server-port 58021 --log-level INFO --rpc-url http://127.0.0.1:58000 --get-ledgers-limit 1
+  t+1ms cursor=4437356
+  state=exited at t+15355ms rc=2
+  fresh_db=157ms final cursor=4437356 log=evidence/wallet-backend-replay/logs/ingest-tr-prefix-rpc.log
+
+## process log (trimmed: usage text and goroutine trace removed)
+13:30:43.165+03:00" level=info msg="📦 Git Commit: "
+13:30:43.165+03:00" level=info msg="📦 Version: 0.2.0"
+13:30:43.165+03:00" level=debug msg="Setting log level to: info"
+13:30:43.185+03:00" level=info msg="Using RPCLedgerBackend for ledger ingestion with buffer size 1"
+13:30:43.191+03:00" level=info msg="protocol SEP41 history production disabled; cursor not initialized"
+13:30:43.191+03:00" level=info msg="protocol SEP41 current-state production disabled; cursor not initialized"
+13:30:43.194+03:00" level=info msg="Starting ingestion from ledger: 4437357"
+13:30:43.246+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 1/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 1s..."
+13:30:44.280+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 2/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 2s..."
+13:30:46.315+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 3/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 4s..."
+13:30:50.342+03:00" level=warning msg="Error ingesting data for ledger 4437357 (attempt 4/5): persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte account/contract keys (SQLSTATE 57014), retrying in 8s..."
+13:30:58.370+03:00" level=info msg="Shutting down servers..."
+13:30:58.370+03:00" level=info msg="Servers gracefully stopped"
+panic: executing root command: running ingest: running 'ingest' from 0 to 0: processing ledger 4437357: ingesting processed data failed after 5 attempts: persisting ledger data for ledger 4437357: running atomic function in RunInTransaction: inserting processed data into db for ledger 4437357: batch inserting state changes: pgx CopyFrom state_changes: ERROR: COPY from stdin failed: converting signer_account_id: converting address to bytes: stellar address PBCK2RYYLIYOSHBEL2FQLAVRSHRH3GP3ID476SGKBV7BEZHMQ6NSAAAAAAB55LN6AANMS has a 40-byte key payload; the account_id column stores only 32-byte a
+
+## exit status as seen by the shell: see 'rc=' above
+
+## observation queries (observe.sh)
+-- cursors
+latest_ingest_ledger|4437356
+oldest_ingest_ledger|4437357
+-- row counts for ledger 4437357 (transactions / operations / state_changes / tx_accounts / op_accounts)
+0|0|0|0|0
+-- current-state tables (native_balances / trustline_balances / trustline_assets / contract_tokens / sac_balances)
+0|0|0|0|0
+-- target tx
+-- SIGNER state changes in the target tx (signer_account_id raw hex, length)
+-- all state changes of the target tx
