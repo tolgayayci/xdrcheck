@@ -1,0 +1,50 @@
+---
+title: "Indexer-hardening guide"
+sidebarTitle: "The guide"
+description: "What the indexer-hardening guide and its checklist cover, where they live, and how they are kept consistent with the corpus and the linter."
+---
+
+For indexer authors and operators, in any language: the guide says which ledger fields stellar-core checks and
+which it passes through, how to cap recursive structures, how to take participants from the meta, and how to handle
+muxed and signed-payload addresses. Its checklist turns that into items you can audit your code against. This page
+says where the guide lives and how it is kept consistent with the corpus and the linter.
+
+| File | What it is |
+|---|---|
+| `guide/indexer-hardening.mdx` | The guide: which transaction fields stellar-core validates and which it passes through, field by field; recommended depth and size caps; taking participants from the meta; handling muxed and signed-payload addresses, SEP-23 strkey forms included |
+| `guide/checklist.mdx` | The self-audit checklist for indexers in any language, generated from the linter's rule registry: one item per rule, plus the items a code analyzer cannot see |
+| `guide/claims.yaml` | One record per normative statement, with its source (code at a pinned commit, a CAP or SEP section, a corpus entry or an executed probe) and its review status |
+| `guide/docs-nav.patch` | The navigation change for the stellar-docs repository, where the guide is written to be published |
+
+[Outline and review state](/hardening/outline) maps each topic to its section, counts the checklist's items by
+mistake, and says how many claims have been reviewed. [Verification report](/hardening/verification) says how each
+claim was checked.
+
+<Warning>
+
+The guide has not yet been reviewed by a stellar-core or platform engineer, and is not published on
+developers.stellar.org until it has.
+
+</Warning>
+
+## How it stays consistent
+
+- The field-by-field tables are generated from `corpus/fields.yaml` joined with the corpus manifest, so the table
+  agrees with the corpus by construction; `make verify-guide OFFLINE=1` fails when it does not.
+- Every normative sentence carries a claim tag, and `make repo-checks` fails on a sentence with "must", "never",
+  "should" or "do not" that has none.
+- The checklist and the linter share one registry: every [xdrlint rule](/reference/lint-rules) has a checklist
+  item, and the checklist says how to check by hand what the linter cannot see.
+- `make verify-guide` also runs the stellar-docs repository's own format and link checks on the page, in a clone at
+  the pinned commit.
+
+## Review before publication
+
+Publication waits on a review by a core or platform engineer: every fact claim `confirmed` or `corrected`, none
+`disputed`. The reviewer package is built by `guide/review/build.py`. The current state is on
+[Outline and review state](/hardening/outline).
+
+## Related
+
+- [Lint](/architecture/linter-and-guide): the same three mistakes as code checks for Go.
+- [The judge](/architecture/replay#real-ledgers-service-rigs-and-the-judge): participants and balances from the meta, the rule the guide recommends.

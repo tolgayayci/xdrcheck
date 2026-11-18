@@ -1,0 +1,83 @@
+---
+title: "For SDK maintainers"
+sidebarTitle: "For SDK maintainers"
+description: "The short path for an SDK or XDR-library team: copy a recipe, pin a corpus release, commit the list of failures you expect, and every corpus entry goes through your decoder on each pull request."
+---
+
+For maintainers of a Stellar SDK or XDR library in Go, JavaScript, Rust or Python. After this page your CI puts
+every corpus entry through your decoder on each pull request, fails on a new divergence, and tells you when a
+known one is fixed.
+
+Each corpus entry carries bytes stellar-core emitted (or a marked synthetic value) and the values a correct reader
+decodes from them. The expected values come from the bytes and the pinned oracle (rs-stellar-xdr), never from
+another SDK. A defect found in one SDK becomes a regression test in yours.
+
+<Steps>
+  <Step title="Pick the recipe for your language">
+
+    | Language | Recipe | Loader | Test step |
+    |---|---|---|---|
+    | Go | `examples/sdk-ci/go` | `packages/go` | `go test` in `xdrcheck/` |
+    | Rust | `examples/sdk-ci/rust` | `packages/rust` | `cargo test --manifest-path xdrcheck/Cargo.toml` |
+    | Python | `examples/sdk-ci/python` | `packages/python` | `python -m unittest` in `tests/corpus` |
+    | JavaScript | `examples/sdk-ci/js` | `packages/npm` | `npx xdrcheck-corpus-run --sdk .` |
+
+    The recipes need none of this repository's build. Go, Rust and Python need your SDK's language and a zstd
+    decoder; JavaScript installs the corpus release's npm runner.
+
+  </Step>
+  <Step title="Copy it into your repository">
+
+    Copy `workflow.yml` to `.github/workflows/xdrcheck.yml` and the rest of the recipe where the workflow's header
+    comment says (`xdrcheck/` for Go, Rust and JavaScript; `tests/corpus/` for Python). The workflow downloads one corpus release pinned by version and sha256, and stops before reading anything if the
+    archive does not match.
+
+  </Step>
+  <Step title="Write, review and commit the expected-failure list">
+
+    Run the test once with `XDRCHECK_WRITE_EXPECTED_FAILURES=1` (JavaScript: `--write-expected-failures FILE`).
+    Read each line, then commit the list with the pinned version. From then on the job fails on a failure the list
+    does not name (`NEW-FAILURE`) and on a listed failure that now passes (`UNEXPECTED-PASS`): remove that line in
+    the same change as the fix.
+
+  </Step>
+  <Step title="Test an unreleased branch">
+
+    The recipes judge bytes only (decode, consume every byte, re-encode identically; Rust and Python also compare
+    the SEP-51 JSON). For decoded values, transaction parsing and the `api` operations, run
+    `xdrcheck conform run --sdk ../your-sdk-checkout` from a checkout of this repository
+    ([SDK CI, section 8](/guides/sdk-ci#8-an-unreleased-sdk-branch-xdrcheck-conform-sdk)).
+
+  </Step>
+</Steps>
+
+## When the job fails
+
+| Line in the output | Meaning | What to do |
+|---|---|---|
+| `NEW-FAILURE` | an entry your SDK did not fail before now fails | a regression, or a corpus release with new entries: read the entry (`xdrcheck entry <id>`) and fix the decoder or add the line |
+| `UNEXPECTED-PASS` | a listed failure now passes | remove its line in the same change |
+| `NEW-UNREAD` | a variant was never read and the list does not name it `unread` | your SDK skipped a type; generate it, or list the variant as `unread` |
+| `NOT-RUN` | a listed item the run does not have | a misspelt or stale line: remove it |
+| a sha256 mismatch | the downloaded archive is not the pinned one | check the pin against the release's `SHA256SUMS` |
+
+## Limits
+
+- The loaders and the npm runner are not on a package registry. Pin them by commit or vendor them (one file each;
+  Go: two).
+- The recipes judge conformance level L0 (bytes). The levels above it need `xdrcheck conform` and a driver, which
+  exist for Go, JavaScript, Rust and Python only.
+- Entries of the `stress` tier are left out of the recipes: they are built to exhaust a reader without limits.
+
+## Next
+
+| To | Read |
+|---|---|
+| Read one entry field by field | [How to read a corpus entry](/start/read-an-entry) |
+| See how a cell is judged | [Conformance](/architecture/conformance) |
+| Set up the recipes, loaders and npm runner in full | [SDK CI](/guides/sdk-ci) |
+| Use the GitHub Action instead | [CI recipes: conform](/guides/ci#3-sdk-maintainers-conform) |
+| Prepare for the next protocol | [Protocol upgrade (SDK)](/guides/protocol-upgrade-sdk) |
+| Look up a CAP's shapes | [CAP coverage](/caps/overview) |
+| Write a driver | [Driver protocol and rules](/reference/driver-protocol) |
+| See where each pinned SDK release stands | [SDK conformance matrix](/results/sdk-matrix) |

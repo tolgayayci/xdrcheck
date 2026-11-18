@@ -1,0 +1,166 @@
+---
+title: "Add corpus entries for a CAP"
+description: "Register an entry ID, produce the bytes from a local stellar-core, a golden, network history or a recipe, write what a correct reader must derive, and prove it with verify."
+---
+
+For SDK maintainers, indexer authors and protocol engineers who need a shape the corpus lacks, such as the new
+arms of a CAP or a rare value seen on mainnet. After this page you can add a corpus entry: bytes stellar-core
+emitted, tagged with the CAP and protocol, with the values a correct reader must produce, checked against
+rs-stellar-xdr and stellar-core's goldens. Every SDK and indexer that runs the corpus is then tested against it.
+
+## Prerequisites
+
+- Linux on x86-64 with cgroup v2 and unprivileged user namespaces (for `OFFLINE=1`), Docker, and about 15 GB of
+  disk. See the [requirements](/quickstart#requirements).
+- The full fetch, which includes stellar-core, its goldens and every dependency:
+
+  ```sh
+  make fetch && make build
+  ```
+
+## Steps
+
+<Steps>
+  <Step title="Register the ID">
+
+    An entry ID is born in `corpus/plan.json` and nowhere else. Search the plan first: the pattern may already exist
+    under another name. If it is new, add a row with every key the plan schema (`corpus/schema/plan.schema.json`)
+    requires: kind, CAPs, minimum protocol, source, priority, what it serves. Run `make repo-checks`, and send the
+    row as its own change.
+
+    One entry is one pattern. The same pattern on another network or protocol is a variant of the same entry.
+
+  </Step>
+  <Step title="Produce the bytes">
+
+    Pick the source in this order, and never edit bytes:
+
+    <Tabs>
+      <Tab title="Local stellar-core">
+
+        Write a scenario under `corpus/scenarios/` (schema `corpus/schema/scenario.schema.json`) and run it on
+        both passphrases:
+
+        ```sh
+        xdrcheck-corpus gen corpus/scenarios/<your-scenario>.yaml           # testnet and pubnet passphrases by default
+        xdrcheck-corpus gen --check corpus/scenarios/<your-scenario>.yaml   # regenerate and compare
+        ```
+
+        The generator runs a standalone, offline stellar-core with manual close. Anyone can reproduce the bytes.
+        Scenario placeholders (`${acct.L}`, `${muxed(L, id)}`, `${signer.payload(L, hex)}`, …) and setup items are
+        listed in [Writing a scenario](#5-writing-a-scenario-local-core-entries).
+
+      </Tab>
+      <Tab title="stellar-core golden">
+
+        ```sh
+        xdrcheck-corpus fetch-goldens <tag>
+        xdrcheck-corpus import-golden <tag> "<test name>" --entry <entry id>
+        ```
+
+        Goldens are named by the human test name, since golden file names change with every protocol.
+
+      </Tab>
+      <Tab title="Network history">
+
+        ```sh
+        xdrcheck-corpus capture testnet <ledger> --tx <hash> --entry <entry id>
+        ```
+
+        Fetches one object from the public SEP-54 data lake verbatim and records its provenance.
+
+      </Tab>
+      <Tab title="Synthetic">
+
+        Only when stellar-core cannot or would not emit the bytes. Write a recipe (schema `recipe.schema.json`)
+        and build it with `xdrcheck-corpus synth <recipe>`. The entry is marked `synthetic: true` with the reason.
+
+      </Tab>
+    </Tabs>
+
+  </Step>
+  <Step title="Render the decoded value">
+
+    ```sh
+    xdrcheck-corpus render <entry id>
+    ```
+
+    Writes the SEP-51 decoded sidecar and fills the derived fields (`requires`, `derived.l1`).
+
+  </Step>
+  <Step title="Write expect">
+
+    State what a correct reader must derive, from two things only: the scenario's intent and the decoded bytes.
+    Never take an expected value from the output of an SDK or indexer under test.
+
+    | Block | Holds |
+    |---|---|
+    | `expect.ledger` | counts of transactions, operations, events and entry changes for the whole ledger |
+    | `expect.transactions` | every transaction with its hash and `successful` |
+    | `expect.values` | a few pinpoints into the decoded value, for the fields the pattern is about |
+    | `participants` | `must_include` base addresses; `must_not_include` the addresses a careless reader would add, each with `because` |
+    | `state_changes`, `movements` | one item per reader-visible change or value movement |
+
+    Set `validity` right after `synthetic`: `valid` for anything stellar-core wrote. See [Entries](/architecture/corpus#entries).
+
+  </Step>
+  <Step title="Compare with the reference extractor">
+
+    ```sh
+    xdrcheck-corpus extract <entry id>
+    ```
+
+    It derives participants, state changes and movements from ledger-entry changes and events only. Resolve every
+    disagreement by reading the bytes again, not by copying either side.
+
+  </Step>
+  <Step title="Index and verify">
+
+    ```sh
+    xdrcheck-corpus index
+    make repo-checks
+    make verify-corpus OFFLINE=1
+    make verify-coverage OFFLINE=1
+    ```
+
+    `verify-corpus` checks that the entry round-trips through rs-stellar-xdr, that its sidecar and pinpoints agree,
+    that the reference extractor agrees with `expect`, and that golden entries equal stellar-core's goldens.
+    `verify-coverage` checks that the coverage report lists the new entry under its CAP.
+
+  </Step>
+</Steps>
+
+## What success looks like
+
+Every command above exits 0, and the entry appears under its CAP in `corpus/COVERAGE.md`. Before you send the
+change, answer each question of the [checklist](#6-checklist-before-you-send-an-entry) for every entry.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="verify says a value cannot be derived">
+
+    A value you stated that the extractor cannot derive from the bytes fails `verify`. Correct it, or keep it with
+    `"unverified": "<reason>"` on the item.
+
+  </Accordion>
+  <Accordion title="gen --check reports different bytes">
+
+    Generation must be reproducible: the same ledger header and transaction hashes, and the same bytes after
+    stellar-core's golden normalisation. A scenario that depends on wall-clock time or unordered input breaks this.
+
+  </Accordion>
+  <Accordion title="A protocol is above what the build supports">
+
+    The oracle refuses a ledger above `max_protocol`. Shapes of the next protocol go into the `-next` channel; see
+    [Maintain the kit through a protocol upgrade](/guides/maintain-kit).
+
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+- [Authoring reference](#authoring-reference), below: the full workflow, scenario syntax and worked examples.
+- [Manifest and index format](/reference/manifest): every field.
+- [CAP coverage](/caps/overview): every coverage row and its entries.
+- [CLI reference](/reference/cli#xdrcheck-corpus): every `xdrcheck-corpus` command.

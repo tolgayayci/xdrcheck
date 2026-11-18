@@ -1,0 +1,16 @@
+Compute facts (JSONL) for ledgers; optionally run the conservation self-check
+
+Usage: xdrcheck-judge facts [OPTIONS] [FILES]...
+
+Arguments:
+  [FILES]...  Ledger files (zstd LedgerCloseMetaBatch or raw XDR), processed in the order given
+
+Options:
+      --root <ROOT>                  A lake-layout directory with `index.tsv` (seq, path, size)
+      --list <LIST>                  Ledger sequences to take from --root (first column of each line; `#`/non-numeric skipped)
+      --network <NETWORK>            [default: "Public Global Stellar Network ; September 2015"]
+      --sac-registry <SAC_REGISTRY>  Extra SAC candidates: one asset string (`native`, `CODE:ISSUER`) per line
+  -o, --out <OUT>                    Facts output (`-` = stdout). Omit to write none
+      --conserve <CONSERVE>          Write `residuals.jsonl` and `summary.json` of the conservation check here
+  -j, --jobs <JOBS>                  [default: 4]
+  -h, --help                         Print help

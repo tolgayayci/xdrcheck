@@ -1,0 +1,203 @@
+---
+title: "Quickstart"
+description: "Read the corpus offline from a fresh clone, then fetch once, build, and run the demo, the judge and find."
+---
+
+For an SDK maintainer or an indexer author trying the kit for the first time. After this page you have read a
+corpus entry from a fresh clone, watched the replay harness catch a planted indexer bug, and know where each tool
+lives.
+
+Part 1 needs a clone and Python 3. Part 2 fetches pinned dependencies once and builds the tools; after that every
+step runs offline.
+
+## Part 1: read the corpus (offline, no build)
+
+The corpus is plain files: `corpus/index.json` lists every entry, and each entry points at its XDR bytes and its
+expected decoded value. The Python loader in `packages/python` uses only the standard library (and the `zstd`
+command or the `zstandard` module for the decoded sidecars).
+
+<Steps>
+  <Step title="Open the corpus">
+
+    From the root of a clone:
+
+    ```sh
+    python3 - <<'EOF'
+    import sys; sys.path.insert(0, "packages/python")
+    import xdrcheck
+    corpus = xdrcheck.open("corpus")
+    print(corpus)
+    e = corpus.entry("cap-0040/signed-payload-signer-added")
+    print(e.id, e.caps, e.title)
+    v = e.variants[0]
+    print(v.network, v.protocol, v.ledger_seq, len(v.blob()), "bytes")
+    EOF
+    ```
+
+    ```text
+    Corpus('30.0.0-dev', 'corpus')
+    cap-0040/signed-payload-signer-added [40] SetOptions adds an ed25519 signed-payload signer to an account
+    testnet 28 4437357 58256 bytes
+    ```
+
+    `v.blob()` checks the bytes against the sha256 and length in the index; `v.expected_json()` returns the
+    SEP-51 JSON value a correct decoder must produce.
+
+  </Step>
+  <Step title="Find the entries of a CAP">
+
+    Each entry names its CAPs. [CAP coverage](/caps/overview) lists them all, with the pattern, protocol, origin and
+    source ledger of each. [How to read a corpus entry](/start/read-an-entry) walks one entry field by field.
+
+  </Step>
+</Steps>
+
+## Part 2: fetch once, build, run (Linux)
+
+You need [mise](https://mise.jdx.dev) and [rustup](https://rustup.rs).
+
+<Steps>
+  <Step title="Toolchains, the one networked step, and the build">
+
+    ```sh
+    mise install                      # the pinned Go, Node, Python and Java; rustup reads rust-toolchain.toml
+    make toolchain                    # check them against pins.toml
+    make fetch-replay && make build   # pinned, hash-checked dependencies; tools linked into ./bin
+    export PATH="$PWD/bin:$PATH"
+    ```
+
+    The first fetch and build take a few minutes. Every later step runs offline; add `OFFLINE=1` to a `make`
+    target to enforce it.
+
+  </Step>
+  <Step title="Run the demo">
+
+    ```sh
+    make demo
+    ```
+
+    It replays the fee-bump (CAP-15) and muxed-account (CAP-27) entries through a small indexer whose planted bug
+    skips failed transactions. Output of the replay step on this commit (one row per entry variant, then the
+    first failure in full; binary paths shortened):
+
+    ```text
+    cap-0015/fee-bump-inner-failed                             pubnet       single  dropped·silent             UNEXPECTED
+    cap-0027/muxed-source-id-zero                              pubnet       single  dropped·silent             UNEXPECTED
+    …
+    cap-0027/muxed-source-and-destination-max-ids              testnet@28   chain   pass                       as expected
+    cap-0027/account-merge-to-muxed-destination                testnet@28   chain   pass                       as expected
+    xdrcheck replay: 41 rows: dropped·silent 33, pass 8. Failing: 33. Not the expected result: 33. Harness faults: 0. Input: sep54-dir.
+
+    ### `cap-0015/fee-bump-inner-failed` (pubnet): dropped·silent
+
+    The indexer went past this ledger without an error but holds nothing for it, or for the transaction under test, or counted fewer items than the ledger has.
+
+    - CAPs: CAP-0015, CAP-0005
+    - Ledger: 34861066 (single unit)
+    - Expected `pass`, got `dropped·silent`: unexpected
+    - receipt: ledger 34861066: 232 transactions — missing: the reader counted fewer (transactions expected `232`, observed `74`)
+    …
+    - transaction 0 74b132b4… successful=false — missing: no transaction with this hash
+    …
+    - Reproduce:
+
+      go/bin/xdrcheck replay --adapter go/bin/demo --target-version demo --entries cap-0015/fee-bump-inner-failed --network pubnet --input sep54-dir
+    ```
+
+    `make demo` exits 0 when the replay finds the planted bug. The bug is the block marked `SEEDED BUG` in
+    `go/adapters/demo/main.go`; remove it and the same replay passes.
+
+  </Step>
+  <Step title="Compute the judge's facts for a corpus ledger">
+
+    The judge reads a ledger with rs-stellar-xdr and states, from the ledger's own entry changes, what each
+    transaction did. For the signed-payload entry above:
+
+    ```sh
+    target/release/xdrcheck-judge facts corpus/blobs/58/582e694b96bf69f894763909a1b058c1a2523d5634f2e0947393cee9765f4e0e.xdr \
+      --network 'Test SDF Network ; September 2015' -o - | head -3
+    ```
+
+    ```text
+    {"kind":"ledger","ledger":4437357,"hash":"0984e28878f8b074c3710f52630f5b6bc5a369bf61a15e7364b6123edf1881b6","protocol":28,"close_time":1788210372,"lcm_version":2,"tx_count":12,"failed_count":1,"upgrade_changes":0,"evicted":0}
+    {"kind":"sac","ledger":4437357,"contract":"CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC","asset":"native"}
+    {"kind":"tx","ledger":4437357,"tx_index":0,"tx_hash":"d9f78749cd01297cd5f22c7f2c798c9eec93d56f399e1c4cc2f8977ca52b9fed","success":true,"result_code":"TxSuccess","op_codes":["SetOptions:Success"],"op_types":["SetOptions"],"fee_charged":100,"meta_version":4}
+    ```
+
+    `make build` builds the judge and the tagger into `target/release/` with the rest of the Rust workspace, but
+    does not link them into `./bin`.
+
+  </Step>
+  <Step title="Show an entry">
+
+    ```sh
+    xdrcheck entry cap-0040/signed-payload-signer-added
+    ```
+
+    Prints the entry's CAPs, protocol, validity, why readers get it wrong, its variants with their blobs, and the
+    expected values every reader must agree with. `--decoded testnet` prints that variant's SEP-51 JSON;
+    `xdrcheck entry --cap 40` lists the entries of a CAP.
+
+  </Step>
+  <Step title="Find captured ledgers of a CAP">
+
+    ```sh
+    xdrcheck find --cap 40 --limit 5
+    ```
+
+    ```text
+    2 transactions matched (corpus); 2 shown, order first
+    ledger	tx	match	occurrences	source
+    4437357	0	testnet corpus cap-0040/signed-payload-signer-added		corpus
+    65437035	61	pubnet corpus cap-0021/extra-signers-two-signed-payload-keys		corpus
+    ```
+
+    Without a dataset, `find --cap` answers from the corpus alone. With the mainnet dataset installed
+    ([Mainnet scan](/architecture/mainnet-scan)), the same command and `--token`, `--class` and `--tag` answer from
+    every transaction of mainnet history.
+
+  </Step>
+</Steps>
+
+## Requirements
+
+| You want to | OS | Tools | Disk |
+|---|---|---|---|
+| Read the corpus (part 1) | any | Python 3 and `zstd`, or the loader for Go, Rust or npm | about 100 MB (the corpus) |
+| Run the demo, or replay your indexer | Linux | Go, Rust, Node, Python and Java through mise and rustup (`make toolchain` checks them); Docker only for the `sep54-s3` input | about 1.5 GB of dependencies (`make fetch-replay`) and 2 GB for `target/` |
+| Run the SDK recipes and the conformance runner | Linux | as for replay | about 4.4 GB (`make fetch-sdk`) and 2 GB for `target/` |
+| Lint a Go module | Linux or macOS | Go 1.26 or later | Go modules; about 2.6 GB with the golangci-lint plugin (`make fetch-lint`) |
+| Author entries, or run every check | Linux on x86-64 with cgroup v2 and unprivileged user namespaces (for `OFFLINE=1`) | all of the above and Docker | about 15 GB (`make fetch`), 0.7 GB of container images and 2 GB for `target/` |
+| Replay the service rigs | Linux | as for replay, Docker (each rig runs its pipeline's database in a container) | the pipeline sources from `make fetch` |
+| Answer `find` from all of mainnet | any | the dataset ([Mainnet scan](/architecture/mainnet-scan)) | several GB; see that page |
+
+Every version the kit builds against or tests is pinned in `pins.toml`.
+
+## If it does not work
+
+<AccordionGroup>
+  <Accordion title="make toolchain fails">
+
+    A tool is missing or at another version than `pins.toml`. Run `mise install` again from the repository root,
+    and check that `rustup` is on your `PATH`.
+
+  </Accordion>
+  <Accordion title="make demo says the replay did not report the planted bug">
+
+    The replay exited with something other than 1. Read `reports-demo/replay.log`. Exit code 2 means the harness
+    itself could not run, for example because a tool was not built: run `make build` again.
+
+  </Accordion>
+  <Accordion title="You are on macOS">
+
+    The replay harness, the rigs and the conformance runner are Linux-only. On macOS you can read the corpus,
+    lint Go code ([Lint Go code](/guides/lint-go)) and use the corpus in an SDK's CI ([SDK CI](/guides/sdk-ci)).
+
+  </Accordion>
+</AccordionGroup>
+
+## Next steps
+
+- SDK or XDR library: [For SDK maintainers](/start/for-sdk-maintainers).
+- Indexer: [For indexer authors and operators](/start/for-indexers).
+- Every command: [Command-line reference](/reference/cli).

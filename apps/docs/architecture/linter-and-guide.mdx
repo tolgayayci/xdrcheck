@@ -1,0 +1,90 @@
+---
+title: "Linter and hardening guide"
+sidebarTitle: "Linter and guide"
+description: "What xdrlint detects in Go ingestion code built on go-stellar-sdk, how its results on wallet-backend and stellar-etl are pinned, and how the indexer-hardening guide is kept equal to the corpus."
+---
+
+Replay finds what an indexer gets wrong on given bytes. The linter finds the code patterns that produce those
+errors before any ledger arrives, and the guide states the rules both are built on.
+
+## xdrlint
+
+`xdrlint` (`lint/`) is a set of analyzers on `golang.org/x/tools/go/analysis` v0.52.0 for Go code that reads ledgers
+with go-stellar-sdk's `xdr`, `ingest`, `processors/token_transfer` and `strkey` packages. It tracks values from those
+packages to sinks (SQL calls, participant sets, map keys, allocations) and reports where an assumption about the
+ledger is made without a check.
+
+| Family | Mistake | Rules |
+|---|---|---|
+| XDR1xx | trusting fields stellar-core never validated | XDR101 address built from a memo; XDR102 unnormalised address used as an identity key (a `KEY_TYPE_MUXED_ED25519` account not reduced to its base); XDR103 unvalidated bytes into text storage (memo text into SQL without a UTF-8 and NUL check); XDR105 `Must<Arm>()` on a multi-arm union without a discriminant check (opt-in) |
+| XDR2xx | walking self-referential structures without a bound | XDR201 recursion over a recursive XDR type (`ScVal`, `SorobanAuthorizedInvocation`, `ClaimPredicate`) with no depth bound; XDR202 unbounded worklist; XDR203 decoded integer as an allocation size; XDR204 persisted recursive value with no length check (opt-in); XDR205 decoder with limits disabled; XDR206 behaviour at a bound differs from the declared policy; XDR207 bound below what stellar-core admits |
+| XDR3xx | participants from the envelope instead of the meta | XDR301 participants from the authorization tree or invocation arguments; XDR302 envelope operation fields used without a success gate; XDR303 participant builder that never reads meta; XDR304 token-shaped contract event trusted without checking the emitting contract |
+| XDR4xx | assumptions about the ledger's form | XDR401 one `TransactionMeta` version assumed; XDR402 wide integer narrowed and stored; XDR403 error discarded on a stored value; XDR404 event topics trusted by position; XDR405 rows from diagnostic events or failed transactions; XDR406 closed switch over an XDR enum with no default (opt-in) |
+| XDR000 | suppression hygiene | a suppression without a reason, for an unknown rule, or suppressing nothing |
+
+Source: `lint/docs/README.md`. Each rule has a page with a reported and a compliant example taken from its fixtures:
+[Lint rules](/reference/lint-rules).
+
+**Running it.** Standalone (`xdrlint ./...`), as a `go vet -vettool`, or as a golangci-lint v2.15.0 module plugin.
+Output as text, `-json`, `-sarif FILE` (for code scanning), or `-report FILE` (`xcc.report/v1` rows). Exit 0 when
+nothing at or above `-fail-on` is left, 1 otherwise, 2 when no package imports go-stellar-sdk's `xdr` package (a run
+that analyses nothing is not reported as clean).
+
+**Accepting a report.** A report you checked is suppressed with a reason; XDR000 fails a suppression without one.
+`-expect FILE` compares the run with a frozen list (rule, file, function, suppressed, count) and fails on any
+difference in either direction.
+
+### How the linter is checked
+
+| Target | What it checks |
+|---|---|
+| `make lint-fixtures` | the rules on seeded-violation fixtures under `lint/testdata/` (`go test`); every expected diagnostic must fire, and compliant code must stay silent |
+| `make lint-wallet-backend` | wallet-backend at `f0c00cf5` with the `wallet-backend` profile: the run must equal `lint/expected/wallet-backend/f0c00cf5….expect.json`. Today that is 3 reports (XDR301 and XDR201 in `ContractDeployProcessor.ProcessOperation`, XDR402 in `EffectsProcessor.parseSigners`), each suppressed with a reason; the suppression ceiling is 3 |
+| `make lint-before-after` | 12 rows over 11 wallet-backend commits (`lint/expected/wallet-backend/plan.json`): for each fix wallet-backend made upstream, the rule reports the recorded count at the commit before the fix and the recorded count after it. Rules covered: XDR102, XDR201, XDR301, XDR302, XDR303 |
+| `make lint-stellar-etl` | stellar-etl at `7e3fc9af`, built with its own Go 1.27.3, against its expected list |
+| `make lint-selftest` | the pinned run can fail: an added report, a new report in a suppressed function, a widened or stale suppression each turn it red |
+
+The before/after table is the evidence that a rule detects a real defect class: the pattern is present at a commit
+wallet-backend later fixed, and absent after.
+
+**For your indexer.** Run `xdrlint ./...` in your module, fix or suppress with a reason, then freeze the result
+with `-expect` in CI. Guide: [xdrlint](/guides/lint-go).
+
+## The indexer-hardening guide
+
+`guide/indexer-hardening.mdx` is written for developers.stellar.org (proposed path
+`docs/data/indexers/build-your-own/indexer-hardening.mdx` in stellar-docs). It tells an indexer author what to trust
+in a ledger and what not to.
+
+| Section | What it says |
+|---|---|
+| Validated versus unvalidated fields | stellar-core's validation stages with source lines at v30.0.0, then one row per field: who controls it, what core checks, what a reader may and must not assume |
+| Caps | what stellar-core admits for recursive values, measured SDK defaults, and what to do at a bound (a declared trade-off, not one fixed rule) |
+| Participants from meta | deriving participants from `LedgerEntryChanges` and events; where envelope and meta disagree; failing closed at protocol boundaries |
+| Muxed and signed-payload handling | every SEP-23 address form, storage widths, muxed accounts and contracts (CAP-27, CAP-84), `SIGNER_KEY_TYPE_ED25519_SIGNED_PAYLOAD` (CAP-40), 64-bit IDs |
+| Checklist | one item per linter rule (`HC-101` …), generated from the rule registry |
+
+**Kept equal to the corpus.**
+
+1. The field table is generated from `corpus/fields.yaml` (53 fields: 35 validated, 14 partially validated, 4
+   passed through) joined with the manifest's field citations. Its "demonstrated by" column lists the corpus
+   entries that show each field, so the table cannot cite an entry that does not exist.
+2. Every normative sentence carries a claim tag (`{/* claim: C-6101 */}`) that resolves to a record in
+   `guide/claims.yaml` with its source: stellar-core code at a pinned commit, a CAP or SEP section, a corpus entry,
+   or an executed probe. A sentence with "must", "never", "should" or "do not" and no tag fails the check.
+3. `make verify-guide` regenerates the tables and fails on a difference, checks every claim and every cited entry,
+   then runs stellar-docs' own checks (`pnpm format:mdx`, `pnpm check`, `pnpm check:links`) in a clone at the pinned
+   commit `48259204`, offline.
+
+`guide/claims.yaml` holds 462 claims: 407 facts and 55 recommendations. The authors' verification of each claim is
+`guide/VERIFICATION.md` ([Verification](/hardening/verification)).
+
+## Limits
+
+- **The guide is not reviewed.** All 462 claims are `reviewer_status: unreviewed`. Publication waits for review by a
+  stellar-core or platform engineer, recorded per claim.
+- **The linter covers Go on go-stellar-sdk only.** Indexers in other languages use the guide's checklist.
+- **Static analysis has limits.** Each rule page lists what the rule cannot see (a check in another package, a
+  sanitizer the configuration does not name).
+
+Related: [xdrlint rules](/reference/lint-rules), [Lint Go code](/guides/lint-go), [Hardening guide](/hardening/overview).

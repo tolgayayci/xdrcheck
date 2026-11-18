@@ -1,0 +1,35 @@
+---
+title: "CI recipes"
+description: "Run XDRCheck in your CI: the GitHub Action for indexers, SDKs and Go linting, expected-failure lists, replaying pinned real ledgers through an SDK branch, and running offline with bounded memory."
+---
+
+For SDK maintainers and indexer teams adding XDRCheck to their own CI. After this page you can pick the job that
+fits your code, copy it, keep an expected-failure list, and run the same checks offline on a workstation.
+
+| You want | Use | Section |
+|---|---|---|
+| Replay the corpus through your indexer on every pull request | the GitHub Action, `mode: replay`, with your adapter and an expected-failure list | [Indexer authors: replay](#2-indexer-authors-replay) |
+| Put the corpus through your SDK on every pull request | a recipe in your SDK's own test suite, or the GitHub Action, `mode: conform` | [SDK CI](/guides/sdk-ci), [SDK maintainers: conform](#3-sdk-maintainers-conform) |
+| Lint Go ingestion code | the GitHub Action, `mode: lint` (SARIF for code scanning), or `xdrlint` in a plain step | [Go teams: lint](#5-go-teams-lint), [Lint Go code](/guides/lint-go) |
+| Replay a pinned set of real ledgers through an SDK branch | `xdrcheck data export` once, then `xdrcheck replay --target` against the pinned dataset | [Replay real ledgers in CI](#replay-real-ledgers-in-ci) |
+| Test the next protocol's shapes | the `-next` corpus channel | [Protocol upgrade (SDK)](/guides/protocol-upgrade-sdk) |
+| Run the checks with no network and bounded memory | `scripts/offline-run.sh`, `scripts/limit-run.sh` | [Offline and memory](#offline-and-memory) |
+
+Every Action mode downloads the prebuilt tools and corpus of one pinned release, checks each file against the
+release's `SHA256SUMS` (and that file against your pin) before running, and writes a job summary with each failure,
+what the ledger holds, what your reader did and the command that reproduces it.
+
+## Expected-failure lists
+
+A list names the entries your reader is known to get wrong, one per line. A run passes only when its failures are
+exactly the list: a new failure fails it, and so does a listed failure that now passes (remove its line in the same
+change as the fix). The format for replay is in [section 4](#4-the-expected-failure-list-for-replay); for SDKs in
+[SDK CI, section 7](/guides/sdk-ci#7-an-expected-failure-list-and-the-all-read-check).
+
+## Before you start
+
+- No corpus release is published yet. Until one is, `uses: OWNER/REPO@v30.0.0` and the pin helper have nothing to
+  download: build from a checkout and use `release-base` with a local `dist/` (`make release`, `make dist-bin`).
+- `replay` and `conform` need a Linux runner.
+- The kit's own workflows are described on [Architecture: CI](/architecture/ci); measured run times are on
+  [Timings](/reference/ci-timings).
