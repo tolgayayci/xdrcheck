@@ -1,0 +1,31 @@
+# ContractDataEntry.durability = 2 (enum ContractDataDurability declares 0..1; a struct field, not a discriminant)
+$ ../local-core/root/usr/bin/stellar-core print-xdr --filetype ledgerentry in/enum-undeclared-durability.bin
+input hex (64 B): 00000007000000060000000000000001222222222222222222222222222222222222222222222222222222222222222200000001000000020000000100000000
+--- stdout ---
+{
+    "LedgerEntry": {
+        "lastModifiedLedgerSeq": 7,
+        "data": {
+            "type": "CONTRACT_DATA",
+            "contractData": {
+                "ext": {
+                    "v": 0
+                },
+                "contract": "CARCEIRCEIRCEIRCEIRCEIRCEIRCEIRCEIRCEIRCEIRCEIRCEIRCEVQO",
+                "key": {
+                    "type": "SCV_VOID"
+                },
+                "durability": "2",
+                "val": {
+                    "type": "SCV_VOID"
+                }
+            }
+        },
+        "ext": {
+            "v": 0
+        }
+    }
+}
+--- stderr ---
+Warning: running non-release version stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1) of stellar-core
+--- exit code: 0

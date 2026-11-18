@@ -1,0 +1,13 @@
+# SCV_STRING bytes ff fe 00 41 (invalid UTF-8, NUL)
+$ ../local-core/root/usr/bin/stellar-core print-xdr --filetype scval in/string-non-utf8.bin
+input hex (12 B): 0000000e00000004fffe0041
+--- stdout ---
+{
+    "SCVal": {
+        "type": "SCV_STRING",
+        "str": "\xff\xfe\u0000A"
+    }
+}
+--- stderr ---
+Warning: running non-release version stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1) of stellar-core
+--- exit code: 0

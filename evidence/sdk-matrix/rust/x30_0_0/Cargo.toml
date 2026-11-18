@@ -1,0 +1,23 @@
+[package]
+name = "probe_x30_0_0"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "probe"
+path = "../common/main.rs"
+
+[dependencies]
+stellar-xdr = { version = "=30.0.0", default-features = false, features = ["std", "base64", "hex"] }
+stellar-strkey = "=1.0.0"
+sha2 = "0.10"
+serde_json = "1"
+hex = "0.4"
+
+[features]
+p30 = []
+default = ["p30"]
+
+[profile.release]
+debug = false

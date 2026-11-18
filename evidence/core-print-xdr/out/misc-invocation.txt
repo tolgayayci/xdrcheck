@@ -1,0 +1,44 @@
+$ stellar-core print-xdr --filetype scval in/does-not-exist.bin
+Warning: running non-release version stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1) of stellar-core
+Could not decode with type 'scval' : in/does-not-exist.bin: No such file or directory
+exit code: 0
+$ stellar-core print-xdr --filetype bogus in/bool-1.bin
+Warning: running non-release version stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1) of stellar-core
+Could not decode with type 'bogus' : unknown filetype bogus
+exit code: 0
+$ printf "AAAAAAAAAAI= AAAAAQ==
+" | stellar-core print-xdr --filetype scval --base64 --compact stdin
+Warning: running non-release version stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1) of stellar-core
+{
+"SCVal": {
+"type": "SCV_BOOL",
+"b": "TRUE"
+}
+}
+{
+"SCVal": {
+"type": "SCV_VOID"
+}
+}
+exit code: 0
+$ stellar-core print-xdr (no file)
+Warning: running non-release version stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1) of stellar-core
+FILE-NAME argument is required
+
+pretty-print one XDR envelope, then quit
+
+usage:
+  stellar-core print-xdr <FILE-NAME> options
+
+where options are:
+  -?, -h, --help            display usage information
+  --filetype <FILE-TYPE>    [auto|asset|ledgerentry|ledgerheader|meta|result
+                            |resultpair|tx|txfee]
+  --base64                  batch process base64 encoded input
+  --compact                 no indent
+  --raw                     raw mode, do not normalize some objects
+exit code: 1
+$ printf "!!notbase64" | stellar-core print-xdr --filetype scval --base64 stdin
+Warning: running non-release version stellar-core 30.0.0 (0e49751aa9ddf892302cca02cea7f3f5d97df9f1) of stellar-core
+Could not decode with type 'scval' : xdr_generic_get: message size not multiple of 4
+exit code: 0
