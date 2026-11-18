@@ -1,0 +1,108 @@
+{
+  "generated_by": "make results-acceptance (after make verify-acceptance)",
+  "rows": [
+    {
+      "area": "Corpus and generator",
+      "check": "entries round-trip through rs-stellar-xdr",
+      "id": "roundtrip",
+      "make": "make verify-corpus",
+      "reason": "round-trip and reject checks: all 738 rows passed",
+      "status": "met"
+    },
+    {
+      "area": "Corpus and generator",
+      "check": "entries agree with stellar-core's `--check-lcm` goldens",
+      "id": "golden-agreement",
+      "make": "make verify-corpus",
+      "reason": "golden checks (AG-1, AG-3, AG-4): all 238 rows passed; corpus/mirrors.json: 20 of 138 local-core entries match a golden transaction (mapped); 118 unmapped (96 \"no golden covers this shape\", 15 \"no golden transaction of this shape; every operation has a golden operation of the same shape\", 7 \"no transaction: a ledger-level pattern\")",
+      "status": "met"
+    },
+    {
+      "area": "Replay harness and reference adapter",
+      "check": "the reference adapter reproduces the known wallet-backend defects on pre-fix commits and passes on the fixed ones",
+      "id": "replay-regression/wallet-backend-729",
+      "make": "make verify-replay",
+      "reason": "the declared failure shows at 2a0a84ea (6 rows) and every result at 2c873353 is the declared one",
+      "status": "met"
+    },
+    {
+      "area": "Replay harness and reference adapter",
+      "check": "the reference adapter reproduces the known wallet-backend defects on pre-fix commits and passes on the fixed ones",
+      "id": "replay-regression/wallet-backend-731",
+      "make": "make verify-replay",
+      "reason": "the declared failure shows at 764a4f5b (4 rows) and every result at c152783c is the declared one",
+      "status": "met"
+    },
+    {
+      "area": "Replay harness and reference adapter",
+      "check": "the reference adapter reproduces the known wallet-backend defects on pre-fix commits and passes on the fixed ones",
+      "id": "replay-regression/wallet-backend-716",
+      "make": "make verify-replay",
+      "reason": "the declared failure shows at 79ea2acd (10 rows) and every result at bb0b162b is the declared one",
+      "status": "met"
+    },
+    {
+      "area": "Linter",
+      "check": "flags seeded violations",
+      "id": "lint-fixtures",
+      "make": "make lint-fixtures",
+      "reason": "the linter's tests, seeded-violation fixtures included: all 87 passed",
+      "status": "met"
+    },
+    {
+      "area": "Linter",
+      "check": "runs clean on current wallet-backend",
+      "id": "lint-current",
+      "make": "make lint-wallet-backend",
+      "reason": "wallet-backend f0c00cf5: all 3 reports are in the frozen expected list and suppressed with a reason and a finding; clean: xdrlint exits 0 with the shipped profile after the suppressions",
+      "status": "met"
+    },
+    {
+      "area": "Guide",
+      "check": "the field-by-field table agrees with the manifest",
+      "id": "guide-table",
+      "make": "make verify-guide",
+      "reason": "the generated field table agrees with the manifest: all 142 rows passed",
+      "status": "met"
+    },
+    {
+      "area": "Guide",
+      "check": "publication gated on review by a core or platform engineer",
+      "id": "guide-review",
+      "make": "make acceptance-report",
+      "reason": "0 of 462 claims reviewed (462 unreviewed, 0 disputed); publication waits on the review by a core or platform engineer, outside the build",
+      "status": "not met"
+    },
+    {
+      "area": "Conformance runner",
+      "check": "reproduces the known js-stellar-sdk defects on pre-fix tags",
+      "id": "sdk-regression",
+      "make": "make verify-conformance",
+      "reason": "all 24 assertion rows of `xdrcheck conform sdk-regression` hold on js@17.2.0, js@17.2.1, js@17.3.0",
+      "status": "met"
+    },
+    {
+      "area": "Findings",
+      "check": "every failure maps to a finding record",
+      "id": "findings-linked",
+      "make": "make verify-findings-acceptance",
+      "reason": "857 failure rows, every one linked; all 92 records filed, duplicate-of or not-a-defect; exempt from the orphan check, observed by source reading only on a target with no driver column: F-0032",
+      "status": "met"
+    }
+  ],
+  "schema": "xdrcheck.results.acceptance/v1",
+  "statuses": [
+    "met",
+    "not met",
+    "missing",
+    "not recorded",
+    "proven in full CI"
+  ],
+  "totals": {
+    "met": 10,
+    "missing": 0,
+    "not met": 1,
+    "not recorded": 0,
+    "proven in full CI": 0
+  }
+}

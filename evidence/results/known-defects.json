@@ -1,0 +1,273 @@
+{
+  "defects": [
+    {
+      "coverage": "agreement",
+      "entries": [
+        "*-golden.*",
+        "corpus/manifest/",
+        "corpus/mirrors.json"
+      ],
+      "evidence": [],
+      "how": "not a reproduction: imported goldens equal their golden frame byte for byte, and each local-core entry that matches a golden transaction of the same shape is compared with it (only these count as mapped); for an entry that matches none, the operation tier, reported separately and not agreement of the entry, states whether every operation has a golden operation of the same shape",
+      "id": "kd-01",
+      "make_targets": [
+        "make verify-corpus"
+      ],
+      "project": "stellar-core",
+      "topic": "`--check-lcm` goldens"
+    },
+    {
+      "coverage": "reproduced",
+      "entries": [
+        "cap-0073/sac-trust-creates-trustline"
+      ],
+      "evidence": [
+        "evidence/wallet-backend-731/README.md"
+      ],
+      "how": "pre-fix and fixed commits",
+      "id": "kd-02",
+      "make_targets": [
+        "make verify-replay"
+      ],
+      "project": "wallet-backend",
+      "topic": "CAP-73 SAC trustline"
+    },
+    {
+      "coverage": "reproduced",
+      "entries": [
+        "cap-0040/signed-payload-signer-added"
+      ],
+      "evidence": [
+        "evidence/wallet-backend-replay/README.md"
+      ],
+      "how": "pre-fix and fixed commits",
+      "id": "kd-03",
+      "make_targets": [
+        "make verify-replay"
+      ],
+      "project": "wallet-backend",
+      "topic": "CAP-40 signed-payload signer"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "cap-0085/bucket-entry-with-executable-tag",
+        "cap-0085/contract-data-keyed-by-executable-tag"
+      ],
+      "evidence": [],
+      "how": "the bucket entry and the contract-data key it failed on; no henyey reader runs here",
+      "id": "kd-04",
+      "make_targets": [],
+      "project": "henyey",
+      "topic": "bucket-entry parse failure"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "xdr-strict/length-prefix-exceeds-input.*"
+      ],
+      "evidence": [],
+      "how": "length prefixes larger than the input",
+      "id": "kd-05",
+      "make_targets": [],
+      "project": "rs-stellar-xdr",
+      "topic": "VecM capacity on decode"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "cap-0038/claim-atoms-pool-and-order-book-mixed",
+        "cap-0046/failed-soroban-tx-with-sac-transfers-in-diagnostics",
+        "classic/amount-above-2-pow-53-stroops"
+      ],
+      "evidence": [],
+      "how": "entries for members of the sweep",
+      "id": "kd-06",
+      "make_targets": [],
+      "project": "stellar-etl",
+      "topic": "data-quality sweep"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "cap-0083/stellar-value-empty-tx-set",
+        "corpus/manifest/cap-0085/"
+      ],
+      "evidence": [],
+      "how": "for the epic's XDR themes: CAP-83's `STELLAR_VALUE_EMPTY_TX_SET` and CAP-85's `CONTRACT_EXECUTABLE_EXTERNAL_REF` and `SCV_EXECUTABLE_TAG`; CAP-86 changed no XDR. The ledger entries among them replay through the stellar-etl adapter (its \"Build and run\" command, with `--entries`)",
+      "id": "kd-07",
+      "make_targets": [],
+      "project": "stellar-etl",
+      "topic": "Protocol 28 epic"
+    },
+    {
+      "coverage": "reproduced",
+      "entries": [
+        "cap-0040/signed-payload-signers-1-byte-and-64-byte",
+        "strkey/truncated-muxed-address-56-chars"
+      ],
+      "evidence": [
+        "evidence/wallet-backend-replay/README.md"
+      ],
+      "how": "pre-fix and fixed commits",
+      "id": "kd-08",
+      "make_targets": [
+        "make verify-replay"
+      ],
+      "project": "wallet-backend",
+      "topic": "AddressBytea truncation"
+    },
+    {
+      "coverage": "run",
+      "entries": [
+        "cap-0067/sac-mint-three-topics"
+      ],
+      "evidence": [
+        "evidence/stellar-etl/README.md"
+      ],
+      "how": "stellar-etl through the adapter at v2.8.34 and the pinned v2.8.35, entries declare the result",
+      "id": "kd-09",
+      "make_targets": [
+        "make replay-etl-known"
+      ],
+      "project": "stellar-etl",
+      "topic": "P23+ event and effect gaps"
+    },
+    {
+      "coverage": "run",
+      "entries": [],
+      "evidence": [
+        "findings/REPORT-pipelines.md"
+      ],
+      "how": "the commits before and after the fixes, through the replay harness and the linter",
+      "id": "kd-10",
+      "make_targets": [
+        "make lint-before-after"
+      ],
+      "project": "wallet-backend",
+      "topic": "four indexer fixes"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "cap-0067/transfer-event-with-non-address-to-topic"
+      ],
+      "evidence": [],
+      "how": "a `transfer` event whose `to` topic is a symbol; no soroban-sdk column runs it",
+      "id": "kd-11",
+      "make_targets": [],
+      "project": "rs-soroban-sdk",
+      "topic": "MuxedAddress from a non-address ScVal"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "xdr-json/vector-longer-than-declared-max"
+      ],
+      "evidence": [],
+      "how": null,
+      "id": "kd-12",
+      "make_targets": [],
+      "project": "rs-stellar-xdr",
+      "topic": "VecM max on serde"
+    },
+    {
+      "coverage": "reproduced",
+      "entries": [
+        "cap-0038/pool-issuers-order-by-bytes-not-strkey"
+      ],
+      "evidence": [
+        "evidence/js-1766/README.md"
+      ],
+      "how": "pre-fix and fixed tags",
+      "id": "kd-13",
+      "make_targets": [
+        "make verify-conformance"
+      ],
+      "project": "js-stellar-sdk",
+      "topic": "issuer and map-key order"
+    },
+    {
+      "coverage": "checked",
+      "entries": [
+        "cap-0088/signed-ms-local-twins"
+      ],
+      "evidence": [],
+      "how": "at the pinned 30.0.0, where the gates are gone: the structural walk reads the ledger against that crate's own `LedgerCloseMeta` JSON Schema and fails on an arm the schema lacks (the issue was closed as not planned)",
+      "id": "kd-14",
+      "make_targets": [
+        "make verify-corpus"
+      ],
+      "project": "rs-stellar-xdr",
+      "topic": "schemas omit feature-gated types"
+    },
+    {
+      "coverage": "reproduced",
+      "entries": [
+        "cap-0046/scval-map-keys-collide-u32-symbol"
+      ],
+      "evidence": [
+        "evidence/js-1789/README.md"
+      ],
+      "how": "pre-fix and fixed tags",
+      "id": "kd-15",
+      "make_targets": [
+        "make verify-conformance"
+      ],
+      "project": "js-stellar-sdk",
+      "topic": "colliding map keys"
+    },
+    {
+      "coverage": "reproduced",
+      "entries": [
+        "cap-0027/api-muxed-account-id-encoding.*",
+        "classic/api-offer-id-encoding.*"
+      ],
+      "evidence": [
+        "evidence/js-1785/README.md"
+      ],
+      "how": "pre-fix and fixed tags",
+      "id": "kd-16",
+      "make_targets": [
+        "make verify-conformance"
+      ],
+      "project": "js-stellar-sdk",
+      "topic": "muxed and offer IDs"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "corpus/manifest/xdr-strict/"
+      ],
+      "evidence": [],
+      "how": "of the same class: float union discriminants, a bool of 2, trailing bytes, undeclared discriminants",
+      "id": "kd-17",
+      "make_targets": [],
+      "project": "js-xdr",
+      "topic": "XDR validation pass"
+    },
+    {
+      "coverage": "input",
+      "entries": [
+        "cap-0067/to-muxed-id-text-non-utf8-memo",
+        "classic/api-memo-text-non-utf8-roundtrip"
+      ],
+      "evidence": [],
+      "how": null,
+      "id": "kd-18",
+      "make_targets": [],
+      "project": "js-stellar-sdk",
+      "topic": "non-UTF-8 string arms"
+    }
+  ],
+  "generated_by": "make results-known-defects",
+  "readme_anchor": "known-upstream-defects",
+  "schema": "xdrcheck.results.known-defects/v1",
+  "totals": {
+    "agreement": 1,
+    "checked": 1,
+    "input": 8,
+    "reproduced": 6,
+    "run": 2
+  }
+}
