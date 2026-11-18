@@ -1,0 +1,119 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0027",
+  "title": "Liquidity pool asset order compared as strkey text: valid pairs refused and reversed pairs accepted",
+  "defect_group": "DG-pool-asset-order",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "17.0.0 (executed; earlier versions by source reading)",
+    "versions_tested": [
+      "python@17.0.0"
+    ],
+    "fixed_in": "17.0.1"
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "medium",
+  "severity_basis": "A valid network transaction is refused and the reversed pair yields the ID of a pool stellar-core cannot create. Fixed in 17.0.1.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 17.0.0: LiquidityPoolAsset refuses the pair with 'Assets are not in lexicographic order'; 17.0.1 returns the ID."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 17.0.0: returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306; 17.0.1 refuses the pair."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 17.0.0: LiquidityPoolAsset refuses the pair with 'Assets are not in lexicographic order'; 17.0.1 returns the ID."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 17.0.0: returns c1324f878b3d11af9f923abb7d692fc74e0a7bcfd9a4edefd564efe5fdae9fdb; 17.0.1 refuses the pair."
+    },
+    {
+      "id": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "scope": "L1",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Earlier versions were not executed; the comparison code predates 17.0.0. Asserted only after one execution.",
+      "variant": "testnet"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L1 and L4, on python@17.0.0.",
+    "post_fix": "python@17.0.1 conforms on the same entries.",
+    "report_rows": [
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order:-:python@17.0.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order:-:python@17.0.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.network-order:-:python@17.0.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.reversed-order:-:python@17.0.0:L4",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey:testnet:python@17.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:pubnet@28:python@17.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:pubnet@30:python@17.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:testnet@28:python@17.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:testnet@30:python@17.0.0:L1"
+    ],
+    "expected_basis": "stellar-core orders the assets of a constant-product pool by XDR bytes (CAP-38)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 5 of 5 listed report rows failed again as recorded, all offline. Review: findings/review/F-0027.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/StellarCN/py-stellar-base/issues/1246"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/StellarCN/py-stellar-base/issues/1246"
+  },
+  "upstream": {
+    "url": "https://github.com/StellarCN/py-stellar-base/issues/1246",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/StellarCN/py-stellar-base/issues/1246 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Listed the rows of the local-twin ledger entry cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins, which the manifest now resolves to this record."
+    }
+  ],
+  "siblings": [
+    "F-0023",
+    "F-0028"
+  ]
+}

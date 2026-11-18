@@ -1,0 +1,46 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0026",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/go-xdr",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "go/bin/xdrcheck conform build --set all",
+        "observed": "every driver builds offline from the caches make fetch filled",
+        "ok": true
+      },
+      {
+        "command": "scripts/offline-run.sh go/bin/xdrcheck conform run --set public --entries <the record's entry IDs> --report reports/conformance-review",
+        "observed": "every listed row fails again with check \"known\" and resolves to this record",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 2,
+      "found_failing": 2,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/go-xdr/pull/34",
+      "matches_rows": true,
+      "state_seen": "merged 2026-08-06",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [
+    "Reproduced under the runner's default memory cap (1 GiB per driver process) as crash · process_died on go@v0.7.1."
+  ],
+  "verdict": "accepted",
+  "failing_step": null
+}

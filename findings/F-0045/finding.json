@@ -1,0 +1,82 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0045",
+  "title": "LedgerCloseMetaBatch.fromXDR refuses a valid ledger whose failed transaction carries an authorization tree at the network's maximum depth",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "17.4.0 and main 81e76be (executed; js-xdr 5.0.0 DEFAULT_MAX_DEPTH 1500; range not established)",
+    "versions_tested": [
+      "js@17.4.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "low",
+  "severity_basis": "stellar-core 30.0.0 admits an authorization tree (subInvocations) 493 levels deep (494 is txMALFORMED), so such a failed transaction can land in a ledger. js-stellar-sdk decodes that LedgerCloseMeta (493 sits exactly at its 1500 depth budget), the TransactionEnvelope and the TransactionHistoryEntry, but LedgerCloseMetaBatch.fromXDR (the data-lake wrapper) adds levels and fails with 'max recursion depth 1500 exceeded'. No SDF service is known to be affected; the impact is on JavaScript readers of the data lake.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/auth-unmatched-entries-succeed",
+      "scope": "L0",
+      "expected": "a LedgerCloseMetaBatch around a ledger the network admitted decodes",
+      "observed": "Not reached by this entry's ledgers (their tree is shallower). On a local stellar-core 30.0.0 ledger with an authorization tree 493 levels deep, LedgerCloseMetaBatch.fromXDR throws 'max recursion depth 1500 exceeded'; the bare LedgerCloseMeta decodes."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Executed by hand outside the corpus: on a local offline stellar-core 30.0.0 an authorization tree of 493 levels is accepted (494 is txMALFORMED) and recorded as a failed transaction (ledger 13); that ledger, wrapped in a LedgerCloseMetaBatch, was decoded with js-stellar-sdk 17.4.0 and main 81e76be. No corpus entry holds such a ledger yet, so no report row exists.",
+    "expected_basis": "A reader of the data lake must decode every ledger the network admitted; the batch wrapper adds only a few XDR levels.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-13",
+    "method": "Re-run on js-stellar-sdk 17.4.0 and main 81e76be with the same local stellar-core 30.0.0 ledger before filing; the batch decode fails as recorded and the bare LedgerCloseMeta decodes.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-13",
+    "queries": [
+      "repo:stellar/js-stellar-sdk max recursion depth",
+      "repo:stellar/js-xdr DEFAULT_MAX_DEPTH"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/js-stellar-sdk (#1901): LedgerCloseMetaBatch.fromXDR refuses a valid ledger with a 493-level authorization tree."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1901",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Created from a depth check with a local stellar-core 30.0.0. js refusing 375 or more nested ScVal vectors is not a defect: the network maximum is 246 nested vectors and host-written values stop at 99."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/js-stellar-sdk/issues/1901 (17.4.0 and main 81e76be)."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Upstream state refreshed: the issue is open; a fix pull request (#1902, raising the decode and encode depth limit to 1550) is open and not merged."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/pull/1902"
+  ]
+}

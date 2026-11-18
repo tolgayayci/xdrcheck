@@ -1,0 +1,93 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0087",
+  "title": "export_token_transfer parses token amounts with ParseFloat into a float64 and scales them by 0.0000001, so the amount column is inexact",
+  "target": {
+    "project": "stellar/stellar-etl",
+    "ecosystem": "source",
+    "versions_affected": "7e3fc9af95359dad6ba939fa88791f49cdf531ae (v2.8.35; range not established)",
+    "versions_tested": [
+      "7e3fc9af95359dad6ba939fa88791f49cdf531ae"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "Lossy export of a derived column: TokenTransferOutput.Amount is a float64, so an amount above 2^53 raw units loses digits and the 1e-7 scaling is inexact even for small values; the exact value stays in amount_raw. No halt. The issue is already open upstream.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0027/muxed-source-id-above-2-pow-63",
+      "scope": "XDR402",
+      "expected": "token amounts exported at full width (a decimal string, NUMERIC or big integer), or with their precision stated",
+      "observed": "XDR402 (warning) five times in transformEvents, internal/transform/token_transfer.go:57, :62, :67, :72 and :77 (transfer, mint, burn, clawback, fee): amountFloat, _ = strconv.ParseFloat(amount, 64) followed by amountFloat = amountFloat * 0.0000001, stored in TokenTransferOutput.Amount (make lint-stellar-etl). The corpus entry is the one the linter maps XDR402 to."
+    },
+    {
+      "id": "classic/amount-above-2-pow-53-stroops",
+      "scope": "XDR402",
+      "expected": "9007199254740993 stroops exported as 900719925.4740993",
+      "observed": "The corpus entry holds a payment of 2^53 + 1 stroops, the smallest amount a float64 cannot hold; no run of it through export_token_transfer is recorded, so this record rests on the linter report."
+    }
+  ],
+  "location": {
+    "commit": "7e3fc9af95359dad6ba939fa88791f49cdf531ae",
+    "file": "internal/transform/token_transfer.go",
+    "lines": "57, 62, 67, 72, 77",
+    "function": "transformEvents"
+  },
+  "evidence": {
+    "pre_fix": "make lint-stellar-etl (xdrlint built with the Go toolchain stellar-etl requires, shipped default profile) at v2.8.35 (7e3fc9af): XDR402, severity warning, at the five ParseFloat calls in transformEvents, suppressed with this record as its finding.",
+    "transcripts": [
+      "reports/lint-stellar-etl/7e3fc9af95359dad6ba939fa88791f49cdf531ae.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/stellar-etl/v2@7e3fc9af:XDR402:internal/transform/token_transfer.go:transformEvents",
+      "lint:github.com/stellar/stellar-etl/v2@7e3fc9af:XDR402:internal/transform/token_transfer.go:transformEvents#2",
+      "lint:github.com/stellar/stellar-etl/v2@7e3fc9af:XDR402:internal/transform/token_transfer.go:transformEvents#3",
+      "lint:github.com/stellar/stellar-etl/v2@7e3fc9af:XDR402:internal/transform/token_transfer.go:transformEvents#4",
+      "lint:github.com/stellar/stellar-etl/v2@7e3fc9af:XDR402:internal/transform/token_transfer.go:transformEvents#5"
+    ],
+    "expected_basis": "Amounts are int64 in classic operations and i128 in contract events (CAP-46, CAP-67); a float64 holds every integer only up to 2^53, and 0.0000001 has no exact binary representation (lint/docs/XDR402.md).",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit maintainer (linter re-run and source reading at the pinned commit)",
+    "date": "2026-11-19",
+    "method": "make lint-stellar-etl OFFLINE=1 at the pinned commit: the five reports again at the recorded lines; transformEvents read again at 7e3fc9af.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "https://github.com/stellar/stellar-etl/issues/454"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/stellar/stellar-etl/issues/454"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-etl/issues/454",
+    "state": "open",
+    "checked_at": "2026-11-19",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The issue, opened by a stellar-etl maintainer, already records that amounts are stored as lossy float64 and that the token transfer amount's 1e-7 scaling is inexact; the linter reports point at the same five lines."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-17",
+      "state": "candidate",
+      "note": "From the stellar-etl linter run at the pinned commit (XDR402 at token_transfer.go:57, :62, :67, :72, :77); listed as pending finding review."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "duplicate-of",
+      "note": "Sites verified at 7e3fc9af; the open upstream item already records this defect. Suppressed at the pinned commit with this record as its finding; the five pending entries removed."
+    }
+  ]
+}

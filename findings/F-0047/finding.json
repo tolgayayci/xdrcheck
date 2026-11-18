@@ -1,0 +1,104 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0047",
+  "title": "scval.to_native merges ScMap keys that convert to the same native key and drops entries silently",
+  "defect_group": "DG-scval-map-key-collision",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "17.0.0 - 17.0.1 (executed: 17.0.0, 17.0.1; earlier versions not run)",
+    "versions_tested": [
+      "python@17.0.0",
+      "python@17.0.1"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "Silent loss of map entries in the native conversion (scval.to_native); the XDR itself decodes and re-encodes unchanged. The same class was fixed in js-stellar-sdk (issue #1789, F-0018).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/scval-map-keys-collide-three-types.bool-u32-i32",
+      "variant": "none",
+      "scope": "L3",
+      "expected": "every map entry survives the conversion, or the conversion fails",
+      "observed": "Executed on 17.0.0 and 17.0.1: scval.to_native returns a dict with 1 entry and no error for a map with the three distinct keys bool true, u32 1 and i32 1 (true == 1 in Python)."
+    },
+    {
+      "id": "cap-0046/scval-map-keys-collide-three-types.u32-string-symbol",
+      "variant": "none",
+      "scope": "L3",
+      "expected": "every map entry survives the conversion, or the conversion fails",
+      "observed": "Executed on 17.0.0 and 17.0.1: scval.to_native returns a dict with 2 entries and no error for a map with the three distinct keys u32 1, string \"1\" and symbol \"1\" (the string and the symbol convert to the same str)."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --columns 'python@*' --entries 'cap-0046/scval-map-keys-collide-three-types.*'), L3, on python@17.0.0 and python@17.0.1.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:cap-0046/scval-map-keys-collide-three-types.bool-u32-i32:none:python@17.0.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.bool-u32-i32:none:python@17.0.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.u32-string-symbol:none:python@17.0.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.u32-string-symbol:none:python@17.0.1:L3"
+    ],
+    "expected_basis": "SCMap is a vector of entries with distinct SCVal keys (https://github.com/stellar/stellar-xdr/blob/v30.0/Stellar-contract.x#L236; CAP-46): u32 1, i32 1 and bool true are different keys, so a conversion that maps them to one native key must keep every entry or fail.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone: 4 of 4 listed report rows failed again as recorded, offline. Failed again in the offline conformance runs of 2026-11-14.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-13",
+    "queries": [
+      "https://github.com/StellarCN/py-stellar-base/issues/1250"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/StellarCN/py-stellar-base/issues/1250"
+  },
+  "upstream": {
+    "url": "https://github.com/StellarCN/py-stellar-base/issues/1250",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Filed upstream by a third party on 2026-11-13 with its own reproduction and a fix pull request (#1252); no new evidence added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-14",
+      "state": "candidate",
+      "note": "Created by xcc findings new from the known divergences that reference https://github.com/StellarCN/py-stellar-base/issues/1250 and their failure rows."
+    },
+    {
+      "date": "2026-11-14",
+      "state": "duplicate-of",
+      "note": "The upstream issue already records this defect (filed by a third party on 2026-11-13; fix pull request #1252 open)."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "duplicate-of",
+      "note": "Upstream state refreshed: the issue was closed on 2026-11-16 by the merged fix pull request #1252; no py-stellar-base release after 17.0.1 includes it yet."
+    }
+  ],
+  "siblings": [
+    "F-0018"
+  ],
+  "related": [
+    "https://github.com/StellarCN/py-stellar-base/pull/1252",
+    "https://github.com/stellar/js-stellar-sdk/issues/1789"
+  ]
+}

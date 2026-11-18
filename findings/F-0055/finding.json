@@ -1,0 +1,74 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0055",
+  "title": "export_ledger_transaction drops PostTxApplyFeeChanges, so Soroban fee refunds (P23+) are missing from the row",
+  "target": {
+    "project": "stellar/stellar-etl",
+    "ecosystem": "source",
+    "versions_affected": "2b24ec89ddce7fc0beb7795de982c93e6895eaf3 (v2.8.34) and release-v20261117 03c64ea; since Protocol 23 ledgers",
+    "versions_tested": [
+      "2b24ec89ddce7fc0beb7795de982c93e6895eaf3"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "TransformLedgerTransaction marshals only Envelope, Result, UnsafeMeta and FeeChanges, so the post-apply fee refund of every refunded Soroban transaction is missing from the row; tx_result.feeCharged is still correct, but anything that rebuilds balances from the row's ledger entry changes is off by the refund (the issue states the impact as internal only).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    63
+  ],
+  "entries": [
+    {
+      "id": "cap-0063/post-tx-apply-fee-refund-golden",
+      "variant": "core-test",
+      "scope": "replay",
+      "expected": "the exported row carries the post-apply fee refund changes",
+      "observed": "Not checked by the kit's runs: no run compares export_ledger_transaction's ledger entry changes with the ledger. By hand at 2b24ec89 on pubnet ledger 59501299, transaction 506c9f02…: the row's balance changes add up to -133207 where the fee charged is 59924; the two postTxApplyFeeProcessing changes appear nowhere in the row."
+    }
+  ],
+  "location": {
+    "commit": "2b24ec89ddce7fc0beb7795de982c93e6895eaf3",
+    "file": "internal/transform/ledger_transaction.go",
+    "function": "TransformLedgerTransaction"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs; no run of the kit compares this behaviour, so no report row exists. The issue's Go test at stellar-etl 2b24ec89 (v2.8.34) and release-v20261117 03c64ea on pubnet ledger 59501299 (transaction 506c9f02…): balance delta from the LedgerCloseMeta -59924, from the exported row -133207.",
+    "expected_basis": "Since Protocol 23 the Soroban resource fee refund is applied in TransactionResultMetaV1.postTxApplyFeeProcessing (LedgerTransaction.PostTxApplyFeeChanges), outside tx_meta; export_transactions already appends these changes.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Re-run on 2026-11-18 at 2b24ec89 with the issue's test on a local copy of pubnet ledger 59501299: row delta -133207, ledger delta -59924, 2 post-apply changes missing.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/stellar-etl PostTxApplyFeeChanges",
+      "repo:stellar/stellar-etl export_ledger_transaction refund"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/stellar-etl/issues/511."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-etl/issues/511",
+    "filed_at": "2026-11-14",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/stellar-etl/issues/511; this record restates the public issue."
+    }
+  ]
+}

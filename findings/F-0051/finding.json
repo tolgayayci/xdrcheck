@@ -1,0 +1,93 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0051",
+  "title": "Spec.fromWasm uses the first contractspecv0 section and ignores the others",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.3.0 - 16.4.1, 17.2.0 - 17.2.1 (executed; earlier versions not run; the 16.x line has no fix)",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1",
+      "js@17.2.0",
+      "js@17.2.1"
+    ],
+    "fixed_in": "17.3.0"
+  },
+  "component": "sdk",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "Acceptance of invalid input: a Wasm with two contractspecv0 sections gives this SDK a different interface than a tool that reads the last section or both, so calls can be encoded for a spec other tools do not show. Fixed in 17.3.0 (pull request #1827); not on the 16.x line.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "contract-spec/two-spec-sections",
+      "variant": "none",
+      "scope": "spec",
+      "expected": "refuse a Wasm with more than one contractspecv0 section (SEP-48: the interface is stored in one section)",
+      "observed": "Executed on 16.3.0, 16.3.1, 16.4.1, 17.2.0 and 17.2.1: contract.Spec.fromWasm returns the first section's interface (function first) and ignores the second (function second), with no error. 17.3.0 and 17.4.0 refuse the Wasm."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --columns 'js@*' --entries 'contract-spec/two-spec-sections'), spec level, on js@16.3.0 - 16.4.1 and js@17.2.0 - 17.2.1.",
+    "post_fix": "js@17.3.0 and js@17.4.0 refuse the Wasm (spec level conforms, reason spec_sections).",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:contract-spec/two-spec-sections:none:js@16.3.0:spec",
+      "conform:contract-spec/two-spec-sections:none:js@16.3.1:spec",
+      "conform:contract-spec/two-spec-sections:none:js@16.4.1:spec",
+      "conform:contract-spec/two-spec-sections:none:js@17.2.0:spec",
+      "conform:contract-spec/two-spec-sections:none:js@17.2.1:spec"
+    ],
+    "expected_basis": "SEP-48 (https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0048.md#wasm-custom-section): the contract interface is stored in one contractspecv0 Wasm custom section.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "maintainer",
+    "date": "2026-11-14",
+    "method": "The kit's offline conformance runs of 2026-11-14 (make verify-conformance and the public column set) fail the 5 listed report rows as recorded, and the fixed versions 17.3.0 and 17.4.0 refuse the Wasm. The upstream issue carries its own reproduction and the merged fix.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "https://github.com/stellar/js-stellar-sdk/issues/1826"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/js-stellar-sdk/issues/1826"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1826",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream (pull request #1827, released in 17.3.0); the upstream item already carries the reproduction and the fix, so no new evidence is added. The 16.x maintenance line receives critical security fixes only (js-stellar-sdk SECURITY.md); no backport request is drafted unless a maintainer decides to ask for one."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-14",
+      "state": "candidate",
+      "note": "Created by xcc findings new from the known divergences that reference https://github.com/stellar/js-stellar-sdk/issues/1826 and their failure rows."
+    },
+    {
+      "date": "2026-11-14",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/pull/1827"
+  ]
+}

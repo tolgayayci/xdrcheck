@@ -1,0 +1,46 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0022",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/js-xdr",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "go/bin/xdrcheck conform build --set all",
+        "observed": "every driver builds offline from the caches make fetch filled",
+        "ok": true
+      },
+      {
+        "command": "scripts/offline-run.sh go/bin/xdrcheck conform run --set public --entries <the record's entry IDs> --report reports/conformance-review",
+        "observed": "every listed row fails again with check \"known\" and resolves to this record",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 6,
+      "found_failing": 6,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/js-xdr/pull/155",
+      "matches_rows": true,
+      "state_seen": "merged 2026-08-14 (default maxDepth 200 -> 1500)",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [
+    "8 further failure rows resolve to this record through the manifest but are not listed in its entries or report_rows: js@16.3.0, js@16.3.1 and js@16.4.1 at L0 on cap-0046/scval-nested-vec-99-in-event (reject depth -> reject_valid). The record should list them."
+  ],
+  "verdict": "accepted",
+  "failing_step": null
+}

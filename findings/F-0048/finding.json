@@ -1,0 +1,123 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0048",
+  "title": "Muxed-account and offer IDs outside their valid range are encoded instead of refused",
+  "defect_group": "DG-id-range-on-encode",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "17.0.0 - 17.0.1 (executed: 17.0.0, 17.0.1; earlier versions not run)",
+    "versions_tested": [
+      "python@17.0.0",
+      "python@17.0.1"
+    ]
+  },
+  "component": "sdk",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Builder input only: an out-of-range ID is wrapped modulo 2^64 into a different value (muxed ID 2^64 as 0, offer ID 2^64 as 0, offer ID 2^64-1 as -1), and a negative offer ID is encoded as is (-1 as ffffffffffffffff), which stellar-core rejects as malformed. No reader impact.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    27
+  ],
+  "entries": [
+    {
+      "id": "cap-0027/api-muxed-account-id-encoding.id-2-pow-64",
+      "scope": "L4",
+      "expected": "refuse an ID outside the field's XDR range (MuxedAccount.med25519.id: unsigned 64-bit)",
+      "observed": "Executed on 17.0.0 and 17.0.1: MuxedAccount accepts the ID 2^64 and encodes muxed ID 0, a different sub-account of the same account."
+    },
+    {
+      "id": "classic/api-offer-id-encoding.id-2-pow-64",
+      "scope": "L4",
+      "expected": "refuse an ID outside the field's XDR range (ManageSellOfferOp.offerID: signed 64-bit, non-negative)",
+      "observed": "Executed on 17.0.0 and 17.0.1: ManageSellOffer accepts the offer ID 2^64 and encodes offer ID 0, which creates a new offer."
+    },
+    {
+      "id": "classic/api-offer-id-encoding.id-2-pow-64-minus-1",
+      "scope": "L4",
+      "expected": "refuse an ID outside the field's XDR range (ManageSellOfferOp.offerID: signed 64-bit, non-negative)",
+      "observed": "Executed on 17.0.0 and 17.0.1: ManageSellOffer accepts the offer ID 2^64-1 and encodes offer ID -1."
+    },
+    {
+      "id": "classic/api-offer-id-encoding.id-negative",
+      "scope": "L4",
+      "expected": "refuse an ID outside the field's XDR range (ManageSellOfferOp.offerID: signed 64-bit, non-negative)",
+      "observed": "Executed on 17.0.0 and 17.0.1: ManageSellOffer accepts the offer ID -1 and encodes it as ffffffffffffffff, which stellar-core rejects as malformed (MANAGE_SELL_OFFER_MALFORMED). The default branch refuses it with a ValueError (offer ID outside 0 to 2^63-1); no release carries that yet."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --columns 'python@*' --entries 'cap-0027/api-muxed-account-id-encoding.*,classic/api-offer-id-encoding.*'), L4, on python@17.0.0 and python@17.0.1.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:cap-0027/api-muxed-account-id-encoding.id-2-pow-64:-:python@17.0.0:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-2-pow-64:-:python@17.0.1:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-64-minus-1:-:python@17.0.0:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-64-minus-1:-:python@17.0.1:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-64:-:python@17.0.0:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-64:-:python@17.0.1:L4",
+      "conform:classic/api-offer-id-encoding.id-negative:-:python@17.0.0:L4",
+      "conform:classic/api-offer-id-encoding.id-negative:-:python@17.0.1:L4"
+    ],
+    "expected_basis": "MuxedAccount.med25519.id is uint64 (https://github.com/stellar/stellar-xdr/blob/v30.0/Stellar-transaction.x#L28) and ManageSellOfferOp.offerID is int64 (https://github.com/stellar/stellar-xdr/blob/v30.0/Stellar-transaction.x#L164); a value outside those ranges has no encoding and should be refused, not wrapped.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone: the listed report rows failed again as recorded, offline. Failed again in the offline conformance runs of 2026-11-14.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-13",
+    "queries": [
+      "https://github.com/StellarCN/py-stellar-base/issues/1251"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/StellarCN/py-stellar-base/issues/1251"
+  },
+  "upstream": {
+    "url": "https://github.com/StellarCN/py-stellar-base/issues/1251",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Filed upstream by a third party on 2026-11-13 with its own reproduction and a fix pull request (#1253); no new evidence added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-14",
+      "state": "candidate",
+      "note": "Created by xcc findings new from the known divergences that reference https://github.com/StellarCN/py-stellar-base/issues/1251 and their failure rows."
+    },
+    {
+      "date": "2026-11-14",
+      "state": "duplicate-of",
+      "note": "The upstream issue already records this defect (filed by a third party on 2026-11-13; fix pull request #1253 open)."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "duplicate-of",
+      "note": "Upstream state refreshed: the issue was closed on 2026-11-14 by the merged fix pull request #1253; no py-stellar-base release after 17.0.1 includes it yet."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "duplicate-of",
+      "note": "Widened to the negative offer ID (classic/api-offer-id-encoding.id-negative), the same range check: 17.0.0 and 17.0.1 encode -1 as ffffffffffffffff (re-run on 17.0.1, the latest release, on 2026-11-19); the default branch at 8907e9c3 refuses it in raise_if_not_valid_offer_id, which no release carries yet."
+    }
+  ],
+  "siblings": [
+    "F-0017"
+  ],
+  "related": [
+    "https://github.com/StellarCN/py-stellar-base/pull/1253",
+    "https://github.com/stellar/js-stellar-sdk/issues/1785"
+  ]
+}

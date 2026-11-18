@@ -1,0 +1,75 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0073",
+  "title": "Entry changes made by a ledger upgrade (upgradesProcessing) are never indexed, so a base-reserve increase leaves stale num_subentries and liabilities",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "3e22515a44979fdc3a558fda3991ca2b48e38cef and 18db88f4ba481c49a782d157be42177700c4385e (range not established)",
+    "versions_tested": [
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+      "18db88f4ba481c49a782d157be42177700c4385e"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "ProcessLedger builds each ledger from its transactions only and never reads LedgerCloseMeta.UpgradesProcessing, so the account, trustline and offer changes stellar-core writes for a base-reserve upgrade are not indexed and the native_balances and trustline_balances rows keep pre-upgrade num_subentries, minimum_balance and liabilities until a later transaction touches them. No error or halt; latent, since current upgrades write only CONFIG_SETTING entries, which wallet-backend does not store.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: base-reserve upgrades and the entry changes stellar-core writes for them predate CAPs.",
+  "entries": [
+    {
+      "id": "none",
+      "scope": "replay",
+      "expected": "the account and trustline changes in upgradesProcessing are indexed like other ledger entry changes",
+      "observed": "No corpus entry holds a base-reserve increase. By hand on a local stellar-core 30.0.0 network (testnet passphrase) with a reserve upgrade from 0.5 to 5 XLM at ledger 21: the upgrade changes four accounts and a trustline and removes three offers, and wallet-backend indexes none of them (num_subentries 2 where the ledger has 1, buying_liabilities 50,000,000 where it has 0)."
+    }
+  ],
+  "location": {
+    "commit": "18db88f4ba481c49a782d157be42177700c4385e",
+    "file": "internal/indexer/indexer.go",
+    "lines": "934-945",
+    "function": "ProcessLedger"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's test (internal/indexer/upgrade_changes_test.go) at wallet-backend 18db88f4 on the embedded ledger 21 of a local stellar-core 30.0.0 network: the base-reserve upgrade changes four accounts and a trustline and removes three offers, and the buffer gets no account or trustline change for any of them. An ingest through ledger 27 at 3e22515a (internal/indexer is the same at 18db88f4) left the stale values the issue lists.",
+    "expected_basis": "LedgerCloseMeta.upgradesProcessing carries the entry changes stellar-core makes when it applies an upgrade; for a base-reserve increase it erases offers the accounts can no longer support and rewrites their numSubEntries, sponsorship counts and liabilities.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made at 18db88f4 before filing on 2026-11-19: no account or trustline change is buffered for the entries the upgrade changed.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/wallet-backend: every issue and pull request title, open and closed",
+      "stellar/wallet-backend: commits since 2026-11-01 on every branch touching the cited files"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/833."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/833",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/wallet-backend/issues/833; this record restates the public issue."
+    }
+  ]
+}

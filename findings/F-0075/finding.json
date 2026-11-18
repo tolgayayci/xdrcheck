@@ -1,0 +1,82 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0075",
+  "title": "txnbuild: NewFeeBumpTransaction refuses a parsed Soroban inner transaction unless the base fee also covers its resource fee",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.1 - v0.9.0 (executed on v0.7.1 and v0.9.0) and main 4cee0255 (lower bound not established)",
+    "versions_tested": [
+      "v0.7.1",
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "low",
+  "severity_basis": "transactionFromParsedXDR sets baseFee = Fee / operations, which for a Soroban transaction includes the resource fee, while NewTransaction keeps the inclusion fee; NewFeeBumpTransaction then refuses a base fee below that and adds the resource fee again, so a parsed Soroban inner transaction is refused at an ordinary base fee or fee-bumped at about three times the fee. A loud refusal or an over-bid; nothing is decoded or built wrongly.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    15,
+    46
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L1",
+      "expected": "a Soroban transaction parsed with TransactionFromXDR is fee-bumped by NewFeeBumpTransaction at the same base fee as the same transaction built with NewTransaction",
+      "observed": "No conformance fact of the kit fee-bumps a parsed transaction. By hand on v0.9.0 with a transaction mirroring pubnet fee bump 5a3f3adc… (ledger 64188934, inner fee 288590, all resource fee): the built inner transaction is fee-bumped at base fee 100 (fee 288790); the parsed one is refused at 100 and gives fee 865770 at base fee 288590."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "txnbuild/transaction.go",
+    "lines": "758-762, 992-1014",
+    "function": "transactionFromParsedXDR"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program on v0.9.0, main 4cee0255 and v0.7.1: parsed.BaseFee() = 288590 where built.BaseFee() = 0; NewFeeBumpTransaction at base fee 100 fails with 'base fee cannot be lower than provided inner transaction fee'. 721 real Soroban fee bumps from pubnet ledgers 54,979,950 to 65,505,982, each at the base fee it paid on chain, are all refused the same way.",
+    "expected_basis": "The inclusion fee of a Soroban transaction is its fee minus SorobanTransactionData.resourceFee (CAP-46); a parsed and a built copy of one transaction are the same transaction.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: the parsed inner transaction is refused at base fee 100.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01",
+      "repo:stellar/go-stellar-sdk NewFeeBumpTransaction",
+      "repo:stellar/go-stellar-sdk inner transaction fee",
+      "repo:stellar/go-stellar-sdk soroban fee bump resource fee txnbuild"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6051."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6051",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6051; this record restates the public issue."
+    }
+  ]
+}

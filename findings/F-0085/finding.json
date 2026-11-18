@@ -1,0 +1,82 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0085",
+  "title": "rpc.Server.getLedgerEntries drops the extXdr field, so the sponsor of an entry cannot be read",
+  "defect_group": "DG-ledger-entries-ext-dropped",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "17.4.0 and main 5243062f (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "js@17.4.0",
+      "5243062fdf7a874d33cbf3089e898eb0777337a8"
+    ]
+  },
+  "component": "sdk",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "parseRawLedgerEntries copies every field of a getLedgerEntries result except extXdr, and Api.RawLedgerEntryResult does not declare it, so getLedgerEntries, getLedgerEntry, getAccountEntry, getTrustline and getClaimableBalance give no way to see an entry's LedgerEntryExt and so its sponsoringId (CAP-33). No value is decoded wrongly (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    33
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L3",
+      "expected": "the parsed getLedgerEntries result carries the entry's LedgerEntryExt when the server sends extXdr",
+      "observed": "No corpus entry drives the RPC client. By hand on 17.4.0 with a stubbed response in the shape stellar-rpc builds for a sponsored account: the raw entry has key, xdr, extXdr and lastModifiedLedgerSeq; the parsed entry has lastModifiedLedgerSeq, key and val only."
+    }
+  ],
+  "location": {
+    "commit": "5243062fdf7a874d33cbf3089e898eb0777337a8",
+    "file": "src/rpc/parsers.ts",
+    "lines": "179-201",
+    "function": "parseRawLedgerEntries"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's script on 17.4.0 (main 5243062f has the same code), with the HTTP client stubbed: parsed entry keys are lastModifiedLedgerSeq, key and val; extXdr, which holds the sponsor GCATS5YO…ZI55U, is dropped.",
+    "expected_basis": "stellar-rpc's getLedgerEntries returns extXdr, the base64 LedgerEntryExt of the entry, since v23.0.0; LedgerEntryExt v1 carries sponsoringId (CAP-33).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on 17.4.0 before filing on 2026-11-19: the parsed entry has no extension.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/js-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/js-stellar-sdk: the active branches",
+      "repo:stellar/js-stellar-sdk extXdr"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/js-stellar-sdk/issues/1913."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1913",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/js-stellar-sdk/issues/1913; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0090",
+    "F-0091"
+  ]
+}

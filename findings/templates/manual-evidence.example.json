@@ -1,0 +1,55 @@
+{
+  "schema": "xcc.manual-evidence/v1",
+  "description": "Manual evidence for an SDK the kit has no conformance driver for (xdrcheck conform siblings --manual FILE). This worked example records a source reading of stellar-dotnet-sdk 17.0.0 for the liquidity-pool asset-order cells; nothing in it was executed. Each cell states the verdict the conformance runner would have given and what the source shows. The format is described in go/internal/conform/siblings/manual.go.",
+  "sdk": "dotnet",
+  "project": "Beans-BV/dotnet-stellar-sdk",
+  "package": "stellar-dotnet-sdk",
+  "ecosystem": "nuget",
+  "version": "17.0.0",
+  "versions_affected": "17.0.0 (source reading; earlier versions not read)",
+  "method": "source-reading",
+  "date": "2026-11-12",
+  "basis": "Read at commit 6eea5fcadff5bd64bd418f1995a1c6c1d11055d3 (release 17.0.0): StellarDotnetSdk/Assets/AssetTypeCreditAlphaNum4.cs lines 69-71 and AssetTypeCreditAlphaNum12.cs lines 65-67 order two credit assets with the same code by string.Compare(Issuer, other.Issuer, StringComparison.Ordinal), that is by strkey text; StellarDotnetSdk/LiquidityPool/LiquidityPoolConstantProductParameters.cs lines 29-31 throw ArgumentException when assetA.CompareTo(assetB) >= 0, and FromXdr (lines 97-102) calls that constructor.",
+  "upstream": [
+    "https://github.com/Beans-BV/dotnet-stellar-sdk/issues/257"
+  ],
+  "cells": [
+    {
+      "entry": "cap-0038/api-liquidity-pool-issuer-ordering.network-order",
+      "level": "L4",
+      "verdict": "reject_valid",
+      "observed": "The two issuers order differently as strkey text and as XDR bytes, so the constructor's text comparison finds the pair in XDR byte order out of order and throws 'Asset A must be < Asset B (Lexicographic Order).'"
+    },
+    {
+      "entry": "cap-0038/api-liquidity-pool-issuer-ordering.reversed-order",
+      "level": "L4",
+      "verdict": "accepts_invalid",
+      "observed": "The reversed pair is in strkey text order, so the constructor accepts it and the pool ID is derived from parameters stellar-core refuses."
+    },
+    {
+      "entry": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order",
+      "level": "L4",
+      "verdict": "reject_valid",
+      "observed": "Same comparison as the network-order member: the pair in XDR byte order is refused with 'Asset A must be < Asset B (Lexicographic Order).'"
+    },
+    {
+      "entry": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order",
+      "level": "L4",
+      "verdict": "accepts_invalid",
+      "observed": "Same comparison as the reversed-order member: the reversed pair is accepted."
+    },
+    {
+      "entry": "cap-0038/api-liquidity-pool-issuer-ordering.identical-assets",
+      "level": "L4",
+      "verdict": "conform",
+      "observed": "CompareTo returns 0 for an asset paired with itself and the constructor throws, as stellar-core requires a strict order."
+    },
+    {
+      "entry": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "variant": "testnet",
+      "level": "L1",
+      "verdict": "reject_valid",
+      "observed": "FromXdr calls the same constructor, so reading the pool-share ChangeTrust of this network transaction throws."
+    }
+  ]
+}

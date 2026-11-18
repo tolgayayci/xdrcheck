@@ -1,0 +1,136 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0024",
+  "title": "strkey.Decode accepts strkeys whose payload breaks the per-type length and padding rules",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.1 (executed; earlier versions not run)",
+    "versions_tested": [
+      "go@v0.7.1"
+    ],
+    "fixed_in": "v0.7.2"
+  },
+  "component": "sdk",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "Acceptance of invalid input (SEP-23 invalid vectors return a payload). Fixed in v0.7.2.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    27,
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-01",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns a 5-byte payload instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-04",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns a 33-byte payload instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-07",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns a 41-byte payload instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-11",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns the payload with its inconsistent length prefix instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-12",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns the payload with its inconsistent length prefix instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-13",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns the unpadded payload instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/synthetic-gap-vectors.signed-payload-empty",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns a signed payload declaring 0 inner bytes instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/synthetic-gap-vectors.signed-payload-nonzero-padding",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns the payload with its 0xff padding instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    },
+    {
+      "id": "strkey/truncated-muxed-address-56-chars",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed: v0.7.1 strkey.Decode returns a 32-byte payload under the M version byte instead of an error; v0.7.2 rejects it. Earlier versions were not run."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on go@v0.7.1.",
+    "post_fix": "go@v0.7.2 and later reject the same vectors.",
+    "transcripts": [
+      "evidence/sdk-matrix/"
+    ],
+    "report_rows": [
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-01:-:go@v0.7.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-04:-:go@v0.7.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-07:-:go@v0.7.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-11:-:go@v0.7.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-12:-:go@v0.7.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-13:-:go@v0.7.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-empty:-:go@v0.7.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-nonzero-padding:-:go@v0.7.1:L4",
+      "conform:strkey/truncated-muxed-address-56-chars:-:go@v0.7.1:L4"
+    ],
+    "expected_basis": "SEP-23 v1.4.0 lists these strkeys as invalid (stellar-protocol at f2d36490)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 9 of 9 listed report rows failed again as recorded, all offline. Review: findings/review/F-0024.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/go-stellar-sdk/pull/5977"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/go-stellar-sdk/pull/5977"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/pull/5977",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/go-stellar-sdk/pull/5977 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{{- /*
+New upstream issue for a sibling defect (xdrcheck conform siblings). Go text/template; the fields are DraftData in
+go/internal/conform/siblings/draft.go. The draft is a starting point: a reviewer completes every "To be written"
+part and the user approves the exact text before a person files it. Nothing in the kit files it.
+*/ -}}
+Title: {{.Title}}
+
+Affected: `{{.Package}}@{{join .Versions ", "}}`     Fixed in: {{.FixedIn}}
+
+## Summary
+
+{{.Summary}}
+
+## Reproduce
+
+{{range $i, $e := .Entries -}}
+- {{if eq $i 0}}Minimal entry{{else}}Entry{{end}}: `{{$e.ID}}`{{if $e.Variant}} (variant `{{$e.Variant}}`){{end}}, level {{$e.Level}}
+  - observed: {{$e.Observed}}
+  - expected: {{$e.Expected}}
+{{end}}
+{{.Method}}
+
+## Why this is expected
+
+{{.ExpectedBasis}}
+
+## Same defect elsewhere
+
+{{range .Elsewhere}}- {{.}}
+{{else}}None known.
+{{end}}
+## Suggested fix
+
+{{.SuggestedFix}}
+
+## Corpus
+
+{{range .Corpus}}    {{.}}
+{{end -}}

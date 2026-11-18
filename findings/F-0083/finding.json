@@ -1,0 +1,80 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0083",
+  "title": "buildFeeBumpTransaction throws \"Inner transaction must have time bounds\" for a v0 transaction without time bounds",
+  "defect_group": "DG-fee-bump-v0-inner",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "17.4.0 and main 5243062f (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "js@17.4.0",
+      "5243062fdf7a874d33cbf3089e898eb0777337a8"
+    ]
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "low",
+  "severity_basis": "TransactionBuilder.buildFeeBumpTransaction converts a v0 inner transaction to v1 and throws when it has no time bounds, although stellar-core converts such a transaction to PRECOND_NONE with the same hash, so a valid pre-signed v0 transaction without time bounds cannot be fee-bumped through the SDK. A loud refusal; nothing is built wrongly (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    15
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L1",
+      "expected": "buildFeeBumpTransaction accepts a v0 transaction without time bounds and wraps it with PRECOND_NONE, keeping its hash",
+      "observed": "No conformance fact of the kit fee-bumps a parsed transaction. By hand on 17.4.0 with the mainnet transaction eef91974… (ledger 18365879, a signed ENVELOPE_TYPE_TX_V0 with no time bounds): buildFeeBumpTransaction throws 'Inner transaction must have time bounds'; its v1 form with PRECOND_NONE has the same hash and can be fee-bumped."
+    }
+  ],
+  "location": {
+    "commit": "5243062fdf7a874d33cbf3089e898eb0777337a8",
+    "file": "src/base/transaction_builder.ts",
+    "lines": "1258-1273",
+    "function": "TransactionBuilder.buildFeeBumpTransaction"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's script on 17.4.0 (main 5243062f has the same code): buildFeeBumpTransaction throws 'Inner transaction must have time bounds' for mainnet transaction eef91974ddae9a5a8e0ff15e9a7044e845c38a2c7ccaa02cdda8d8c55b0d657e; the v1 form with PRECOND_NONE hashes to the same value and fee-bumps.",
+    "expected_basis": "Time bounds are optional in TransactionV0; stellar-core's convertForV13 (src/transactions/TransactionBridge.cpp) sets PRECOND_TIME only when timeBounds is present, and the v1 form has the same hash (CAP-15).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on 17.4.0 before filing on 2026-11-19: buildFeeBumpTransaction throws for eef91974….",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/js-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/js-stellar-sdk: the active branches"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/js-stellar-sdk/issues/1911."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1911",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/js-stellar-sdk/issues/1911; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0081"
+  ]
+}

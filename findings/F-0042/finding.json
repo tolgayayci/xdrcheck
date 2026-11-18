@@ -1,0 +1,98 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0042",
+  "title": "Contracts deployed by a factory contract get no ACCOUNT CREATE state change",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "e967ce8b7362b79c277e700e789181d76fbb5967, 3e22515a, 18db88f4 and f0c00cf5 (executed; range not established)",
+    "versions_tested": [
+      "e967ce8b7362b79c277e700e789181d76fbb5967",
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "ContractDeployProcessor (contract_deploy.go at 3e22515a) records nested deploys only when they appear in the authorization tree; a factory contract that deploys with its own address is authorised implicitly, so the deployed contract gets no deploy row, although wallet-backend's docs/architecture/state-changes.md promises one. Missing history, no wrong value.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0085/instance-with-external-ref-executable.testnet-4372196",
+      "variant": "testnet",
+      "scope": "replay",
+      "expected": "contract_deployed for CBZKN44R… deployed by the factory CATF2IK7… (transaction e20eff37…)",
+      "observed": "Executed at e967ce8b and 3e22515a through the replay harness, both inputs: dropped · partial, no deploy row for CBZKN44R… and no participants CATF2IK7…, CBZKN44R…."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "make replay-full (the whole corpus against wallet-backend at the pinned current commit e967ce8b, inputs sep54-s3 and rpc): dropped · partial on cap-0085/instance-with-external-ref-executable.testnet-4372196 (testnet ledger 4372196, transaction e20eff37b29f0d334eeae53920fd0a111369bf5eff3964b7c1657566e5590546). Same at 3e22515a.",
+    "transcripts": [
+      "reports/replay-full/wallet-backend-sep54-s3/report.json",
+      "reports/replay-full/wallet-backend-rpc/report.json"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0085/instance-with-external-ref-executable.testnet-4372196:testnet:single"
+    ],
+    "expected_basis": "The ledger meta shows the contract instance created by the factory's call; wallet-backend's own documentation (docs/architecture/state-changes.md) states a deploy row for every contract deployment.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-13",
+    "method": "Re-run at wallet-backend 3e22515a on both inputs in a separate run before filing; the deploy row is missing as recorded.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-13",
+    "queries": [
+      "repo:stellar/wallet-backend contract_deployed factory",
+      "repo:stellar/wallet-backend ContractDeployProcessor"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/wallet-backend (#806)."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/806",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Seen in the wallet-backend replay of the whole corpus; confirmed at 3e22515a."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/wallet-backend/issues/806."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Executed again at the pinned current commit 18db88f4 (make replay-full, both inputs): the same rows as at 3e22515a; the entry's divergence names 18db88f4."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "Executed again at the pinned current commit f0c00cf5 (make replay-full, both inputs): the same rows as at 18db88f4; the entry's divergence names f0c00cf5. The commits between them change only the GraphQL server's metrics (internal/serve, internal/metrics), not ingest."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0085.md"
+  ]
+}

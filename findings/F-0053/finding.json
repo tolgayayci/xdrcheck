@@ -1,0 +1,98 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0053",
+  "title": "Transaction drops an explicit minSeqNum of 0; cloneFrom and assembleTransaction rebuild the transaction without it",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "17.1.0 - 17.4.0 (executed: 17.1.0, 17.2.0, 17.2.1, 17.3.0, 17.4.0); 17.0.x has the same constructor code; 16.3.0 and 16.4.1 are not affected",
+    "versions_tested": [
+      "js@17.2.0",
+      "js@17.2.1",
+      "js@17.3.0",
+      "js@17.4.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "The Transaction constructor tests the bigint minSeqNum for truthiness, so 0n is dropped: minAccountSequence is undefined and cloneFrom (used by rpc.assembleTransaction, Server.prepareTransaction and AssembledTransaction) rebuilds the transaction without minSeqNum. Under CAP-21 a relaxed-sequence transaction comes back as a strict-sequence one, can then fail with tx_bad_seq, and its hash changes. A regression from the bigint migration.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    21
+  ],
+  "entries": [
+    {
+      "id": "cap-0021/precond-v2-min-seq-num-zero",
+      "scope": "L1",
+      "expected": "an explicit minSeqNum of 0 is kept when the transaction is parsed and rebuilt through TransactionBuilder.cloneFrom: the rebuilt transaction is the network's",
+      "observed": "Executed by the kit (the rebuild fact) on 17.2.0, 17.2.1, 17.3.0 and 17.4.0: the rebuilt transaction has no minSeqNum (cond differs) and another hash, on all four variants (17.2.x read only the Protocol 28 ones); 16.3.0, 16.3.1 and 16.4.1 rebuild it to the network's hash."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "make verify-conformance and the public set: on cap-0021/precond-v2-min-seq-num-zero (a local stellar-core ledger whose transaction carries PRECOND_V2 with minSeqNum 0), the rebuild fact of the focus transaction diverges on 17.2.0, 17.2.1, 17.3.0 and 17.4.0: TransactionBuilder.cloneFrom builds the transaction without minSeqNum (cond differs); 16.3.0, 16.3.1 and 16.4.1 rebuild it to the network's hash. The issue's script on 17.1.0 to 17.4.0: the parsed minAccountSequence is undefined (16.3.0: \"0\") and the clone's hash differs (16.3.0: equal). main 5243062f has the same code (src/base/transaction.ts#L151-L154, transaction_builder.ts#L398).",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:cap-0021/precond-v2-min-seq-num-zero:pubnet@28:js@17.2.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:pubnet@28:js@17.2.1:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:pubnet@28:js@17.3.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:pubnet@28:js@17.4.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:pubnet@30:js@17.3.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:pubnet@30:js@17.4.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:testnet@28:js@17.2.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:testnet@28:js@17.2.1:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:testnet@28:js@17.3.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:testnet@28:js@17.4.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:testnet@30:js@17.3.0:L1",
+      "conform:cap-0021/precond-v2-min-seq-num-zero:testnet@30:js@17.4.0:L1"
+    ],
+    "expected_basis": "CAP-21: a present minSeqNum of 0 accepts any source sequence below the transaction's sequence; an absent one requires exactly seqNum - 1, so dropping it changes the transaction's meaning and hash.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "make verify-conformance OFFLINE=1 and xdrcheck conform run --set public: the rebuild fact diverges on every 17.x column and conforms on every 16.x column; re-run by hand on 2026-11-18 with the issue's script on 17.4.0.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/js-stellar-sdk minSeqNum 0",
+      "repo:stellar/js-stellar-sdk minAccountSequence cloneFrom"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/js-stellar-sdk/issues/1904."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1904",
+    "filed_at": "2026-11-14",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/js-stellar-sdk/issues/1904; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Now executed by the kit: cap-0021/precond-v2-min-seq-num-zero (generated on a local stellar-core) and the driver protocol's rebuild fact show the defect, and the entry declares it as a known divergence."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0021.md"
+  ]
+}

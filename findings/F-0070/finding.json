@@ -1,0 +1,75 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0070",
+  "title": "A tracked SEP-41 token that upgrades to a WASM whose transfer takes to: MuxedAddress is no longer indexed, and its old balances keep being served",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "18db88f4ba481c49a782d157be42177700c4385e (range not established)",
+    "versions_tested": [
+      "18db88f4ba481c49a782d157be42177700c4385e"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "matchSEP41Spec accepts a MuxedAddress recipient in transfer only when the parameter is named to_muxed, so a WASM with the standard transfer(from: Address, to: MuxedAddress, amount: i128) does not match. A tracked token that upgrades to it stops being indexed while its contract_tokens row stays sep41 and its sep41_balances rows stay as at the upgrade, and BalanceModel.GetByAccount keeps serving them as current: a silent stale balance, limited to the upgrading token's own balances (29 pubnet contracts in the issue), so medium, not high.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "spec",
+      "expected": "a WASM whose transfer is transfer(from: Address, to: MuxedAddress, amount: i128) matches SEP-41, so a tracked token keeps being indexed after it upgrades to it",
+      "observed": "No corpus entry holds such a WASM. By hand at 18db88f4: matchSEP41Spec gives false for transfer(from: Address, to: MuxedAddress, amount: i128) and true when only the parameter is renamed to_muxed; on pubnet it gives true for WASM 43a1cd08… and false for 07bab30e…, 87827804… and 72eb5d52…, which the 29 contracts of the issue upgraded to."
+    }
+  ],
+  "location": {
+    "commit": "18db88f4ba481c49a782d157be42177700c4385e",
+    "file": "internal/services/sep41/validator.go",
+    "lines": "337-344",
+    "function": "matchSEP41Spec"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. At wallet-backend 18db88f4, the issue's test (internal/services/sep41/muxed_transfer_test.go) prints matchSEP41Spec = false for transfer(from: Address, to: MuxedAddress, amount: i128) and true for the same signature with to_muxed. On a local network (stellar-core 30.0.0, live ingestion at the same code), a tracked SEP-41 token upgraded to a WASM with the same storage and events but a non-matching interface: a later transfer was not booked, the old row kept its value and contract_tokens.type stayed sep41.",
+    "expected_basis": "SEP-41 and soroban-sdk's TokenInterface declare transfer(from: Address, to: MuxedAddress, amount: i128) (https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made at 18db88f4 before filing on 2026-11-19: the test prints false for to: MuxedAddress and true for to_muxed: MuxedAddress.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/wallet-backend: every issue and pull request title, open and closed",
+      "stellar/wallet-backend: commits since 2026-11-01 on every branch touching the cited files"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/829."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/829",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/wallet-backend/issues/829; this record restates the public issue."
+    }
+  ]
+}

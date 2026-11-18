@@ -1,0 +1,76 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0078",
+  "title": "ingest: footprint helpers give up at the first footprint key of another type, and panic on classic transactions",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.9.0 and main 4cee0255 (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "ContractCodeHashFromSorobanFootprint and ContractIdFromTxEnvelope return ('', false) at the first footprint key that is not the kind they look for, so they miss the contract code hash or contract ID on many Soroban transactions, and all three footprint helpers panic with a nil pointer dereference on a classic transaction. The issue finds no caller in go-stellar-sdk, Horizon or stellar-rpc; affected code is third-party code that calls the helpers.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L3",
+      "expected": "the helpers return the contract code hash and contract ID in a Soroban transaction's footprint, and an empty result without panicking for a classic transaction",
+      "observed": "No conformance fact of the kit calls these helpers. By hand on v0.9.0 on pubnet ledger 65437014: for Soroban transaction a61a64e2… both helpers return false although its footprint holds the code hash and the contract ID; for classic transaction a0d77cb7… all three helpers panic."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "ingest/ledger_transaction.go",
+    "lines": "761-900"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's program on v0.9.0 and main 4cee0255, on pubnet ledger 65437014 from the public data lake: the three helpers panic on classic transaction a0d77cb7…; on Soroban transaction a61a64e2… ContractCodeHashFromSorobanFootprint and ContractIdFromTxEnvelope return false. In 1,500 pubnet ledgers from protocol 23 on: false on 59,512 and 53,234 transactions whose footprint holds the key, and a panic on all 289,595 classic transactions.",
+    "expected_basis": "A Soroban footprint lists keys of every type in any order (CAP-46); the other Soroban accessors of LedgerTransaction return false for a classic transaction.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: false for a61a64e2… and a panic for a0d77cb7….",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6054."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6054",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6054; this record restates the public issue."
+    }
+  ]
+}

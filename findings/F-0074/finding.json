@@ -1,0 +1,76 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0074",
+  "title": "A revocation that redeems pool shares from several liquidity pools gets one liquidity_pool_revoked effect, which can cite another pool's claimable balance",
+  "target": {
+    "project": "stellar/stellar-horizon",
+    "package": "github.com/stellar/stellar-horizon",
+    "ecosystem": "source",
+    "versions_affected": "v30.0.1 and main 01ba44a (internal/ingest/processors/ is the same in both; range not established)",
+    "versions_tested": [
+      "v30.0.1",
+      "01ba44a988b3ebc2d68d3cb6747fa2c2733773cd"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "medium",
+  "severity_basis": "addLiquidityPoolRevokedEffect uses only the first liquidity pool change of the operation, so a revocation that redeems pool shares from several pools (CAP-38) gets one liquidity_pool_revoked effect and the other pools' reserve debits are written nowhere; the claimable balances are matched by asset alone, so the one effect written can cite another pool's claimable balance. Wrong and missing historical effects on pubnet; balances and current state are not affected.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "replay",
+      "expected": "one liquidity_pool_revoked effect per pool whose shares the operation redeems, each citing the claimable balance created for that pool's reserve",
+      "observed": "Not run by the kit against Horizon (Horizon has no replay adapter in this kit). By hand at v30.0.1 on pubnet ledger 55568683, transaction cfe5afa4…: its four AllowTrust operations redeem pool shares 9 times across 6 pools and Horizon writes 4 effects; in operation 1 the effect for pool 07fbafb9… cites claimable balance 00000000f2dfbb49… (the d7ac80ee… redemption) instead of 00000000d8c94440…."
+    }
+  ],
+  "location": {
+    "commit": "01ba44a988b3ebc2d68d3cb6747fa2c2733773cd",
+    "file": "internal/ingest/processors/effects_processor.go",
+    "lines": "1365-1392",
+    "function": "addLiquidityPoolRevokedEffect"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. Horizon v30.0.1 rows for pubnet ledger 55568683, transaction cfe5afa41074ab428e2f4440f7b06895a90dacd5e2cb1aa2596fd234e3946f6c: 4 liquidity_pool_revoked effects where the operation meta shows 9 pool redemptions, 10 reserve debits not reported, and one effect citing the wrong claimable balance; git diff v30.0.1 main -- internal/ingest/processors/ is empty.",
+    "expected_basis": "CAP-38 (https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md): a revocation redeems the trustor's shares of every pool with the revoked asset, each reserve into its own claimable balance; the operation meta has one LIQUIDITY_POOL change per redeemed pool.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The rows the issue reports, from Horizon v30.0.1 ingesting pubnet ledger 55568683, read before filing on 2026-11-19 against the LIQUIDITY_POOL changes in each operation's meta.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/stellar-horizon: every issue and pull request title, open and closed",
+      "stellar/stellar-horizon: commits since 2026-11-01 on every branch touching internal/ingest/processors/"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/stellar-horizon/issues/266."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-horizon/issues/266",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/stellar-horizon/issues/266; this record restates the public issue."
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0010",
+  "title": "A deployer address of a kind the account column cannot store is recorded",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "71625b21f832478aece23c2212ddf458c8a2f134 (range not established)",
+    "versions_tested": [
+      "71625b21f832478aece23c2212ddf458c8a2f134"
+    ],
+    "fixed_in": "ce0820d75073d232fcbd9cb44faf9ca40751a1c8"
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "A deployer address of a non-account kind reached an account column. Fixed upstream by PR #745 (ce0820d7); the linter fires at the pre-fix commit and is silent after (make lint-before-after).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    27,
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0027/muxed-source-and-destination-max-ids",
+      "scope": "XDR102",
+      "expected": "no XDR102 report",
+      "observed": "XDR102: xdr.ScAddress.String() renders M…, W…, B… and L… strkeys for the muxed, claimable-balance and pool kinds; it reaches participant sink processors.StateChangeBuilder.WithCreator at line 73 without being reduced to the base account (ToAccountId) or kind-checked"
+    }
+  ],
+  "location": {
+    "commit": "71625b21f832478aece23c2212ddf458c8a2f134",
+    "file": "internal/indexer/processors/contract_deploy.go",
+    "lines": "67",
+    "function": "ContractDeployProcessor.ProcessOperation"
+  },
+  "evidence": {
+    "transcripts": [
+      "reports/lint-before-after/71625b21f832478aece23c2212ddf458c8a2f134.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@71625b21:XDR102:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation"
+    ]
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row lint:github.com/stellar/wallet-backend@71625b21:XDR102:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Pre-fix side of a public upstream fix."
+    }
+  ],
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0010.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/wallet-backend/pull/745"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/wallet-backend/pull/745"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/pull/745",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the fix itself is the evidence and the linter row is the pre-fix side of the before/after table."
+    }
+  }
+}

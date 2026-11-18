@@ -1,0 +1,94 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0007",
+  "title": "A Soroban operation's source account is stored in its muxed M form",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "f8e5786d22c04adad16318f2e126728beec5aac9 (range not established)",
+    "versions_tested": [
+      "f8e5786d22c04adad16318f2e126728beec5aac9",
+      "79ea2acd1dc65a07166133cc04b12e76db314db0"
+    ],
+    "fixed_in": "bb0b162b072583c7dabffbdee664d1c117e5ba56"
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "high",
+  "severity_basis": "A muxed source reached an account column un-reduced (one producer of issue #716). Fixed upstream by PR #753 (bb0b162b); the linter fires at the pre-fix commit and is silent after (make lint-before-after).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    27,
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0027/muxed-source-and-destination-max-ids",
+      "scope": "XDR102",
+      "expected": "no XDR102 report",
+      "observed": "XDR102: xdr.MuxedAccount.Address() renders the M… form of a muxed account; it reaches a participant set (NewThreadUnsafeSet) at line 156 without being reduced to the base account (ToAccountId) or kind-checked"
+    }
+  ],
+  "location": {
+    "commit": "f8e5786d22c04adad16318f2e126728beec5aac9",
+    "file": "internal/indexer/processors/contract_operations.go",
+    "lines": "156",
+    "function": "participantsForSorobanOp"
+  },
+  "evidence": {
+    "transcripts": [
+      "reports/lint-before-after/f8e5786d22c04adad16318f2e126728beec5aac9.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@f8e5786d:XDR102:internal/indexer/processors/contract_operations.go:participantsForSorobanOp",
+      "replay:stellar/wallet-backend@79ea2acd1dc65a07166133cc04b12e76db314db0:cap-0046/soroban-ops-with-muxed-source:pubnet@28:chain",
+      "replay:stellar/wallet-backend@79ea2acd1dc65a07166133cc04b12e76db314db0:cap-0046/soroban-ops-with-muxed-source:testnet@28:chain"
+    ]
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row lint:github.com/stellar/wallet-backend@f8e5786d:XDR102:internal/indexer/processors/contract_operations.go:participantsForSorobanOp."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Pre-fix side of a public upstream fix."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "duplicate-of",
+      "note": "The replay shows the same defect: at 79ea2acd the Soroban operations' muxed source is stored as a participant in its M form on the Protocol 28 local-core chains (cap-0046/soroban-ops-with-muxed-source, both passphrases, both inputs of make verify-replay); the known divergence names this record and its rows are listed."
+    }
+  ],
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0007.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/wallet-backend/pull/753"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/wallet-backend/pull/753"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/pull/753",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the fix itself is the evidence and the linter row is the pre-fix side of the before/after table."
+    }
+  },
+  "related": [
+    "https://github.com/stellar/wallet-backend/issues/716"
+  ]
+}

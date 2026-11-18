@@ -1,0 +1,96 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0050",
+  "title": "js-stellar-sdk before 16.4.0 and 17.3.0 refuses contract specs with UDT names over 60 bytes (pre-v30 XDR bound, not a defect)",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "none: 16.3.0 - 16.3.1 and 17.2.0 - 17.2.1 follow the pre-v30 definitions they are built on",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@17.2.0",
+      "js@17.2.1"
+    ],
+    "fixed_in": "16.4.0, 17.3.0"
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "low",
+  "severity_basis": "No defect: see the resolution.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "contract-spec/qualified-udt-names",
+      "variant": "testnet",
+      "scope": "spec",
+      "expected": "decode the interface: the v30 definitions bound a UDT name at 1024 bytes",
+      "observed": "Executed on 16.3.0, 16.3.1, 17.2.0 and 17.2.1: contract.Spec.fromWasm refuses the testnet contract's spec at the 63-byte qualified name (string byte length 63 exceeds maximum 60)."
+    },
+    {
+      "id": "contract-spec/udt-name-61-bytes",
+      "variant": "none",
+      "scope": "spec",
+      "expected": "decode the interface: the v30 definitions bound a UDT name at 1024 bytes",
+      "observed": "Executed on 16.3.0, 16.3.1, 17.2.0 and 17.2.1: contract.Spec.fromWasm refuses the 61-byte struct name (string byte length 61 exceeds maximum 60)."
+    },
+    {
+      "id": "contract-spec/udt-name-1024-bytes",
+      "variant": "none",
+      "scope": "spec",
+      "expected": "decode the interface: the v30 definitions bound a UDT name at 1024 bytes",
+      "observed": "Executed on 16.3.0, 16.3.1, 17.2.0 and 17.2.1: contract.Spec.fromWasm refuses the 1024-byte struct name (string byte length 1024 exceeds maximum 60)."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --entries 'contract-spec/*'), spec level: reject_valid with reason length_exceeds_max, declared as a known divergence referencing stellar-xdr PR #312.",
+    "post_fix": "16.4.0, 17.3.0 and later decode the same specs (spec level conforms).",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:contract-spec/qualified-udt-names:testnet:js@16.3.0:spec",
+      "conform:contract-spec/qualified-udt-names:testnet:js@16.3.1:spec",
+      "conform:contract-spec/qualified-udt-names:testnet:js@17.2.0:spec",
+      "conform:contract-spec/qualified-udt-names:testnet:js@17.2.1:spec",
+      "conform:contract-spec/udt-name-1024-bytes:none:js@16.3.0:spec",
+      "conform:contract-spec/udt-name-1024-bytes:none:js@16.3.1:spec",
+      "conform:contract-spec/udt-name-1024-bytes:none:js@17.2.0:spec",
+      "conform:contract-spec/udt-name-1024-bytes:none:js@17.2.1:spec",
+      "conform:contract-spec/udt-name-61-bytes:none:js@16.3.0:spec",
+      "conform:contract-spec/udt-name-61-bytes:none:js@16.3.1:spec",
+      "conform:contract-spec/udt-name-61-bytes:none:js@17.2.0:spec",
+      "conform:contract-spec/udt-name-61-bytes:none:js@17.2.1:spec"
+    ],
+    "expected_basis": "stellar-xdr v30.0 (4f524bbac80c781c06e4fb5fc93a2d0d331d6705) raised SC_SPEC_TYPE_NAME_LIMIT from 60 to 1024 bytes (https://github.com/stellar/stellar-xdr/pull/312, merged 2026-09-09).",
+    "observed": "executed"
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-14",
+      "state": "candidate",
+      "note": "Created by xcc findings new from the spec-level known divergences that reference https://github.com/stellar/stellar-xdr/pull/312 and their failure rows."
+    },
+    {
+      "date": "2026-11-14",
+      "state": "not-a-defect",
+      "note": "The refusal follows the pre-v30 XDR definitions these versions are built on; later versions on the v30 definitions decode the same specs."
+    }
+  ],
+  "resolution": {
+    "reason": "Not a defect in js-stellar-sdk. These versions decode contract specs with XDR definitions older than v30, where a UDT name is a string of at most 60 bytes (SC_SPEC_TYPE_NAME_LIMIT 60); they refuse a longer name exactly as those definitions require. stellar-xdr v30 raised the bound to 1024 (https://github.com/stellar/stellar-xdr/pull/312) so that soroban-sdk 30 can write fully qualified type names, and js-stellar-sdk adopted the v30 definitions in 16.4.0, 17.3.0, which decode the same specs. A reader on older definitions refusing names the newer definitions allow is protocol evolution, not a bug to report; the guidance for readers is to move to the v30 definitions.",
+    "reviewer": "maintainer",
+    "date": "2026-11-14",
+    "manifest_action": "none: the refusals stay declared as known divergences on contract-spec/qualified-udt-names, contract-spec/udt-name-61-bytes and contract-spec/udt-name-1024-bytes (status fixed, reference stellar-xdr PR #312), each naming this record"
+  },
+  "related": [
+    "https://github.com/stellar/stellar-xdr/pull/312"
+  ]
+}

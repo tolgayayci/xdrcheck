@@ -1,0 +1,39 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0008",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/wallet-backend",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "make lint-before-after OFFLINE=1",
+        "observed": "the record's report row is produced again, suppressed with this record as its finding (reports/lint-before-after/<commit>.json; every before/after row shows its recorded counts and the run passes)",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 1,
+      "found_failing": 1,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/wallet-backend/pull/756",
+      "matches_rows": true,
+      "state_seen": "merged 2026-09-25 as 666a64d4",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [],
+  "verdict": "accepted",
+  "failing_step": null
+}

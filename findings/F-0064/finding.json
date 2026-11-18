@@ -1,0 +1,92 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0064",
+  "title": "StrKey decodes a signed payload key whose padding bytes are not zero",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "17.0.0 - 17.0.1 (executed: 17.0.0, 17.0.1; main 3d722d01 has the same code; earlier versions not run)",
+    "versions_tested": [
+      "python@17.0.0",
+      "python@17.0.1"
+    ],
+    "fixed_in": "210616efe70b47a941e3151f7e3e106145c17f22"
+  },
+  "component": "sdk",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "StrKey.decode_ed25519_signed_payload() checks how many padding bytes follow the payload but not their value, so two different P strings decode to the same signer and is_valid_ed25519_signed_payload() accepts both; code that compares signer keys as strings can treat one signer as two.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/synthetic-gap-vectors.signed-payload-nonzero-padding",
+      "scope": "L4",
+      "expected": "refuse a signed-payload strkey whose padding bytes are not zero (SEP-23)",
+      "observed": "Executed on 17.0.0 and 17.0.1: StrKey decoding returns the 1-byte payload with its three 0xff padding bytes instead of an error."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner, L4, python@17.0.0 and python@17.0.1 (make verify-conformance and make verify-conformance-public), entry strkey/synthetic-gap-vectors.signed-payload-nonzero-padding: accepts_invalid.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:strkey/synthetic-gap-vectors.signed-payload-nonzero-padding:-:python@17.0.0:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-nonzero-padding:-:python@17.0.1:L4"
+    ],
+    "expected_basis": "SEP-23, encoding step 4: the payload is followed by 0 to 3 zero bytes so that its length is a multiple of four (https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md).",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Re-run on 2026-11-18: the 2 listed report rows failed again in make verify-conformance-public and make verify-conformance, offline; the issue's script on 17.0.1 decodes the 0xff-padded key and is_valid returns True.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:StellarCN/py-stellar-base signed payload padding",
+      "repo:StellarCN/py-stellar-base strkey padding"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/StellarCN/py-stellar-base/issues/1258."
+  },
+  "upstream": {
+    "url": "https://github.com/StellarCN/py-stellar-base/issues/1258",
+    "filed_at": "2026-11-14",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/StellarCN/py-stellar-base/issues/1258; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Upstream: closed on 2026-11-14 by the merged pull request #1261; no release after 17.0.1 includes it yet."
+    }
+  ],
+  "siblings": [
+    "F-0019",
+    "F-0024"
+  ],
+  "related": [
+    "https://github.com/StellarCN/py-stellar-base/pull/1261",
+    "https://github.com/stellar/js-stellar-sdk/pull/1588"
+  ]
+}

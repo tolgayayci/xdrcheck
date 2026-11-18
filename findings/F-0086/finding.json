@@ -1,0 +1,84 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0086",
+  "title": "asset_balance_changes are built from a failed transaction's diagnostic events, so a failed Soroban transaction gets rows for rolled-back transfers",
+  "target": {
+    "project": "stellar/stellar-etl",
+    "ecosystem": "source",
+    "versions_affected": "7e3fc9af95359dad6ba939fa88791f49cdf531ae (v2.8.35; range not established)",
+    "versions_tested": [
+      "7e3fc9af95359dad6ba939fa88791f49cdf531ae"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "Wrong value in a secondary field: the operation details' asset_balance_changes list movements of a failed transaction that the ledger rolled back; no balance column is changed and the transaction is exported as failed. Seen by the linter at the pinned commit and confirmed by reading the source; the issue is already open upstream.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/failed-soroban-tx-with-sac-transfers-in-diagnostics",
+      "scope": "XDR405",
+      "expected": "balance-change rows are built from diagnostic events only for a successful transaction",
+      "observed": "XDR405 (error) at internal/transform/operation.go:1889 (transactionOperationWrapper.parseAssetBalanceChangesFromContractEvents) and :1924 (parseAssetBalanceChangesFromContractEvents): LedgerTransaction.GetDiagnosticEvents() feeds the asset_balance_changes rows with no check that the transaction succeeded, here or in any caller (make lint-stellar-etl). filterEvents (:1865) keeps only events with InSuccessfulContractCall, which is the contract call's outcome, not the transaction's. The corpus entry is a failed transaction (resource_limit_exceeded) whose diagnostic events hold Stellar Asset Contract transfers marked in_successful_contract_call; no replay of it against stellar-etl is recorded."
+    }
+  ],
+  "location": {
+    "commit": "7e3fc9af95359dad6ba939fa88791f49cdf531ae",
+    "file": "internal/transform/operation.go",
+    "lines": "1889, 1924",
+    "function": "transactionOperationWrapper.parseAssetBalanceChangesFromContractEvents"
+  },
+  "evidence": {
+    "pre_fix": "make lint-stellar-etl (xdrlint built with the Go toolchain stellar-etl requires, shipped default profile) at v2.8.35 (7e3fc9af): XDR405, severity error, at the two GetDiagnosticEvents() calls in internal/transform/operation.go, suppressed with this record as its finding.",
+    "transcripts": [
+      "reports/lint-stellar-etl/7e3fc9af95359dad6ba939fa88791f49cdf531ae.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/stellar-etl/v2@7e3fc9af:XDR405:internal/transform/operation.go:transactionOperationWrapper.parseAssetBalanceChangesFromContractEvents",
+      "lint:github.com/stellar/stellar-etl/v2@7e3fc9af:XDR405:internal/transform/operation.go:parseAssetBalanceChangesFromContractEvents"
+    ],
+    "expected_basis": "CAP-46: a failed transaction's operations have no effect on the ledger outside the fee; diagnostic events are debugging output that still lists calls which returned before the transaction failed, so in_successful_contract_call does not say the movement happened (lint/docs/XDR405.md).",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit maintainer (linter re-run and source reading at the pinned commit)",
+    "date": "2026-11-19",
+    "method": "make lint-stellar-etl OFFLINE=1 at the pinned commit: both reports again at the recorded lines; the two functions and filterEvents read again at 7e3fc9af: neither function nor any caller checks LedgerTransaction.Successful().",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "https://github.com/stellar/stellar-etl/issues/488"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/stellar/stellar-etl/issues/488"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-etl/issues/488",
+    "state": "open",
+    "checked_at": "2026-11-19",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The issue, opened by a stellar-etl maintainer, already describes asset_balance_changes being populated for failed Soroban transactions; the linter report points at the same two functions and adds nothing the issue lacks."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-17",
+      "state": "candidate",
+      "note": "From the stellar-etl linter run at the pinned commit (XDR405 at operation.go:1889 and :1924); listed as pending finding review."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "duplicate-of",
+      "note": "Sites verified at 7e3fc9af; the open upstream item already records this defect. Suppressed at the pinned commit with this record as its finding; the two pending entries removed."
+    }
+  ]
+}

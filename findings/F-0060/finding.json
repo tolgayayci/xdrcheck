@@ -1,0 +1,69 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0060",
+  "title": "Sep45Challenge.readChallengeAuthorizationEntries throws IllegalArgumentException instead of InvalidSep45ChallengeException for some malformed input",
+  "target": {
+    "project": "lightsail-network/java-stellar-sdk",
+    "package": "network.lightsail:stellar-sdk",
+    "ecosystem": "maven",
+    "versions_affected": "6.0.0 and master 95bca0b (range not established)",
+    "versions_tested": [
+      "java@6.0.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "hardening",
+  "severity": "low",
+  "severity_basis": "readChallengeAuthorizationEntries catches only IOException around SorobanAuthorizationEntries.fromXdrBase64, so an unknown enum or union discriminant and an invalid base64 string escape as IllegalArgumentException instead of the documented InvalidSep45ChallengeException; a server that maps that exception to 400 answers these client requests through its generic error path. No wrong result is returned and nothing invalid is accepted (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L4",
+      "expected": "every malformed authorizationEntriesXdr raises InvalidSep45ChallengeException",
+      "observed": "No corpus entry drives the SEP-45 challenge API. By hand on 6.0.0: AAAAAQ== raises InvalidSep45ChallengeException, AAAAAQAAAAU= raises IllegalArgumentException 'Unknown enum value: 5' and 'not base64!' raises IllegalArgumentException 'Illegal base64 character 20'."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs; no run of the kit compares this behaviour, so no report row exists. The issue's Java program on network.lightsail:stellar-sdk 6.0.0 (master 95bca0b the same): two of the three malformed inputs escape as java.lang.IllegalArgumentException.",
+    "expected_basis": "The Javadoc of readChallengeAuthorizationEntries (and verifyChallengeAuthorizationEntries, which calls it first) documents InvalidSep45ChallengeException for an invalid challenge.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Re-run on 2026-11-18 with the issue's program on stellar-sdk 6.0.0: the same three results.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:lightsail-network/java-stellar-sdk Sep45Challenge exception",
+      "repo:lightsail-network/java-stellar-sdk InvalidSep45ChallengeException"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/lightsail-network/java-stellar-sdk/issues/834."
+  },
+  "upstream": {
+    "url": "https://github.com/lightsail-network/java-stellar-sdk/issues/834",
+    "filed_at": "2026-11-14",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/lightsail-network/java-stellar-sdk/issues/834; this record restates the public issue."
+    }
+  ]
+}

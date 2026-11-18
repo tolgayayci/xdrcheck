@@ -1,0 +1,77 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0080",
+  "title": "ingest: SorobanInclusionFeeCharged / InclusionFeeCharged return minus the resource fee when the fee account is a muxed account",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.9.0 and main 4cee0255 (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "SorobanInclusionFeeCharged looks up the fee account's balance changes by the muxed M address, which matches no account entry, so with a muxed fee account it and InclusionFeeCharged return 0 - resourceFee. The issue states impact low: since protocol 25 only ExtendFootprintTtl, RestoreFootprint and fee bumps with a muxed fee source are affected, none was found in about 544,000 pubnet Soroban transactions, and no caller in go-stellar-sdk, Horizon or stellar-rpc.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L3",
+      "expected": "the inclusion fee charged is the same for a fee account and its muxed form",
+      "observed": "No conformance fact of the kit calls these helpers. By hand on v0.9.0: with fee 50000100 (resource fee 50000000) both helpers give 100 for the G fee account and -50000000 for its muxed form; the same on local stellar-core v30 ledgers with RestoreFootprint and ExtendFootprintTtl from muxed accounts."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "ingest/ledger_transaction.go",
+    "lines": "519-565",
+    "function": "LedgerTransaction.SorobanInclusionFeeCharged"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program on v0.9.0 and main 4cee0255: SorobanInclusionFeeCharged() = -50000000 and InclusionFeeCharged() = -50000000 for the muxed fee account, 100 for the same account as G; OriginalFeeCharged() = 50000100 for both.",
+    "expected_basis": "Account entries, and so the fee-processing changes stellar-core writes, are keyed by the underlying G account (CAP-27); OriginalFeeCharged and SorobanResourceFeeRefund demux the fee account first.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: -50000000 for the muxed fee account.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6056."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6056",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6056; this record restates the public issue."
+    }
+  ]
+}

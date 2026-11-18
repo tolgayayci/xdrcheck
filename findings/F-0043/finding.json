@@ -1,0 +1,115 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0043",
+  "title": "Decoding with Limits::none() allocates the length a prefix claims before reading the body (up to 4 GiB per prefix)",
+  "target": {
+    "project": "stellar/rs-stellar-xdr",
+    "package": "stellar-xdr",
+    "ecosystem": "crates",
+    "versions_affected": "28.0.0 - 30.0.0 when decoding with Limits::none() (28.0.0, 28.0.1 and 30.0.0 executed; lower bound not established)",
+    "versions_tested": [
+      "28.0.0",
+      "28.0.1",
+      "30.0.0"
+    ]
+  },
+  "component": "xdr-library",
+  "class": "resource_exhaustion",
+  "severity": "low",
+  "severity_basis": "Hardening: in stellar-xdr 30.0.0 and main ebec5fb, BytesM, StringM and VecM<u8> allocate vec![0u8; len] before read_exact (#581 fixed only the generic VecM<T>). No SDF service is known to decode untrusted input with Limits::none(): rs-soroban-env uses DEFAULT_XDR_RW_LIMITS (depth 500, len 32 MiB); stellar-rpc's xdr2json and preflight use the same 32 MiB; rs-stellar-archivist sets len to the input length; only offline CLIs use none(). Without a memory cap the allocation is lazy (clean UnexpectedEof); under RLIMIT_AS 1 GiB the process aborts.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: an XDR encoding rule that holds in every protocol version (the corpus's xdr-strict group).",
+  "entries": [
+    {
+      "id": "xdr-strict/length-prefix-exceeds-input.6h4",
+      "variant": "none",
+      "scope": "L0",
+      "expected": "reject without allocating more than the input can hold",
+      "observed": "Executed on 28.0.0, 28.0.1 and 30.0.0 under limits-none (Limits::none()) with RLIMIT_AS 1 GiB: the process aborts allocating the length the prefix claims ('memory allocation of … bytes failed'). Under limits-default the length budget refuses the input before allocating; without a memory cap the allocation is lazy and the decode is refused (UnexpectedEof)."
+    },
+    {
+      "id": "xdr-strict/length-prefix-exceeds-input.6h3",
+      "variant": "none",
+      "scope": "L0",
+      "expected": "reject without allocating more than the input can hold",
+      "observed": "Executed on 28.0.0, 28.0.1 and 30.0.0 under limits-none (Limits::none()) with RLIMIT_AS 1 GiB: the process aborts allocating the length the prefix claims ('memory allocation of … bytes failed'). Under limits-default the length budget refuses the input before allocating; without a memory cap the allocation is lazy and the decode is refused (UnexpectedEof)."
+    },
+    {
+      "id": "xdr-strict/length-prefix-exceeds-input.6h2",
+      "variant": "none",
+      "scope": "L0",
+      "expected": "reject without allocating more than the input can hold",
+      "observed": "Executed on 28.0.0, 28.0.1 and 30.0.0 under limits-none (Limits::none()) with RLIMIT_AS 1 GiB: the process aborts allocating the length the prefix claims ('memory allocation of … bytes failed'). Under limits-default the length budget refuses the input before allocating; without a memory cap the allocation is lazy and the decode is refused (UnexpectedEof)."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --columns 'rust@*' --entries 'xdr-strict/length-prefix-exceeds-input.*'), L0: every Rust column runs these entries in a fresh driver process under RLIMIT_AS 1 GiB (the known divergence's profile, limits-none under address-space cap RLIMIT_AS 1 GiB); the limits-none columns crash, the limits-default columns refuse (LengthLimitExceeded).",
+    "transcripts": [
+      "reports/conformance/report.json"
+    ],
+    "report_rows": [
+      "conform:xdr-strict/length-prefix-exceeds-input.6h2:none:rust@28.0.0:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h3:none:rust@28.0.0:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h4:none:rust@28.0.0:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h2:none:rust@28.0.1:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h3:none:rust@28.0.1:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h4:none:rust@28.0.1:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h2:none:rust@30.0.0:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h3:none:rust@30.0.0:limits-none:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h4:none:rust@30.0.0:limits-none:L0"
+    ],
+    "expected_basis": "A decoder must not allocate more than the remaining input can hold: stellar-core's xdrpp checks the length against the remaining bytes before resizing (marshal.h), and go-xdr fixed the same shape in stellar/go-xdr#34.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-13",
+    "method": "Re-assessed in a separate run on stellar-xdr 30.0.0 and main ebec5fb: BytesM, StringM and VecM<u8> allocate the claimed length before reading under Limits::none(); without a memory cap the allocation is lazy, under RLIMIT_AS 1 GiB the process aborts; Limits::len(8) refuses before allocating.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "repo:stellar/rs-stellar-xdr allocation (PR #581 limits VecM capacity only; BytesM still allocates up front)",
+      "repo:stellar/rs-stellar-xdr Limits::none",
+      "repo:stellar/rs-stellar-xdr length prefix",
+      "repo:stellar/rs-stellar-xdr memory"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public hardening issue on stellar/rs-stellar-xdr (#623): BytesM, StringM and VecM<u8> pre-allocate the length prefix under Limits::none()."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-xdr/issues/623",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from a run of the probe's memory vectors through the Rust conformance driver under an address-space cap; no public issue or advisory found."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Assessed as low (hardening): no SDF service is known to decode untrusted input with Limits::none()."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/rs-stellar-xdr/issues/623 (low, hardening) against 30.0.0 and main ebec5fb."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/go-xdr/pull/34",
+    "https://github.com/stellar/rs-stellar-xdr/pull/581"
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0011",
+  "title": "SAC metadata string stored without a UTF-8 check on a best-effort enrichment path, since removed (accepted site)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "79ea2acd1dc65a07166133cc04b12e76db314db0 (range not established)",
+    "versions_tested": [
+      "79ea2acd1dc65a07166133cc04b12e76db314db0"
+    ]
+  },
+  "component": "pipeline",
+  "class": "hardening",
+  "severity": "low",
+  "severity_basis": "No defect: see the resolution.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0067/to-muxed-id-text-non-utf8-memo",
+      "scope": "XDR103",
+      "expected": "no XDR103 report",
+      "observed": "XDR103: xdr.ScVal.GetStr() (line 195) carries submitter- or contract-controlled bytes into database field data.Contract.Code without a UTF-8 and NUL check"
+    }
+  ],
+  "location": {
+    "commit": "79ea2acd1dc65a07166133cc04b12e76db314db0",
+    "file": "internal/services/contract_metadata.go",
+    "lines": "220",
+    "function": "contractMetadataService.fetchSACMetadataForContract"
+  },
+  "evidence": {
+    "transcripts": [
+      "reports/lint-before-after/79ea2acd1dc65a07166133cc04b12e76db314db0.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@79ea2acd:XDR103:internal/services/contract_metadata.go:contractMetadataService.fetchSACMetadataForContract"
+    ]
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row lint:github.com/stellar/wallet-backend@79ea2acd:XDR103:internal/services/contract_metadata.go:contractMetadataService.fetchSACMetadataForContract."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "not-a-defect",
+      "note": "Closed with the reason the suppression reviewer recorded."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "not-a-defect",
+      "note": "Reason corrected after the reproduction review: the path is reachable at 79ea2acd; the conclusion holds because the enrichment is best-effort and its failure keeps the defaults."
+    }
+  ],
+  "resolution": {
+    "reason": "Not a defect at the reported site, for a reason other than the one first recorded. At 79ea2acd (and 6e5a5910), both before PR #695 (22660cf4), the path is reachable: ingest_live.go:330 calls EnrichStaleSACMetadata at startup and checkpoint.go:382 calls FetchSACMetadata after a checkpoint load. It is a best-effort enrichment that runs after the load has committed: any error, a database write that refuses the value included, rolls back only the enrichment transaction, is logged ('defaults retained, retried on restart') and ingestion proceeds with the rows' ledger-derived defaults. The reported value therefore cannot halt ingestion or be stored partly; the worst outcome is a row that keeps its defaults. PR #695 made the path unreachable and PR #723 (ce332e70) removed it; the site is absent at the pinned current commit e967ce8b.",
+    "reviewer": "kit-maintainer (suppression review)",
+    "date": "2026-11-12",
+    "manifest_action": "none: the linter report stays suppressed with this record as its finding"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0011.json (returned: resolution check: the stated reason (dead code at the cited commit) does not hold at 79ea2acd).",
+    "result": "reproduced"
+  }
+}

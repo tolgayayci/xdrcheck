@@ -1,0 +1,96 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0033",
+  "title": "txnbuild.TransactionFromXDR accepts 1 or 2 trailing bytes inside the final base64 quantum",
+  "defect_group": "DG-base64-trailing-bytes",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.1 - v0.9.0 (executed)",
+    "versions_tested": [
+      "go@v0.7.1",
+      "go@v0.7.2",
+      "go@v0.7.3",
+      "go@v0.8.0",
+      "go@v0.9.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "Provisional: an envelope with bytes after it, which stellar-core refuses, parses as a transaction, and two different base64 strings parse to the same transaction. Only 1 or 2 bytes slip, depending on the value's length mod 3; 3 or more are refused. No reader impact verified. Open upstream.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: an XDR encoding rule that holds in every protocol version (the corpus's xdr-strict group).",
+  "entries": [
+    {
+      "id": "xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum",
+      "scope": "L4",
+      "expected": "refuse a TransactionEnvelope followed by 1 extra byte",
+      "observed": "Executed on v0.7.1, v0.7.2, v0.7.3, v0.8.0 and v0.9.0: txnbuild.TransactionFromXDR, through xdr.SafeUnmarshalBase64, parses the 136-byte envelope and ignores the extra byte."
+    },
+    {
+      "id": "xdr-strict/api-transaction-parse-trailing-bytes.two-bytes-in-final-quantum",
+      "scope": "L4",
+      "expected": "refuse a TransactionEnvelope followed by 2 extra bytes",
+      "observed": "Executed on v0.7.1, v0.7.2, v0.7.3, v0.8.0 and v0.9.0: txnbuild.TransactionFromXDR parses the 136-byte envelope and ignores the two extra bytes. The same versions refuse three extra bytes (xdr-strict/api-transaction-parse-trailing-bytes.three-bytes-next-quantum)."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --columns 'go@*' --entries 'xdr-strict/api-transaction-parse-trailing-bytes.*'), L4 transaction.parse, on go@v0.7.1, v0.7.2, v0.7.3, v0.8.0 and v0.9.0.",
+    "report_rows": [
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum:-:go@v0.7.1:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum:-:go@v0.7.2:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum:-:go@v0.7.3:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum:-:go@v0.8.0:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum:-:go@v0.9.0:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.two-bytes-in-final-quantum:-:go@v0.7.1:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.two-bytes-in-final-quantum:-:go@v0.7.2:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.two-bytes-in-final-quantum:-:go@v0.7.3:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.two-bytes-in-final-quantum:-:go@v0.8.0:L4",
+      "conform:xdr-strict/api-transaction-parse-trailing-bytes.two-bytes-in-final-quantum:-:go@v0.9.0:L4"
+    ],
+    "expected_basis": "A TransactionEnvelope is the whole input: bytes after the value are not part of it, and stellar-core refuses an envelope with trailing bytes. The same SDK's xdr.SafeUnmarshal, which checks consumption in decoded bytes, refuses them."
+  },
+  "reproduction": {
+    "by": "independent-upstream-reporter",
+    "date": "2026-11-13",
+    "method": "Found and reproduced independently of this kit by the reporter of the upstream issue, on v0.9.0 with values of several lengths. The kit's own run reproduced it on 10 of 10 listed report rows, offline, and the three-byte control is refused on every version.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-13",
+    "queries": [
+      "https://github.com/stellar/go-stellar-sdk/issues/6039"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/stellar/go-stellar-sdk/issues/6039"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6039",
+    "state": "open",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The issue already describes this exact defect, including the dependence on the value's length mod 3 and its reach through txnbuild.TransactionFromXDR; our entries reproduce what it describes, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row conform:xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum:-:go@v0.9.0:L4."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect; pull request #6041 proposes the fix and is not merged."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/go-stellar-sdk/pull/6041"
+  ]
+}

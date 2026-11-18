@@ -1,0 +1,96 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0036",
+  "title": "strkey.Decode with the claimable-balance version byte accepts an unknown type byte",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.1 - v0.9.0 (executed: v0.7.1, v0.7.2, v0.7.3, v0.8.0, v0.9.0; lower bound not established)",
+    "versions_tested": [
+      "go@v0.7.1",
+      "go@v0.7.2",
+      "go@v0.7.3",
+      "go@v0.8.0",
+      "go@v0.9.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "Acceptance of invalid input: strkey.Decode, DecodeAny and IsValidClaimableBalance accept SEP-23 invalid vector 15, while the typed decoder xdr.ClaimableBalanceId.DecodeFromStrkey rejects it. No reader impact verified.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: a SEP-23 strkey text rule, not a protocol change (the corpus's strkey group).",
+  "entries": [
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-15",
+      "scope": "L4",
+      "expected": "reject SEP-23 v1.4.0 invalid vector 15 (a claimable-balance strkey whose type byte is not a known ClaimableBalanceIDType)",
+      "observed": "Executed on v0.7.1, v0.7.2, v0.7.3, v0.8.0 and v0.9.0: strkey.Decode with the claimable-balance version byte checks only the 33-byte length and returns the payload with no error."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (make verify-conformance; xcc conform run --columns 'go@*' --entries 'strkey/sep-0023-v1.4.0-vectors.invalid-15'), L4, on every Go column.",
+    "transcripts": [
+      "reports/conformance/report.json"
+    ],
+    "report_rows": [
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:go@v0.7.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:go@v0.7.2:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:go@v0.7.3:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:go@v0.8.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:go@v0.9.0:L4"
+    ],
+    "expected_basis": "SEP-23 v1.4.0 (https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md) lists this vector as invalid (invalid vector 15).",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone: the listed report rows failed again as recorded, offline. Checked again by hand on v0.9.0 (2026-11-13) before filing.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fgo-stellar-sdk+claimable+balance+strkey+decode",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fgo-stellar-sdk+is%3Apr+strkey+claimable+balance",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fgo-stellar-sdk+invalid-15"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/go-stellar-sdk (#6042): strkey.Decode / DecodeAny / IsValidClaimableBalance accept SEP-23 invalid-15 while xdr.ClaimableBalanceId.DecodeFromStrkey rejects it."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6042",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the conformance run's failure rows; no public upstream item found."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "draft",
+      "note": "Reproduced, upstream searched (none found), issue text written; awaiting a maintainer's review before filing."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/go-stellar-sdk/issues/6042, on v0.9.0 and main 376279e, framed as the inconsistency between the raw strkey path and the xdr path. No pull request (the repository takes pull requests by invitation)."
+    }
+  ],
+  "siblings": [
+    "F-0024"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0014",
+  "title": "A trustline created by a Stellar Asset Contract call produces no trustline state change",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "..764a4f5bcbff5abb0949d93da37f769063013ea0",
+    "versions_tested": [
+      "764a4f5bcbff5abb0949d93da37f769063013ea0"
+    ],
+    "fixed_in": "c152783c054c765c8b51fd26ed313fd1ebc1c50c"
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "high",
+  "severity_basis": "Silent partial drop of a balance-relevant state change: ingestion completes, the transaction and the current-state balance are stored, the trustline_created state change is missing. Executed at the pre-fix commit; fixed upstream.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    73
+  ],
+  "entries": [
+    {
+      "id": "cap-0073/sac-trust-creates-trustline",
+      "scope": "replay",
+      "expected": "a trustline_created state change for the account the SAC call created the trustline for",
+      "observed": "Executed at 764a4f5b on the Protocol 28 variants (also Protocols 26 and 27; both passphrases; both inputs; single ledger and whole chain): ingestion reaches the ledger with no error, the transaction, the operation and the fee row are stored and the current-state balance table holds the new trustline, but no TRUSTLINE/ADD and no BALANCE_AUTHORIZATION/SET state change exists. Executed at c152783c an",
+      "variant": "pubnet@28"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "wallet-backend 764a4f5b through the replay harness (make verify-replay), Protocol 28 variants, both passphrases, both inputs: dropped · partial.",
+    "post_fix": "wallet-backend c152783c and the pinned current commit e967ce8b: pass (make verify-replay).",
+    "transcripts": [
+      "evidence/wallet-backend-731/"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@764a4f5bcbff5abb0949d93da37f769063013ea0:cap-0073/sac-trust-creates-trustline:pubnet@28:single",
+      "replay:stellar/wallet-backend@764a4f5bcbff5abb0949d93da37f769063013ea0:cap-0073/sac-trust-creates-trustline:testnet@28:single"
+    ],
+    "expected_basis": "The ledger meta of the local stellar-core run shows the TRUSTLINE ledger entry created by the SAC trust call (CAP-73)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 2 of 2 listed report rows failed again as recorded, all offline. Review: findings/review/F-0014.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/wallet-backend/issues/731"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/wallet-backend/issues/731"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/731",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/wallet-backend/issues/731 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ]
+}

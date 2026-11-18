@@ -1,0 +1,101 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0069",
+  "title": "A pool-share trustline removed by an AllowTrust or SetTrustLineFlags revocation gets no TRUSTLINE REMOVE state change",
+  "defect_group": "DG-revoked-pool-share-trustline-removal",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "3e22515a44979fdc3a558fda3991ca2b48e38cef, 18db88f4ba481c49a782d157be42177700c4385e and f0c00cf5242048d0438d07151cc1ef1a4b98d7c7 (range not established)",
+    "versions_tested": [
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "TRUSTLINE REMOVE rows come only from addChangeTrustEffects, which runs for ChangeTrust only, so when an AllowTrust or SetTrustLineFlags revocation makes stellar-core redeem pool shares and remove the pool-share trustline (CAP-38), no row records the removal and the account's history shows the trustline as still open. The pool-share balance itself is recorded correctly and ingestion does not halt.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/auth-revocation-redeems-pool-shares",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "a TRUSTLINE REMOVE state change, with the pool's liquidity_pool_id, for the pool-share trustline the revocation removes",
+      "observed": "Executed through the replay harness at 3e22515a and at 18db88f4, all four variants, both inputs: dropped · partial, no trustline_removed for GAIXNEYG… on pool 16c943ea… in the SetTrustLineFlags transaction (050f8c41… on the pubnet variants, e060d79e… on the testnet variants); every other compared fact matched. By hand at 18db88f4 on pubnet ledger 50914934, transaction 6b1d2cb8… (AllowTrust): the holder gets only BALANCE_AUTHORIZATION CLEAR."
+    }
+  ],
+  "location": {
+    "commit": "18db88f4ba481c49a782d157be42177700c4385e",
+    "file": "internal/indexer/processors/effects_horizon.go",
+    "lines": "80-86, 245, 307, 383",
+    "function": "addChangeTrustEffects"
+  },
+  "evidence": {
+    "pre_fix": "make replay-full (the whole corpus against wallet-backend at the pinned current commit, both inputs): dropped · partial on all four variants of cap-0038/auth-revocation-redeems-pool-shares at 3e22515a and again at 18db88f4. The issue's test (internal/indexer/revoke_pool_shares_mainnet_test.go) at 18db88f4 on pubnet ledger 50914934 from the public data lake fails: expected 1 TRUSTLINE REMOVE, actual 0 (the reproduction in the upstream issue).",
+    "transcripts": [
+      "reports/replay-full/wallet-backend-sep54-s3/report.json",
+      "reports/replay-full/wallet-backend-rpc/report.json"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0038/auth-revocation-redeems-pool-shares:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0038/auth-revocation-redeems-pool-shares:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0038/auth-revocation-redeems-pool-shares:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0038/auth-revocation-redeems-pool-shares:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0038/auth-revocation-redeems-pool-shares:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0038/auth-revocation-redeems-pool-shares:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0038/auth-revocation-redeems-pool-shares:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0038/auth-revocation-redeems-pool-shares:testnet@30:chain"
+    ],
+    "expected_basis": "CAP-38 (https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md): revoking authorization redeems the holder's pool shares into claimable balances and removes the pool-share trustline; the operation meta shows the trustline LEDGER_ENTRY_REMOVED, and a ChangeTrust removal of the same trustline produces a TRUSTLINE REMOVE row.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "make replay-full at 18db88f4 (both inputs): dropped · partial on all four variants, as at 3e22515a; the issue's test, run at 18db88f4 before filing on 2026-11-19, fails as the issue shows.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/wallet-backend: every issue and pull request title, open and closed",
+      "stellar/wallet-backend: open pull requests touching the effects processors"
+    ],
+    "result": "existing-open"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/831."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/831",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/wallet-backend/issues/831; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "Executed again at the pinned current commit f0c00cf5 (make replay-full, both inputs): the same rows as at 18db88f4; the entries' divergences name f0c00cf5. The commits between them change only the GraphQL server's metrics (internal/serve, internal/metrics), not ingest."
+    }
+  ],
+  "siblings": [
+    "F-0088"
+  ]
+}

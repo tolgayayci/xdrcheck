@@ -1,0 +1,76 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0020",
+  "title": "Address.fromScAddress on the 16.x line refuses a muxed contract address (Protocol 30)",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.4.1 (executed; the 16.x line)",
+    "versions_tested": [
+      "js@16.4.1"
+    ],
+    "fixed_in": "17.3.0"
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "medium",
+  "severity_basis": "A valid Protocol 30 value decodes but the Address class refuses it; muxed contract addresses came to the 17.x line in 17.3.0 and are not on the 16.x maintenance line.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    84
+  ],
+  "entries": [
+    {
+      "id": "cap-0084/api-muxed-address-field-order.9e2",
+      "scope": "L4",
+      "expected": "convert SC_ADDRESS_TYPE_MUXED_CONTRACT to an address",
+      "observed": "Executed on 16.4.1: the Protocol 30 XDR decodes the SCAddress, but Address.fromScAddress throws 'Unsupported address type: scAddressTypeMuxedContract'. Muxed contract addresses came to the Address class in 17.3.0 (#1811); the 16.x line does not have them."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on js@16.4.1.",
+    "post_fix": "js@17.3.0 and js@17.4.0 convert it.",
+    "report_rows": [
+      "conform:cap-0084/api-muxed-address-field-order.9e2:-:js@16.4.1:L4"
+    ],
+    "expected_basis": "SC_ADDRESS_TYPE_MUXED_CONTRACT is an SCAddress arm in the Protocol 30 XDR definitions (CAP-84)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0020.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/js-stellar-sdk/pull/1811"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/js-stellar-sdk/pull/1811"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/pull/1811",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added. The 16.x maintenance line receives critical security fixes only (js-stellar-sdk SECURITY.md); no backport request is drafted unless a maintainer decides to ask for one."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/js-stellar-sdk/pull/1811 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ]
+}

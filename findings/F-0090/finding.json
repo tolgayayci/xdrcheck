@@ -1,0 +1,81 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0090",
+  "title": "SorobanServer.get_ledger_entries drops the extXdr field, so the sponsor of a ledger entry cannot be read",
+  "defect_group": "DG-ledger-entries-ext-dropped",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "17.0.1 and main 7b5fb3b9 (executed on both; lower bound not established)",
+    "versions_tested": [
+      "python@17.0.1",
+      "7b5fb3b9f0d17f4e49576c1f9a15a6b0ea4ce544"
+    ]
+  },
+  "component": "sdk",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "LedgerEntryResult declares key, xdr, lastModifiedLedgerSeq and liveUntilLedgerSeq but not extXdr, and pydantic ignores undeclared fields, so SorobanServer.get_ledger_entries, SorobanServerAsync.get_ledger_entries and the helpers built on them return entries without their LedgerEntryExt and so without the sponsoringId (CAP-33). No value is decoded wrongly (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    33
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L3",
+      "expected": "the parsed get_ledger_entries result carries the entry's LedgerEntryExt when the server sends extXdr",
+      "observed": "No corpus entry drives the RPC client. By hand on 17.0.1 and main 7b5fb3b9 with a local HTTP server answering in the shape stellar-rpc builds for a sponsored account: the server sends key, xdr, extXdr and lastModifiedLedgerSeq; the parsed entry has key, xdr, last_modified_ledger and live_until_ledger only. The same against stellar-rpc 30 on a local standalone network for an account created inside a sponsoring block."
+    }
+  ],
+  "location": {
+    "commit": "7b5fb3b9f0d17f4e49576c1f9a15a6b0ea4ce544",
+    "file": "stellar_sdk/soroban_rpc.py",
+    "lines": "129-133",
+    "function": "LedgerEntryResult"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's script on 17.0.1 and main 7b5fb3b9, with a local HTTP server: the parsed entry's fields are key, xdr, last_modified_ledger and live_until_ledger; extXdr, which holds the sponsor GCATS5YO…, is dropped.",
+    "expected_basis": "stellar-rpc's getLedgerEntries returns extXdr, the base64 LedgerEntryExt of the entry, since v23.0.0; LedgerEntryExt v1 carries sponsoringId (CAP-33).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on 17.0.1 and main 7b5fb3b9 before filing on 2026-11-19: the parsed entry has no extension.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "StellarCN/py-stellar-base: every issue and pull request, open and closed, about getLedgerEntries or extXdr",
+      "StellarCN/py-stellar-base: the active branches and the CHANGELOG"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/StellarCN/py-stellar-base/issues/1278."
+  },
+  "upstream": {
+    "url": "https://github.com/StellarCN/py-stellar-base/issues/1278",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/StellarCN/py-stellar-base/issues/1278; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0085",
+    "F-0091"
+  ]
+}

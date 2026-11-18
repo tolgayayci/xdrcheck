@@ -1,0 +1,90 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0026",
+  "title": "A length prefix larger than the input is allocated before reading (out of memory under an address-space cap)",
+  "target": {
+    "project": "stellar/go-xdr",
+    "package": "github.com/stellar/go-xdr",
+    "ecosystem": "go",
+    "versions_affected": "go-xdr as pinned by go-stellar-sdk v0.7.1 (executed)",
+    "versions_tested": [
+      "go@v0.7.1"
+    ],
+    "fixed_in": "go-stellar-sdk v0.7.2"
+  },
+  "component": "xdr-library",
+  "class": "resource_exhaustion",
+  "severity": "medium",
+  "severity_basis": "The runtime aborts with out of memory only under an address-space cap (1 GiB); without the cap the allocation is never touched and the decode is refused. Fixed upstream; go-stellar-sdk v0.7.2 and later carry the fix.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: an XDR encoding rule that holds in every protocol version (the corpus's xdr-strict group).",
+  "entries": [
+    {
+      "id": "xdr-strict/length-prefix-exceeds-input.6h3",
+      "scope": "L0",
+      "expected": "refuse the input before allocating its claimed length",
+      "observed": "Executed: under prlimit --as=1GiB, v0.7.1 allocates the claimed length before reading and the Go runtime aborts with 'out of memory'; v0.7.2 rejects with 'data exceeds max slice limit'. Without the cap, in a fresh process, v0.7.1 rejects (the allocation is never touched).",
+      "variant": "none"
+    },
+    {
+      "id": "xdr-strict/length-prefix-exceeds-input.6h4",
+      "scope": "L0",
+      "expected": "refuse the input before allocating its claimed length",
+      "observed": "Executed: under prlimit --as=1GiB, v0.7.1 allocates the claimed length before reading and the Go runtime aborts with 'out of memory'; v0.7.2 rejects with 'data exceeds max slice limit'. Without the cap, in a fresh process, v0.7.1 rejects (the allocation is never touched).",
+      "variant": "none"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L0, on go@v0.7.1 under the isolated memory sandbox (RLIMIT_AS 1 GiB).",
+    "post_fix": "go@v0.7.2 and later refuse with \"data exceeds max slice limit\".",
+    "report_rows": [
+      "conform:xdr-strict/length-prefix-exceeds-input.6h3:none:go@v0.7.1:L0",
+      "conform:xdr-strict/length-prefix-exceeds-input.6h4:none:go@v0.7.1:L0"
+    ],
+    "expected_basis": "RFC 4506: a variable-length array whose length prefix exceeds the remaining input is malformed.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 2 of 2 listed report rows failed again as recorded, all offline. Review: findings/review/F-0026.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/go-xdr/pull/34"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/go-xdr/pull/34"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-xdr/pull/34",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/go-xdr/pull/34 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "duplicate-of",
+      "note": "The entries xdr-strict/length-prefix-exceeds-input.6h3 and .6h4 are in the public corpus again; the record lists their report rows."
+    }
+  ]
+}

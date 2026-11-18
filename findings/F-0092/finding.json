@@ -1,0 +1,79 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0092",
+  "title": "ingest: FeesFromTxParts counts a failed Soroban transaction as a classic fee when core runs without EMIT_SOROBAN_TRANSACTION_META_EXT_V1",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.9.0 and main 4cee0255 (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "FeesFromTxParts decides that a transaction is Soroban from the presence of sorobanMeta; with TransactionMeta v4 stellar-core leaves sorobanMeta out of a failed transaction unless EMIT_SOROBAN_TRANSACTION_META_EXT_V1 is on, which it is not by default, so a failed InvokeHostFunction transaction is counted in ClassicFeesPerOp with its whole fee, resource fee included. A wrong fee statistic for callers whose meta comes from a core with the default config; stellar-rpc enforces the flag and is not affected (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/contract-error-return-values-golden.38db1ab5b5b4c24b",
+      "variant": "core-test",
+      "scope": "replay",
+      "expected": "a failed Soroban transaction is not counted in ClassicFeesPerOp",
+      "observed": "Not run by the kit against go-stellar-sdk's fee helpers. By hand on this ledger (stellar-core's 'contract errors cause transaction to fail|err_err', protocol 30, ledger 9: one failed InvokeHostFunction, fee charged 33733, no sorobanMeta): ExtractLedgerTxParts and FeesFromTxParts give ClassicFeesPerOp=[33733] and SorobanInclusionFees=[]."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "ingest/extract.go",
+    "lines": "168-176, 240-295",
+    "function": "classifyTxFee"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program on v0.9.0 and main 4cee0255: a failed InvokeHostFunction with no sorobanMeta gives ClassicFeesPerOp=[33733], while a successful one with sorobanMeta ext v0 is skipped and a failed one with ext v1 gives SorobanInclusionFees=[100]. stellar-core's test ledger 9 of the contract error test gives the same result as the first case.",
+    "expected_basis": "stellar-core v30 (TransactionMeta.cpp maybeActivateSorobanMeta) writes sorobanMeta for a failed transaction only with EMIT_SOROBAN_TRANSACTION_META_EXT_V1; the operation result type (InvokeHostFunction, ExtendFootprintTtl or RestoreFootprint) marks a Soroban transaction either way, and the doc comment of ClassicFeesPerOp says it holds every non-Soroban transaction.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: the failed transaction without sorobanMeta is counted as a classic fee of 33733.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01",
+      "repo:stellar/go-stellar-sdk FeesFromTxParts"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6060."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6060",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6060; this record restates the public issue."
+    }
+  ]
+}

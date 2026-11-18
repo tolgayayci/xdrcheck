@@ -1,0 +1,76 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0071",
+  "title": "operations.successful is true for operations of a failed transaction that stellar-core rolled back",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "3e22515a44979fdc3a558fda3991ca2b48e38cef and 18db88f4ba481c49a782d157be42177700c4385e (range not established)",
+    "versions_tested": [
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+      "18db88f4ba481c49a782d157be42177700c4385e"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "ConvertOperation takes successful from the operation's own result code only, so every operation coded op_success in a transaction that failed with txFAILED or txFEE_BUMP_INNER_FAILED is stored as successful although stellar-core rolled it back, and the API documents the field as whether the operation succeeded. A silent wrong value in a secondary field of account history, common on pubnet; no state change is attached to these operations, so balances are right.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: a failed transaction rolling back its operations is classic behaviour that predates CAPs.",
+  "entries": [
+    {
+      "id": "classic/failed-tx-operations-rolled-back",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "every operation of a failed transaction is stored with successful = false: transaction 34a69fbc… of pubnet ledger 65484612 is txFAILED, and its second operation (PAYMENT, coded op_success) was rolled back with it",
+      "observed": "The entry holds the ledger and states the transaction's successful = false, its result codes and no operation meta; no replay of the kit compares an operation's successful field (the expectation vocabulary has none). By hand at 18db88f4 on this ledger: 195 of the 868 stored operations have successful = true in a failed transaction, for example operation 2 (PAYMENT, op_success) of transaction 34a69fbc… (txFAILED)."
+    }
+  ],
+  "location": {
+    "commit": "18db88f4ba481c49a782d157be42177700c4385e",
+    "file": "internal/indexer/processors/utils.go",
+    "lines": "250-270",
+    "function": "ConvertOperation"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's test (internal/indexer/failed_ops_test.go) at wallet-backend 18db88f4 runs ProcessLedger on pubnet ledger 65484612 from the public data lake: 195 of 868 buffered operations are Successful while their transaction failed. An ingest of the same ledger at 3e22515a stored those 195 operations with successful = true (processors/utils.go and processors/codes.go are the same at 18db88f4).",
+    "expected_basis": "When a transaction fails, stellar-core rolls back all of its operations, including those whose own result code is op_success; the transaction result says whether any of them took effect.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made at 18db88f4 before filing on 2026-11-19: 195 of 868 operations of pubnet ledger 65484612 are successful in a failed transaction.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/wallet-backend: every issue and pull request title, open and closed",
+      "stellar/wallet-backend: commits since 2026-11-01 on every branch touching the cited files"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/830."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/830",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/wallet-backend/issues/830; this record restates the public issue."
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0059",
+  "title": "JSON schema $ref values contain unencoded < and > (#/definitions/StringM<N>), so strict validators reject the schemas",
+  "target": {
+    "project": "stellar/rs-stellar-xdr",
+    "package": "stellar-xdr",
+    "ecosystem": "crates",
+    "versions_affected": "30.0.0 and main ebec5fb (the schemas in xdr-json/); @stellar/stellar-xdr-json 30.0.0 schema() (range not established)",
+    "versions_tested": [
+      "rust@30.0.0"
+    ],
+    "fixed_in": "f6c69ff0a188f9b7ec93e52f18c7c0e5b2cc265a"
+  },
+  "component": "xdr-library",
+  "class": "documentation",
+  "severity": "low",
+  "severity_basis": "schema_name() of StringM<MAX> returns StringM<N>, which schemars 0.8 uses as the $ref without encoding; < and > are not allowed unencoded in a URI fragment, so a validator that checks uri-reference refuses 131 of the 477 published schemas. Lenient validators accept them.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: the JSON schemas of SEP-51 XDR-JSON, not a protocol change.",
+  "entries": [
+    {
+      "id": "none",
+      "scope": "json",
+      "expected": "the published JSON schemas compile in a strict JSON Schema validator",
+      "observed": "No corpus entry covers the JSON schemas. By hand on 30.0.0: 131 of the 477 files in xdr-json/ hold 443 $ref values of the form #/definitions/StringM<N>, which the jsonschema crate refuses as not a uri-reference."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs; no run of the kit compares this behaviour, so no report row exists. The issue's program on stellar-xdr 30.0.0 with schemars 0.8 and jsonschema 0.61: the Memo schema and xdr-json/Memo.json are refused with '\"#/definitions/StringM<28>\" is not a \"uri-reference\"'; percent-encoding only the $ref values makes all 477 files compile.",
+    "expected_basis": "A $ref must be a URI reference, and < and > are not allowed unencoded in a URI fragment (RFC 3986 section 3.5).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Checked again on 2026-11-18 in the published stellar-xdr 30.0.0 crate: 131 of 477 xdr-json files with 443 $ref values containing '<' (src/generated.rs formats StringM<{MAX}>). The strict validator was not re-run.",
+    "result": "source-reading"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/rs-stellar-xdr schema $ref StringM",
+      "repo:stellar/rs-stellar-xdr jsonschema"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/rs-stellar-xdr/issues/626."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-xdr/issues/626",
+    "filed_at": "2026-11-14",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/rs-stellar-xdr/issues/626; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Upstream: the maintainer closed the issue on 2026-11-19 after a fix was merged on main in commit f6c69ff0 (the generated schemas inline StringM, so none of the 477 files in xdr-json/ holds a $ref with < or >, checked at that commit); no stellar-xdr release after 30.0.0 includes it yet."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "Upstream state refreshed: GitHub records the issue's closure reason as duplicate; the fix of commit f6c69ff0 is on main, and no stellar-xdr release after 30.0.0 includes it yet."
+    }
+  ]
+}

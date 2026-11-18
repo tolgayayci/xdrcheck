@@ -1,0 +1,91 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0044",
+  "title": "A text memo is written into the JSON export without a UTF-8 check (invalid bytes become U+FFFD)",
+  "target": {
+    "project": "stellar/stellar-etl",
+    "ecosystem": "source",
+    "versions_affected": "2b24ec89ddce7fc0beb7795de982c93e6895eaf3 (range not established); also release-v20261117 (a046ba53, b891ddda)",
+    "versions_tested": [
+      "2b24ec89ddce7fc0beb7795de982c93e6895eaf3",
+      "a046ba53"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "Lossy export of a field the ledger carries as arbitrary bytes (Go's encoding/json replaces invalid UTF-8 with U+FFFD) while tx_envelope keeps the bytes. No halt: the JSON encoder does not fail on it.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0067/to-muxed-id-text-non-utf8-memo",
+      "scope": "XDR103",
+      "expected": "memo bytes exported without loss, or flagged",
+      "observed": "XDR103 at internal/transform/transaction.go:247 (TransformTransaction): xdr.Memo.MustText() carries submitter-controlled bytes into the JSON field TransactionOutput.Memo without a UTF-8 check (make lint-stellar-etl); the exported memo of a non-UTF-8 text memo contains U+FFFD."
+    }
+  ],
+  "location": {
+    "commit": "2b24ec89ddce7fc0beb7795de982c93e6895eaf3",
+    "file": "internal/transform/transaction.go",
+    "lines": "247",
+    "function": "TransformTransaction"
+  },
+  "evidence": {
+    "pre_fix": "make lint-stellar-etl (xdrlint built with the Go toolchain stellar-etl requires): XDR103 at internal/transform/transaction.go:247, suppressed with this record as its finding. Still present at release-v20261117 (a046ba53).",
+    "transcripts": [
+      "reports/lint-stellar-etl/2b24ec89ddce7fc0beb7795de982c93e6895eaf3.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/stellar-etl/v2@2b24ec89:XDR103:internal/transform/transaction.go:TransformTransaction"
+    ],
+    "expected_basis": "Memo text is string<28> in the XDR definitions (https://github.com/stellar/stellar-xdr/blob/v30.0/Stellar-transaction.x#L778): arbitrary bytes, not required to be UTF-8; Go's encoding/json replaces invalid UTF-8 with U+FFFD, so the exported value is not the ledger's.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone: 1 of 1 listed report rows failed again as recorded, offline. Checked again at a046ba53 before filing.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fstellar-etl+memo+utf8",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fstellar-etl+invalid+utf-8"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/stellar-etl (#504): the memo column holds U+FFFD for a non-UTF-8 text memo while tx_envelope keeps the bytes."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-etl/issues/504",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the stellar-etl linter run; no public upstream item found."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "draft",
+      "note": "Reproduced, upstream searched (none found), issue text written; awaiting a maintainer's review before filing."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/stellar-etl/issues/504 (master 2b24ec89 and release-v20261117 b891ddda)."
+    }
+  ]
+}

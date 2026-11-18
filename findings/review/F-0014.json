@@ -1,0 +1,39 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0014",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/wallet-backend",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "make verify-replay OFFLINE=1",
+        "observed": "the pre-fix commit gives the declared class on both inputs (sep54-s3 and rpc), the fixed and current commits pass; nothing left behind",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 2,
+      "found_failing": 2,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/wallet-backend/issues/731",
+      "matches_rows": true,
+      "state_seen": "closed 2026-09-17 by PR #734 (c152783c)",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [],
+  "verdict": "accepted",
+  "failing_step": null
+}

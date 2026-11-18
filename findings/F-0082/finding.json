@@ -1,0 +1,78 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0082",
+  "title": "processors/token_transfer: NewEventsProcessor drops the issuer burn when a revocation redeems pool shares and the other asset's amount rounds to 0",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.9.0 and main 4cee0255 (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "In derived mode generateEventsForRevokedTrustlines infers burns from the number of claimable balances created, so when a revocation redeems pool shares, one leg rounds to 0 and the trustor issues the other asset, the burn of the issuer's leg is lost (and with one claimable balance a 0-amount burn core does not emit is added); the package's own VerifyEvents fails on the ledger. The issue states impact low: the input needs a zero leg, and losing a burn needs an issuer trustor; no pubnet instance was searched.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38,
+    67
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "replay",
+      "expected": "NewEventsProcessor reports the burn stellar-core emits for the issuer's redeemed leg, and VerifyEvents passes in derived mode",
+      "observed": "No corpus entry holds a revocation with a zero leg. By hand on v0.9.0 on ledger 18 of a local stellar-core 30.0.0 network (protocol 30): the SetTrustLineFlags revocation burns 94870 AAA and creates no claimable balance; NewEventsProcessor emits 0 operation events where NewEventsProcessorForUnifiedEvents emits the burn, and VerifyEvents(derived) is false."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "processors/token_transfer/token_transfer_processor.go",
+    "lines": "675-686, 722-768",
+    "function": "generateEventsForRevokedTrustlines"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program (the ledger embedded, sha256 of the raw XDR 8c6b277d664fa38514a459be0148de5bf99a68f676529d9f26cb488fe9d6bef5) on v0.9.0 and main 4cee0255: NewEventsProcessor gives 0 operation events, the unified processor gives burn 94870, and VerifyEvents(lcm, passphrase, false) reports 'balance delta mismatch between events and ledger changes'.",
+    "expected_basis": "stellar-core's redeemIntoClaimableBalance (https://github.com/stellar/stellar-core/blob/0e49751aa9ddf892302cca02cea7f3f5d97df9f1/src/transactions/TransactionUtils.cpp#L1677-L1695) burns a leg the trustor issues, creates no claimable balance for a leg of 0 and emits the burn event (CAP-38, CAP-67).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: the derived processor drops the burn and VerifyEvents fails.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6058."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6058",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6058; this record restates the public issue."
+    }
+  ]
+}

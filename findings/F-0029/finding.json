@@ -1,0 +1,90 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0029",
+  "title": "SignedPayload with an empty payload encodes to a strkey the library's own parser refuses",
+  "defect_group": "DG-signed-payload-empty-encode",
+  "target": {
+    "project": "stellar/rs-stellar-strkey",
+    "package": "stellar-strkey",
+    "ecosystem": "crates",
+    "versions_affected": "stellar-strkey 0.0.13 as pinned by stellar-xdr 28.0.0 - 28.0.1",
+    "versions_tested": [
+      "rust@28.0.0:limits-default",
+      "rust@28.0.0:limits-none",
+      "rust@28.0.1:limits-default",
+      "rust@28.0.1:limits-none"
+    ],
+    "fixed_in": "stellar-strkey 0.0.17"
+  },
+  "component": "xdr-library",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Encode side only. stellar-xdr 28.0.0 and 28.0.1 pin stellar-strkey 0.0.13; stellar-strkey 0.0.17 (#107) requires a non-empty payload and stellar-xdr 30.0.0 pins stellar-strkey 1.0.0.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/api-encode-signed-payload-empty",
+      "scope": "L4",
+      "expected": "refuse to encode a signed payload of 0 bytes (SEP-23: 1 to 64 bytes)",
+      "observed": "Executed on 28.0.0 and 28.0.1, which pin stellar-strkey 0.0.13: SignedPayload with an empty payload encodes to PA7QYNF7…AAAAAAKH4Y, which the library's own parser refuses. stellar-strkey 0.0.17 (#107) requires a non-empty payload; stellar-xdr 30.0.0 pins stellar-strkey 1.0.0 and refuses."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on rust@28.0.0 and rust@28.0.1 (both profiles).",
+    "post_fix": "rust@30.0.0 refuses.",
+    "transcripts": [
+      "evidence/sdk-matrix/"
+    ],
+    "report_rows": [
+      "conform:strkey/api-encode-signed-payload-empty:-:rust@28.0.0:limits-default:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:rust@28.0.0:limits-none:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:rust@28.0.1:limits-default:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:rust@28.0.1:limits-none:L4"
+    ],
+    "expected_basis": "SEP-23 v1.4.0: a signed payload carries 1 to 64 bytes."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 4 of 4 listed report rows failed again as recorded, all offline. Review: findings/review/F-0029.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/rs-stellar-strkey/pull/107"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/rs-stellar-strkey/pull/107"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-strkey/pull/107",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/rs-stellar-strkey/pull/107 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ],
+  "siblings": [
+    "F-0025",
+    "F-0034"
+  ]
+}

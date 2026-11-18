@@ -1,0 +1,104 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0040",
+  "title": "A pre-authorized-transaction signer removed by a failed transaction produces no signer_removed",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "e967ce8b7362b79c277e700e789181d76fbb5967 (range not established); also 3e22515a (checked 2026-11-13); also 18db88f4 (replay 2026-11-19); also f0c00cf5 (replay 2026-11-20)",
+    "versions_tested": [
+      "e967ce8b7362b79c277e700e789181d76fbb5967",
+      "3e22515a",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "medium",
+  "severity_basis": "A failed transaction whose pre-authorized-transaction signer stellar-core removed (CAP-28) produces no signer_removed state change, so wallet-backend keeps reporting a signer the account no longer has. Executed through the replay harness on four local stellar-core ledgers (Protocols 28 and 30, testnet and pubnet passphrases), on both inputs; the baseline indexer reports the change.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    28
+  ],
+  "entries": [
+    {
+      "id": "cap-0028/pre-auth-signer-removed-on-failed-tx",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "a signer_removed state change for the pre-auth-tx signer stellar-core removed",
+      "observed": "Executed at e967ce8b through the replay harness, both inputs: dropped · partial, no signer_removed for GAC75KAX… in the failed transaction (9d62dbee… on the pubnet variants, c1cbc388… on the testnet variants); every other compared fact matched."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "make replay-full (the whole corpus against wallet-backend at the pinned current commit e967ce8b, both inputs): dropped · partial on all four variants. Still reproduces at 3e22515a.",
+    "transcripts": [
+      "reports/replay-full/wallet-backend-sep54-s3/report.json",
+      "reports/replay-full/wallet-backend-rpc/report.json"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0028/pre-auth-signer-removed-on-failed-tx:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0028/pre-auth-signer-removed-on-failed-tx:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0028/pre-auth-signer-removed-on-failed-tx:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0028/pre-auth-signer-removed-on-failed-tx:testnet@30:chain"
+    ],
+    "expected_basis": "CAP-28 (https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/core/cap-0028.md): from Protocol 13 stellar-core removes a pre-authorized-transaction signer when the transaction is applied, whatever its result; the ledger meta of the failed transaction shows the signer removed from the account entry.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone: 4 of 4 listed report rows failed again as recorded, offline. Reproduced again at 3e22515a on both inputs before filing.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fwallet-backend+pre-auth+signer",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fwallet-backend+signer+removed+failed+transaction",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fwallet-backend+failed+transaction+signer"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/wallet-backend (#805): a CAP-28 pre-auth signer removed by a failed transaction gets no SIGNER/REMOVE, only the fee debit."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/805",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the replay run's failure rows; no public upstream item found."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "draft",
+      "note": "Reproduced, upstream searched (none found), issue text written; awaiting a maintainer's review before filing."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/wallet-backend/issues/805 at main 3e22515a (also e967ce8b), transaction c1cbc388…, with the LedgerCloseMeta and a ProcessLedger test in the issue."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Executed again at the pinned current commit 18db88f4 (make replay-full, both inputs): the same rows as at 3e22515a; the entries' divergences name 18db88f4."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "Executed again at the pinned current commit f0c00cf5 (make replay-full, both inputs): the same rows as at 18db88f4; the entries' divergences name f0c00cf5. The commits between them change only the GraphQL server's metrics (internal/serve, internal/metrics), not ingest."
+    }
+  ]
+}

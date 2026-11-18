@@ -1,0 +1,143 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0062",
+  "title": "wallet-backend lists the inner source of a failed fee bump whose sequence number did not move as a participant (by design)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "e967ce8b7362b79c277e700e789181d76fbb5967, 3e22515a44979fdc3a558fda3991ca2b48e38cef, 18db88f4ba481c49a782d157be42177700c4385e and f0c00cf5242048d0438d07151cc1ef1a4b98d7c7 (the same code on main)",
+    "versions_tested": [
+      "e967ce8b7362b79c277e700e789181d76fbb5967",
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "No defect: see the resolution.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    15
+  ],
+  "entries": [
+    {
+      "id": "cap-0015/fee-bump-inner-apply-time-failures.bad-seq",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "participants exactly the fee payer FB (the inner source's sequence number did not move)",
+      "observed": "Executed at e967ce8b, every variant and both inputs: mishandled · wrong_value, one extra participant, the inner source QS (GAORBKEP…); nothing missing, wrong or forbidden."
+    },
+    {
+      "id": "cap-0015/fee-bump-inner-apply-time-failures.no-account",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "participants exactly the fee payer FB (the inner source's sequence number did not move)",
+      "observed": "Executed at e967ce8b, every variant and both inputs: mishandled · wrong_value, one extra participant, the inner source NA (GAK7P5CT…); nothing missing, wrong or forbidden."
+    }
+  ],
+  "location": {
+    "commit": "e967ce8b7362b79c277e700e789181d76fbb5967",
+    "file": "internal/indexer/processors/participants.go",
+    "lines": "85-95",
+    "function": "ParticipantsProcessor.GetTransactionParticipants"
+  },
+  "evidence": {
+    "pre_fix": "make replay-full OFFLINE=1 (the whole corpus against wallet-backend at the pinned current commit e967ce8b, inputs sep54-s3 and rpc): 16 rows, mishandled · wrong_value with participants.exact extra-in-scope for the inner source; the four sibling entries (bad-auth, bad-auth-extra, bad-min-seq-age-or-gap, bad-sponsorship), whose inner source's sequence number did move and is expected, pass.",
+    "transcripts": [
+      "reports/replay-full/wallet-backend-sep54-s3/report.json",
+      "reports/replay-full/wallet-backend-rpc/report.json"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.bad-seq:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.no-account:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0015/fee-bump-inner-apply-time-failures.no-account:testnet@30:chain"
+    ],
+    "expected_basis": "The corpus's participant rule (docs/manifest.md 6.5 and 6.11): participants are what the ledger meta shows was affected; the source is the account whose sequence number the transaction moved, and envelope-only claims are never participants.",
+    "observed": "executed"
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "candidate",
+      "note": "Triaged from the 16 replay-full failure rows of the two entries that had no finding ID."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "not-a-defect",
+      "note": "Closed with the reason below after reading wallet-backend at e967ce8b, 3e22515a and main."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "not-a-defect",
+      "note": "Carried to the pinned current commit 3e22515a: make replay-full shows the same rows there; the divergences name both commits."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "not-a-defect",
+      "note": "Carried to the pinned current commit 18db88f4: make replay-full shows the same rows there; the divergences name it too."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "not-a-defect",
+      "note": "Carried to the pinned current commit f0c00cf5: make replay-full shows the same rows there; the divergences name it too."
+    }
+  ],
+  "resolution": {
+    "reason": "Not a defect in wallet-backend. ParticipantsProcessor.GetTransactionParticipants always adds the envelope's source account ('in case of a fee bump, this is the innerTx source account', participants.go at e967ce8b), and GetOperationParticipants keeps the source of a failed transaction 'so the operation row still exists for the submitter'. Attributing a failed transaction to the account that submitted it is wallet-backend's documented intent and the same at 3e22515a and on main; it stores no state change or movement for that account, and nothing the network did not apply is attributed (no forbidden address appears). The extra participant comes from this kit's stricter rule, under which a source whose sequence number did not move (txBAD_SEQ) or that no longer exists (txNO_ACCOUNT) is an envelope-only claim. The entries keep their exact expectation and the cells are declared.",
+    "reviewer": "kit-maintainer",
+    "date": "2026-11-18",
+    "manifest_action": "divergence recorded as wont_fix on cap-0015/fee-bump-inner-apply-time-failures.bad-seq and .no-account (stellar/wallet-backend e967ce8b), naming this record"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "make replay-full OFFLINE=1 on 2026-11-18: the 16 rows (8 row IDs on each input) show the same single extra participant; source read again at e967ce8b and 3e22515a.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-18",
+    "queries": [
+      "repo:stellar/wallet-backend participants",
+      "repo:stellar/wallet-backend fee bump participant",
+      "repo:stellar/wallet-backend participants failed transaction"
+    ],
+    "result": "none-found"
+  },
+  "related": [
+    "https://github.com/stellar/wallet-backend/blob/e967ce8b7362b79c277e700e789181d76fbb5967/internal/indexer/processors/participants.go#L85-L95"
+  ]
+}

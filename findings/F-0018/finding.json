@@ -1,0 +1,116 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0018",
+  "title": "scValToNative merges ScMap keys that convert to the same native key and drops entries silently",
+  "defect_group": "DG-scval-map-key-collision",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.3.0 - 16.4.1, 17.2.0 - 17.2.1 (earlier 17.x not run)",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1",
+      "js@17.2.0",
+      "js@17.2.1"
+    ],
+    "fixed_in": "17.3.0"
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "Silent wrong value in a converted contract value (entries lost without an error). Fixed in 17.3.0 (it now throws); not on the 16.x line.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/scval-map-keys-collide-three-types.bool-u32-i32",
+      "scope": "L3",
+      "expected": "either every map entry survives the conversion or the conversion fails",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: scValToNative returns an object with 2 key(s) and no error; the fix of the v17 line was not backported to v16.",
+      "variant": "none"
+    },
+    {
+      "id": "cap-0046/scval-map-keys-collide-three-types.u32-string-symbol",
+      "scope": "L3",
+      "expected": "either every map entry survives the conversion or the conversion fails",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: scValToNative returns an object with 1 key(s) and no error; the fix of the v17 line was not backported to v16.",
+      "variant": "none"
+    },
+    {
+      "id": "cap-0046/scval-map-keys-collide-u32-symbol",
+      "scope": "L3",
+      "expected": "either every map entry survives the conversion or the conversion fails",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: scValToNative returns an object with 1 key(s) and no error; the fix of the v17 line was not backported to v16.",
+      "variant": "none"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L3, on js@16.3.0 - 16.4.1 and js@17.2.0 - 17.2.1.",
+    "post_fix": "js@17.3.0 and js@17.4.0 throw on the same values.",
+    "transcripts": [
+      "evidence/js-1789/"
+    ],
+    "report_rows": [
+      "conform:cap-0046/scval-map-keys-collide-three-types.bool-u32-i32:none:js@16.3.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.bool-u32-i32:none:js@16.3.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.bool-u32-i32:none:js@16.4.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.bool-u32-i32:none:js@17.2.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.bool-u32-i32:none:js@17.2.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.u32-string-symbol:none:js@16.3.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.u32-string-symbol:none:js@16.3.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.u32-string-symbol:none:js@16.4.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.u32-string-symbol:none:js@17.2.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-three-types.u32-string-symbol:none:js@17.2.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-u32-symbol:none:js@16.3.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-u32-symbol:none:js@16.3.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-u32-symbol:none:js@16.4.1:L3",
+      "conform:cap-0046/scval-map-keys-collide-u32-symbol:none:js@17.2.0:L3",
+      "conform:cap-0046/scval-map-keys-collide-u32-symbol:none:js@17.2.1:L3"
+    ],
+    "expected_basis": "The ScMap carries distinct keys of different ScVal types (CAP-46); a lossless conversion must keep each."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 15 of 15 listed report rows failed again as recorded, all offline. Review: findings/review/F-0018.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/js-stellar-sdk/issues/1789"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/js-stellar-sdk/issues/1789"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1789",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added. The 16.x maintenance line receives critical security fixes only (js-stellar-sdk SECURITY.md); no backport request is drafted unless a maintainer decides to ask for one."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/js-stellar-sdk/issues/1789 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ],
+  "siblings": [
+    "F-0047"
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0046",
+  "title": "The token transfer processor credits the admin, not the recipient, of a legacy custom-token mint event",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.9.0 and main 376279e8 (executed by hand; range not established)",
+    "versions_tested": [
+      "v0.9.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "processors/token_transfer/contract_events.go parses a legacy custom-token mint [mint, admin, to] under TransactionMeta v4 with the CAP-67 layout and credits topics[1] (the admin) instead of the recipient, so balances derived from the events are wrong for those tokens. Seen on real pubnet ledgers 64870500 and 64870521; the clawback branch has the same shape (not executed).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0067/legacy-layout-mint-with-admin-topic.pubnet-64870500",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "the mint credits the recipient named in the last topic",
+      "observed": "Not run by the kit against go-stellar-sdk: on this ledger, read from the public data lake with go-stellar-sdk v0.9.0 and main 376279e8, the token transfer processor credits the admin (topics[1]) instead of the recipient named in the last topic."
+    },
+    {
+      "id": "cap-0067/legacy-layout-mint-with-admin-topic.pubnet-64870521",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "the mint credits the recipient named in the last topic",
+      "observed": "Not run by the kit against go-stellar-sdk: on this ledger, read from the public data lake with go-stellar-sdk v0.9.0 and main 376279e8, the token transfer processor credits the admin (topics[1]) instead of the recipient named in the last topic."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs: pubnet ledgers 64870500 (transaction 4f2d99a0…) and 64870521 (transaction 829d96b9…) from the public data lake through go-stellar-sdk v0.9.0 and main 376279e8; confirmed by reading processors/token_transfer/contract_events.go. No run of the kit drives the token transfer processor on these entries, so no report row exists.",
+    "expected_basis": "A legacy (pre-CAP-67) mint event names the recipient in its last topic; the credit must go to the recipient (the operation's ledger meta credits it).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-13",
+    "method": "Reproduced in a separate run on pubnet ledgers 64870500 (4f2d99a0…) and 64870521 (829d96b9…) from the public data lake with go-stellar-sdk v0.9.0 and main 376279e8: a legacy [mint, admin, to] event under TransactionMeta v4 is credited to the admin.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-13",
+    "queries": [
+      "repo:stellar/go-stellar-sdk token transfer mint admin",
+      "https://github.com/stellar/stellar-etl/issues/467"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/go-stellar-sdk (#6044): legacy custom-token mint/clawback [mint, admin, to] credited to the admin under TxMeta v4."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6044",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Created from a triage of stellar-etl replay rows, confirmed by reading go-stellar-sdk v0.9.0 (equal to main)."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/go-stellar-sdk/issues/6044 (v0.9.0 and main 376279e8; pubnet 64870500 and 64870521; related stellar-etl#467)."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/stellar-etl/issues/467",
+    "https://github.com/stellar/go-stellar-sdk/pull/6004",
+    "https://github.com/stellar/go-stellar-sdk/issues/6043"
+  ]
+}

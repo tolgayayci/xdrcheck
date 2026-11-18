@@ -1,0 +1,87 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0009",
+  "title": "A muxed address reaches an account column in SEP-41 processing",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "79ea2acd1dc65a07166133cc04b12e76db314db0 (range not established)",
+    "versions_tested": [
+      "79ea2acd1dc65a07166133cc04b12e76db314db0"
+    ],
+    "fixed_in": "6e5a59101158dc2996295450190142366062cd05"
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "high",
+  "severity_basis": "A muxed address was stored un-reduced (one producer of issue #716); the claimable-balance and pool kinds stayed reachable until PR #756. Fixed upstream by PR #693 (6e5a5910); make lint-before-after shows the narrowing.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    27,
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0027/muxed-source-and-destination-max-ids",
+      "scope": "XDR102",
+      "expected": "no XDR102 report",
+      "observed": "XDR102: xdr.ScAddress.String() renders M…, W…, B… and L… strkeys for the muxed, claimable-balance and pool kinds; it reaches account-key type types.AddressBytea at line 173 without being reduced to the base account (ToAccountId) or kind-checked"
+    }
+  ],
+  "location": {
+    "commit": "79ea2acd1dc65a07166133cc04b12e76db314db0",
+    "file": "internal/services/sep41/events.go",
+    "lines": "307",
+    "function": "extractAddressFromScVal"
+  },
+  "evidence": {
+    "transcripts": [
+      "reports/lint-before-after/79ea2acd1dc65a07166133cc04b12e76db314db0.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@79ea2acd:XDR102:internal/services/sep41/events.go:extractAddressFromScVal"
+    ]
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row lint:github.com/stellar/wallet-backend@79ea2acd:XDR102:internal/services/sep41/events.go:extractAddressFromScVal."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Pre-fix side of a public upstream fix."
+    }
+  ],
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0009.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/wallet-backend/pull/693"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/wallet-backend/pull/693"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/pull/693",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the fix itself is the evidence and the linter row is the pre-fix side of the before/after table."
+    }
+  },
+  "related": [
+    "https://github.com/stellar/wallet-backend/issues/716",
+    "https://github.com/stellar/wallet-backend/pull/756"
+  ]
+}

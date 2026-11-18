@@ -1,0 +1,79 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0093",
+  "title": "contract.Spec cannot convert a #[contracterror] argument or a nested soroban_sdk::Error value",
+  "defect_group": "DG-spec-error-values",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "17.4.0 and main 5243062f (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "js@17.4.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "low",
+  "severity_basis": "nativeToUdt has no case for scSpecEntryUdtErrorEnumV0 and the spec's scValToNative handles scSpecTypeError only in a Result's error slot, so funcArgsToScVals throws for a #[contracterror] argument (given the case number or a ready ScVal) and funcResToNative throws for a struct field of type Error; the contract Client and generated bindings cannot call such a function or read the value. These types are rare in deployed contracts (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "spec",
+      "expected": "funcArgsToScVals encodes a #[contracterror] argument as scvError(sceContract(code)) and funcResToNative gives { type: \"contract\", code } for a nested Error value, the shape scValToNative already uses",
+      "observed": "No corpus entry converts an error value through a contract spec. By hand on 17.4.0: funcArgsToScVals('report', { e: 1 }) and funcArgsToScVals('report', { e: <ScVal> }) throw failed to parse udt MyError; funcResToNative('last', …) for a struct with an Error field throws failed to convert … to native type from type scSpecTypeError; the generic scValToNative gives {\"type\":\"contract\",\"code\":1}."
+    }
+  ],
+  "location": {
+    "commit": "5243062fdf7a874d33cbf3089e898eb0777337a8",
+    "file": "src/contract/spec.ts",
+    "lines": "946-962, 1176-1187",
+    "function": "nativeToUdt"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's script on 17.4.0 (main 5243062f has the same code): both funcArgsToScVals calls throw failed to parse udt MyError and funcResToNative('last') throws failed to convert { \"error\": { \"contract\": 1 } } to native type from type scSpecTypeError.",
+    "expected_basis": "soroban-sdk implements TryFromVal in both directions between a #[contracterror] enum and an scvError of type sceContract with the case's code, so a contract can take one as an argument, and maps soroban_sdk::Error to the spec type Error, which can be nested in a #[contracttype] struct or a Vec.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on 17.4.0 before filing on 2026-11-19: the #[contracterror] argument and the nested Error value both throw.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/js-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/js-stellar-sdk: the active branches"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/js-stellar-sdk/issues/1915."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1915",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/js-stellar-sdk/issues/1915; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0089"
+  ]
+}

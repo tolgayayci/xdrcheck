@@ -1,0 +1,131 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0023",
+  "title": "Liquidity pool asset order compared as strkey text: valid pairs refused, reversed and identical pairs accepted",
+  "defect_group": "DG-pool-asset-order",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.0 - v0.7.1 (executed v0.7.1); before v0.6.1 from release notes",
+    "versions_tested": [
+      "go@v0.7.1"
+    ],
+    "fixed_in": "v0.7.2"
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "medium",
+  "severity_basis": "A valid network transaction is refused by txnbuild and the reversed pair yields the ID of a pool stellar-core cannot create. Fixed in v0.7.2 (and backported to v0.6.1).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-identical-assets",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes and refuse an asset paired with itself",
+      "observed": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId checks AssetA <= AssetB and returns an ID for a pool of an asset with itself; v0.7.2 requires AssetA < AssetB."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes and refuse an asset paired with itself",
+      "observed": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId fails with 'AssetA must be <= AssetB'; v0.7.2 returns the ID."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes and refuse an asset paired with itself",
+      "observed": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306; v0.7.2 refuses the pair."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.identical-assets",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes and refuse an asset paired with itself",
+      "observed": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId checks AssetA <= AssetB and returns an ID for a pool of an asset with itself; v0.7.2 requires AssetA < AssetB."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes and refuse an asset paired with itself",
+      "observed": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId fails with 'AssetA must be <= AssetB'; v0.7.2 returns the ID."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes and refuse an asset paired with itself",
+      "observed": "Executed on v0.7.1: txnbuild.NewLiquidityPoolId returns c1324f878b3d11af9f923abb7d692fc74e0a7bcfd9a4edefd564efe5fdae9fdb; v0.7.2 refuses the pair."
+    },
+    {
+      "id": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "scope": "L1",
+      "expected": "order the pool assets by XDR bytes and refuse an asset paired with itself",
+      "observed": "From the release notes of the v0.6.1 backport; no 0.6.x version was executed. Asserted only after one execution.",
+      "variant": "testnet"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L1 and L4, on go@v0.7.1.",
+    "post_fix": "go@v0.7.2, v0.7.3 and v0.8.0 conform on the same entries.",
+    "report_rows": [
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-identical-assets:-:go@v0.7.1:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order:-:go@v0.7.1:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order:-:go@v0.7.1:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.identical-assets:-:go@v0.7.1:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.network-order:-:go@v0.7.1:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.reversed-order:-:go@v0.7.1:L4",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey:testnet:go@v0.7.1:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:pubnet@28:go@v0.7.1:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:testnet@28:go@v0.7.1:L1"
+    ],
+    "expected_basis": "stellar-core orders the assets of a constant-product pool by XDR bytes and refuses identical assets (CAP-38)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 7 of 7 listed report rows failed again as recorded, all offline. Review: findings/review/F-0023.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/go-stellar-sdk/pull/5974"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/go-stellar-sdk/pull/5974"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/pull/5974",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/go-stellar-sdk/pull/5974 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Listed the rows of the local-twin ledger entry cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins, which the manifest now resolves to this record."
+    }
+  ],
+  "siblings": [
+    "F-0027",
+    "F-0028"
+  ]
+}

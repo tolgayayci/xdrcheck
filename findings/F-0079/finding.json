@@ -1,0 +1,78 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0079",
+  "title": "ingest: ChangeCompactor writes the merged TTL back into the caller's LedgerCloseMeta when two transactions extend the same TTL entry",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.9.0 and main 4cee0255 (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "addUpdatedChange writes maxTTL through change.Post.Data.Ttl, a pointer into the caller's LedgerCloseMeta, so compacting a ledger in which a later transaction extends a TTL entry less than an earlier one changes that transaction's meta in the input; the compacted result is right. Silent input mutation on a rare input (CAP-63 parallel extensions); the Horizon impact the issue describes was read, not run.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    63
+  ],
+  "entries": [
+    {
+      "id": "cap-0063/parallel-phase-stages-and-clusters-golden.b959dfeef765fbb2",
+      "variant": "core-test",
+      "scope": "replay",
+      "expected": "compacting the ledger's changes leaves the input LedgerCloseMeta unchanged",
+      "observed": "Not run by the kit against go-stellar-sdk's change readers. By hand on v0.9.0 on this ledger (stellar-core's 'parallel txs|basic test', protocol 23, ledger 34): after NewCompactingChangeReader, transaction 7's TTL update 46 -> 234 reads 46 -> 434, and the re-marshalled ledger differs from the input."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "ingest/change_compactor.go",
+    "lines": "193-197",
+    "function": "addUpdatedChange"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program on v0.9.0 and main 4cee0255: after compaction, tx B's updated entry reads liveUntilLedgerSeq = 434 (was 234). The same with stellar-core's test ledger 34 of the parallel phase test through NewLedgerChangeReaderFromLedgerCloseMeta and NewCompactingChangeReader.",
+    "expected_basis": "CAP-63 (https://github.com/stellar/stellar-protocol/blob/master/core/cap-0063.md#ttl-ledger-change-semantics): each transaction's meta shows its own TTL update and the ledger keeps the larger value; a reader of the meta does not change it.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: tx B's TTL in the input reads 434 after compaction.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6055."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6055",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6055; this record restates the public issue."
+    }
+  ]
+}

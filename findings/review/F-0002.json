@@ -1,0 +1,36 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0002",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "not-a-defect",
+  "target": "stellar/wallet-backend",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "make lint-wallet-backend OFFLINE=1",
+        "observed": "at the review (2026-11-12) the record's report row was produced again, suppressed with this record as its finding (reports/lint-wallet-backend/<commit>.json; the run passed). Since XDR304 follows builder chains (2026-11-13) the site is no longer reported at any commit of the wallet-backend table and its suppression is removed; the same command now shows the row absent and the run passes",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 1,
+      "found_failing": 1,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "links": {
+      "dangling": []
+    },
+    "resolution": "agreed: at e967ce8b processor.processEvent returns for any contract outside the tracked SEP-41 set before parsing (processor.go:188) and builds the state change with WithToken of the emitting contract on the same builder; the report comes from the rule not following the builder chain"
+  },
+  "notes": [
+    "2026-11-13: the linter false positive this record describes is fixed in XDR304 (fixtures lint/testdata/xdr3xx/xdr304builder); the report row is no longer produced, which is what a not-a-defect record of a linter limitation expects once the rule is fixed."
+  ],
+  "verdict": "accepted",
+  "failing_step": null
+}

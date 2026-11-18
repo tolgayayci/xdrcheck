@@ -1,0 +1,86 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0035",
+  "title": "SignedPayload with a 65-byte payload encodes to a strkey the library's own parser refuses",
+  "defect_group": "DG-signed-payload-oversize-encode",
+  "target": {
+    "project": "stellar/rs-stellar-strkey",
+    "package": "stellar-strkey",
+    "ecosystem": "crates",
+    "versions_affected": "stellar-strkey 0.0.13 as pinned by stellar-xdr 28.0.0 - 28.0.1",
+    "versions_tested": [
+      "rust@28.0.0:limits-default",
+      "rust@28.0.0:limits-none",
+      "rust@28.0.1:limits-default",
+      "rust@28.0.1:limits-none"
+    ],
+    "fixed_in": "stellar-strkey 0.0.17"
+  },
+  "component": "xdr-library",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Encode side only. stellar-xdr 28.0.0 and 28.0.1 pin stellar-strkey 0.0.13; stellar-strkey 0.0.17 (#107) enforces a 1 to 64 byte payload and stellar-xdr 30.0.0 pins stellar-strkey 1.0.0.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/api-encode-signed-payload-65-bytes",
+      "scope": "L4",
+      "expected": "refuse to encode a signed payload of 65 bytes (SEP-23 and CAP-0040: 1 to 64 bytes)",
+      "observed": "Executed on 28.0.0 and 28.0.1, which pin stellar-strkey 0.0.13: SignedPayload with a 65-byte payload encodes to a 172-character P strkey, which the library's own parser refuses. stellar-xdr 30.0.0 refuses to encode it."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --columns 'rust@*' --entries 'strkey/api-encode-signed-payload-65-bytes'), L4, on rust@28.0.0 and rust@28.0.1 (both profiles).",
+    "post_fix": "rust@30.0.0 refuses.",
+    "report_rows": [
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:rust@28.0.0:limits-default:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:rust@28.0.0:limits-none:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:rust@28.0.1:limits-default:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:rust@28.0.1:limits-none:L4"
+    ],
+    "expected_basis": "SEP-23 v1.4.0 and CAP-0040: a signed payload carries 1 to 64 bytes (opaque payload<64>), so its strkey is at most 165 characters."
+  },
+  "reproduction": {
+    "by": "upstream-fix-author",
+    "date": "2026-11-13",
+    "method": "The upstream pull request states the 1 to 64 byte rule and adds it to the constructor; the kit's own run reproduced the pre-fix behaviour on 4 of 4 listed report rows, offline, and the fixed version refuses.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-13",
+    "queries": [
+      "https://github.com/stellar/rs-stellar-strkey/pull/107"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/rs-stellar-strkey/pull/107"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-strkey/pull/107",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the pull request enforces the 1 to 64 byte range on every SignedPayload, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Created from the known divergences of strkey/api-encode-signed-payload-65-bytes that reference https://github.com/stellar/rs-stellar-strkey/pull/107 and their failure rows."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ],
+  "siblings": [
+    "F-0034"
+  ]
+}

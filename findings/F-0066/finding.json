@@ -1,0 +1,78 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0066",
+  "title": "SEP-41 balances are running sums of four event names, so a token that used other event names before a WASM upgrade is served a negative balance",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "3e22515a44979fdc3a558fda3991ca2b48e38cef (range not established)",
+    "versions_tested": [
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "sep41_balances is a running sum of transfer, mint, burn and clawback events with no starting value from contract storage and no check against it, and the column takes a negative sum; the API serves the stored value. A token whose balance changes were published under other event names (here: before a WASM upgrade) gets a wrong stored balance, and a negative one after its first standard transfer out: a silent wrong balance served to clients. Only the emitting token's own balances are affected (events count only for the contract that emitted them), so a contract can make wallet-backend serve wrong balances only of its own token, not of any other asset: medium, not high. The issue was filed in public.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "replay",
+      "expected": "a SEP-41 balance served by the API matches the token's [Balance, addr] contract storage and is never negative",
+      "observed": "No corpus entry holds this token's ledgers. By hand at 3e22515a on mainnet ledgers 65,293,184 to 65,293,433 of token CBAPZAZNNB4X3VPXV2LYA5RMV7XHXIVREES2GG7R5GUXDZ4R4CKOY4EU: sep41_balances and the GraphQL SEP41Balance edge give -88425026799475 for holder GCAETBNBFKVGLYFXKCLMKT6ZVHFXHRSDFSEW7ODIUJYC6R7H2QJ6OKGU, whose [Balance, addr] entry holds 895,464,242,420,347."
+    }
+  ],
+  "location": {
+    "commit": "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+    "file": "internal/data/sep41/balances.go",
+    "lines": "188-194"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs; no run of the kit compares this behaviour, so no report row exists. At wallet-backend 3e22515a, the issue's steps (migrate up; the token's protocol_wasms, protocol_contracts and contract_tokens rows inserted by hand; protocol-setup --protocol-id SEP41; ingest over mainnet ledgers 65,293,184 to 65,293,433 served through the RPC interface; protocol-migrate current-state --start-ledger 65293184; serve) store and serve -88425026799475 for the holder, exactly minus the two standard transfers out after the WASM upgrade at ledger 65,293,237.",
+    "expected_basis": "The token's own contract storage: the holder's [Balance, addr] contract data entry in the meta of ledger 65,293,433 holds 895,464,242,420,347. A token balance cannot be negative.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "The run the issue reports, made at 3e22515a before filing on 2026-11-18: the SEP41Balance edge is -88425026799475 with the built-in hidden list and absent with a hidden-contracts file that lists the token.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-18",
+    "queries": [
+      "repo:stellar/wallet-backend sep41_balances negative",
+      "repo:stellar/wallet-backend SEP-41 balance running total",
+      "repo:stellar/wallet-backend hidden_contracts"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-18",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/824."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/824",
+    "filed_at": "2026-11-18",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-18 as https://github.com/stellar/wallet-backend/issues/824; this record restates the public issue."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md"
+  ]
+}

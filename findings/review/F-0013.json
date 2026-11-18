@@ -1,0 +1,41 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0013",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/wallet-backend",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "make verify-replay OFFLINE=1",
+        "observed": "the pre-fix commit gives the declared class on both inputs (sep54-s3 and rpc), the fixed and current commits pass; nothing left behind",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 1,
+      "found_failing": 1,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/wallet-backend/issues/716",
+      "matches_rows": true,
+      "state_seen": "closed 2026-09-18",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [
+    "fixed_in bb0b162b is the pinned fixed commit (PR #753); #716 was closed on 2026-09-18, a week earlier, so it is a commit without the defect rather than the first one."
+  ],
+  "verdict": "accepted",
+  "failing_step": null
+}

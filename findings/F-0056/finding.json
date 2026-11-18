@@ -1,0 +1,108 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0056",
+  "title": "txnbuild: TransactionFromXDR drops SorobanTransactionData from ExtendFootprintTtl and RestoreFootprint operations",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.1 - v0.9.0 (executed by the kit on v0.7.1, v0.7.2, v0.7.3, v0.8.0 and v0.9.0) and main 578d9e74 (the code is the same; lower bound not established)",
+    "versions_tested": [
+      "v0.7.1",
+      "v0.7.2",
+      "v0.7.3",
+      "v0.8.0",
+      "v0.9.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "transactionFromParsedXDR attaches the envelope's Tx.Ext only to *InvokeHostFunction, so parsed ExtendFootprintTtl and RestoreFootprint operations have an empty Ext and a transaction rebuilt from them builds without error but has no footprint, resources or resource fee; the network rejects it. Reading the parsed transaction is unaffected (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0066/p22-restore-with-backfilled-restored-changes",
+      "variant": "pubnet",
+      "scope": "L1",
+      "expected": "the transaction rebuilt from the parsed RestoreFootprint transaction through txnbuild.NewTransaction is the network's transaction (hash c7d932fd…)",
+      "observed": "Executed by the kit (the rebuild fact) on v0.7.1 to v0.9.0: the parsed operation's Ext is empty, so the rebuilt transaction has no SorobanTransactionData and hashes to d343299c… (ext differs); the JavaScript columns rebuild the same transaction to its own hash."
+    },
+    {
+      "id": "classic/real-result-codes.testnet-5380224",
+      "variant": "testnet",
+      "scope": "L1",
+      "expected": "the transaction rebuilt from the parsed ExtendFootprintTtl transaction through txnbuild.NewTransaction is the network's transaction (hash f99f15d2…)",
+      "observed": "Executed by the kit (the rebuild fact) on v0.7.1 to v0.9.0: the rebuilt transaction has no SorobanTransactionData and hashes to 707e4a0e… (ext differs)."
+    }
+  ],
+  "location": {
+    "commit": "578d9e74c8e43974a9b2ecb32d4f510c0f61cca0",
+    "file": "txnbuild/transaction.go",
+    "lines": "788-793",
+    "function": "transactionFromParsedXDR"
+  },
+  "evidence": {
+    "pre_fix": "make verify-conformance and the public set: the rebuild fact of the focus transaction diverges on every Go column (v0.7.1, v0.7.2, v0.7.3, v0.8.0, v0.9.0, and the view-path columns v0.8.0 and v0.9.0) on a mainnet RestoreFootprint (cap-0066/p22-restore-with-backfilled-restored-changes) and a testnet ExtendFootprintTtl (classic/real-result-codes.testnet-5380224): txnbuild.TransactionFromXDR leaves the parsed operation's Ext empty and the transaction rebuilt from the parsed object has no SorobanTransactionData (ext differs). The issue's test (txnbuild/footprint_ext_fromxdr_test.go) fails the same way on v0.9.0 and main 578d9e74.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:cap-0066/p22-restore-with-backfilled-restored-changes:pubnet:go@v0.7.1:L1",
+      "conform:cap-0066/p22-restore-with-backfilled-restored-changes:pubnet:go@v0.7.2:L1",
+      "conform:cap-0066/p22-restore-with-backfilled-restored-changes:pubnet:go@v0.7.3:L1",
+      "conform:cap-0066/p22-restore-with-backfilled-restored-changes:pubnet:go@v0.8.0:L1",
+      "conform:cap-0066/p22-restore-with-backfilled-restored-changes:pubnet:go@v0.9.0:L1",
+      "conform:classic/real-result-codes.testnet-5380224:testnet:go@v0.7.1:L1",
+      "conform:classic/real-result-codes.testnet-5380224:testnet:go@v0.7.2:L1",
+      "conform:classic/real-result-codes.testnet-5380224:testnet:go@v0.7.3:L1",
+      "conform:classic/real-result-codes.testnet-5380224:testnet:go@v0.8.0:L1",
+      "conform:classic/real-result-codes.testnet-5380224:testnet:go@v0.9.0:L1"
+    ],
+    "expected_basis": "The envelope carries SorobanTransactionData (Tx.Ext v1) for every Soroban operation; ExtendFootprintTtl and RestoreFootprint implement SorobanOperation and NewTransaction takes the transaction's Ext from the operation.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "make verify-conformance OFFLINE=1 and xdrcheck conform run --set public: the rebuild fact diverges on both entries on every Go column; re-run by hand on 2026-11-18 with the issue's test on v0.9.0.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/go-stellar-sdk TransactionFromXDR ExtendFootprintTtl",
+      "repo:stellar/go-stellar-sdk RestoreFootprint Ext"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6045."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6045",
+    "filed_at": "2026-11-14",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/go-stellar-sdk/issues/6045; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Now executed by the kit: the driver protocol's rebuild fact (docs/conformance-protocol.md) shows the defect on two network transactions, and both entries declare it as a known divergence."
+    }
+  ]
+}

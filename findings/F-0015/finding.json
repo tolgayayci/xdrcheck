@@ -1,0 +1,121 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0015",
+  "title": "export_token_transfer turns a text or hash memo into a muxed destination with ID 0",
+  "target": {
+    "project": "stellar/stellar-etl",
+    "ecosystem": "source",
+    "versions_affected": "2b24ec89ddce7fc0beb7795de982c93e6895eaf3 (range not established)",
+    "versions_tested": [
+      "2b24ec89ddce7fc0beb7795de982c93e6895eaf3"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "high",
+  "severity_basis": "Silent wrong value in a participant-facing field: a muxed address with ID 0 is fabricated from a memo. Executed at the pinned commit; upstream keeps the behaviour on purpose and pins it in a test, so the issue stays open.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0067/to-muxed-id-bytes-from-memo-hash",
+      "scope": "replay",
+      "expected": "no M address is built from a memo; to_muxed_id carries the memo value with its type",
+      "observed": "Executed at v2.8.34 (2b24ec89) through the replay harness: export_token_transfer writes the self-payment of transaction c31dd894\u2026 with to_muxed set to the account's key with muxed ID 0 and to_muxed_id \"0\", where the event carries the 32 MEMO_HASH bytes; the harness reports routing u64:0 against bytes. The address the bytes would spell is not recorded. Every other compared fact matched.",
+      "variant": "pubnet"
+    },
+    {
+      "id": "cap-0067/to-muxed-id-text-from-memo.pubnet-64558277",
+      "scope": "replay",
+      "expected": "no M address is built from a memo; to_muxed_id carries the memo value with its type",
+      "observed": "Executed at v2.8.34 (2b24ec89) through the replay harness: export_token_transfer writes the mint of transaction 6591994c\u2026 with to_muxed MBN32NH6\u2026ATXO (the recipient's key with muxed ID 0) and to_muxed_id \"0\", where the event carries the text \"psp:160886906\"; the harness reports routing u64:0 against text. Every other compared fact matched (382 transactions, receipts, participants). Upstream keeps the behaviour on purpose and pins it in a test.",
+      "variant": "pubnet"
+    },
+    {
+      "id": "cap-0067/to-muxed-id-text-from-memo.pubnet-65437006",
+      "scope": "replay",
+      "expected": "no M address is built from a memo; to_muxed_id carries the memo value with its type",
+      "observed": "Executed at v2.8.34 (2b24ec89) through the replay harness: export_token_transfer writes each of the five transfers of transaction 7f2aaed8\u2026 with to_muxed set to the destination's key with muxed ID 0 and to_muxed_id \"0\", where the events carry the text \"Daily 2026-11-12\"; the harness reports routing u64:0 against text five times. Every other compared fact matched.",
+      "variant": "pubnet"
+    },
+    {
+      "id": "cap-0067/to-muxed-id-u64-from-muxed-destination-over-memo",
+      "scope": "replay",
+      "expected": "no M address is built from a memo; to_muxed_id carries the memo value with its type",
+      "observed": "Executed at v2.8.34 (2b24ec89) through the replay harness: the operation-1 transfer to the muxed destination is written correctly (to_muxed_id 23144059716), but the operation-0 self-transfer, whose event carries the text \"SoroswapAggregator-5637e5344\", is written with to_muxed_id \"0\" and an M address; the harness reports routing u64:0 against text. Every other compared fact matched.",
+      "variant": "pubnet"
+    },
+    {
+      "id": "cap-0067/to-muxed-id-text-from-memo.pubnet-64558277",
+      "scope": "XDR101",
+      "expected": "no muxed address is built from a memo",
+      "observed": "XDR101 at internal/transform/token_transfer.go:210 and :223 (encodeMuxedDestination): a value from the MuxedInfo_Text arm reaches strkey.MuxedContract.SetID() and strkey.MuxedAccount.SetID() (make lint-stellar-etl)"
+    }
+  ],
+  "location": {
+    "commit": "2b24ec89ddce7fc0beb7795de982c93e6895eaf3",
+    "file": "internal/transform/token_transfer.go",
+    "lines": "210, 223",
+    "function": "encodeMuxedDestination"
+  },
+  "evidence": {
+    "pre_fix": "stellar-etl v2.8.34 (2b24ec89) through the replay harness with --assert-known: mishandled \u00b7 wrong_value on four pubnet entries (evidence/stellar-etl/); make lint-stellar-etl (xdrlint built with the Go toolchain stellar-etl requires) reports XDR101 at the two SetID calls in internal/transform/token_transfer.go, suppressed with this record as its finding.",
+    "transcripts": [
+      "evidence/stellar-etl/",
+      "reports/lint-stellar-etl/2b24ec89ddce7fc0beb7795de982c93e6895eaf3.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/stellar-etl/v2@2b24ec89:XDR101:internal/transform/token_transfer.go:encodeMuxedDestination",
+      "lint:github.com/stellar/stellar-etl/v2@2b24ec89:XDR101:internal/transform/token_transfer.go:encodeMuxedDestination#2",
+      "replay:stellar/stellar-etl@2b24ec89ddce7fc0beb7795de982c93e6895eaf3:cap-0067/to-muxed-id-bytes-from-memo-hash:pubnet:single",
+      "replay:stellar/stellar-etl@2b24ec89ddce7fc0beb7795de982c93e6895eaf3:cap-0067/to-muxed-id-text-from-memo.pubnet-64558277:pubnet:single",
+      "replay:stellar/stellar-etl@2b24ec89ddce7fc0beb7795de982c93e6895eaf3:cap-0067/to-muxed-id-text-from-memo.pubnet-65437006:pubnet:single",
+      "replay:stellar/stellar-etl@2b24ec89ddce7fc0beb7795de982c93e6895eaf3:cap-0067/to-muxed-id-u64-from-muxed-destination-over-memo:pubnet:single"
+    ],
+    "expected_basis": "CAP-67: to_muxed_id is the transaction memo or the muxed ID with its own type; a text or hash memo is not a routing ID."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 6 of 6 listed report rows failed again as recorded, all offline. Review: findings/review/F-0015.json (returned: reproduction steps: the lint half does not run as written with the kit's linter, and its report path is produced by nothing in the repository).",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/stellar-etl/issues/450"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/stellar/stellar-etl/issues/450"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-etl/issues/450",
+    "state": "open",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The issue already describes the behaviour, and upstream pins it in a test on purpose; our entries reproduce exactly what it describes."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/stellar-etl/issues/450 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Lint half made reproducible as written: make lint-stellar-etl and the frozen lists in lint/expected/stellar-etl/."
+    }
+  ]
+}

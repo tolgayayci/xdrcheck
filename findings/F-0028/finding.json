@@ -1,0 +1,127 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0028",
+  "title": "Liquidity pool asset order compared as strkey text: valid pairs refused and reversed pairs accepted",
+  "defect_group": "DG-pool-asset-order",
+  "target": {
+    "project": "lightsail-network/java-stellar-sdk",
+    "package": "network.lightsail:stellar-sdk",
+    "ecosystem": "maven",
+    "versions_affected": "<= 6.0.0 (6.0.0 executed)",
+    "versions_tested": [
+      "java@6.0.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "medium",
+  "severity_basis": "A valid network transaction is refused and the reversed pair yields the ID of a pool stellar-core cannot create. The fix is merged on the default branch (95bca0b5) and is not in release 6.0.0.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 6.0.0: LiquidityPool refuses the pair with 'Assets are not in lexicographic order'. The fix is merged on the default branch (95bca0b5) and not released."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 6.0.0: returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306. The fix is merged on the default branch (95bca0b5) and not released."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 6.0.0: LiquidityPool refuses the pair with 'Assets are not in lexicographic order'. The fix is merged on the default branch (95bca0b5) and not released."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed on 6.0.0: returns c1324f878b3d11af9f923abb7d692fc74e0a7bcfd9a4edefd564efe5fdae9fdb. The fix is merged on the default branch (95bca0b5) and not released."
+    },
+    {
+      "id": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "variant": "testnet",
+      "scope": "L1",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Executed: 6.0.0 rejects the valid order and returns pool ID c1324f87\u2026 for the reversed pair. A fix is merged on master (95bca0b5) and not released."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run), L1 and L4, on the java@6.0.0 column, whose driver is kept and run outside this repository.",
+    "report_rows": [
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order:-:java@6.0.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order:-:java@6.0.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.network-order:-:java@6.0.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.reversed-order:-:java@6.0.0:L4",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey:testnet:java@6.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:pubnet@28:java@6.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:pubnet@30:java@6.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:testnet@28:java@6.0.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:testnet@30:java@6.0.0:L1"
+    ],
+    "expected_basis": "stellar-core orders the assets of a constant-product pool by XDR bytes (CAP-38)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12, on the java@6.0.0 column, whose driver is kept and run outside this repository: 5 of 5 listed report rows failed again as recorded, all offline. The defect is the one https://github.com/lightsail-network/java-stellar-sdk/pull/832 fixes upstream. Review: findings/review/F-0028.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/lightsail-network/java-stellar-sdk/pull/832"
+    ],
+    "result": "fix-merged-unreleased",
+    "existing": "https://github.com/lightsail-network/java-stellar-sdk/pull/832"
+  },
+  "issue_draft": {
+    "path": "issue-java-stellar-sdk.md",
+    "kind": "release-request",
+    "dry_run_command": "gh issue create --repo lightsail-network/java-stellar-sdk --title \"Release request: Liquidity pool asset order compared as strkey text: valid pairs refused and reversed pairs accepted\" --body-file findings/F-0028/issue-java-stellar-sdk.md"
+  },
+  "upstream": {
+    "url": "https://github.com/lightsail-network/java-stellar-sdk/pull/832",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The fix is merged upstream and the existing pull request carries it, so no evidence is added there. What remains is a release: a release request is drafted next to this record (issue-java-stellar-sdk.md, xcc conform siblings) and waits for a maintainer's review; nothing is filed."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/lightsail-network/java-stellar-sdk/pull/832 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Listed the rows of the local-twin ledger entry cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins, which the manifest now resolves to this record."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Release-request draft written by xcc conform siblings (fix merged 2026-11-05, after release 6.0.0); its command is printed, not run."
+    }
+  ],
+  "siblings": [
+    "F-0023",
+    "F-0027"
+  ]
+}

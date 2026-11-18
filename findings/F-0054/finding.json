@@ -1,0 +1,78 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0054",
+  "title": "Transaction participants from operation meta are never recorded: participantsForMeta reads only the TransactionMeta v0 arm",
+  "target": {
+    "project": "stellar/stellar-horizon",
+    "package": "github.com/stellar/stellar-horizon",
+    "ecosystem": "source",
+    "versions_affected": "v30.0.1 (6f7cff3) and main (01ba44a) with go-stellar-sdk v0.9.0 (range not established)",
+    "versions_tested": [
+      "6f7cff3903be1df4fb980a12910a1313c5d7d8dd"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "participantsForMeta returns early unless meta.Operations (the V0 arm) is set, so on V1-V4 meta accounts that appear only in operation meta (for example the maker of an offer crossed by a path payment) are never added to history_transaction_participants. The accounts still see the activity in /effects and /trades, and nothing is attributed to the wrong account (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/claim-atoms-pool-and-order-book-mixed",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "every account whose ledger entry changes in a successful transaction's operation meta is a transaction participant",
+      "observed": "Not run by the kit against Horizon. By hand at v30.0.1 on pubnet ledger 59501299: 7 successful transactions have accounts changed by operations that ParticipantsForTransaction does not list, for example GAUEEYOU… in 1c7352b4… (a path_payment_strict_send crossing its offer)."
+    }
+  ],
+  "location": {
+    "commit": "6f7cff3903be1df4fb980a12910a1313c5d7d8dd",
+    "file": "internal/ingest/processors/participants_processor.go",
+    "function": "participantsForMeta"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs; no run of the kit compares this behaviour, so no report row exists. The issue's Go test at stellar-horizon v30.0.1 (6f7cff3) and main (01ba44a) on pubnet ledger 59501299 from the public data lake fails for 7 transactions; public Horizon does not list 1c7352b4… under the maker's /accounts/{id}/transactions.",
+    "expected_basis": "On v0 meta Horizon recorded every account changed in operation meta as a participant; the V1-V4 arms carry the same operation changes (transaction.GetOperationChanges handles them).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Re-run on 2026-11-18 at v30.0.1 (6f7cff3) with the issue's test on a local copy of pubnet ledger 59501299: 7 successful transactions with missing participants, including 1c7352b4….",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/stellar-horizon participantsForMeta",
+      "repo:stellar/go-stellar-sdk participantsForMeta"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/stellar-horizon/issues/259."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-horizon/issues/259",
+    "filed_at": "2026-11-14",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/stellar-horizon/issues/259; this record restates the public issue."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/wallet-backend/issues/677"
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0067",
+  "title": "Signer weights above 32,767 wrap when stored as signer_weight_old / signer_weight_new (int16)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "3e22515a44979fdc3a558fda3991ca2b48e38cef, 18db88f4ba481c49a782d157be42177700c4385e and f0c00cf5242048d0438d07151cc1ef1a4b98d7c7 (range not established)",
+    "versions_tested": [
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "EffectsProcessor.parseSigners converts signer weights to int16 with no range check before they are stored in state_changes.signer_weight_old / signer_weight_new (SMALLINT). A signer weight is a uint32 in XDR and stellar-core refuses a weight above 255 only from protocol 10 on, so only a signer added before protocol 10 with a weight above 32,767 is affected: its row is written with a wrapped weight (40,000 becomes -25,536). No halt; whether such a signer is still present on mainnet was not checked.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: signer weights (Signer, SetOptions) are classic ledger fields that predate CAPs.",
+  "entries": [
+    {
+      "id": "none",
+      "scope": "XDR402",
+      "expected": "the stored signer weight equals the signer's weight on the ledger, or an out-of-range weight is rejected",
+      "observed": "No corpus entry demonstrates it. XDR402 at internal/indexer/processors/effects.go:598 (EffectsProcessor.parseSigners): int16(oldVal) narrows the int32 from AccountEntry.SignerSummary() with no range check, and the result is stored as signer_weight_old (make lint-wallet-backend)."
+    }
+  ],
+  "location": {
+    "commit": "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+    "file": "internal/indexer/processors/effects.go",
+    "lines": "598",
+    "function": "EffectsProcessor.parseSigners"
+  },
+  "evidence": {
+    "pre_fix": "make lint-wallet-backend (xdrlint with the shipped wallet-backend profile at the pinned commit 3e22515a): XDR402 at internal/indexer/processors/effects.go:598, suppressed with this record as its finding. The same function converts the new weight the same way (line 572, from the effect details).",
+    "transcripts": [
+      "reports/lint-wallet-backend/3e22515a44979fdc3a558fda3991ca2b48e38cef.json",
+      "reports/lint-wallet-backend/18db88f4ba481c49a782d157be42177700c4385e.json",
+      "reports/lint-wallet-backend/f0c00cf5242048d0438d07151cc1ef1a4b98d7c7.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@3e22515a:XDR402:internal/indexer/processors/effects.go:EffectsProcessor.parseSigners",
+      "lint:github.com/stellar/wallet-backend@18db88f4:XDR402:internal/indexer/processors/effects.go:EffectsProcessor.parseSigners",
+      "lint:github.com/stellar/wallet-backend@f0c00cf5:XDR402:internal/indexer/processors/effects.go:EffectsProcessor.parseSigners"
+    ],
+    "expected_basis": "A signer weight is a uint32 in the XDR definitions (https://github.com/stellar/stellar-xdr/blob/v30.0/Stellar-ledger-entries.x); stellar-core's SetOptionsOpFrame refuses a weight above 255 (SET_OPTIONS_BAD_SIGNER) only from protocol 10 on, and the upgrade did not rewrite older signers, so a stored weight above 32,767 is a value the ledger can hold.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "The linter row fired again at 3e22515a in make lint-wallet-backend; the wrap itself was confirmed by reading the source, not by ingesting a ledger with such a signer (the issue says so).",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-18",
+    "queries": [
+      "repo:stellar/wallet-backend signer weight int16",
+      "repo:stellar/wallet-backend signer_weight_old",
+      "repo:stellar/wallet-backend parseSigners"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-18",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/825."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/825",
+    "filed_at": "2026-11-18",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-18 as https://github.com/stellar/wallet-backend/issues/825; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "The linter row fires again at the pinned current commit 18db88f4 (make lint-wallet-backend, the same line of the unchanged effects.go); its suppression is carried to 18db88f4's frozen list."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "The linter row fires again at the pinned current commit f0c00cf5 (make lint-wallet-backend, the same line of the unchanged effects.go); its suppression is carried to f0c00cf5's frozen list."
+    }
+  ]
+}

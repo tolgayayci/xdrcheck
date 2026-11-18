@@ -1,0 +1,182 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0019",
+  "title": "The v16 StrKey decoder checks the checksum but not the per-type payload rules",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.0.0 - 16.4.1 (16.3.0, 16.3.1 and 16.4.1 executed)",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1"
+    ],
+    "fixed_in": "17.2.0 (strict decoder of the 17.x line)"
+  },
+  "component": "sdk",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "Acceptance of invalid input (SEP-23 invalid vectors return a payload). The strict decoder exists only on the 17.x line; 16.x is a maintenance line. The signed-payload framing vectors (strkey/synthetic-gap-vectors.signed-payload-65-byte, .signed-payload-empty, .signed-payload-nonzero-padding) were fixed specifically by #1588 (merged into the v17 feature branch on 2026-08-04), which reached the default branch with #1580.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    27,
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-01",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-04",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-07",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-11",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-12",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-13",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/sep-0023-v1.4.0-vectors.invalid-15",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/synthetic-gap-vectors.signed-payload-65-byte",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/synthetic-gap-vectors.signed-payload-empty",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/synthetic-gap-vectors.signed-payload-nonzero-padding",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    },
+    {
+      "id": "strkey/truncated-muxed-address-56-chars",
+      "scope": "L4",
+      "expected": "reject the SEP-23 invalid vectors",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: the v16 StrKey decoder (unchanged since 16.0.0) checks the checksum but not the per-type payload rules and returns a payload. The strict decoder exists only on the v17 line, where 17.2.0 and later reject this vector."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on js@16.3.0 - 16.4.1.",
+    "post_fix": "js@17.2.0 and later reject the same vectors.",
+    "transcripts": [
+      "evidence/sdk-matrix/"
+    ],
+    "report_rows": [
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-01:-:js@16.3.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-01:-:js@16.3.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-01:-:js@16.4.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-04:-:js@16.3.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-04:-:js@16.3.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-04:-:js@16.4.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-07:-:js@16.3.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-07:-:js@16.3.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-07:-:js@16.4.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-11:-:js@16.3.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-11:-:js@16.3.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-11:-:js@16.4.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-12:-:js@16.3.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-12:-:js@16.3.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-12:-:js@16.4.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-13:-:js@16.3.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-13:-:js@16.3.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-13:-:js@16.4.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:js@16.3.0:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:js@16.3.1:L4",
+      "conform:strkey/sep-0023-v1.4.0-vectors.invalid-15:-:js@16.4.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-65-byte:-:js@16.3.0:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-65-byte:-:js@16.3.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-65-byte:-:js@16.4.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-empty:-:js@16.3.0:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-empty:-:js@16.3.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-empty:-:js@16.4.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-nonzero-padding:-:js@16.3.0:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-nonzero-padding:-:js@16.3.1:L4",
+      "conform:strkey/synthetic-gap-vectors.signed-payload-nonzero-padding:-:js@16.4.1:L4",
+      "conform:strkey/truncated-muxed-address-56-chars:-:js@16.3.0:L4",
+      "conform:strkey/truncated-muxed-address-56-chars:-:js@16.3.1:L4",
+      "conform:strkey/truncated-muxed-address-56-chars:-:js@16.4.1:L4"
+    ],
+    "expected_basis": "SEP-23 v1.4.0 lists these strkeys as invalid (stellar-protocol at f2d36490)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 33 of 33 listed report rows failed again as recorded, all offline. Review: findings/review/F-0019.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/js-stellar-sdk/pull/1580"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/js-stellar-sdk/pull/1580"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/pull/1580",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added. The 16.x maintenance line receives critical security fixes only (js-stellar-sdk SECURITY.md); no backport request is drafted unless a maintainer decides to ask for one."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/js-stellar-sdk/pull/1580 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Linked #1588, the specific fix for the signed-payload framing vectors, alongside #1580."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/pull/1588"
+  ]
+}

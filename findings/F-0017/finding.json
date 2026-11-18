@@ -1,0 +1,149 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0017",
+  "title": "Offer and muxed-account IDs accept unsafe integers, empty, hex and negative input and encode a different ID",
+  "defect_group": "DG-id-range-on-encode",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.3.0 - 16.4.1, 17.2.0 - 17.2.1 (earlier versions not run)",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1",
+      "js@17.2.0",
+      "js@17.2.1"
+    ],
+    "fixed_in": "17.3.0"
+  },
+  "component": "sdk",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Builder input: the SDK encodes a different ID than the caller gave, or a value stellar-core rejects. No reader impact. Fixed in 17.3.0 (pull request #1780); not on the 16.x line.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    27
+  ],
+  "entries": [
+    {
+      "id": "cap-0027/api-muxed-account-id-encoding.id-empty-string",
+      "scope": "L4",
+      "expected": "refuse an ID that is not a decimal integer in the unsigned 64-bit range (offer IDs: signed 64-bit, non-negative)",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: new MuxedAccount accepts an empty ID string and encodes ID 0. The 17.3.0 fix is not on the 16.x line."
+    },
+    {
+      "id": "cap-0027/api-muxed-account-id-encoding.id-hex-string",
+      "scope": "L4",
+      "expected": "refuse an ID that is not a decimal integer in the unsigned 64-bit range (offer IDs: signed 64-bit, non-negative)",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: new MuxedAccount accepts the ID string \"0x10\" and encodes ID 16. The 17.3.0 fix is not on the 16.x line."
+    },
+    {
+      "id": "classic/api-offer-id-encoding.id-2-pow-53-plus-1-number",
+      "scope": "L4",
+      "expected": "refuse an ID that is not a decimal integer in the unsigned 64-bit range (offer IDs: signed 64-bit, non-negative)",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: Operation.manageSellOffer accepts the unsafe integer and encodes offer ID 9007199254740992. The 17.3.0 fix is not on the 16.x line."
+    },
+    {
+      "id": "classic/api-offer-id-encoding.id-empty-string",
+      "scope": "L4",
+      "expected": "refuse an ID that is not a decimal integer in the unsigned 64-bit range (offer IDs: signed 64-bit, non-negative)",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: Operation.manageSellOffer accepts an empty string and encodes offer ID 0 (a new offer). The 17.3.0 fix is not on the 16.x line."
+    },
+    {
+      "id": "classic/api-offer-id-encoding.id-hex-string",
+      "scope": "L4",
+      "expected": "refuse an ID that is not a decimal integer in the unsigned 64-bit range (offer IDs: signed 64-bit, non-negative)",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: Operation.manageSellOffer accepts \"0x10\" and encodes offer ID 16. The 17.3.0 fix is not on the 16.x line."
+    },
+    {
+      "id": "classic/api-offer-id-encoding.id-negative",
+      "scope": "L4",
+      "expected": "refuse an ID that is not a decimal integer in the unsigned 64-bit range (offer IDs: signed 64-bit, non-negative)",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: Operation.manageSellOffer accepts -1 and encodes it, which stellar-core rejects as malformed. The 17.3.0 fix is not on the 16.x line."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on js@16.3.0 - 16.4.1 and js@17.2.0 - 17.2.1.",
+    "post_fix": "js@17.3.0 and js@17.4.0 refuse the same inputs.",
+    "transcripts": [
+      "evidence/js-1785/"
+    ],
+    "report_rows": [
+      "conform:cap-0027/api-muxed-account-id-encoding.id-empty-string:-:js@16.3.0:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-empty-string:-:js@16.3.1:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-empty-string:-:js@16.4.1:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-empty-string:-:js@17.2.0:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-empty-string:-:js@17.2.1:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-hex-string:-:js@16.3.0:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-hex-string:-:js@16.3.1:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-hex-string:-:js@16.4.1:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-hex-string:-:js@17.2.0:L4",
+      "conform:cap-0027/api-muxed-account-id-encoding.id-hex-string:-:js@17.2.1:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-53-plus-1-number:-:js@16.3.0:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-53-plus-1-number:-:js@16.3.1:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-53-plus-1-number:-:js@16.4.1:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-53-plus-1-number:-:js@17.2.0:L4",
+      "conform:classic/api-offer-id-encoding.id-2-pow-53-plus-1-number:-:js@17.2.1:L4",
+      "conform:classic/api-offer-id-encoding.id-empty-string:-:js@16.3.0:L4",
+      "conform:classic/api-offer-id-encoding.id-empty-string:-:js@16.3.1:L4",
+      "conform:classic/api-offer-id-encoding.id-empty-string:-:js@16.4.1:L4",
+      "conform:classic/api-offer-id-encoding.id-empty-string:-:js@17.2.0:L4",
+      "conform:classic/api-offer-id-encoding.id-empty-string:-:js@17.2.1:L4",
+      "conform:classic/api-offer-id-encoding.id-hex-string:-:js@16.3.0:L4",
+      "conform:classic/api-offer-id-encoding.id-hex-string:-:js@16.3.1:L4",
+      "conform:classic/api-offer-id-encoding.id-hex-string:-:js@16.4.1:L4",
+      "conform:classic/api-offer-id-encoding.id-hex-string:-:js@17.2.0:L4",
+      "conform:classic/api-offer-id-encoding.id-hex-string:-:js@17.2.1:L4",
+      "conform:classic/api-offer-id-encoding.id-negative:-:js@16.3.0:L4",
+      "conform:classic/api-offer-id-encoding.id-negative:-:js@16.3.1:L4",
+      "conform:classic/api-offer-id-encoding.id-negative:-:js@16.4.1:L4",
+      "conform:classic/api-offer-id-encoding.id-negative:-:js@17.2.0:L4",
+      "conform:classic/api-offer-id-encoding.id-negative:-:js@17.2.1:L4"
+    ],
+    "expected_basis": "MuxedAccount.med25519.id is uint64 and ManageOfferOp.offerID is int64 in the XDR definitions (stellar-xdr v30.0); stellar-core rejects a negative offer ID as malformed."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 30 of 30 listed report rows failed again as recorded, all offline. Review: findings/review/F-0017.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/js-stellar-sdk/issues/1785"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/js-stellar-sdk/issues/1785"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1785",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added. The 16.x maintenance line receives critical security fixes only (js-stellar-sdk SECURITY.md); no backport request is drafted unless a maintainer decides to ask for one."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/js-stellar-sdk/issues/1785 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/js-stellar-sdk/pull/1780"
+  ],
+  "siblings": [
+    "F-0048"
+  ]
+}

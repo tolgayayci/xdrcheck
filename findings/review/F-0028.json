@@ -1,0 +1,41 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0028",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "lightsail-network/java-stellar-sdk",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "go/bin/xdrcheck conform run --columns java@6.0.0 --entries <the record's entry IDs> --report <a directory outside the tree>",
+        "observed": "every listed row fails again with check \"known\" and resolves to this record; the java@6.0.0 column's driver is kept and run outside this repository",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 5,
+      "found_failing": 5,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/lightsail-network/java-stellar-sdk/pull/832",
+      "matches_rows": true,
+      "state_seen": "merged 2026-11-05; latest release 6.0.0 (2026-10-28), so the fix is unreleased",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [
+    "The rows come from the java@6.0.0 column, whose driver is not part of this repository; the public record of the defect is https://github.com/lightsail-network/java-stellar-sdk/pull/832. The run itself needs no network."
+  ],
+  "verdict": "accepted",
+  "failing_step": null
+}

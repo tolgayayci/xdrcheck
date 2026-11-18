@@ -1,0 +1,85 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0021",
+  "title": "A union with a float discriminant and a non-representable case value encodes bytes it cannot decode",
+  "target": {
+    "project": "stellar/js-xdr",
+    "package": "@stellar/js-xdr",
+    "ecosystem": "npm",
+    "versions_affected": "js-xdr 4.0.0 and 5.0.0 as installed by @stellar/stellar-sdk 16.3.0 - 17.4.0",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1",
+      "js@17.2.0",
+      "js@17.2.1",
+      "js@17.3.0",
+      "js@17.4.0"
+    ]
+  },
+  "component": "xdr-library",
+  "class": "accepts_invalid",
+  "severity": "low",
+  "severity_basis": "Reachable only through a custom schema: the Stellar XDR definitions have no float-discriminated union. Fixed in js-xdr by a merged pull request that is not yet in a release the SDKs install.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: an XDR encoding rule that holds in every protocol version (the corpus's xdr-strict group).",
+  "entries": [
+    {
+      "id": "xdr-strict/api-float-union-discriminant-custom-schema",
+      "scope": "L4",
+      "expected": "refuse a float union discriminant (RFC 4506 discriminants are int, unsigned int or enum)",
+      "observed": "Executed against the js-xdr each SDK version installs (4.0.0 for 16.x, 5.0.0 for 17.x): a union with switchOn float() and a case 0.1 is accepted, encodes the discriminant as 3dcccccd, and decoding those bytes fails ('no case for union discriminator 0.10000000149011612'). Fixed in js-xdr by pull request #171 (906a0aae), not released; no conformance driver offers this op yet, so the runner lists it "
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on every js column (16.3.0 - 17.4.0).",
+    "report_rows": [
+      "conform:xdr-strict/api-float-union-discriminant-custom-schema:-:js@16.3.0:L4",
+      "conform:xdr-strict/api-float-union-discriminant-custom-schema:-:js@16.3.1:L4",
+      "conform:xdr-strict/api-float-union-discriminant-custom-schema:-:js@16.4.1:L4",
+      "conform:xdr-strict/api-float-union-discriminant-custom-schema:-:js@17.2.0:L4",
+      "conform:xdr-strict/api-float-union-discriminant-custom-schema:-:js@17.2.1:L4",
+      "conform:xdr-strict/api-float-union-discriminant-custom-schema:-:js@17.3.0:L4",
+      "conform:xdr-strict/api-float-union-discriminant-custom-schema:-:js@17.4.0:L4"
+    ],
+    "expected_basis": "RFC 4506 section 4.15: a union discriminant is int, unsigned int or an enumerated type."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 7 of 7 listed report rows failed again as recorded, all offline. Review: findings/review/F-0021.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/js-xdr/issues/162"
+    ],
+    "result": "fix-merged-unreleased",
+    "existing": "https://github.com/stellar/js-xdr/issues/162"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-xdr/issues/162",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The issue already holds the reproduction and the fix is merged upstream; what remains is a release, which is upstream's schedule."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/js-xdr/issues/162 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ]
+}

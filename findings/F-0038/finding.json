@@ -1,0 +1,103 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0038",
+  "title": "support/contractevents rejects CAP-67 three-topic SAC mint and clawback events, so consumers such as stellar-etl write no effect for them",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.9.0 and main 376279e8 (support/contractevents); seen through stellar-etl 2b24ec89 (v2.8.34) and a046ba53 (release-v20261117 head); lower bound not established",
+    "versions_tested": [
+      "v0.9.0",
+      "stellar-etl@2b24ec89ddce7fc0beb7795de982c93e6895eaf3",
+      "stellar-etl@a046ba53"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "medium",
+  "severity_basis": "Silent drop in a derived table: every mint by invoke_host_function in pubnet ledger 64558277 (34 of 34) has no account_credited or contract_credited effect in stellar-etl's effects export, while every classic-payment mint (101 of 101) has one; the token-transfer export records the same mints correctly. Not attacker-controlled. Cause from code reading: support/contractevents accepts only the four-topic (pre-CAP-67) mint and clawback layouts. The three-topic clawback takes the same path; not executed.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0067/sac-mint-three-topics",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "the mint recipient is credited (participant, balance change) for the operation",
+      "observed": "Executed at stellar-etl v2.8.34 (2b24ec89) through the replay harness: dropped · partial, no participant and no balance_changed for GB237VS5… KALE in transaction b35be42e…; the effects export has no row for the operation."
+    }
+  ],
+  "location": {
+    "commit": "2b24ec89ddce7fc0beb7795de982c93e6895eaf3",
+    "file": "internal/transform/effects.go",
+    "lines": "1387",
+    "function": "addInvokeHostFunctionEffects (contract event switch)"
+  },
+  "evidence": {
+    "pre_fix": "xcc replay with the stellar-etl adapter at 2b24ec89 on cap-0067/sac-mint-three-topics with --assert-known (evidence/stellar-etl/reproduce.sh): dropped · partial. In the effects export of ledger 64558277, 34 of 34 invoke_host_function SAC mints have no credited effect and 101 of 101 classic-payment mints have one. Same result at a046ba53 (go-stellar-sdk v0.9.0). Source: support/contractevents parseBalanceChangeEvent requires four topics, unchanged in v0.9.0.",
+    "transcripts": [
+      "evidence/stellar-etl/replay-assert-known.txt"
+    ],
+    "report_rows": [
+      "replay:stellar/stellar-etl@2b24ec89ddce7fc0beb7795de982c93e6895eaf3:cap-0067/sac-mint-three-topics:pubnet:single"
+    ],
+    "expected_basis": "CAP-67: a SAC mint event is [\"mint\", to, asset] with the amount as data (a clawback likewise [\"clawback\", from, asset]); the ledger credits the recipient (balance change in the operation's meta).",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-13",
+    "method": "Re-run at stellar-etl 2b24ec89 and a046ba53 (go-stellar-sdk v0.9.0): xcc replay with the stellar-etl adapter on cap-0067/sac-mint-three-topics reports dropped · partial; the effects tally of ledger 64558277 is unchanged (34 of 34 contract mints uncredited). Source read again in go-stellar-sdk v0.9.0.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "repo:stellar/stellar-etl mint",
+      "repo:stellar/stellar-etl effects soroban",
+      "repo:stellar/stellar-etl CAP-67",
+      "stellar/stellar-etl epic #448 members #449-#465 (#460 covers CAP-73 effects and muxed SAC destinations, not the three-topic mint)",
+      "repo:stellar/go-stellar-sdk contractevents",
+      "repo:stellar/go-stellar-sdk mint topics",
+      "repo:stellar/go-stellar-sdk CAP-67 events effects"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/go-stellar-sdk (#6043): support/contractevents rejects CAP-67 three-topic SAC mint and clawback events; describes the stellar-etl effects impact."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6043",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from a replay of cap-0067/sac-mint-three-topics through the stellar-etl adapter and a tally of its effects export; no public upstream item found."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Still reproduces at stellar-etl a046ba53 (go-stellar-sdk v0.9.0, release branch release-v20261117). Retargeted to the root cause in go-stellar-sdk support/contractevents; stellar-etl's effects export is the affected consumer. Scope widened to clawback, which takes the same three-topic path."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/go-stellar-sdk/issues/6043 against v0.9.0 and main 376279e8, covering mint and clawback, with stellar-etl named as the affected consumer."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/core/cap-0067.md",
+    "https://github.com/stellar/stellar-etl/issues/460"
+  ]
+}

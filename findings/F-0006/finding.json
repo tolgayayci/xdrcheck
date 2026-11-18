@@ -1,0 +1,91 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0006",
+  "title": "A nested deploy declared in the authorization tree is recorded without meta showing that it happened",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a (range not established)",
+    "versions_tested": [
+      "9538b3caeaebfeb3d034146c0ce9643c3066cf8a"
+    ],
+    "fixed_in": "80121f3abe0fcdf6487d123e940de2631c1210b2"
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "A declared but unexecuted deploy produced a contract record. Issue #746 describes it and is still open; the fix landed as 80121f3a, one of the rebased commits of PR #739, without closing the issue. The linter fires at the pre-fix commit and is silent after (make lint-before-after).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    73
+  ],
+  "entries": [
+    {
+      "id": "cap-0073/sac-trust-creates-trustline",
+      "scope": "XDR303",
+      "expected": "no XDR303 report",
+      "observed": "XDR303: participant builder ProcessOperation never reads ledger meta (fee changes, operation changes or events), and no function of this package that reads meta calls it; participants come from meta, the envelope only labels causes"
+    }
+  ],
+  "location": {
+    "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+    "file": "internal/indexer/processors/contract_deploy.go",
+    "lines": "36",
+    "function": "ContractDeployProcessor.ProcessOperation"
+  },
+  "evidence": {
+    "transcripts": [
+      "reports/lint-before-after/9538b3caeaebfeb3d034146c0ce9643c3066cf8a.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@9538b3ca:XDR303:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation"
+    ]
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row lint:github.com/stellar/wallet-backend@9538b3ca:XDR303:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Pre-fix side of a public upstream fix."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Upstream state corrected: #746 is open; its fix landed as 80121f3a inside PR #739 without closing it."
+    }
+  ],
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0006.json (returned: upstream state check: the record says upstream.state \"fixed\" and upstream_search.result \"existing-closed\", but stellar/wallet-backend#746 is open).",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/wallet-backend/issues/746"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/stellar/wallet-backend/issues/746"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/746",
+    "state": "open",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The open issue already describes this defect, and its fix is already in the default branch (80121f3a, part of PR #739). Our before/after linter rows show that same fix and add no reproduction the maintainers lack. Asking for the issue to be closed is an upstream action left to the maintainers; no comment is drafted."
+    }
+  },
+  "related": [
+    "https://github.com/stellar/wallet-backend/pull/739",
+    "https://github.com/stellar/wallet-backend/commit/80121f3abe0fcdf6487d123e940de2631c1210b2"
+  ]
+}

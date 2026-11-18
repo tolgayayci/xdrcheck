@@ -1,0 +1,82 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0088",
+  "title": "A pool-share trustline removed by an AllowTrust or SetTrustLineFlags revocation gets no trustline_removed effect",
+  "defect_group": "DG-revoked-pool-share-trustline-removal",
+  "target": {
+    "project": "stellar/stellar-horizon",
+    "package": "github.com/stellar/stellar-horizon",
+    "ecosystem": "source",
+    "versions_affected": "v30.0.1 and main 01ba44a (internal/ingest/processors/ is the same in both; range not established)",
+    "versions_tested": [
+      "v30.0.1",
+      "01ba44a988b3ebc2d68d3cb6747fa2c2733773cd"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "EffectTrustlineRemoved is written only by addChangeTrustEffects, which runs for ChangeTrust only; addAllowTrustEffects and addSetTrustLineFlagsEffects write the flag effects and liquidity_pool_revoked and never look at the trustlines the operation removes, so when a revocation makes stellar-core redeem the trustor's pool shares and remove the pool-share trustline (CAP-38), the account's effects show the trustline as created and never removed. The account's balances are right; only the effects history misses the row.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/auth-revocation-redeems-pool-shares",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "a trustline_removed effect for the trustor's pool-share trustline, with asset_type liquidity_pool_shares and the pool's liquidity_pool_id, as a ChangeTrust removal of the same trustline gets",
+      "observed": "Not run by the kit against Horizon (Horizon has no replay adapter in this kit). By hand on the four local stellar-core variants of this entry (protocols 28 and 30, testnet and pubnet passphrases): the SetTrustLineFlags revocation removes one pool-share trustline and Horizon writes no trustline_removed. The AllowTrust case is from pubnet ledgers, not from this entry: at v30.0.1, ledger 50914934, transaction 6b1d2cb8… removes 1 pool-share trustline and gets 0 trustline_removed; ledger 55568683, transaction cfe5afa4… removes 9 and gets 0."
+    }
+  ],
+  "location": {
+    "commit": "01ba44a988b3ebc2d68d3cb6747fa2c2733773cd",
+    "file": "internal/ingest/processors/effects_processor.go",
+    "lines": "781-808, 882-927, 1313-1320",
+    "function": "addChangeTrustEffects"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's test (internal/ingest/processors/revoked_pool_share_trustline_test.go) at v30.0.1 on pubnet ledger 50914934 from the public data lake fails: expected 1 trustline_removed, actual 0; the same on main 01ba44a (git diff v30.0.1 main -- internal/ingest/processors/ is empty). On pubnet ledger 55568683, transaction cfe5afa41074ab428e2f4440f7b06895a90dacd5e2cb1aa2596fd234e3946f6c, four AllowTrust operations remove 9 pool-share trustlines and no trustline_removed is written.",
+    "expected_basis": "CAP-38 (https://github.com/stellar/stellar-protocol/blob/master/core/cap-0038.md): revoking authorization redeems the holder's pool shares into claimable balances and removes the pool-share trustline; the operation meta shows the trustline LEDGER_ENTRY_REMOVED, and Horizon writes trustline_removed when a ChangeTrust with limit 0 removes the same trustline.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v30.0.1 and main 01ba44a before filing on 2026-11-19: the test finds 1 pool-share trustline removed in the operation meta and 0 trustline_removed effects.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/stellar-horizon: every issue and pull request title, open and closed",
+      "stellar/stellar-horizon: every branch touching internal/ingest/processors/",
+      "stellar/go: issues and pull requests about Horizon effects of pool-share trustlines"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/stellar-horizon/issues/267."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-horizon/issues/267",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/stellar-horizon/issues/267; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0069"
+  ]
+}

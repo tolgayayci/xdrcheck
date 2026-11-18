@@ -1,0 +1,70 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0003",
+  "title": "Invoked contract of a successful transaction recorded as a participant (accepted site)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a (range not established)",
+    "versions_tested": [
+      "9538b3caeaebfeb3d034146c0ce9643c3066cf8a"
+    ]
+  },
+  "component": "pipeline",
+  "class": "hardening",
+  "severity": "low",
+  "severity_basis": "No defect: see the resolution.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/auth-unmatched-entries-succeed",
+      "scope": "XDR301",
+      "expected": "no XDR301 report",
+      "observed": "XDR301: hostFn.MustInvokeContract().ContractAddress (authorization tree or invocation arguments) reaches participant sink participants.Add with no meta corroboration; the host never checks entries that no require_auth matched, so take authorizers from the nonce entries in meta"
+    }
+  ],
+  "location": {
+    "commit": "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+    "file": "internal/indexer/processors/contract_operations.go",
+    "lines": "84",
+    "function": "participantsForSorobanOp"
+  },
+  "evidence": {
+    "transcripts": [
+      "reports/lint-before-after/9538b3caeaebfeb3d034146c0ce9643c3066cf8a.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@9538b3ca:XDR301:internal/indexer/processors/contract_operations.go:participantsForSorobanOp"
+    ]
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row lint:github.com/stellar/wallet-backend@9538b3ca:XDR301:internal/indexer/processors/contract_operations.go:participantsForSorobanOp."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "not-a-defect",
+      "note": "Closed with the reason the suppression reviewer recorded."
+    }
+  ],
+  "resolution": {
+    "reason": "Accepted site, not a defect: the invoked contract of a successful transaction (the caller checks success first); the host fails an invocation whose address is not a deployed contract, so this address is a contract. It comes from the host function, not from the authorization tree.",
+    "reviewer": "kit-maintainer (suppression review)",
+    "date": "2026-11-12",
+    "manifest_action": "none: the linter report stays suppressed with this record as its finding"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0003.json.",
+    "result": "reproduced"
+  }
+}

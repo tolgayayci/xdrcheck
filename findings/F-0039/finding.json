@@ -1,0 +1,118 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0039",
+  "title": "An account created by a native Stellar Asset Contract transfer produces no account_created",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "e967ce8b7362b79c277e700e789181d76fbb5967 (range not established); also 3e22515a (checked 2026-11-13); also 18db88f4 (replay 2026-11-19); also f0c00cf5 (replay 2026-11-20)",
+    "versions_tested": [
+      "e967ce8b7362b79c277e700e789181d76fbb5967",
+      "3e22515a",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "partial_drop",
+  "severity": "medium",
+  "severity_basis": "An account created by a native Stellar Asset Contract transfer (CAP-73) produces no account_created state change; the other facts of the transaction match. The same class as issue #731 (a SAC call creating a trustline), fixed upstream for trustlines. Executed through the replay harness on both inputs; the baseline indexer reports the change.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    73
+  ],
+  "entries": [
+    {
+      "id": "cap-0073/native-sac-transfer-creates-account-local-twins",
+      "scope": "replay",
+      "expected": "an account_created state change for the account the transfer creates",
+      "observed": "Executed at e967ce8b through the replay harness (make replay-full), both inputs, on all four variants (Protocols 29 and 30, testnet and pubnet passphrases): dropped · partial, no account_created for GBPRDIGX…; every other compared fact matched."
+    },
+    {
+      "id": "cap-0073/native-sac-transfer-creates-account",
+      "scope": "replay",
+      "expected": "an account_created state change for the account the transfer creates",
+      "observed": "Executed at e967ce8b through the replay harness (make replay-full), both inputs, on the stellar-core v30.0.0 golden (frame 17, ledger 19, transaction 88f25cc7…): dropped · partial, no account_created for GBMZAFOQ…; every other compared fact matched."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "make replay-full (the whole corpus against wallet-backend at the pinned current commit e967ce8b, both inputs): dropped · partial on the four variants of cap-0073/native-sac-transfer-creates-account-local-twins and on the stellar-core golden of the same case, cap-0073/native-sac-transfer-creates-account. Still reproduces at 3e22515a.",
+    "transcripts": [
+      "reports/replay-full/wallet-backend-sep54-s3/report.json",
+      "reports/replay-full/wallet-backend-rpc/report.json"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0073/native-sac-transfer-creates-account-local-twins:pubnet@29:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0073/native-sac-transfer-creates-account-local-twins:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0073/native-sac-transfer-creates-account-local-twins:testnet@29:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0073/native-sac-transfer-creates-account-local-twins:testnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0073/native-sac-transfer-creates-account:core-test:single"
+    ],
+    "expected_basis": "CAP-73 (https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/core/cap-0073.md): a native (XLM) Stellar Asset Contract transfer to a G-address that does not exist creates the account; the operation's ledger meta shows the ACCOUNT entry created.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record: the account creation was missing again as recorded, offline. Reproduced again at 3e22515a on both inputs before filing.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fwallet-backend+account_created+SAC+transfer",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fwallet-backend+native+transfer+creates+account",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fwallet-backend+account+created+contract+transfer"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/wallet-backend (#804): a native SAC transfer that creates an account produces no ACCOUNT/CREATE and no SIGNER state change."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/804",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the replay run's failure rows; no public upstream item found."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "draft",
+      "note": "Reproduced, upstream searched (none found), issue text written; awaiting a maintainer's review before filing."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/wallet-backend/issues/804 at main 3e22515a, reproduced on the stellar-core v30.0.0 golden test-lcm-current/InvokeHostFunctionTests/692fdd0e57531ce4.xdr frame 17 (ledger 19, transaction 88f25cc7…)."
+    },
+    {
+      "date": "2026-11-14",
+      "state": "filed",
+      "note": "The wallet-backend adapter no longer declares an account_created caused by a contract call out of scope (it had excused the golden, which passed); the golden cap-0073/native-sac-transfer-creates-account now fails dropped · partial at e967ce8b on both inputs and is added to the entries and report rows. No other row changed."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Executed again at the pinned current commit 18db88f4 (make replay-full, both inputs): the same rows as at 3e22515a; the entries' divergences name 18db88f4."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "Executed again at the pinned current commit f0c00cf5 (make replay-full, both inputs): the same rows as at 18db88f4; the entries' divergences name f0c00cf5. The commits between them change only the GraphQL server's metrics (internal/serve, internal/metrics), not ingest."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/wallet-backend/issues/731"
+  ]
+}

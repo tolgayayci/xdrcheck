@@ -1,0 +1,77 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0030",
+  "title": "Serde deserialisation accepts a vector longer than its declared maximum and encodes undecodable bytes",
+  "target": {
+    "project": "stellar/rs-stellar-xdr",
+    "package": "stellar-xdr",
+    "ecosystem": "crates",
+    "versions_affected": "28.0.0 (executed)",
+    "versions_tested": [
+      "rust@28.0.0:limits-default",
+      "rust@28.0.0:limits-none"
+    ],
+    "fixed_in": "28.0.1"
+  },
+  "component": "xdr-library",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "JSON input with 21 signatures is accepted into a DecoratedSignature<20> and encoded; the library's own decoder refuses the bytes. Published advisory; fixed in 28.0.1.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: a rule of SEP-51 XDR-JSON and the XDR definitions (a vector's declared maximum), not a protocol change (the corpus's xdr-json group).",
+  "entries": [
+    {
+      "id": "xdr-json/vector-longer-than-declared-max",
+      "scope": "L4",
+      "expected": "refuse JSON whose vector exceeds the declared maximum",
+      "observed": "Executed on 28.0.0: serde deserialisation of the JSON accepts 21 signatures into a DecoratedSignature<20> and the encoder writes bytes the library's own decoder refuses; 28.0.1 refuses the JSON ('xdr value max length exceeded')."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on rust@28.0.0 (both profiles).",
+    "post_fix": "rust@28.0.1 and 30.0.0 refuse with \"xdr value max length exceeded\".",
+    "report_rows": [
+      "conform:xdr-json/vector-longer-than-declared-max:-:rust@28.0.0:limits-default:L4",
+      "conform:xdr-json/vector-longer-than-declared-max:-:rust@28.0.0:limits-none:L4"
+    ],
+    "expected_basis": "Transaction signatures are DecoratedSignature<20> in the XDR definitions (stellar-xdr v30.0)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 2 of 2 listed report rows failed again as recorded, all offline. Review: findings/review/F-0030.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/rs-stellar-xdr/security/advisories/GHSA-3xhm-p452-9wjh"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/rs-stellar-xdr/security/advisories/GHSA-3xhm-p452-9wjh"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-xdr/security/advisories/GHSA-3xhm-p452-9wjh",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/rs-stellar-xdr/security/advisories/GHSA-3xhm-p452-9wjh and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ]
+}

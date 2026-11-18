@@ -1,0 +1,78 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0052",
+  "title": "SEP-41 classifier requires wallet-backend's exact parameter names, so tokens written to the SEP-41 interface are never tracked",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "3e22515a44979fdc3a558fda3991ca2b48e38cef and e967ce8b7362b79c277e700e789181d76fbb5967 (the code is identical; range not established)",
+    "versions_tested": [
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef"
+    ]
+  },
+  "component": "pipeline",
+  "class": "silent_drop",
+  "severity": "medium",
+  "severity_basis": "wasmspec.Match compares parameter names as well as types and order, and several required names differ from SEP-41, soroban-sdk 23-25's TokenInterface and OpenZeppelin (to: MuxedAddress, live_until_ledger, account, owner). An unclassified contract produces no state changes, so wallets built on wallet-backend show nothing for these tokens until the contract's code changes. Not attacker-triggered.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    41
+  ],
+  "entries": [
+    {
+      "id": "contract-spec/token-with-renamed-parameters",
+      "variant": "testnet",
+      "scope": "spec",
+      "expected": "a contract that matches SEP-41 by function, parameter types and order is classified as SEP-41",
+      "observed": "Not run by the kit against wallet-backend. By hand at 3e22515a: services.NewWasmSpecExtractor and matchSEP41Spec return false for this entry's wasm (testnet df3524d3…), one of the four real wasm the issue lists."
+    }
+  ],
+  "location": {
+    "commit": "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+    "file": "internal/services/sep41/validator.go",
+    "lines": "290-380"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs; no run of the kit compares this behaviour, so no report row exists. At wallet-backend 3e22515a, the issue's steps (services.NewWasmSpecExtractor, then matchSEP41Spec, as TestValidator_RealWasm does) return false for the four real wasm it lists (pubnet 72eb5d52…, 0a41411f…, 7fc336be…; testnet df3524d3…), and renaming only the parameters to wallet-backend's names makes the match pass.",
+    "expected_basis": "SEP-41 (https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md) names transfer's destination to: MuxedAddress and approve's expiry live_until_ledger; Soroban arguments are positional, so parameter names add no protection against spoofing.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Re-run on 2026-11-18 at 3e22515a on the corpus copy of testnet wasm df3524d3… (contract-spec/token-with-renamed-parameters): matchSEP41Spec returns false, as the issue states.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/wallet-backend SEP-41 parameter names",
+      "repo:stellar/wallet-backend matchSEP41Spec"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/809."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/809",
+    "filed_at": "2026-11-14",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/wallet-backend/issues/809; this record restates the public issue."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md"
+  ]
+}

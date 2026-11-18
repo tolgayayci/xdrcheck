@@ -1,0 +1,76 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0084",
+  "title": "contract.Spec decodes a struct map by entry position instead of by key: a missing Option field shifts values, an extra key throws",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "17.4.0 and main 5243062f (the code involved is the same in both; lower bound not established)",
+    "versions_tested": [
+      "js@17.4.0",
+      "5243062fdf7a874d33cbf3089e898eb0777337a8"
+    ]
+  },
+  "component": "sdk",
+  "class": "wrong_value",
+  "severity": "medium",
+  "severity_basis": "structToNative assigns the i-th map entry to the i-th field of the spec and never reads the keys, so a struct map with a field missing (CAP-86 sparse unpacking, for example data stored before an Option field was added) decodes to wrong field values, and a map with an extra key throws TypeError. A silent wrong value in decoded contract data, storage or call arguments after a struct migration; maps that match the struct exactly are not affected.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    86
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "spec",
+      "expected": "Spec.scValToNative matches a struct map's entries to the fields by key, gives null for a missing Option field and ignores extra keys",
+      "observed": "No corpus entry decodes a sparse struct map through a contract spec. By hand on 17.4.0: {a: 1, c: 3} decoded as State { a: u32, b: Option<u32>, c: u32 } gives {a: 1, b: 3}, and a map with an extra key throws TypeError: Cannot read properties of undefined (reading 'name')."
+    }
+  ],
+  "location": {
+    "commit": "5243062fdf7a874d33cbf3089e898eb0777337a8",
+    "file": "src/contract/spec.ts",
+    "lines": "1245-1249",
+    "function": "structToNative"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's script on 17.4.0 (main 5243062f has the same code): Spec.scValToNative gives {\"a\":1,\"b\":3} for the map {a: 1, c: 3} and throws TypeError for maps with an extra key aa or z; the generic scValToNative gives {\"a\":1,\"c\":3}.",
+    "expected_basis": "CAP-86 (sparse_map_unpack_to_linear_memory sets a missing key to Void and allows extra keys) and soroban-sdk 28, which unpacks #[contracttype] structs sparsely by key for every unpack, function arguments included.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on 17.4.0 before filing on 2026-11-19: the b-missing map decodes to {a: 1, b: 3}.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/js-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/js-stellar-sdk: the active branches"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/js-stellar-sdk/issues/1912."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1912",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/js-stellar-sdk/issues/1912; this record restates the public issue."
+    }
+  ]
+}

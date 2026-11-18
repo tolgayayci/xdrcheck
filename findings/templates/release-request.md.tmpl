@@ -1,0 +1,38 @@
+{{- /*
+Release request: the fix is merged upstream but no release contains it (xdrcheck conform siblings). Go
+text/template; the fields are DraftData in go/internal/conform/siblings/draft.go, .Target is the merged fix and
+.Release the latest release when one was found. The user approves the exact text before a person files it;
+nothing in the kit files it.
+*/ -}}
+Title: {{.Title}}
+
+Affected: `{{.Package}}@{{join .Versions ", "}}`     Fixed in: {{.FixedIn}}
+
+## Summary
+
+{{.Target.URL}} (merged {{day .Target.MergedAt}}) fixes this, {{if .Release}}but the latest release, {{.Release.Tag}} ({{day .Release.PublishedAt}}), predates it{{else}}but no release containing it was found{{end}}. Users of the released package still hit the defect: {{.Summary}}
+
+Could a patch release include the fix?
+
+## Reproduce on the released version
+
+{{range .Entries -}}
+- `{{.ID}}`{{if .Variant}} (variant `{{.Variant}}`){{end}}, level {{.Level}}
+  - observed: {{.Observed}}
+  - expected: {{.Expected}}
+{{end}}
+{{.Method}}
+
+## Why this is expected
+
+{{.ExpectedBasis}}
+
+## Same defect elsewhere
+
+{{range .Elsewhere}}- {{.}}
+{{else}}None known.
+{{end}}
+## Corpus
+
+{{range .Corpus}}    {{.}}
+{{end -}}

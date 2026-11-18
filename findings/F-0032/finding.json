@@ -1,0 +1,118 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0032",
+  "title": "Liquidity pool asset order compared as strkey text: valid pairs refused and reversed pairs accepted",
+  "defect_group": "DG-pool-asset-order",
+  "target": {
+    "project": "Beans-BV/dotnet-stellar-sdk",
+    "package": "stellar-dotnet-sdk",
+    "ecosystem": "nuget",
+    "versions_affected": "17.0.0 (source reading; earlier versions not read)",
+    "versions_tested": [
+      "dotnet@17.0.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "medium",
+  "severity_basis": "Provisional, as for the original finding of this defect group (medium): a valid pool-share operation is refused and the reversed pair accepted. Read from the 17.0.0 source, not executed; the kit has no driver for this SDK, so no report row shows it and the record is a duplicate of the open upstream issue rather than a reproduced run.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Not executed: source reading of 17.0.0 (the kit has no driver for this SDK). Same comparison as the network-order member: the pair in XDR byte order is refused with 'Asset A must be < Asset B (Lexicographic Order).'"
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Not executed: source reading of 17.0.0 (the kit has no driver for this SDK). Same comparison as the reversed-order member: the reversed pair is accepted."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.network-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Not executed: source reading of 17.0.0 (the kit has no driver for this SDK). The two issuers order differently as strkey text and as XDR bytes, so the constructor's text comparison finds the pair in XDR byte order out of order and throws 'Asset A must be < Asset B (Lexicographic Order).'"
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.reversed-order",
+      "scope": "L4",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Not executed: source reading of 17.0.0 (the kit has no driver for this SDK). The reversed pair is in strkey text order, so the constructor accepts it and the pool ID is derived from parameters stellar-core refuses."
+    },
+    {
+      "id": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "variant": "testnet",
+      "scope": "L1",
+      "expected": "order the pool assets by XDR bytes",
+      "observed": "Not executed: source reading of 17.0.0 (the kit has no driver for this SDK). FromXdr calls the same constructor, so reading the pool-share ChangeTrust of this network transaction throws."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Not executed: the kit has no conformance driver for this SDK. The outcomes above are read from the source of stellar-dotnet-sdk 17.0.0 (2026-11-12). Read at commit 6eea5fcadff5bd64bd418f1995a1c6c1d11055d3 (release 17.0.0): StellarDotnetSdk/Assets/AssetTypeCreditAlphaNum4.cs lines 69-71 and AssetTypeCreditAlphaNum12.cs lines 65-67 order two credit assets with the same code by string.Compare(Issuer, other.Issuer, StringComparison.Ordinal), that is by strkey text; StellarDotnetSdk/LiquidityPool/LiquidityPoolConstantProductParameters.cs lines 29-31 throw ArgumentException when assetA.CompareTo(assetB) >= 0, and FromXdr (lines 97-102) calls that constructor.",
+    "expected_basis": "stellar-core orders the assets of a constant-product pool by XDR bytes (CAP-38).",
+    "observed": "source-reading"
+  },
+  "reproduction": {
+    "by": "record-maintainer",
+    "date": "2026-11-13",
+    "method": "Source reading only, never executed: the kit has no conformance driver for this SDK, so the cells cannot be run. The comparison read at release 17.0.0 (commit and lines in evidence.pre_fix) is the one the open upstream issue #257 describes; the record adds no executed reproduction.",
+    "result": "source-reading"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/Beans-BV/dotnet-stellar-sdk/issues/257",
+      "https://github.com/search?type=issues&q=repo%3ABeans-BV%2Fdotnet-stellar-sdk+liquidity+pool+asset+order"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/Beans-BV/dotnet-stellar-sdk/issues/257"
+  },
+  "issue_draft": {
+    "path": "issue-dotnet-stellar-sdk.md",
+    "kind": "comment-on-existing",
+    "dry_run_command": "gh issue comment 257 --repo Beans-BV/dotnet-stellar-sdk --body-file findings/F-0032/issue-dotnet-stellar-sdk.md"
+  },
+  "upstream": {
+    "url": "https://github.com/Beans-BV/dotnet-stellar-sdk/issues/257",
+    "state": "open",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The open upstream issue #257 already records this defect, and pull request #272 says it fixes it. Our evidence is a source reading, not an executed run, so nothing is posted: the evidence comment drafted next to this record (issue-dotnet-stellar-sdk.md) stays a draft unless a maintainer decides to post it."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc conform siblings as a sibling of F-0016 (stellar/js-stellar-sdk): dotnet@17.0.0 shows the same outcome on 5 corpus cell(s) by manual evidence (source-reading)."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Issue #257 is open and pull request #272, also open, says it fixes it; the evidence comment is drafted and waits for a maintainer's review."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "duplicate-of",
+      "note": "Duplicate of the open upstream issue #257 (same defect, same comparison). Observed by source reading only, on an SDK the kit has no driver column for, so no report row can refer to it; the findings check exempts it from the orphan rule and lists it. The evidence comment stays a draft; nothing is posted."
+    }
+  ],
+  "siblings": [
+    "F-0016",
+    "F-0023",
+    "F-0027",
+    "F-0028"
+  ],
+  "related": [
+    "https://github.com/Beans-BV/dotnet-stellar-sdk/pull/272"
+  ]
+}

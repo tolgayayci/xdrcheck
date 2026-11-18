@@ -1,0 +1,44 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0020",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/js-stellar-sdk",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "go/bin/xdrcheck conform build --set all",
+        "observed": "every driver builds offline from the caches make fetch filled",
+        "ok": true
+      },
+      {
+        "command": "scripts/offline-run.sh go/bin/xdrcheck conform run --set public --entries <the record's entry IDs> --report reports/conformance-review",
+        "observed": "every listed row fails again with check \"known\" and resolves to this record",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 1,
+      "found_failing": 1,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/js-stellar-sdk/pull/1811",
+      "matches_rows": true,
+      "state_seen": "merged 2026-10-19",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [],
+  "verdict": "accepted",
+  "failing_step": null
+}

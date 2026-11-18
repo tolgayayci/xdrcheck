@@ -1,0 +1,200 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0065",
+  "title": "wallet-backend records accounts named only as claimants, with no ledger change, as participants (by design, not a defect)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "e967ce8b7362b79c277e700e789181d76fbb5967, 3e22515a44979fdc3a558fda3991ca2b48e38cef, 18db88f4ba481c49a782d157be42177700c4385e and f0c00cf5242048d0438d07151cc1ef1a4b98d7c7",
+    "versions_tested": [
+      "e967ce8b7362b79c277e700e789181d76fbb5967",
+      "3e22515a44979fdc3a558fda3991ca2b48e38cef",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "No defect: see the resolution.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    23
+  ],
+  "entries": [
+    {
+      "id": "cap-0023/claimants-max-10",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "claimants with no ledger change are not participants (must_not_include)",
+      "observed": "Executed at e967ce8b and 3e22515a, every variant and both inputs: mishandled · wrong_value; the claimants appear as participants and stored addresses; nothing else differs."
+    },
+    {
+      "id": "cap-0023/claim-predicate-depth-4",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "claimants with no ledger change are not participants (must_not_include)",
+      "observed": "Executed at e967ce8b and 3e22515a, every variant and both inputs: mishandled · wrong_value; the claimants appear as participants and stored addresses; nothing else differs."
+    },
+    {
+      "id": "cap-0023/relative-predicate-stored-absolute",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "claimants with no ledger change are not participants (must_not_include)",
+      "observed": "Executed at e967ce8b and 3e22515a, every variant and both inputs: mishandled · wrong_value; the claimants appear as participants and stored addresses; nothing else differs."
+    },
+    {
+      "id": "cap-0023/balance-id-from-muxed-source",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "claimants with no ledger change are not participants (must_not_include)",
+      "observed": "Executed at e967ce8b and 3e22515a, every variant and both inputs: mishandled · wrong_value; the claimants appear as participants and stored addresses; nothing else differs."
+    },
+    {
+      "id": "cap-0035/claimable-balance-clawback-flag-ext-v1",
+      "variant": "pubnet@30",
+      "scope": "replay",
+      "expected": "claimants with no ledger change are not participants (must_not_include)",
+      "observed": "Executed at e967ce8b and 3e22515a, every variant and both inputs: mishandled · wrong_value; the claimants appear as participants and stored addresses; nothing else differs."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "make replay-full OFFLINE=1 at e967ce8b and at 3e22515a (inputs sep54-s3 and rpc): every variant of the five entries reports the claimant accounts as forbidden participants and stored addresses; no other fact differs.",
+    "transcripts": [
+      "reports/replay-full/wallet-backend-sep54-s3/report.json",
+      "reports/replay-full/wallet-backend-rpc/report.json"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claimants-max-10:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claimants-max-10:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claimants-max-10:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claimants-max-10:testnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claimants-max-10:pubnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claimants-max-10:pubnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claimants-max-10:testnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claimants-max-10:testnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claim-predicate-depth-4:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claim-predicate-depth-4:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claim-predicate-depth-4:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/claim-predicate-depth-4:testnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claim-predicate-depth-4:pubnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claim-predicate-depth-4:pubnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claim-predicate-depth-4:testnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/claim-predicate-depth-4:testnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/relative-predicate-stored-absolute:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/relative-predicate-stored-absolute:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/relative-predicate-stored-absolute:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/relative-predicate-stored-absolute:testnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/relative-predicate-stored-absolute:pubnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/relative-predicate-stored-absolute:pubnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/relative-predicate-stored-absolute:testnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/relative-predicate-stored-absolute:testnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/balance-id-from-muxed-source:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/balance-id-from-muxed-source:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/balance-id-from-muxed-source:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0023/balance-id-from-muxed-source:testnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/balance-id-from-muxed-source:pubnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/balance-id-from-muxed-source:pubnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/balance-id-from-muxed-source:testnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0023/balance-id-from-muxed-source:testnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@30:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@28:chain",
+      "replay:stellar/wallet-backend@e967ce8b7362b79c277e700e789181d76fbb5967:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@30:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@28:chain",
+      "replay:stellar/wallet-backend@3e22515a44979fdc3a558fda3991ca2b48e38cef:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claimants-max-10:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claimants-max-10:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claimants-max-10:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claimants-max-10:testnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claim-predicate-depth-4:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claim-predicate-depth-4:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claim-predicate-depth-4:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/claim-predicate-depth-4:testnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/relative-predicate-stored-absolute:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/relative-predicate-stored-absolute:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/relative-predicate-stored-absolute:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/relative-predicate-stored-absolute:testnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/balance-id-from-muxed-source:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/balance-id-from-muxed-source:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/balance-id-from-muxed-source:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0023/balance-id-from-muxed-source:testnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@30:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@28:chain",
+      "replay:stellar/wallet-backend@18db88f4ba481c49a782d157be42177700c4385e:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claimants-max-10:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claimants-max-10:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claimants-max-10:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claimants-max-10:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claim-predicate-depth-4:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claim-predicate-depth-4:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claim-predicate-depth-4:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/claim-predicate-depth-4:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/relative-predicate-stored-absolute:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/relative-predicate-stored-absolute:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/relative-predicate-stored-absolute:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/relative-predicate-stored-absolute:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/balance-id-from-muxed-source:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/balance-id-from-muxed-source:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/balance-id-from-muxed-source:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0023/balance-id-from-muxed-source:testnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0035/claimable-balance-clawback-flag-ext-v1:pubnet@30:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@28:chain",
+      "replay:stellar/wallet-backend@f0c00cf5242048d0438d07151cc1ef1a4b98d7c7:cap-0035/claimable-balance-clawback-flag-ext-v1:testnet@30:chain"
+    ],
+    "expected_basis": "The corpus's participant rule (docs/manifest.md 6.5 and 6.11): participants are what the ledger meta shows was affected; an account only named in the envelope is an envelope-only claim.",
+    "observed": "executed"
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Triaged from the replay rows of the five claimable-balance entries, which stayed pending finding review."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "not-a-defect",
+      "note": "Closed with the reason below; made public after maintainer review."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "not-a-defect",
+      "note": "Carried to the pinned current commit 18db88f4: make replay-full shows the same rows there; the divergences name it too."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "not-a-defect",
+      "note": "Carried to the pinned current commit f0c00cf5: make replay-full shows the same rows there; the divergences name it too."
+    }
+  ],
+  "resolution": {
+    "reason": "Not a defect in wallet-backend. Its participant table (docs/architecture/state-changes.md, at e967ce8b and 3e22515a) lists 'Accounts named in the operation body, for example payment destinations, claimants, trustors, and clawback holders' as participants of successful transactions. Recording a claimant of a claimable balance as a participant is therefore wallet-backend's documented definition; it stores no state change or movement for such an account. The difference comes from this kit's stricter rule. The entries keep their expectation and the cells are declared.",
+    "reviewer": "kit-maintainer",
+    "date": "2026-11-18",
+    "manifest_action": "divergence recorded as wont_fix on the five entries (stellar/wallet-backend e967ce8b and 3e22515a), naming this record"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "make replay-full OFFLINE=1 at e967ce8b and 3e22515a: the same forbidden claimant participants on every variant and input; documentation read again at both commits.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-18",
+    "queries": [
+      "repo:stellar/wallet-backend claimants participants",
+      "repo:stellar/wallet-backend claimable balance participant"
+    ],
+    "result": "none-found"
+  },
+  "related": [
+    "https://github.com/stellar/wallet-backend/blob/3e22515a44979fdc3a558fda3991ca2b48e38cef/docs/architecture/state-changes.md"
+  ]
+}

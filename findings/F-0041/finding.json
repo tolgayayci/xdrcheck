@@ -1,0 +1,68 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0041",
+  "title": "py-stellar-base decodes a bool encoded as 2 as true, as stellar-core does (the network's reading, not a defect)",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "none: the SDK reads the value as stellar-core does",
+    "versions_tested": [
+      "17.0.0",
+      "17.0.1"
+    ]
+  },
+  "component": "sdk",
+  "class": "accepts_invalid",
+  "severity": "low",
+  "severity_basis": "No defect: see the resolution.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: an XDR encoding rule that holds in every protocol version (the corpus's xdr-strict group).",
+  "entries": [
+    {
+      "id": "xdr-strict/bool-value-2",
+      "variant": "none",
+      "scope": "L0",
+      "expected": "reject: an XDR bool is 0 or 1 (RFC 4506 4.4)",
+      "observed": "Executed on 17.0.0 and 17.0.1 (xdrlib3 0.1.1): xdr.SCVal.from_xdr_bytes decodes the value as True and re-encodes it as 0000000000000001, the same reading as stellar-core 30.0.0."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --columns 'python@*' --entries 'xdr-strict/bool-value-2'), L0: accepts_invalid, declared as a wont_fix known divergence.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json",
+      "evidence/core-print-xdr/out/bool-2.txt"
+    ],
+    "report_rows": [
+      "conform:xdr-strict/bool-value-2:none:python@17.0.0:L0",
+      "conform:xdr-strict/bool-value-2:none:python@17.0.1:L0"
+    ],
+    "expected_basis": "RFC 4506 4.4; stellar-core 30.0.0 print-xdr reads the same bytes as TRUE (evidence/core-print-xdr/out/bool-2.txt).",
+    "observed": "executed"
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the Python cells of xdr-strict/bool-value-2."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "not-a-defect",
+      "note": "The SDK reads the bytes as the network does; recorded as wont_fix on the entry."
+    }
+  ],
+  "resolution": {
+    "reason": "Not a defect in py-stellar-base. The SDK accepts a bool encoded as 2 and reads it as True, which RFC 4506 does not allow, but stellar-core 30.0.0 reads the same bytes the same way (print-xdr shows \"b\": \"TRUE\", evidence/core-print-xdr/out/bool-2.txt; xdrpp reads any non-zero bool as true) and re-serialises it canonically. A reader that agrees with the network's own decoder shows the value the network applies, so there is nothing to change; the entry keeps its strict expectation and the cell is declared.",
+    "reviewer": "independent-reviewer",
+    "date": "2026-11-13",
+    "manifest_action": "divergence recorded as wont_fix on xdr-strict/bool-value-2 (stellar-sdk (PyPI) 17.0.0 || 17.0.1), naming this record"
+  },
+  "related": [
+    "https://www.rfc-editor.org/rfc/rfc4506#section-4.4"
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0058",
+  "title": "Top-level Int64 and Uint64 serialize to JSON numbers and reject strings, diverging from SEP-51",
+  "target": {
+    "project": "stellar/rs-stellar-xdr",
+    "package": "stellar-xdr",
+    "ecosystem": "crates",
+    "versions_affected": "30.0.0 and main ebec5fb; @stellar/stellar-xdr-json 30.0.0 (range not established)",
+    "versions_tested": [
+      "rust@30.0.0"
+    ],
+    "fixed_in": "d65093af6992abbde0eb9a61f7c16bba2697d096"
+  },
+  "component": "xdr-library",
+  "class": "encode_mismatch",
+  "severity": "low",
+  "severity_basis": "Int64 and Uint64 are generated as type aliases, so the NumberOrString handling of 64-bit fields and newtype typedefs does not apply: converting the types themselves gives bare JSON numbers and refuses the SEP-51 string form, and the JS binding loses precision through JSON.parse without an error. Every 64-bit value inside another type is already a string (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: the SEP-51 XDR-JSON text form of Int64 and Uint64, not a protocol change.",
+  "entries": [
+    {
+      "id": "none",
+      "scope": "json",
+      "expected": "Int64 and Uint64 converted by type name serialize to JSON strings and accept the string form (SEP-51)",
+      "observed": "No corpus entry converts Int64 or Uint64 on their own. By hand on 30.0.0: serde_json gives 9223372036854775807 and 18446744073709551615 (bare numbers) and refuses \"5\"; TimePoint and SequenceNumber give strings."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs; no run of the kit compares this behaviour, so no report row exists. The issue's Rust program on stellar-xdr 30.0.0 (main ebec5fb the same) and its JS snippet on @stellar/stellar-xdr-json 30.0.0: Uint64 2^53+1 decodes to a bare number that re-encodes as 2^53.",
+    "expected_basis": "SEP-51 maps hyper and unsigned hyper to JSON strings; its example for hyper is f/////////8= as \"9223372036854775807\" (https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0051.md#hyper-integer-64-bit).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Re-run on 2026-11-18 with the issue's Rust program on stellar-xdr 30.0.0, offline: Int64 and Uint64 print as numbers and refuse \"5\"; TimePoint and SequenceNumber print as strings.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/rs-stellar-xdr Int64 json string",
+      "repo:stellar/rs-stellar-xdr NumberOrString"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/rs-stellar-xdr/issues/625."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-xdr/issues/625",
+    "filed_at": "2026-11-14",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/rs-stellar-xdr/issues/625; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "Upstream: a maintainer merged pull request 645 on main on 2026-11-20 (it stops generating the integer typedef types; commit d65093af) and closed the issue as completed; no stellar-xdr release after 30.0.0 includes it yet."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0051.md"
+  ]
+}

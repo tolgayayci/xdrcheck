@@ -1,0 +1,103 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0037",
+  "title": "A bool encoded as 2 decodes as false, while stellar-core reads the same bytes as true",
+  "target": {
+    "project": "stellar/rs-stellar-xdr",
+    "package": "stellar-xdr",
+    "ecosystem": "crates",
+    "versions_affected": "28.0.0 - 30.0.0 (28.0.0, 28.0.1 and 30.0.0 executed; lower bound not established)",
+    "versions_tested": [
+      "28.0.0",
+      "28.0.1",
+      "30.0.0"
+    ],
+    "fixed_in": "2f72a6a57d914e1e9c0740a21a2fc7c36e987f6c"
+  },
+  "component": "xdr-library",
+  "class": "accepts_invalid",
+  "severity": "medium",
+  "severity_basis": "Acceptance of invalid input with the opposite value to stellar-core's reading of the same bytes (core's xdrpp reads any non-zero bool as TRUE; print-xdr executed). Core re-serialises canonically, so ledger data never carries the value; a tool that decodes a submitted envelope before core would show false where core applies true. No such tool is verified. Under both decode profiles.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: an XDR encoding rule that holds in every protocol version (the corpus's xdr-strict group).",
+  "entries": [
+    {
+      "id": "xdr-strict/bool-value-2",
+      "variant": "none",
+      "scope": "L0",
+      "expected": "reject: an XDR bool is 0 or 1 (RFC 4506 4.4)",
+      "observed": "Executed on 28.0.0, 28.0.1 and 30.0.0 under limits-default and limits-none: decodes as ScVal::Bool(false) and re-encodes as 0000000000000000."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (make verify-conformance; xcc conform run --columns 'rust@*' --entries 'xdr-strict/bool-value-2'), L0, on every Rust column: verdict diverge (reencode_mismatch).",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "evidence/core-print-xdr/out/bool-2.txt"
+    ],
+    "report_rows": [
+      "conform:xdr-strict/bool-value-2:none:rust@28.0.0:limits-default:L0",
+      "conform:xdr-strict/bool-value-2:none:rust@28.0.0:limits-none:L0",
+      "conform:xdr-strict/bool-value-2:none:rust@28.0.1:limits-default:L0",
+      "conform:xdr-strict/bool-value-2:none:rust@28.0.1:limits-none:L0",
+      "conform:xdr-strict/bool-value-2:none:rust@30.0.0:limits-default:L0",
+      "conform:xdr-strict/bool-value-2:none:rust@30.0.0:limits-none:L0"
+    ],
+    "expected_basis": "RFC 4506 4.4 (a bool is 0 or 1); stellar-core 30.0.0 print-xdr reads the same bytes as TRUE (evidence/core-print-xdr/out/bool-2.txt).",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-13",
+    "method": "Independent re-run, separate from the first: rust@28.0.0, 28.0.1 and 30.0.0 under limits-default and limits-none decode the bool 2 as false and re-encode 0; core@30.0.0 reads it as true. Confirmed again on 30.0.0 and main ebec5fb before filing.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "repo:stellar/rs-stellar-xdr bool",
+      "repo:stellar/rs-stellar-xdr whitespace"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/rs-stellar-xdr (#622): bool 2 and 0xffffffff decode as false and re-encode as 0, while stellar-core reads true."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-xdr/issues/622",
+    "filed_at": "2026-11-13",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the conformance cells of xdr-strict/bool-value-2 on the Rust columns; no public issue or pull request found (an unmerged upstream branch carries a fix commit, c3fdc2e9, with no pull request)."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Filed by the maintainers of this kit as https://github.com/stellar/rs-stellar-xdr/issues/622, against 30.0.0 and main ebec5fb; cites xdrpp from_uint (u != 0) and the maintainer's unmerged branches reject-invalid-xdr-bool (e7416c43) and fix-bool-and-whitespace-decode (c3fdc2e9). No pull request."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Upstream state refreshed: on 2026-11-16 a maintainer marked the issue as a duplicate (target not shown) and assigned it; it is still open and no fix is merged."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "filed",
+      "note": "Upstream: the maintainer closed the issue on 2026-11-19 as completed after a fix was merged on main in commit 2f72a6a5 (a bool other than 0 or 1 is refused on decode); no stellar-xdr release after 30.0.0 includes it yet."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/rs-stellar-xdr/commit/c3fdc2e9e6bc6138b347044727e9302aa74326ec",
+    "https://www.rfc-editor.org/rfc/rfc4506#section-4.4"
+  ]
+}

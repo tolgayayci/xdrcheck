@@ -1,0 +1,44 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0030",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/rs-stellar-xdr",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "go/bin/xdrcheck conform build --set all",
+        "observed": "every driver builds offline from the caches make fetch filled",
+        "ok": true
+      },
+      {
+        "command": "scripts/offline-run.sh go/bin/xdrcheck conform run --set public --entries <the record's entry IDs> --report reports/conformance-review",
+        "observed": "every listed row fails again with check \"known\" and resolves to this record",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 2,
+      "found_failing": 2,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/rs-stellar-xdr/security/advisories/GHSA-3xhm-p452-9wjh",
+      "matches_rows": true,
+      "state_seen": "published repository advisory \"VecM serde deserialization does not enforce maximum length\", affected < 28.0.1, patched 28.0.1 (page read; not in the global advisory database)",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [],
+  "verdict": "accepted",
+  "failing_step": null
+}

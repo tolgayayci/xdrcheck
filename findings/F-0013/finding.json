@@ -1,0 +1,84 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0013",
+  "title": "Addresses longer than an account key are stored truncated (signed-payload signer stored as 33 bytes)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "..79ea2acd1dc65a07166133cc04b12e76db314db0",
+    "versions_tested": [
+      "79ea2acd1dc65a07166133cc04b12e76db314db0"
+    ],
+    "fixed_in": "bb0b162b072583c7dabffbdee664d1c117e5ba56"
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "high",
+  "severity_basis": "Silent wrong value in a stored signer: ingestion completes with no error and the stored value does not round-trip to the P strkey. Executed at the pre-fix commit; fixed upstream.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    40
+  ],
+  "entries": [
+    {
+      "id": "cap-0040/signed-payload-signer-added",
+      "scope": "replay",
+      "expected": "the signed-payload signer is stored whole (41 bytes) and round-trips to its P strkey",
+      "observed": "Executed at 79ea2acd: ingestion completes with no error and stores the signer as 33 bytes, dropping the payload; the stored value does not round-trip to the P strkey. The fixed commits store 41 bytes.",
+      "variant": "testnet"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "wallet-backend 79ea2acd through the replay harness (make verify-replay), both inputs: mishandled · wrong_value.",
+    "post_fix": "wallet-backend bb0b162b and the pinned current commit e967ce8b: pass on both inputs (make verify-replay).",
+    "transcripts": [
+      "evidence/wallet-backend-replay/"
+    ],
+    "report_rows": [
+      "replay:stellar/wallet-backend@79ea2acd1dc65a07166133cc04b12e76db314db0:cap-0040/signed-payload-signer-added:testnet:single"
+    ],
+    "expected_basis": "The signer key in the ledger is a SIGNER_KEY_TYPE_ED25519_SIGNED_PAYLOAD with a 3-byte payload; its strkey is defined by SEP-23."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0013.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/wallet-backend/issues/716"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/wallet-backend/issues/716"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/716",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/wallet-backend/issues/716 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/wallet-backend/pull/693",
+    "https://github.com/stellar/wallet-backend/pull/753",
+    "https://github.com/stellar/wallet-backend/pull/729"
+  ]
+}

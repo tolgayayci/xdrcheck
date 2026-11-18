@@ -1,0 +1,75 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0002",
+  "title": "Token state change keyed by the emitting contract reported by XDR304 (linter false positive, fixed in the rule)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "go",
+    "versions_affected": "e967ce8b7362b79c277e700e789181d76fbb5967 (range not established)",
+    "versions_tested": [
+      "e967ce8b7362b79c277e700e789181d76fbb5967"
+    ]
+  },
+  "component": "pipeline",
+  "class": "hardening",
+  "severity": "low",
+  "severity_basis": "No defect in the target: see the resolution. The false positive was in the linter and is fixed in the rule.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    67
+  ],
+  "entries": [
+    {
+      "id": "cap-0067/forged-token-event-from-unrelated-contract",
+      "scope": "XDR304",
+      "expected": "no XDR304 report",
+      "observed": "XDR304: ParseTransferEvent() (contract event topics or data) reaches participant sink scBuilder.WithReason(types.StateChangeReasonCredit).WithAccount with no check that the event's ContractId is the expected contract; any contract can emit a token-shaped event, so compare it with asset.ContractID(passphrase) first"
+    }
+  ],
+  "location": {
+    "commit": "e967ce8b7362b79c277e700e789181d76fbb5967",
+    "file": "internal/services/sep41/processor.go",
+    "lines": "207",
+    "function": "processor.processEvent"
+  },
+  "evidence": {
+    "transcripts": [
+      "reports/lint-wallet-backend/e967ce8b7362b79c277e700e789181d76fbb5967.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@e967ce8b:XDR304:internal/services/sep41/processor.go:processor.processEvent"
+    ]
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created by xcc findings new from report row lint:github.com/stellar/wallet-backend@e967ce8b:XDR304:internal/services/sep41/processor.go:processor.processEvent."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "not-a-defect",
+      "note": "Closed with the reason the suppression reviewer recorded."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "not-a-defect",
+      "note": "Linter fixed: XDR304 now treats a configured sink called on a builder that was given the emitting contract's ID earlier in the chain as keyed by that contract (fixtures lint/testdata/xdr3xx/xdr304builder). The five reports at processor.processEvent are no longer produced at any commit of the wallet-backend table, and their suppression and expected entries are removed."
+    }
+  ],
+  "resolution": {
+    "reason": "Not a defect in the target: the state change is recorded for the contract that emitted the event (WithToken with the event's contract ID, on the same builder), and only for tracked contracts. The report came from a limitation of the rule, whose contract-keyed exemption did not follow a builder chain; the rule now follows it, so the site is no longer reported.",
+    "reviewer": "kit-maintainer (suppression review)",
+    "date": "2026-11-12",
+    "manifest_action": "none: fixed in the linter (XDR304 follows the builder chain); no suppression remains"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 1 of 1 listed report rows failed again as recorded, all offline. Review: findings/review/F-0002.json.",
+    "result": "reproduced"
+  }
+}

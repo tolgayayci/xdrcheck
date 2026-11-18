@@ -1,0 +1,156 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0016",
+  "title": "Pool asset order and ScVal map key order compared as strkey text instead of XDR bytes",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.3.0, 17.0.0 - 17.2.0 (asset order); 16.3.0 - 16.4.1 and 17.2.0 (map key order)",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1",
+      "js@17.2.0"
+    ],
+    "fixed_in": "17.2.1"
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "medium",
+  "severity_basis": "A valid network transaction is refused by TransactionBuilder.fromXdr and the reversed pair yields the ID of a pool stellar-core cannot create; map keys are sorted out of host order. Fixed in 17.2.1; the asset-order half was backported to 16.3.1, the map-order half is not on the 16.x line.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    38,
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order",
+      "scope": "L4",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed on 16.3.0 and 17.2.0: getLiquidityPoolId throws 'Assets are not in lexicographic order' for a pair that is in XDR byte order (issuers compared as strkey text); 16.3.1 and 17.2.1 return the ID."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order",
+      "scope": "L4",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed on 16.3.0 and 17.2.0: getLiquidityPoolId accepts the reversed pair and returns ee51a32736d4dfb94f3695019f76fed06781068fa9f13b5a2867ea9dcd03c306, the ID of a pool stellar-core cannot create; 16.3.1 and 17.2.1 refuse it."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.network-order",
+      "scope": "L4",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed on 16.3.0 and 17.2.0: getLiquidityPoolId throws 'Assets are not in lexicographic order' for a pair that is in XDR byte order (issuers compared as strkey text); 16.3.1 and 17.2.1 return the ID."
+    },
+    {
+      "id": "cap-0038/api-liquidity-pool-issuer-ordering.reversed-order",
+      "scope": "L4",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed on 16.3.0 and 17.2.0: getLiquidityPoolId accepts the reversed pair and returns c1324f878b3d11af9f923abb7d692fc74e0a7bcfd9a4edefd564efe5fdae9fdb, the ID of a pool stellar-core cannot create; 16.3.1 and 17.2.1 refuse it."
+    },
+    {
+      "id": "cap-0038/pool-issuers-order-by-bytes-not-strkey",
+      "scope": "L1",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed: 17.2.0 and 16.3.0 throw 'Assets are not in lexicographic order' from TransactionBuilder.fromXdr on this transaction; 17.2.1 and 16.3.1 parse it. The raw XDR codec round-trips on every version.",
+      "variant": "testnet"
+    },
+    {
+      "id": "cap-0046/api-scval-map-sort-order.bytes-keys",
+      "scope": "L4",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: scvSortedMap orders the keys 0a, 09. The map-ordering half of the 17.2.1 fix is not on the 16.x line (the 16.3.1 backport covers asset order only)."
+    },
+    {
+      "id": "cap-0046/api-scval-map-sort-order.symbol-versus-string",
+      "scope": "L4",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: scvSortedMap orders the keys symbol a, string b. The map-ordering half of the 17.2.1 fix is not on the 16.x line (the 16.3.1 backport covers asset order only)."
+    },
+    {
+      "id": "cap-0046/api-scval-map-sort-order.u32-keys",
+      "scope": "L4",
+      "expected": "order by XDR bytes, as stellar-core and the host do",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: nativeToScVal orders the keys 10, 9. The map-ordering half of the 17.2.1 fix is not on the 16.x line (the 16.3.1 backport covers asset order only)."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all) on js@16.3.0 and js@17.2.0 (asset order) and js@16.3.0 - 16.4.1 and js@17.2.0 (map order).",
+    "post_fix": "js@17.2.1, js@17.3.0 and js@17.4.0 conform on the same entries.",
+    "transcripts": [
+      "evidence/js-1766/"
+    ],
+    "report_rows": [
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order:-:js@16.3.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-network-order:-:js@17.2.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order:-:js@16.3.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.go-pair-reversed-order:-:js@17.2.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.network-order:-:js@16.3.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.network-order:-:js@17.2.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.reversed-order:-:js@16.3.0:L4",
+      "conform:cap-0038/api-liquidity-pool-issuer-ordering.reversed-order:-:js@17.2.0:L4",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey:testnet:js@16.3.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey:testnet:js@17.2.0:L1",
+      "conform:cap-0046/api-scval-map-sort-order.bytes-keys:-:js@16.3.0:L4",
+      "conform:cap-0046/api-scval-map-sort-order.bytes-keys:-:js@16.3.1:L4",
+      "conform:cap-0046/api-scval-map-sort-order.bytes-keys:-:js@16.4.1:L4",
+      "conform:cap-0046/api-scval-map-sort-order.bytes-keys:-:js@17.2.0:L4",
+      "conform:cap-0046/api-scval-map-sort-order.symbol-versus-string:-:js@16.3.0:L4",
+      "conform:cap-0046/api-scval-map-sort-order.symbol-versus-string:-:js@16.3.1:L4",
+      "conform:cap-0046/api-scval-map-sort-order.symbol-versus-string:-:js@16.4.1:L4",
+      "conform:cap-0046/api-scval-map-sort-order.symbol-versus-string:-:js@17.2.0:L4",
+      "conform:cap-0046/api-scval-map-sort-order.u32-keys:-:js@16.3.0:L4",
+      "conform:cap-0046/api-scval-map-sort-order.u32-keys:-:js@16.3.1:L4",
+      "conform:cap-0046/api-scval-map-sort-order.u32-keys:-:js@16.4.1:L4",
+      "conform:cap-0046/api-scval-map-sort-order.u32-keys:-:js@17.2.0:L4",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:pubnet@28:js@16.3.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:pubnet@28:js@17.2.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:testnet@28:js@16.3.0:L1",
+      "conform:cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins:testnet@28:js@17.2.0:L1"
+    ],
+    "expected_basis": "stellar-core orders the assets of a constant-product pool by XDR bytes (CAP-38) and the host orders ScMap keys by ScVal comparison (CAP-46)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 22 of 22 listed report rows failed again as recorded, all offline. Review: findings/review/F-0016.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/js-stellar-sdk/pull/1766"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/js-stellar-sdk/pull/1766"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/pull/1766",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added. The 16.x maintenance line receives critical security fixes only (js-stellar-sdk SECURITY.md); no backport request is drafted unless a maintainer decides to ask for one."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/js-stellar-sdk/pull/1766 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Listed the rows of the local-twin ledger entry cap-0038/pool-issuers-order-by-bytes-not-strkey-local-twins, which the manifest now resolves to this record."
+    }
+  ]
+}

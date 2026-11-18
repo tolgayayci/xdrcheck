@@ -1,0 +1,108 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0061",
+  "title": "scValToNative and humanizeEvents drop the ScErrorType of every non-contract error",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.3.0 - 17.4.0 (executed by the kit on 16.3.0, 16.3.1, 16.4.1, 17.2.0, 17.2.1, 17.3.0 and 17.4.0) and master 5243062 (since stellar/js-stellar-base#753; lower bound not established)",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1",
+      "js@17.2.0",
+      "js@17.2.1",
+      "js@17.3.0",
+      "js@17.4.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "scvError values of every type other than sceContract become { type: \"system\", code, value } with only the ScErrorCode, so Error(Storage, ExceededLimit) and Error(Budget, ExceededLimit) are indistinguishable; humanizeEvents runs scValToNative on each diagnostic topic, so the failure reason of a failed Soroban transaction loses its error type. No value is decoded wrongly (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/scval-error-storage-exceeded-limit",
+      "variant": "testnet",
+      "scope": "L3",
+      "expected": "the native value of Error(Storage, ExceededLimit) carries type storage and code exceeded_limit",
+      "observed": "Executed by the kit (the native error fact) on every JavaScript column: scValToNative gives {type: \"system\", code: 5, value: \"scecExceededLimit\"}, which carries the code and no error type; py-stellar-base 17.0.0 and 17.0.1 keep both."
+    },
+    {
+      "id": "cap-0046/scval-error-budget-exceeded-limit",
+      "variant": "pubnet",
+      "scope": "L3",
+      "expected": "the native value of Error(Budget, ExceededLimit) carries type budget and code exceeded_limit",
+      "observed": "Executed by the kit on every JavaScript column: the same native value as for Error(Storage, ExceededLimit)."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "make verify-conformance and the public set: on cap-0046/scval-error-storage-exceeded-limit and cap-0046/scval-error-budget-exceeded-limit (12-byte slices of diagnostic events of failed Soroban transactions, testnet ledger 5521432 and mainnet ledger 64558277), the native error fact diverges on 16.3.0, 16.3.1, 16.4.1, 17.2.0, 17.2.1, 17.3.0 and 17.4.0: the native value carries no error type. The issue's script on 17.4.0 (16.4.1 and master 5243062 the same): both diagnostic events, copied from failed mainnet transactions, humanize to the same value, and all nine non-contract error types give the same output.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:cap-0046/scval-error-budget-exceeded-limit:pubnet:js@16.3.0:L3",
+      "conform:cap-0046/scval-error-budget-exceeded-limit:pubnet:js@16.3.1:L3",
+      "conform:cap-0046/scval-error-budget-exceeded-limit:pubnet:js@16.4.1:L3",
+      "conform:cap-0046/scval-error-budget-exceeded-limit:pubnet:js@17.2.0:L3",
+      "conform:cap-0046/scval-error-budget-exceeded-limit:pubnet:js@17.2.1:L3",
+      "conform:cap-0046/scval-error-budget-exceeded-limit:pubnet:js@17.3.0:L3",
+      "conform:cap-0046/scval-error-budget-exceeded-limit:pubnet:js@17.4.0:L3",
+      "conform:cap-0046/scval-error-storage-exceeded-limit:testnet:js@16.3.0:L3",
+      "conform:cap-0046/scval-error-storage-exceeded-limit:testnet:js@16.3.1:L3",
+      "conform:cap-0046/scval-error-storage-exceeded-limit:testnet:js@16.4.1:L3",
+      "conform:cap-0046/scval-error-storage-exceeded-limit:testnet:js@17.2.0:L3",
+      "conform:cap-0046/scval-error-storage-exceeded-limit:testnet:js@17.2.1:L3",
+      "conform:cap-0046/scval-error-storage-exceeded-limit:testnet:js@17.3.0:L3",
+      "conform:cap-0046/scval-error-storage-exceeded-limit:testnet:js@17.4.0:L3"
+    ],
+    "expected_basis": "ScError is a union of ScErrorType and ScErrorCode (CAP-46, Stellar-contract.x); dropping the type loses which host subsystem failed.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "make verify-conformance OFFLINE=1 and xdrcheck conform run --set public: the native error fact diverges on every JavaScript column and conforms on both Python columns; re-run by hand on 2026-11-18 with the issue's two diagnostic events on 17.4.0.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:stellar/js-stellar-sdk scValToNative scvError",
+      "repo:stellar/js-stellar-sdk ScErrorType"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/stellar/js-stellar-sdk/issues/1905."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1905",
+    "filed_at": "2026-11-14",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/stellar/js-stellar-sdk/issues/1905; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Now executed by the kit: the driver protocol's native error fact (docs/conformance-protocol.md) on two error values sliced from network ledgers, both declaring it as a known divergence."
+    }
+  ]
+}

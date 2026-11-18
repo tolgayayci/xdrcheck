@@ -1,0 +1,34 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0003",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "not-a-defect",
+  "target": "stellar/wallet-backend",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "make lint-before-after OFFLINE=1",
+        "observed": "the record's report row is produced again, suppressed with this record as its finding (reports/lint-before-after/<commit>.json; every before/after row shows its recorded counts and the run passes)",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 1,
+      "found_failing": 1,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "links": {
+      "dangling": []
+    },
+    "resolution": "agreed: at 9538b3ca GetOperationParticipants returns at participants.go:170 for a failed transaction before calling participantsForSorobanOp (line 193), and the address comes from the host function, not the authorization tree"
+  },
+  "notes": [],
+  "verdict": "accepted",
+  "failing_step": null
+}

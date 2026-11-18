@@ -1,0 +1,122 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0034",
+  "title": "StrKey.encodeSignedPayload encodes a signed payload outside 1 to 64 bytes (empty or 65 bytes)",
+  "defect_group": "DG-signed-payload-empty-encode",
+  "target": {
+    "project": "stellar/js-stellar-sdk",
+    "package": "@stellar/stellar-sdk",
+    "ecosystem": "npm",
+    "versions_affected": "16.3.0 - 17.4.0 (executed: 16.3.0, 16.3.1, 16.4.1, 17.2.0, 17.2.1, 17.3.0, 17.4.0; lower bound not established)",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1",
+      "js@17.2.0",
+      "js@17.2.1",
+      "js@17.3.0",
+      "js@17.4.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Encode side only: the SDK produces a P strkey SEP-23 calls invalid (an empty payload, or a 172-character strkey for a 65-byte payload); the 17.x decoder refuses both. No reader impact verified. Siblings are public in Go (open issue) and Rust (fixed).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/api-encode-signed-payload-empty",
+      "scope": "L4",
+      "expected": "refuse to encode a signed payload of 0 bytes (SEP-23 and CAP-0040: 1 to 64 bytes)",
+      "observed": "Executed on 16.3.0, 16.3.1, 16.4.1, 17.2.0, 17.2.1, 17.3.0 and 17.4.0: StrKey.encodeSignedPayload emits PA7QYNF7…AAAAAAKH4Y for an empty payload instead of refusing it; the 17.x decoder refuses the text it emitted."
+    },
+    {
+      "id": "strkey/api-encode-signed-payload-65-bytes",
+      "scope": "L4",
+      "expected": "refuse to encode a signed payload of 65 bytes (SEP-23 and CAP-0040: 1 to 64 bytes)",
+      "observed": "Executed on 16.3.0, 16.3.1, 16.4.1, 17.2.0, 17.2.1, 17.3.0 and 17.4.0: StrKey.encodeSignedPayload emits a 172-character P strkey. The 16.x decoder reads it back; the 17.x decoder refuses it ('invalid encoded string length: expected 56-165, got 172')."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner, L4, on every JavaScript column: make verify-conformance (the 17.x columns) and xcc conform run --set public (the 16.x columns), entries strkey/api-encode-signed-payload-empty and strkey/api-encode-signed-payload-65-bytes.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:strkey/api-encode-signed-payload-empty:-:js@16.3.0:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:js@16.3.1:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:js@16.4.1:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:js@17.2.0:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:js@17.2.1:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:js@17.3.0:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:js@17.4.0:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:js@16.3.0:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:js@16.3.1:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:js@16.4.1:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:js@17.2.0:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:js@17.2.1:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:js@17.3.0:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:js@17.4.0:L4"
+    ],
+    "expected_basis": "SEP-23 (https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md) and CAP-0040: a signed payload carries 1 to 64 bytes (opaque payload<64>), so its strkey is at most 165 characters; an empty payload or a 65-byte payload is invalid, and the SDK's own 17.x decoder refuses both.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone: the 7 empty-payload report rows failed again as recorded, offline. The 65-byte case was reproduced by the kit's run on 7 of 7 rows, offline, and checked by hand on 17.4.0 and main 81e76be before filing.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fjs-stellar-sdk+signed+payload+empty",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fjs-stellar-sdk+signed+payload+encode",
+      "https://github.com/search?type=issues&q=repo%3Astellar%2Fjs-stellar-sdk+is%3Apr+encodeSignedPayload"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-13",
+    "scope": "Public issue on stellar/js-stellar-sdk (#1899), covering the empty signed-payload encode and the 65-byte payload encode."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-stellar-sdk/issues/1899",
+    "filed_at": "2026-11-13",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-13",
+      "state": "candidate",
+      "note": "Created from the known divergences of strkey/api-encode-signed-payload-65-bytes that reference https://github.com/stellar/js-stellar-sdk/issues/1899 and their failure rows."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "filed",
+      "note": "Corrected: js-stellar-sdk#1899 was filed by the maintainers of this kit, so this record is the filing, not a duplicate of an existing item. Widened to the empty payload (strkey/api-encode-signed-payload-empty), which the same issue reports. No pull request (the repository takes pull requests by invitation)."
+    }
+  ],
+  "siblings": [
+    "F-0025",
+    "F-0029",
+    "F-0035"
+  ],
+  "related": [
+    "https://github.com/stellar/go-stellar-sdk/issues/5981",
+    "https://github.com/stellar/rs-stellar-strkey/pull/107"
+  ]
+}

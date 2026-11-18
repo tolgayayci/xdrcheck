@@ -1,0 +1,44 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0025",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/go-stellar-sdk",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "go/bin/xdrcheck conform build --set all",
+        "observed": "every driver builds offline from the caches make fetch filled",
+        "ok": true
+      },
+      {
+        "command": "scripts/offline-run.sh go/bin/xdrcheck conform run --set public --entries <the record's entry IDs> --report reports/conformance-review",
+        "observed": "every listed row fails again with check \"known\" and resolves to this record",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 4,
+      "found_failing": 4,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/go-stellar-sdk/issues/5981",
+      "matches_rows": true,
+      "state_seen": "open",
+      "note": ""
+    },
+    "links": {
+      "dangling": []
+    }
+  },
+  "notes": [],
+  "verdict": "accepted",
+  "failing_step": null
+}

@@ -1,0 +1,97 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0068",
+  "title": "Deploy walk over authorization sub-invocations has no explicit depth bound (hardening note, not a defect)",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "none: the walk is bounded by the XDR decoder at every commit of the linter's wallet-backend table, 79ea2acd1dc65a07166133cc04b12e76db314db0 to f0c00cf5242048d0438d07151cc1ef1a4b98d7c7",
+    "versions_tested": [
+      "79ea2acd1dc65a07166133cc04b12e76db314db0",
+      "6e5a59101158dc2996295450190142366062cd05",
+      "71625b21f832478aece23c2212ddf458c8a2f134",
+      "ce0820d75073d232fcbd9cb44faf9ca40751a1c8",
+      "f8e5786d22c04adad16318f2e126728beec5aac9",
+      "bb0b162b072583c7dabffbdee664d1c117e5ba56",
+      "ba8215796d8118d3c7d302395b901eec925894ab",
+      "666a64d426263fa6bd2a0ee61ee8dfb1f4729019",
+      "9538b3caeaebfeb3d034146c0ce9643c3066cf8a",
+      "80121f3abe0fcdf6487d123e940de2631c1210b2",
+      "18db88f4ba481c49a782d157be42177700c4385e",
+      "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+    ]
+  },
+  "component": "pipeline",
+  "class": "hardening",
+  "severity": "low",
+  "severity_basis": "No defect: see the resolution. The linter's warning stands as hardening advice.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "cap-0046/scval-nested-vec-99-in-event",
+      "scope": "XDR201",
+      "expected": "recursion over SorobanAuthorizedInvocation carries an explicit depth bound (XDR201, checklist item HC-201)",
+      "observed": "XDR201 (warning): walkInvocation, a closure in ContractDeployProcessor.ProcessOperation, calls itself once per entry of inv.SubInvocations with no depth parameter (internal/indexer/processors/contract_deploy.go:143 at 18db88f4; :137 at 80121f3a; :104 at 9538b3ca, 666a64d4, ba821579, bb0b162b, f8e5786d and ce0820d7; :98 at 71625b21, 6e5a5910 and 79ea2acd). No level merges its children's results."
+    }
+  ],
+  "location": {
+    "commit": "18db88f4ba481c49a782d157be42177700c4385e",
+    "file": "internal/indexer/processors/contract_deploy.go",
+    "lines": "115-153",
+    "function": "ContractDeployProcessor.ProcessOperation"
+  },
+  "evidence": {
+    "pre_fix": "make lint-wallet-backend and make lint-before-after (xdrlint with the shipped wallet-backend profile): XDR201, severity warning, at the same closure at every commit of the table, suppressed with this record as its finding.",
+    "transcripts": [
+      "reports/lint-wallet-backend/18db88f4ba481c49a782d157be42177700c4385e.json",
+      "reports/lint-before-after/18db88f4ba481c49a782d157be42177700c4385e.json",
+      "reports/lint-wallet-backend/f0c00cf5242048d0438d07151cc1ef1a4b98d7c7.json",
+      "reports/lint-before-after/f0c00cf5242048d0438d07151cc1ef1a4b98d7c7.json"
+    ],
+    "report_rows": [
+      "lint:github.com/stellar/wallet-backend@79ea2acd:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@6e5a5910:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@71625b21:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@ce0820d7:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@f8e5786d:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@bb0b162b:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@ba821579:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@666a64d4:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@9538b3ca:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@80121f3a:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@18db88f4:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation",
+      "lint:github.com/stellar/wallet-backend@f0c00cf5:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation"
+    ],
+    "expected_basis": "XDR201 asks for an explicit bound on every recursion over a self-referential xdr type (lint/docs/XDR201.md, guide checklist HC-201). Whether a missing bound is a defect depends on what can reach the walk: the go-xdr decoder that go-stellar-sdk uses counts depth on every nested decode and stops at DecodeDefaultMaxDepth = 1500 (go-xdr v0.0.0-20260806060815-dc590f17552a, xdr3/decode.go:36, required by every commit of the table through go-stellar-sdk v0.7.3 and v0.8.0); stellar-core admits an envelope only within its own decoder depth (in the v30.0.0 build: 1000 in the Rust parser from Protocol 28, xdrpp 500 before; corpus/fields.yaml, VF-50).",
+    "observed": "executed"
+  },
+  "state": "not-a-defect",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "candidate",
+      "note": "Created by xdrcheck findings new from report row lint:github.com/stellar/wallet-backend@18db88f4:XDR201:internal/indexer/processors/contract_deploy.go:ContractDeployProcessor.ProcessOperation."
+    },
+    {
+      "date": "2026-11-19",
+      "state": "not-a-defect",
+      "note": "Reviewed at every commit of the table (same function, same closure, same pattern): the walk is bounded by the decoder, so the report is hardening advice, not a defect. Suppressed at each commit with this record as its finding."
+    },
+    {
+      "date": "2026-11-20",
+      "state": "not-a-defect",
+      "note": "The warning fires again at the pinned current commit f0c00cf5 (make lint-wallet-backend, the same line of the unchanged contract_deploy.go); its suppression is carried to f0c00cf5's frozen list."
+    }
+  ],
+  "resolution": {
+    "reason": "Not a defect in wallet-backend; a hardening note. (1) The tree the walk visits was decoded from XDR by go-stellar-sdk, whose decoder refuses anything nested deeper than 1500 depth units; wallet-backend sets no other XDR decode depth. Measured with go-stellar-sdk v0.8.0 on 2026-11-19: a bare chain of SorobanAuthorizedInvocation decodes up to 1,495 levels and is refused at 1,496 ('maximum decoding depth reached'); inside a transaction or ledger meta fewer levels fit. (2) stellar-core admits an envelope only within its own decoder depth (1000 from Protocol 28, 500 before, in the v30.0.0 build); how many authorization levels that admits is not measured here, and whatever it admits, wallet-backend still reads it through the limit in (1). (3) Go stacks grow on demand: a walk of the same shape (one recursive call per sub-invocation, no merge) completed at 1,495 levels and at 149,500 levels built in memory, so no depth the decoder lets through can overflow the stack. (4) The walk is linear in the size of the tree: no level merges its children's results, which is why the rule reports a warning and not an error. (5) At 80121f3a and 18db88f4, ProcessOperation returns before the walk when the transaction failed (contract_deploy.go:49 and :50), so only successful transactions are walked; at the nine earlier commits the walk also runs for failed transactions, whose envelopes pass the same decoder limit, so the conclusion is the same. XDR201 deliberately does not count a success check as a bound. (6) The deepest authorization tree in the corpus is 4 levels (cap-0046/auth-deep-tree-golden; 1,617 root invocations across the corpus's 711 decoded blobs, none deeper). The rule keeps reporting this site as a warning on purpose: a walk over submitter-shaped data should carry an explicit cap at or above what stellar-core admits and say what happens past it (lint/docs/XDR201.md). That advice stands; the report is not counted as a failure of the pipeline.",
+    "reviewer": "kit maintainer (suppression review)",
+    "date": "2026-11-19",
+    "manifest_action": "none: the linter keeps XDR201 and its warning severity; the report at each commit of the table stays suppressed with this record as its finding"
+  }
+}

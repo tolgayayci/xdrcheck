@@ -1,0 +1,78 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0076",
+  "title": "txnbuild: time bounds above 2^63-1 parse as negative values, so a valid transaction cannot be rebuilt",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.1 - v0.9.0 (executed on v0.7.1 and v0.9.0) and main 4cee0255 (lower bound not established)",
+    "versions_tested": [
+      "v0.7.1",
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "rejects_valid",
+  "severity": "low",
+  "severity_basis": "Preconditions.FromXDR converts the uint64 TimePoint bounds to int64, so a bound of 2^63 or more parses as negative and TimeBounds.Validate refuses it ('maxTime cannot be negative'): a parsed transaction with such a bound cannot be rebuilt or edited through NewTransaction, and Timebounds() reports -1. A loud refusal; the transaction's hash and bytes are not affected.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: TimeBounds and their uint64 TimePoint predate CAPs (CAP-21 later carried them unchanged into Preconditions).",
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L1",
+      "expected": "a transaction with time bounds {0, 2^64-1} parsed with TransactionFromXDR is rebuilt by NewTransaction with the same bytes",
+      "observed": "No corpus entry rebuilds such a transaction in the Go column. By hand on v0.9.0: Timebounds() gives MaxTime -1 and NewTransaction fails with 'invalid timebound: maxTime cannot be negative'; pubnet ledger 60190078 holds such a transaction (7139913c…, protocol 24, successful)."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "txnbuild/preconditions.go",
+    "lines": "110-123",
+    "function": "Preconditions.FromXDR"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program on v0.9.0, main 4cee0255 and v0.7.1: XDR maxTime 18446744073709551615, tx.Timebounds() {MinTime:0 MaxTime:-1}, NewTransaction fails with 'invalid preconditions: invalid timebound: maxTime cannot be negative'.",
+    "expected_basis": "TimePoint is a uint64 in the XDR definitions (https://github.com/stellar/stellar-xdr/blob/v30.0/Stellar-transaction.x) and stellar-core accepts any value; BuildXDR writes the same uint64 back.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: NewTransaction refuses the parsed time bounds.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01",
+      "repo:stellar/go-stellar-sdk maxTime negative"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6052."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6052",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6052; this record restates the public issue."
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0091",
+  "title": "get_ledger_entries and get_full_ledger_entries drop the extXdr field, so the sponsor of a ledger entry cannot be read",
+  "defect_group": "DG-ledger-entries-ext-dropped",
+  "target": {
+    "project": "stellar/rs-stellar-rpc-client",
+    "package": "stellar-rpc-client",
+    "ecosystem": "crates",
+    "versions_affected": "30.0.0 (main 316aabc8 differs from the tag only in a workflow file; lower bound not established); also seen through stellar-cli 30.0.1 (stellar ledger entry fetch)",
+    "versions_tested": [
+      "stellar-rpc-client@30.0.0",
+      "stellar-cli@30.0.1"
+    ]
+  },
+  "component": "sdk",
+  "class": "partial_drop",
+  "severity": "low",
+  "severity_basis": "LedgerEntryResult and FullLedgerEntry have no field for extXdr and serde drops unknown fields, so get_ledger_entries, get_full_ledger_entries and stellar ledger entry fetch (even --output xdr, documented as the original RPC output) give no way to see an entry's LedgerEntryExt and so its sponsoringId (CAP-33). No value is decoded wrongly (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    33
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L3",
+      "expected": "the parsed getLedgerEntries result carries the entry's LedgerEntryExt when the server sends extXdr",
+      "observed": "No corpus entry drives the RPC client. By hand on stellar-rpc-client 30.0.0 with a localhost server answering in the shape stellar-rpc builds for a sponsored account: neither the get_ledger_entries nor the get_full_ledger_entries result has the extension. With stellar-cli 30.0.1 against stellar-rpc 30 on a local standalone network, stellar ledger entry fetch --output xdr for an account created inside a sponsoring block omits the extXdr the raw response holds."
+    }
+  ],
+  "location": {
+    "commit": "316aabc850755bcbf2e7ff19023e589c79c4e935",
+    "file": "src/lib.rs",
+    "lines": "419-432, 940-953",
+    "function": "LedgerEntryResult"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program on stellar-rpc-client 30.0.0, with a localhost server: the serialized get_ledger_entries entry has key, xdr and lastModifiedLedgerSeq, and the get_full_ledger_entries entry has key, val and lastModifiedLedgerSeq; extXdr, which holds the sponsor GCATS5YO…, is dropped. stellar ledger entry fetch account --output xdr (CLI 30.0.1) omits the extXdr naming the sponsor GBQL4M27….",
+    "expected_basis": "stellar-rpc's getLedgerEntries returns extXdr, the base64 LedgerEntryExt of the entry, since v23.0.0; LedgerEntryExt v1 carries sponsoringId (CAP-33).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The runs the issue reports, made on stellar-rpc-client 30.0.0 and stellar-cli 30.0.1 before filing on 2026-11-19: neither result has the extension.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/rs-stellar-rpc-client: every issue and pull request, open and closed",
+      "stellar/rs-stellar-rpc-client: every branch",
+      "stellar/stellar-cli: every issue and pull request about ledger entry fetch or extXdr"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/rs-stellar-rpc-client/issues/124."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/rs-stellar-rpc-client/issues/124",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/rs-stellar-rpc-client/issues/124; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0085",
+    "F-0090"
+  ]
+}

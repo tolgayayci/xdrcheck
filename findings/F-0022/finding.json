@@ -1,0 +1,115 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0022",
+  "title": "js-xdr 4.x default decode depth (200) refuses valid deeply nested values that the 5.x line decodes",
+  "target": {
+    "project": "stellar/js-xdr",
+    "package": "@stellar/js-xdr",
+    "ecosystem": "npm",
+    "versions_affected": "js-xdr 4.0.0 as installed by @stellar/stellar-sdk 16.3.0 - 16.4.1",
+    "versions_tested": [
+      "js@16.3.0",
+      "js@16.3.1",
+      "js@16.4.1"
+    ],
+    "fixed_in": "js-xdr 5.0.0 (@stellar/stellar-sdk 17.x)"
+  },
+  "component": "xdr-library",
+  "class": "rejects_valid",
+  "severity": "medium",
+  "severity_basis": "A valid value is refused with \"exceeded max decoding depth\" by the js-xdr 4.0.0 that the 16.x SDK line installs; js-xdr 5 raised the default to 1500. The 16.x line is a maintenance line.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "limits/scvec-nesting-100",
+      "scope": "L0",
+      "expected": "decode values nested as deeply as stellar-core and the host admit",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: 'exceeded max decoding depth'. js-xdr 4.0.0's default depth of 200 allows about 66 nested vectors; js-xdr 5 (the v17 line) raised it to 1500.",
+      "variant": "none"
+    },
+    {
+      "id": "limits/scvec-nesting-99",
+      "scope": "L0",
+      "expected": "decode values nested as deeply as stellar-core and the host admit",
+      "observed": "Executed on 16.3.0, 16.3.1 and 16.4.1: 'exceeded max decoding depth'. js-xdr 4.0.0's default depth of 200 allows about 66 nested vectors; js-xdr 5 (the v17 line) raised it to 1500.",
+      "variant": "none"
+    },
+    {
+      "id": "cap-0046/scval-nested-vec-99-in-event",
+      "scope": "L0",
+      "expected": "the ledger decodes: the network accepted it, and js-xdr 5 (the 17.x line) decodes it",
+      "observed": "reject: 'XDR Read Error: exceeded max decoding depth' on js@16.3.0, 16.3.1 and 16.4.1 (16.3.x on the Protocol 29 variants only; Protocol 30 is beyond their schema)"
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L0, on js@16.3.0 - 16.4.1: the two limits/scvec-nesting entries and the deep ledger entry cap-0046/scval-nested-vec-99-in-event.",
+    "post_fix": "js@17.2.0 and later (js-xdr 5) decode the same values.",
+    "report_rows": [
+      "conform:limits/scvec-nesting-100:none:js@16.3.0:L0",
+      "conform:limits/scvec-nesting-100:none:js@16.3.1:L0",
+      "conform:limits/scvec-nesting-100:none:js@16.4.1:L0",
+      "conform:limits/scvec-nesting-99:none:js@16.3.0:L0",
+      "conform:limits/scvec-nesting-99:none:js@16.3.1:L0",
+      "conform:limits/scvec-nesting-99:none:js@16.4.1:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:pubnet@29:js@16.3.0:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:pubnet@29:js@16.3.1:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:pubnet@29:js@16.4.1:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:pubnet@30:js@16.4.1:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:testnet@29:js@16.3.0:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:testnet@29:js@16.3.1:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:testnet@29:js@16.4.1:L0",
+      "conform:cap-0046/scval-nested-vec-99-in-event:testnet@30:js@16.4.1:L0"
+    ],
+    "expected_basis": "The values are within the Soroban host limits (DEFAULT_XDR_RW_LIMITS depth 500, soroban-env-host v30.0.0 budget/limits.rs)."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 6 of 6 listed report rows failed again as recorded, all offline. Review: findings/review/F-0022.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/js-xdr/pull/155"
+    ],
+    "result": "existing-closed",
+    "existing": "https://github.com/stellar/js-xdr/pull/155"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/js-xdr/pull/155",
+    "state": "fixed",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "Fixed upstream; the upstream item already carries the reproduction and the fix, so no new evidence is added. The 16.x maintenance line receives critical security fixes only (js-stellar-sdk SECURITY.md); no backport request is drafted unless a maintainer decides to ask for one."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/js-xdr/pull/155 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "Listed the 24 rows of the three deep ledger entries that the manifest already resolves to this record (js 16.x at L0)."
+    },
+    {
+      "date": "2026-11-13",
+      "state": "duplicate-of",
+      "note": "Re-run on 2026-11-13 (xcc conform run --set all over the record's entries): every listed report row fails again as recorded; the record lists the public entries that show it."
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0081",
+  "title": "txnbuild: NewFeeBumpTransaction with a v0 inner transaction returns a fee bump whose inner transaction is nil, so Base64() and Hash() panic",
+  "defect_group": "DG-fee-bump-v0-inner",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.6.0 - v0.9.0 (the code involved is the same in every tag; executed on v0.7.1 and v0.9.0) and main 4cee0255",
+    "versions_tested": [
+      "v0.7.1",
+      "v0.9.0",
+      "4cee025512a603a2f21639160e379251f4f43507"
+    ]
+  },
+  "component": "sdk",
+  "class": "crash",
+  "severity": "low",
+  "severity_basis": "NewFeeBumpTransaction builds the fee-bump envelope from the inner envelope read before convertToV1, so for an ENVELOPE_TYPE_TX_V0 inner transaction InnerTx.V1 is nil and Base64(), MarshalBinary() and Hash() panic; convertToV1 also refuses a v0 transaction without time bounds and changes the inner hash when the fee is not a multiple of the operation count. In practice the API cannot fee-bump a v0 transaction; a panic or a refusal, no wrong value reaches the network.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    15
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "L1",
+      "expected": "NewFeeBumpTransaction over a parsed v0 transaction gives a fee bump whose inner transaction is the signed transaction, and the fee bump encodes and hashes",
+      "observed": "No conformance fact of the kit fee-bumps a parsed transaction. By hand on v0.9.0: for a v0 transaction with time bounds, fee 300 and 3 operations, the fee-bump envelope has InnerTx.V1 == nil and fb.Base64(), fb.MarshalBinary() and fb.HashHex() panic with a nil pointer dereference."
+    }
+  ],
+  "location": {
+    "commit": "4cee025512a603a2f21639160e379251f4f43507",
+    "file": "txnbuild/transaction.go",
+    "lines": "940-976, 1027-1030",
+    "function": "NewFeeBumpTransaction"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's standalone program on v0.9.0, main 4cee0255 and v0.7.1: NewFeeBumpTransaction returns no error, the envelope's InnerTx.V1 is nil, and Base64(), MarshalBinary() and HashHex() panic; a v0 transaction without time bounds is refused, and fee 301 for 3 operations becomes 300 with a different inner hash.",
+    "expected_basis": "stellar-core converts a v0 transaction to v1 field by field (txbridge::convertForV13), with PRECOND_TIME or PRECOND_NONE and the same fee, so the hash and the signatures stay valid (CAP-15).",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made on v0.9.0 and main 4cee0255 before filing on 2026-11-19: the fee bump of a v0 transaction panics when encoded.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/go-stellar-sdk: every issue and pull request since 2026-11-01",
+      "stellar/go-stellar-sdk: every issue since 2025-01",
+      "stellar/go-stellar-sdk: the branches with commits since 2026-11-01",
+      "repo:stellar/go-stellar-sdk NewFeeBumpTransaction",
+      "repo:stellar/go-stellar-sdk fee bump v0"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/go-stellar-sdk/issues/6057."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/6057",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/go-stellar-sdk/issues/6057; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0083"
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0063",
+  "title": "Signed payload signer: an empty or 65+ byte payload is encoded into a P key that the SDK itself cannot decode",
+  "defect_group": "DG-signed-payload-empty-encode",
+  "target": {
+    "project": "StellarCN/py-stellar-base",
+    "package": "stellar-sdk",
+    "ecosystem": "pypi",
+    "versions_affected": "17.0.0 - 17.0.1 (executed: 17.0.0, 17.0.1; main 3d722d01 has the same code; earlier versions not run)",
+    "versions_tested": [
+      "python@17.0.0",
+      "python@17.0.1"
+    ],
+    "fixed_in": "1b33206507bf84527214f36cba2e5849c5052fd1"
+  },
+  "component": "sdk",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Encode side only: SignerKey.ed25519_signed_payload() and StrKey.encode_ed25519_signed_payload() do not check the payload length, so an empty or 65-byte payload is encoded into a P strkey that the SDK's own decoder refuses. The same gap is public in js-stellar-sdk and go-stellar-sdk and fixed in rs-stellar-strkey.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/api-encode-signed-payload-empty",
+      "scope": "L4",
+      "expected": "refuse to encode a signed payload of 0 bytes (SEP-23 and CAP-0040: 1 to 64 bytes)",
+      "observed": "Executed on 17.0.0 and 17.0.1: StrKey.encode_ed25519_signed_payload emits PA7QYNF7…AAAAAAKH4Y for an empty payload; the SDK's own decoder refuses the text it emitted."
+    },
+    {
+      "id": "strkey/api-encode-signed-payload-65-bytes",
+      "scope": "L4",
+      "expected": "refuse to encode a signed payload of 65 bytes (SEP-23 and CAP-0040: 1 to 64 bytes)",
+      "observed": "Executed on 17.0.0 and 17.0.1: StrKey.encode_ed25519_signed_payload emits a P strkey for a 65-byte payload; the SDK's own decoder refuses it."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner, L4, python@17.0.0 and python@17.0.1 (make verify-conformance and make verify-conformance-public), entries strkey/api-encode-signed-payload-empty and strkey/api-encode-signed-payload-65-bytes: accepts_invalid, reason own_output_rejected.",
+    "transcripts": [
+      "reports/conformance/report.json",
+      "reports/conformance-public/report.json"
+    ],
+    "report_rows": [
+      "conform:strkey/api-encode-signed-payload-empty:-:python@17.0.0:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:python@17.0.1:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:python@17.0.0:L4",
+      "conform:strkey/api-encode-signed-payload-65-bytes:-:python@17.0.1:L4"
+    ],
+    "expected_basis": "CAP-40 defines the payload as opaque payload<64> and SetOptionsOp fails with SET_OPTIONS_BAD_SIGNER on an empty one; SEP-23 (https://github.com/stellar/stellar-protocol/blob/f2d364902615af726b3533021403c8b225aa6e5d/ecosystem/sep-0023.md) bounds the strkey accordingly, and the SDK's own decoder requires 40 to 100 bytes of data for this version byte.",
+    "observed": "executed"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-18",
+    "method": "Re-run on 2026-11-18: the 4 listed report rows failed again in make verify-conformance-public and make verify-conformance, offline; the issue's script on 17.0.1 encodes 0 and 65 bytes and refuses to decode both.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-14",
+    "queries": [
+      "repo:StellarCN/py-stellar-base signed payload",
+      "repo:StellarCN/py-stellar-base encode_ed25519_signed_payload"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-14",
+    "scope": "Public issue https://github.com/StellarCN/py-stellar-base/issues/1256."
+  },
+  "upstream": {
+    "url": "https://github.com/StellarCN/py-stellar-base/issues/1256",
+    "filed_at": "2026-11-14",
+    "state": "fix-merged-unreleased",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Recorded on 2026-11-18: filed by the maintainers of this kit on 2026-11-14 as https://github.com/StellarCN/py-stellar-base/issues/1256; this record restates the public issue."
+    },
+    {
+      "date": "2026-11-18",
+      "state": "filed",
+      "note": "Upstream: the maintainer closed the issue on 2026-11-16 as fixed on main by pull request #1265 (the SDK moved to stellar-strkey); no release after 17.0.1 includes it yet."
+    }
+  ],
+  "siblings": [
+    "F-0025",
+    "F-0029",
+    "F-0034",
+    "F-0035"
+  ],
+  "related": [
+    "https://github.com/StellarCN/py-stellar-base/pull/1265",
+    "https://github.com/stellar/js-stellar-sdk/issues/1899",
+    "https://github.com/stellar/go-stellar-sdk/issues/5981",
+    "https://github.com/stellar/rs-stellar-strkey/pull/107"
+  ]
+}

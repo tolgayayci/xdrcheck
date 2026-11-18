@@ -1,0 +1,89 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0072",
+  "title": "TRUSTLINE, SIGNATURE_THRESHOLD and DATA_ENTRY UPDATE rows are written for operations that leave the entry unchanged",
+  "target": {
+    "project": "stellar/wallet-backend",
+    "package": "github.com/stellar/wallet-backend",
+    "ecosystem": "source",
+    "versions_affected": "18db88f4ba481c49a782d157be42177700c4385e (range not established)",
+    "versions_tested": [
+      "18db88f4ba481c49a782d157be42177700c4385e"
+    ]
+  },
+  "component": "pipeline",
+  "class": "wrong_value",
+  "severity": "low",
+  "severity_basis": "The trustline limit, threshold and data entry state changes are built from the operation body without comparing the entry before and after, so a change_trust with the current limit, a set_options with a threshold equal to the current one and a manage_data with the current value each write an UPDATE row although the documentation describes these rows as changes. Noise in account history; balances and current state are not affected (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [],
+  "caps_note": "No CAP applies: change_trust, set_options and manage_data are classic operations that predate CAPs.",
+  "entries": [
+    {
+      "id": "classic/change-trust-unchanged-limit",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "no TRUSTLINE UPDATE row for the change_trust of transaction 24846775… (pubnet ledger 65480311), whose trustline limit is INT64_MAX before and after",
+      "observed": "The entry pins the limit before and after and states no trustline change (state_changes_exact); the wallet-backend adapter does not map TRUSTLINE/UPDATE rows, so no replay of the kit compares this row. By hand at 18db88f4: the operation writes TRUSTLINE UPDATE with limit MAX to MAX."
+    },
+    {
+      "id": "classic/set-options-unchanged-threshold",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "no SIGNATURE_THRESHOLD UPDATE row for the low threshold of the set_options in transaction 7535dbce… (pubnet ledger 65480333), which stays 1 while medium and high go from 2 to 1",
+      "observed": "The entry pins the thresholds before (00010202) and after (00010101); the neutral thresholds_changed carries values after only, so the replay matcher cannot tell the row for the unchanged low threshold from the rows for the changed ones. By hand at 18db88f4: the operation writes SIGNATURE_THRESHOLD UPDATE LOW 1 to 1."
+    },
+    {
+      "id": "classic/manage-data-unchanged-value",
+      "variant": "pubnet",
+      "scope": "replay",
+      "expected": "no DATA_ENTRY UPDATE row for the manage_data of transaction c62a0535… (pubnet ledger 26417001), which writes the entry's current value",
+      "observed": "The entry pins the value before and after (equal); the wallet-backend adapter does not map DATA_ENTRY rows, so no replay of the kit compares this row. By hand at 18db88f4: the operation writes DATA_ENTRY UPDATE with old = new."
+    }
+  ],
+  "location": {
+    "commit": "18db88f4ba481c49a782d157be42177700c4385e",
+    "file": "internal/indexer/processors/effects_horizon.go",
+    "lines": "273-275, 342-381",
+    "function": "addChangeTrustEffects"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's test (internal/indexer/noop_rows_test.go) at wallet-backend 18db88f4 runs ProcessLedger on pubnet ledgers 65480311, 65480333 and 26417001 from the public data lake and prints, for each of the three operations, the entry before and after (unchanged) and the UPDATE row written. In a sample of 750 pubnet ledgers, 364 of 389 TRUSTLINE UPDATE rows had the same limit before and after and 76 of 450 SIGNATURE_THRESHOLD rows had old == new.",
+    "expected_basis": "wallet-backend's docs/architecture/state-changes.md describes these rows as changes and says a home-domain write that keeps the same value emits nothing; homeDomainChange makes that comparison.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The run the issue reports, made at 18db88f4 before filing on 2026-11-19: the three operations each produce an UPDATE row for an unchanged entry.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/wallet-backend: every issue and pull request title, open and closed",
+      "stellar/wallet-backend: commits since 2026-11-01 on every branch touching the cited files"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/wallet-backend/issues/832."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/wallet-backend/issues/832",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/wallet-backend/issues/832; this record restates the public issue."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0011",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "not-a-defect",
+  "target": "stellar/wallet-backend",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "make lint-before-after OFFLINE=1",
+        "observed": "the record's report row is produced again, suppressed with this record as its finding (reports/lint-before-after/<commit>.json; every before/after row shows its recorded counts and the run passes)",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 1,
+      "found_failing": 1,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "links": {
+      "dangling": []
+    },
+    "resolution": "NOT agreed as written. The reason says the SAC metadata path was dead code with no ingestion path reaching it. At the cited commit 79ea2acd it was reachable: ingest_live.go:330 calls EnrichStaleSACMetadata at startup and checkpoint.go:382 calls FetchSACMetadata after a checkpoint load. 79ea2acd is 4 commits behind PR #695 (22660cf4, merged 2026-09-04), and PR #723 itself says the path became unreachable only after #695. The not-a-defect conclusion may still hold on other grounds (the enrichment error is logged and the rows keep their defaults; the site is gone at the pinned current commit), but the reason must say that"
+  },
+  "notes": [],
+  "verdict": "returned",
+  "failing_step": "resolution check: the stated reason (dead code at the cited commit) does not hold at 79ea2acd"
+}

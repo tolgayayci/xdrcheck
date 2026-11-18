@@ -1,0 +1,93 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0025",
+  "title": "strkey.Encode emits a signed-payload strkey for an empty payload",
+  "defect_group": "DG-signed-payload-empty-encode",
+  "target": {
+    "project": "stellar/go-stellar-sdk",
+    "package": "github.com/stellar/go-stellar-sdk",
+    "ecosystem": "go",
+    "versions_affected": "v0.7.1 - v0.9.0 (executed)",
+    "versions_tested": [
+      "go@v0.7.1",
+      "go@v0.7.2",
+      "go@v0.7.3",
+      "go@v0.8.0",
+      "go@v0.9.0"
+    ]
+  },
+  "component": "sdk",
+  "class": "encode_mismatch",
+  "severity": "medium",
+  "severity_basis": "Encode side: the SDK produces a P strkey that SEP-23 calls invalid and that its own decoder refuses from v0.7.2. No reader impact verified. Open upstream.",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    40
+  ],
+  "entries": [
+    {
+      "id": "strkey/api-encode-signed-payload-empty",
+      "scope": "L4",
+      "expected": "refuse to encode a signed payload of 0 bytes (SEP-23: 1 to 64 bytes)",
+      "observed": "Executed on v0.7.2, v0.7.3, v0.8.0 and v0.9.0: strkey.Encode emits PA7QYNF7…AAAAAAKH4Y for an empty payload, which the SDK's own decoder then refuses ('signed payload declares 0 payload bytes')."
+    }
+  ],
+  "evidence": {
+    "pre_fix": "Conformance runner (xcc conform run --set all), L4, on go@v0.7.1, v0.7.2, v0.7.3, v0.8.0 and v0.9.0.",
+    "transcripts": [
+      "evidence/sdk-matrix/"
+    ],
+    "report_rows": [
+      "conform:strkey/api-encode-signed-payload-empty:-:go@v0.7.1:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:go@v0.7.2:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:go@v0.7.3:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:go@v0.8.0:L4",
+      "conform:strkey/api-encode-signed-payload-empty:-:go@v0.9.0:L4"
+    ],
+    "expected_basis": "SEP-23 v1.4.0: a signed payload carries 1 to 64 bytes; rs-stellar-strkey requires a non-empty payload since #107."
+  },
+  "reproduction": {
+    "by": "independent-reviewer",
+    "date": "2026-11-12",
+    "method": "Independent reviewer reproduction from the record alone on 2026-11-12: 4 of 4 listed report rows failed again as recorded, all offline. Review: findings/review/F-0025.json.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-12",
+    "queries": [
+      "https://github.com/stellar/go-stellar-sdk/issues/5981"
+    ],
+    "result": "existing-open",
+    "existing": "https://github.com/stellar/go-stellar-sdk/issues/5981"
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/go-stellar-sdk/issues/5981",
+    "state": "open",
+    "checked_at": "2026-11-18",
+    "evidence_added": {
+      "kind": "not-needed",
+      "reason": "The issue already states this exact asymmetry with the same input; our entry reproduces exactly what it describes, so no new evidence is added."
+    }
+  },
+  "state": "duplicate-of",
+  "history": [
+    {
+      "date": "2026-11-12",
+      "state": "candidate",
+      "note": "Created from the known divergences that reference https://github.com/stellar/go-stellar-sdk/issues/5981 and their failure rows."
+    },
+    {
+      "date": "2026-11-12",
+      "state": "duplicate-of",
+      "note": "The upstream item already records this defect."
+    }
+  ],
+  "related": [
+    "https://github.com/stellar/rs-stellar-strkey/pull/107"
+  ],
+  "siblings": [
+    "F-0029",
+    "F-0034"
+  ]
+}

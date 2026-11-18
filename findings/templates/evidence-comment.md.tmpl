@@ -1,0 +1,32 @@
+{{- /*
+Evidence comment for an existing open upstream item that already describes the defect (xdrcheck conform siblings).
+Go text/template; the fields are DraftData in go/internal/conform/siblings/draft.go, and .Target is the open
+item. It adds what the item lacks (the corpus cells, the versions observed, the same defect in other SDKs) and
+does not restate the report. The user approves the exact text before a person posts it; nothing in the kit
+posts it.
+*/ -}}
+{{if .Executed -}}
+Additional evidence for #{{.Target.Number}}: the same outcome reproduces on `{{.Package}}@{{join .Versions ", "}}` with these conformance corpus cells.
+{{- else -}}
+Additional evidence for #{{.Target.Number}}: reading the source of `{{.Package}}@{{join .Versions ", "}}` shows the same outcome for these conformance corpus cells (read, not executed).
+{{- end}}
+
+{{range .Entries -}}
+- `{{.ID}}`{{if .Variant}} (variant `{{.Variant}}`){{end}}, level {{.Level}}
+  - observed: {{.Observed}}
+  - expected: {{.Expected}}
+{{end}}
+{{.Method}}
+
+Why this is expected: {{.ExpectedBasis}}
+
+{{if .Elsewhere -}}
+The same defect in other SDKs:
+
+{{range .Elsewhere}}- {{.}}
+{{end}}
+{{end -}}
+To run the cells:
+
+{{range .Corpus}}    {{.}}
+{{end -}}

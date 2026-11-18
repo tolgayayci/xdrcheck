@@ -1,0 +1,60 @@
+{
+  "schema": "xcc.finding-review/v1",
+  "finding": "F-0015",
+  "reviewer": "independent-reviewer",
+  "date": "2026-11-12",
+  "record_state": "duplicate-of",
+  "target": "stellar/stellar-etl",
+  "reproduction": {
+    "result": "reproduced",
+    "offline": true,
+    "steps": [
+      {
+        "command": "(cd go && GOPROXY=off go build -o <dir>/ ./adapters/stellaretl/cmd/stellaretl)",
+        "observed": "builds offline; the stellar-etl adapter is not part of make build",
+        "ok": true
+      },
+      {
+        "command": "scripts/offline-run.sh go/bin/xdrcheck replay --corpus corpus --adapter <dir>/stellaretl --target-version 2b24ec89ddce7fc0beb7795de982c93e6895eaf3 --assert-known --report reports/replay-stellar-etl",
+        "observed": "four rows mishandled·wrong_value, all expected, input sep54-dir; routing u64:0 against text or bytes exactly as the record describes",
+        "ok": true
+      },
+      {
+        "command": "lint/bin/xdrlint -report reports/lint-stellar-etl/2b24ec89ddce7fc0beb7795de982c93e6895eaf3.json ./... (in the stellar-etl tree of the adapter cache)",
+        "observed": "FAILS: xdrlint is built with go1.26.11 and cannot load stellar-etl, whose go.mod says go 1.27.3 (\"package requires newer Go version go1.27\")",
+        "ok": false
+      },
+      {
+        "command": "(cd lint && GOTOOLCHAIN=go1.27.3 GOPROXY=off go build -o <dir>/xdrlint-go127 ./cmd/xdrlint), then the same lint run under scripts/offline-run.sh with GOTOOLCHAIN=go1.27.3",
+        "observed": "XDR101 at internal/transform/token_transfer.go:210 and :223 (encodeMuxedDestination), as the record says",
+        "ok": true
+      }
+    ],
+    "report_rows": {
+      "listed": 6,
+      "found_failing": 6,
+      "not_found": [],
+      "not_failing": []
+    }
+  },
+  "checks": {
+    "upstream": {
+      "url": "https://github.com/stellar/stellar-etl/issues/450",
+      "matches_rows": true,
+      "state_seen": "open",
+      "note": ""
+    },
+    "links": {
+      "dangling": [
+        "reports/lint-stellar-etl/2b24ec89ddce7fc0beb7795de982c93e6895eaf3.json (no make target or documented command produces it)"
+      ]
+    }
+  },
+  "notes": [
+    "The lint rows are produced without a finding ID: no suppression or expected list for stellar-etl exists in the public tree, so nothing maps them to this record, and no make target writes reports/lint-stellar-etl/.",
+    "evidence/stellar-etl/reproduce.sh needs fake-gcs-server from `go install` (network) for its emulator half, and it overwrites the transcripts in evidence/stellar-etl/ when run.",
+    "The observed text of entry cap-0067/to-muxed-id-text-from-memo.pubnet-64558277 (scope replay) is cut off mid-sentence (\"Upstream keeps \")."
+  ],
+  "verdict": "returned",
+  "failing_step": "reproduction steps: the lint half does not run as written with the kit's linter, and its report path is produced by nothing in the repository"
+}

@@ -1,0 +1,80 @@
+{
+  "schema": "xcc.finding/v1",
+  "id": "F-0089",
+  "title": "contract invoke panics with \"not yet implemented\" on a result holding a soroban_sdk::Error and cannot pass a #[contracterror] argument",
+  "defect_group": "DG-spec-error-values",
+  "target": {
+    "project": "stellar/stellar-cli",
+    "package": "soroban-spec-tools",
+    "ecosystem": "crates",
+    "versions_affected": "stellar-cli 30.0.1 and soroban-spec-tools 30.0.1 (main 0571268f has the same code in cmd/crates/soroban-spec-tools; lower bound not established)",
+    "versions_tested": [
+      "stellar-cli@30.0.1",
+      "soroban-spec-tools@30.0.1"
+    ]
+  },
+  "component": "sdk",
+  "class": "crash",
+  "severity": "low",
+  "severity_basis": "Spec::xdr_to_json has todo!() for an scvError of spec type Error, so contract invoke panics (exit 101) while printing the result of a successful simulation when the result holds a soroban_sdk::Error in a struct field or a vec; parse_udt has no case for an error-enum UDT, so a #[contracterror] argument is refused in every form. A developer tool that cannot call such a function or show its result; no wrong value is produced, and these types are uncommon (the issue states impact low).",
+  "security_relevant": false,
+  "visibility": "public",
+  "caps": [
+    46
+  ],
+  "entries": [
+    {
+      "id": "none",
+      "scope": "spec",
+      "expected": "contract invoke prints an Error-typed value as {\"contract\":1}, the form to_json gives without a spec, and encodes a #[contracterror] argument as scvError(sceContract(code))",
+      "observed": "No corpus entry drives stellar-cli. By hand with CLI 30.0.1 against a soroban-sdk 29.0.1 contract on a local standalone network (core 30): last (a struct with an Error field) and errs (a Vec<Error>) panic at soroban-spec-tools src/lib.rs:641 with not yet implemented after the simulation succeeds; report refuses the argument given as 1, NotFound, \"NotFound\" and {\"contract\":1}."
+    }
+  ],
+  "location": {
+    "commit": "0571268fdce4ac12f5732ff6a9af42a0ea05296b",
+    "file": "cmd/crates/soroban-spec-tools/src/lib.rs",
+    "lines": "377-420, 641",
+    "function": "Spec::xdr_to_json"
+  },
+  "evidence": {
+    "pre_fix": "Executed by hand outside the kit's runs, with the reproduction in the upstream issue; no run of the kit compares this behaviour, so no report row exists. The issue's runs with stellar 30.0.1 (soroban-spec-tools 30.0.1) and a contract built with soroban-sdk 29.0.1: contract invoke -- last and -- errs exit 101 with not yet implemented at src/lib.rs:641; -- report --e is refused for every form tried. The issue's standalone program on soroban-spec-tools 30.0.1 with no network: from_string(\"1\", MyError) returns an error and xdr_to_json on the errs result panics.",
+    "expected_basis": "soroban-sdk gives soroban_sdk::Error the spec type SC_SPEC_TYPE_ERROR and converts it, like a #[contracterror] enum, to and from an scvError (sceContract with the code); in soroban-sdk's test environment report(MyError::NotFound) returns 1.",
+    "observed": "private-run"
+  },
+  "reproduction": {
+    "by": "kit-maintainer",
+    "date": "2026-11-19",
+    "method": "The runs the issue reports, made with stellar 30.0.1 and soroban-spec-tools 30.0.1 before filing on 2026-11-19: last and errs panic, and the #[contracterror] argument is refused in every form.",
+    "result": "reproduced"
+  },
+  "upstream_search": {
+    "date": "2026-11-19",
+    "queries": [
+      "stellar/stellar-cli: every issue and pull request, open and closed, about soroban-spec-tools, Error values or error-enum arguments",
+      "stellar/stellar-cli: every branch, for changes to cmd/crates/soroban-spec-tools"
+    ],
+    "result": "none-found"
+  },
+  "approval": {
+    "by": "user",
+    "date": "2026-11-19",
+    "scope": "Public issue https://github.com/stellar/stellar-cli/issues/2897."
+  },
+  "upstream": {
+    "url": "https://github.com/stellar/stellar-cli/issues/2897",
+    "filed_at": "2026-11-19",
+    "state": "open",
+    "checked_at": "2026-11-20"
+  },
+  "state": "filed",
+  "history": [
+    {
+      "date": "2026-11-19",
+      "state": "filed",
+      "note": "Recorded on 2026-11-19: filed by the maintainers of this kit on 2026-11-19 as https://github.com/stellar/stellar-cli/issues/2897; this record restates the public issue."
+    }
+  ],
+  "siblings": [
+    "F-0093"
+  ]
+}
