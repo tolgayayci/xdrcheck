@@ -1,0 +1,26 @@
+$ node repro.mjs fixed
+@stellar/stellar-sdk 17.2.1  @stellar/js-xdr 5.0.0  node v24.19.0
+issuer A GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL key e305f885fff4203598bf7a7bb29cf6dcb05f9ecc44f15a5c5557ef665c0e01f7
+issuer B GD32JQHFWLIROCNQ564GLCB2M7T4GMQAP5UKHMVT64OQISWL2LHYK2HO key f7a4c0e5b2d11709b0efb865883a67e7c332007f68a3b2b3f71d044acbd2cf85
+text order  A<B: false   (expected false: '3'=0x33 < 'R'=0x52)
+byte order  A<B: true   (expected true: 0xe3 < 0xf7)
+
+-- builder / comparator API --
+Asset.compare(A,B)  [core: -1]: OK -1
+Asset.compare(B,A)  [core: 1]: OK 1
+new LiquidityPoolAsset(A,B,30)  [core: valid]: OK GDRQL6EF772CANMYX55HXMU463OLAX46ZRCPCWS4KVL66ZS4BYA7OYDL
+new LiquidityPoolAsset(B,A,30)  [core: invalid order]: THROWS Error: Assets are not in lexicographic order
+getLiquidityPoolId(A,B)  [core: c2a730127d006897b021d6fcb279da68b4f65f9b6a408c74eb2cdd85ea862d5e]: OK c2a730127d006897b021d6fcb279da68b4f65f9b6a408c74eb2cdd85ea862d5e
+getLiquidityPoolId(B,A)  [core: invalid order, no such pool]: THROWS Error: Assets are not in lexicographic order
+Operation.changeTrust({asset: LP(A,B)}) type: OK changeTrust
+
+-- decode of the core-accepted testnet transaction (ledger 5521432) --
+xdr.TransactionEnvelope.fromXdr (raw XDR layer): OK type=envelopeTypeTx ops=3 roundtrip=true
+TransactionBuilder.fromXdr (SDK Transaction layer): OK hash=0126748091930959a3aefac9296e1773b947f964a9b73f37ce856c4df32d346f hashOk=true op[2]=changeTrust poolId=c2a730127d006897b021d6fcb279da68b4f65f9b6a408c74eb2cdd85ea862d5e
+Operation.fromXdrObject(op[2]) (SDK Operation layer): OK changeTrust
+
+-- ScVal map key order (second half of #1766) --
+scvSortedMap(bytes 0x0a, bytes 0x09)  [host: 09, 0a]: OK scvBytes(09), scvBytes(0a)
+scvSortedMap(symbol "a", string "b")  [host: string before symbol]: OK scvString(b), scvSymbol(a)
+nativeToScVal({10:1, 9:2}, u32 keys)  [host: 9, 10]: OK scvU32(9), scvU32(10)
+exit=0

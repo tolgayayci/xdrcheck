@@ -1,0 +1,23 @@
+$ node repro.mjs fixed
+@stellar/stellar-sdk 17.3.0  node v24.19.0
+
+-- MuxedAccount IDs (expected: only canonical decimal uint64 accepted) --
+new MuxedAccount(G, "16") -> id() / M-address: OK id()="16" M=MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAACCRFU decodedId=16
+new MuxedAccount(G, "0x10") -> id() / M-address: THROWS Error: id is not a valid uint64 string: 0x10
+new MuxedAccount(G, "016") -> id() / M-address: OK id()="16" M=MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJUAAAAAAAAAAACCRFU decodedId=16
+new MuxedAccount(G, " 16 ") -> id() / M-address: THROWS Error: id is not a valid uint64 string:  16 
+new MuxedAccount(G, "") -> id() / M-address: THROWS Error: id is not a valid uint64 string: 
+new MuxedAccount(G, "-1") -> id() / M-address: THROWS Error: id is not a valid uint64 string: -1
+new MuxedAccount(G, "18446744073709551616") -> id() / M-address: THROWS Error: id value out of range for uint64 [0, 18446744073709551615]: 18446744073709551616
+encodeMuxedAccount(G, "0x10") -> M-address: THROWS Error: id is not a valid uint64 string: 0x10
+
+-- offerId (expected: non-negative safe integer / bigint / decimal string <= int64 max) --
+manageSellOffer offerId=9007199254740993 (number literal, > 2^53): THROWS Error: offerId must be a non-negative safe integer; pass a larger ID as a bigint or a decimal string
+manageSellOffer offerId=2**63 (number): THROWS Error: offerId must be a non-negative safe integer; pass a larger ID as a bigint or a decimal string
+manageSellOffer offerId="" (empty string; 0 = create new offer): THROWS Error: offerId must be a string of decimal digits
+manageSellOffer offerId="-5": THROWS Error: offerId must be a string of decimal digits
+manageSellOffer offerId=-5: THROWS Error: offerId must be a non-negative safe integer; pass a larger ID as a bigint or a decimal string
+manageSellOffer offerId="0x10": THROWS Error: offerId must be a string of decimal digits
+manageSellOffer offerId="9007199254740993" (string, exact): OK encoded offerId=9007199254740993
+manageBuyOffer offerId=9007199254740993 (number): THROWS Error: offerId must be a non-negative safe integer; pass a larger ID as a bigint or a decimal string
+exit=0
