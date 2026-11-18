@@ -1,0 +1,304 @@
+# Authoring corpus entries
+
+How to add or change an entry so that it passes `verify`. The normative rules are in
+[`manifest.md`](manifest.md) (fields and matching) and [`entry-ids.md`](entry-ids.md) (IDs); this page is the
+workflow, the scenario syntax and the checklist to answer before you send an entry.
+
+## 1. Before you start
+
+1. **The ID must already be a row in `corpus/plan.json`.** If you need a new entry, add the plan row first, in its
+   own change, as [`entry-ids.md`](entry-ids.md) section 5 describes (kind, CAP, minimum protocol, source,
+   priority, what it serves). One entry is one pattern; the same pattern on another network or protocol is a
+   *variant* of the same entry, not a new entry.
+2. **Pick the source** in this order: a local stellar-core scenario (reproducible by anyone, on both passphrases);
+   a stellar-core golden at the pinned tag; an unmodified public-lake object; and only when stellar-core cannot or
+   would not emit the bytes, a synthetic recipe (`synthetic: true`, with the reason). The five source kinds and
+   what each must record are in [`manifest.md`](manifest.md) section 4.4.
+3. **Never edit bytes.** A blob is exactly what stellar-core emitted or the lake served. A smaller value cut out of
+   a ledger is an `xdr` entry with `slice_of` pointing to its parent, not an edit. A synthetic ledger is an `xdr`
+   entry of type `LedgerCloseMeta` whose recipe edits a local-core entry's blob (the hashes the edit invalidates,
+   `scpValue.txSetHash` and the header hash, recomputed); `synth` writes its variant with network `none`, so set
+   the base ledger's `network` and `passphrase` on it, which the reference extractor needs to hash the envelopes.
+
+## 2. Writing `expect`
+
+`expect` states what a *correct reader* must derive. Write it from two things only:
+
+- **the scenario's intent** — what the transaction was built to do (for local-core entries the scenario step says so);
+- **the decoded bytes** — the SEP-51 sidecar the oracle emits, read by hand.
+
+Never take an expected value from the output of an SDK or indexer under test.
+
+Then let the reference extractor (`xdrcheck-corpus extract <entry>`, [`manifest.md`](manifest.md) section 6.11) derive
+participants, state changes and movements from ledger-entry changes and consensus events, and resolve every
+disagreement by reading the bytes again. Do not resolve a disagreement by copying either side.
+
+| Block | What to put in it | Common mistakes |
+|---|---|---|
+| `expect.ledger` | Counts of transactions, operations, events and entry changes for the **whole** ledger (counting rules in [`manifest.md`](manifest.md) section 6.2) | Counting diagnostic events; forgetting failed transactions' operations |
+| `expect.transactions` | Every transaction with hash and `successful`; result codes for the focus transaction | Listing only the focus transaction (the whole-ledger receipts need all of them) |
+| `expect.values` | A few JSON Pointer pinpoints into the sidecar for the fields the pattern is about; a ledger-entry change is selected by its ledger key (`select: {in, key, change}`, [`manifest.md`](manifest.md) section 6.1), not its position | Pinpointing values that are incidental to the pattern; a positional pointer into an operation's change list (core writes it in no fixed order) |
+| `participants.must_include` | Base addresses whose ledger entries the focus transaction changed | Adding an address because it appears in the envelope or in an authorization entry |
+| `participants.must_not_include` | Addresses a sloppy reader would wrongly add, each with `because` | Leaving it empty on entries whose point is a trap (memo, unmatched authorization, failed destination, forged event) |
+| `state_changes` | One item per reader-visible change, using the fixed `detail` keys for its kind ([`manifest.md`](manifest.md) section 6.6) | Inventing detail keys; stating limits or IDs that differ by reader model |
+| `movements` | Value movements with decimal-string amounts and the typed routing ID ([`manifest.md`](manifest.md) section 6.7) | Treating `text` or `bytes` routing as an address; forgetting `count: 0` pins |
+| `*_exact` | Set when the pattern is "this and nothing else" in the focus transaction ([`manifest.md`](manifest.md) section 6.4) | Expecting exactness to cover fee rows (it never does) |
+
+Passphrase-dependent values (transaction hashes, contract IDs, fees that differ per protocol) go under each
+variant's `derived` and are referenced as `${derived.<name>}` ([`manifest.md`](manifest.md) section 4.6).
+
+A value you state that the extractor cannot derive from the bytes (a modelling detail no ledger field carries) fails
+`verify`. Correct it, or keep it with `"unverified": "<reason>"` on the item ([`manifest.md`](manifest.md) sections
+6.4 and 6.11). Two variant fields are derived, not written: `requires` (XDR features the bytes need; mandatory on
+every variant, `[]` when none) and `derived.l1` (what an SDK's object layer reads from the focus, section 10.1).
+`xdrcheck-corpus render <entry>` fills both (with the sidecar fields), `synth`, `slice` and `gen` fill them for the
+entries they write, and `xdrcheck-corpus verify` prints the exact JSON it expects. A negative variant has no sidecar:
+render sets its `requires` to `[]` unless you state the feature its defect needs.
+
+Negative vectors: a depth vector measured against a reader's boundary states it as `expect.reject.limits.depth`
+(stellar-core's decoder boundary for a bare `SCVal` is `{"depth": 2000}`); a record-mark vector sets
+`"framing": "record-marked"` and `"frame_index"` on its variant and `reason: "record_mark"` (section 9.3). A
+variant whose SEP-51 JSON does not round-trip declares `"json_roundtrip": {"skip": true, "reason": "…"}` (section
+4.2).
+
+Every entry states its `validity` ([`manifest.md`](manifest.md) section 9.5), right after `synthetic` (or
+`negative`):
+
+| The input is | `validity` | Also write |
+|---|---|---|
+| bytes stellar-core wrote, or any input a reader must accept | `valid` | nothing (`flags` only for an edge such as `depth`) |
+| bytes or text that must not decode (XDR strictness, strkey, a spec section cut short) | `malformed` | `negative: true`, `expect.reject.reason`, and the flag of the same name in `flags` |
+| a value that decodes but breaks a rule about values (`value_out_of_range`, `ordering`, `spec_sections`) | `invalid` | the same as `malformed` |
+| an `api` call where the exact result and a refusal both conform | `acceptable` | `expect_reject` together with `expect_xdr_hex` or `expect_value` |
+
+Add `core-lenient` to `flags` when `core_behaviour.accepts` is true. The schema and `verify` reject a `validity`
+that disagrees with `negative`, the reject reason or the `api` block, so pick the row from what the entry already
+says. `xdrcheck-corpus gen`, `intake` and `synth` write a starting value (`valid`, or `malformed` for a negative plan
+row); confirm it. After adding or changing entries, run `xdrcheck-corpus index` to rewrite `corpus/index.json`.
+
+## 3. Known divergences
+
+A known divergence records that a specific reader gets this entry wrong in a version range
+([`manifest.md`](manifest.md) section 7). It must cite an **executed** result (a transcript, a report, a
+reproduction under `evidence/`), the target and the version range or commit range, the level (`L0`–`L4` or
+`replay`) and the outcome; for `replay` also the qualifier (`halt`, `wrong_value`, `partial`, …). A divergence known
+only from source reading or an upstream report is recorded with `observed: source-reading` or `reported`, and is
+asserted only after it has been executed once. A divergence that is security-relevant and not yet disclosed does not
+go in the public manifest.
+
+## 4. Worked examples
+
+The three entries vendored first are the reference for style:
+
+| Entry | Source | What to look at |
+|---|---|---|
+| `cap-0040/signed-payload-signer-added` | testnet history | a `signer_added` change compared in full (payload included); an `addresses` item for the 69-character `P…` key; two wallet-backend known divergences with different qualifiers (evidence in `evidence/wallet-backend-replay/`) |
+| `cap-0038/pool-issuers-order-by-bytes-not-strkey` | testnet history | pinpoints on the two issuers in byte order; a focus whose apply-order index differs from its transaction-set position; known divergences in four SDK families at L1, split into executed and reported ranges (evidence in `evidence/js-1766/` and `evidence/sdk-matrix/`) |
+| `cap-0073/sac-trust-creates-trustline` | local-core twins at Protocols 28 and 30 | shared `expect` with per-variant `derived`; `only_if` on the authorisation change; an executed golden mirror (evidence in `evidence/wallet-backend-731/`, `evidence/local-core/` and `evidence/golden-mirror/`) |
+
+## 5. Writing a scenario (local-core entries)
+
+A local-core entry comes from a scenario file under `corpus/scenarios/`, validated against
+`corpus/schema/scenario.schema.json` and run with `xdrcheck-corpus gen <file>` (then `xdrcheck-corpus gen --check <file>`).
+Transactions are SEP-51 JSON of `Transaction` with `${…}` placeholders:
+
+| Placeholder | Value |
+|---|---|
+| `${acct.L}`, `${muxed(L, id)}`, `${seq.L}` | actor L's `G…` address, its `M…` address with that ID, its next sequence number |
+| `${muxed_contract(NAME, id)}` | the `W…` address of contract NAME (as `${contract.id(NAME)}`) with that ID |
+| `${signer.payload(L, hex)}` | `P…` signed-payload signer of L's key and 1–64 payload bytes |
+| `${signer.hash_x(NAME)}` | `X…` hash-x signer: sha256 of the preimage NAME |
+| `${hash_x.preimage(NAME)}` | the preimage NAME in hex: sha256 of the UTF-8 string `xcc/hashx/<NAME>` (32 bytes) |
+| `${signer.pre_auth_tx(STEP)}` | `T…` pre-auth signer: the transaction hash of step STEP (its inner transaction under a fee bump) on the run's passphrase |
+| `${asset.NAME}`, `${contract.sac(NAME)}`, `${contract.id(NAME)}` | an asset's SEP-51 JSON, its Stellar Asset Contract `C…`, a deployed contract's `C…` |
+| `${pool(A, B)}` | the `L…` ID of the constant-product pool (fee 30) of assets A and B, in that order |
+| `${close_time}`, `${derived.NAME}` | the step's close time; a value from the variant's `derived` block |
+| `${order_nonce}` | in a ledger group with `order`: the nonce `gen` chose for that apply order (section 5.4) |
+
+`${signer.pre_auth_tx(STEP)}` may name a later step (add the signer, then submit the pre-authorised transaction with
+`sign: [{pre_auth: true}]`); that step must not be `simulate: true`, and its transaction must not depend on another
+pre-auth hash. A hash-x signature is `sign: [{hash_x: "${hash_x.preimage(NAME)}"}]` (or the preimage in hex).
+
+Write `cond: none` (`PRECOND_NONE`) unless the entry is about preconditions or the step needs a time bound (a
+transaction core must drop, an `${order_nonce}`). Unbounded time bounds (`{time: {min_time: "0", max_time: "0"}}`)
+change no outcome, but they are part of the envelope, which the golden mirror (check AG-4, `docs/manifest.md`
+section 4.7) compares unmasked, and almost no transaction in stellar-core's golden set carries them: a focus
+transaction with them finds no golden counterpart.
+
+Setup items: `fund: {L: "<XLM>", …}`; `trust: {L: ASSET | [ASSET, …], …}` (one transaction, maximum limits);
+`pay: {from: L, to: L, asset: ASSET | native, amount: "<decimal>"}`; `deploy_sac: ASSET`; `deploy_contract: NAME`;
+`tx: <template>`; `close: {ledgers: n}`; `config_upgrade: {…}` (section 5.2). Any item may name an `entry` (section 5.1).
+
+A step's `upgrade: {…}` arms ledger upgrades for the ledger the step closes, with the parameter names of
+stellar-core's `upgrades` command: `basefee`, `basereserve`, `maxtxsetsize`, `maxsorobantxsetsize` (Protocol 20 and
+later), `flags`, `protocolversion`. A step may hold an upgrade and no transaction. Upgrades are applied after the
+ledger's transactions, so the header of that ledger already shows the new value while its transactions were applied
+under the old one.
+
+Soroban:
+
+- `deploy_sac` deploys the asset's contract from root in one ledger, at any protocol.
+- `contracts.NAME` gives `wasm` (relative to the corpus root, for example `contracts/shape-emitter.wasm`),
+  `wasm_sha256`, `deployer` (an actor; root when absent) and `constructor_args` (SEP-51 `ScVal` JSON, for example
+  `[{symbol: xcc}]`). The salt is sha256 of `xcc/contract-salt/<NAME>`, so `${contract.id(NAME)}` is known before the
+  run when a deployer is named. `deploy_contract` uploads the code (one ledger, skipped when it is already on the
+  ledger) and creates the contract (one ledger) through simulation, so a scenario with `deploy_contract` lists only
+  Protocols 29 and later.
+- A step with a declared footprint writes `ext.v1` itself (`soroban_resources: declared`). A step with
+  `simulate: true` (Protocol 29 or later; limit it with `protocols` in a scenario that also runs at 28) writes
+  `ext: v0` or leaves `ext` out, may leave the operation's `auth` out, and gives the inclusion fee as `fee`: the
+  generator simulates the one `invoke_host_function` with the pinned host against the node's state, fills the
+  footprint, resources, resource fee and recorded authorization (source-account credentials when the authorizer is
+  the transaction source; anything else needs `auth` written out), and records the step as simulated
+  (`source.soroban_resources: simulated`). The applied transaction must match its simulation (success, contract
+  events, return value).
+
+Every generated variant carries `derived.accounts` (actor label → `G…`), so an `expect` shared with a variant
+from another source (a stellar-core golden, whose accounts differ) names an actor as `${derived.accounts.<label>}`
+and the other variant gives the same labels in its own `derived`.
+
+YAML nests at most 128 levels (the parser's fixed limit) and each level of an `ScVal` vector or an authorization
+tree is two of them. A scenario whose values nest deeper (a near-limit argument or authorization tree) is written
+as a `.json` file, which has no nesting limit.
+
+A step's `mirrors` has exactly the manifest entry's `mirrors` shape (`docs/manifest.md`, the golden mirror); `gen`
+copies it into the entry.
+
+### 5.1 Entries on bring-up and setup ledgers; the root account
+
+Every chain starts with the bring-up: ledger 2 upgrades the fresh node from genesis (protocol 0) to the target in
+one jump (its `LedgerCloseMeta` is v0, and the upgrade creates the configuration settings of every protocol
+crossed), then two Soroban settings sets (`enable`, then the protocol's network limits) are written and applied.
+A scenario names entries on these ledgers with `bring_up`, and on a setup item's ledger with `entry` next to the
+item's action. Both take `expect`, `fields` and `notes` like a step:
+
+```yaml
+bring_up:
+  - ledger: upgrade              # ledger 2; also `enable-applied`, `settings-applied` (Protocol 20 and later)
+    entry: ledger/standalone-upgrade-0-to-30-lcm-v0
+    protocols: [30]              # optional, as on a step
+    expect: {ledger: {transactions: 0}}
+  - ledger: upgrade              # one ledger may be several entries
+    entry: cap-0070/scp-timing-config-setting-created-at-upgrade
+setup:
+  - fund: {A: "10000"}
+    entry: classic/…             # the item's ledger (a `deploy_contract`'s create ledger; a `close`'s first)
+```
+
+The entry's `source.step` is `bring-up-<ledger>` or `setup-<index>-<action>`; a setup item's transaction is the
+variant's focus.
+
+The label `root` names the network's root account (its seed is the network ID, so it differs per passphrase):
+`${acct.root}`, `${seq.root}`, `${muxed(root, id)}`, `sign: [{key: root}]` and `fee_bump.fee_source: root`. In
+`expect`, `fields` and `mirrors`, `${acct.root}` is written as `${derived.accounts.root}`, which `gen` fills in
+every variant of a scenario that names root. No actor may be called `root`.
+
+**Protocols.** A scenario may list any protocol from 13 (the first that accepts `ENVELOPE_TYPE_TX` envelopes) to 30
+except 20. Below 20 the bring-up is the upgrade ledger alone: there is no Soroban and no settings set, so steps start
+at ledger 3 and the chain index lists no settings files; `LedgerCloseMeta` is v0 throughout. From 21 the bring-up
+applies `enable` and the protocol's network set, vendored under `corpus/settings/` from quickstart's
+`config-settings/p<N>/testnet.json` at the pinned commit (28 borrows 27's; quickstart has no file for 20, so 20 is
+refused). `LedgerCloseMeta` is v1 at 20–22 and v2 from 23. A stepwise upgrade (for example 23 → 24, which changes the
+fee pool on the public passphrase) is a step `upgrade: {protocolversion: 24}` with an `entry`, limited with
+`protocols` to the chain it upgrades.
+
+### 5.2 Changing Soroban settings: `config_upgrade`
+
+A setup item `config_upgrade` changes Soroban configuration settings the way the bring-up applies its sets: root
+writes a `ConfigUpgradeSet` through its own upgrade contract (restore, upload, create, invoke; one ledger each) and
+the next ledger applies it, so the item takes five ledgers. The contract's salt is sha256 of
+`xcc/settings-upgrade-salt/<scenario>/setup-<index>`, so the chain reproduces. Keys are `ConfigSettingEntry` arm
+names; an object is merged into the setting the node holds (only the fields written change), anything else — and
+any setting the node does not hold, such as the `*_delta` arms — is the arm's SEP-51 JSON as written. Frozen keys
+may be written as `LedgerKey` JSON instead of XDR hex. Protocol 20 or later; core refuses a set that fails its
+validity checks (for example `min_persistent_ttl` below 10) and the run fails.
+
+```yaml
+setup:
+  - config_upgrade:
+      state_archival: {min_persistent_ttl: 10, min_temporary_ttl: 16, starting_eviction_scan_level: 1}
+    entry: ledger/config-upgrade-set-applied        # optional: the ledger that applies the set
+  - config_upgrade:
+      frozen_ledger_keys_delta:
+        keys_to_freeze: [{account: {account_id: "${acct.F}"}}]
+        keys_to_unfreeze: []
+```
+
+Each set becomes a pinned input of the run (`source.inputs`: `<scenario>/setup-<index>.xdr` with its sha256).
+
+### 5.3 A transaction left out of its ledger: `expect_excluded`
+
+Surge pricing leaves the lowest bids out of a ledger when more operations are queued than it admits. A step with
+`expect_excluded: true` (and no `expect_result`) must be accepted at submission and absent from the ledger its group
+closes; it consumes no sequence number and is never the entry's focus. Core keeps it queued, so give it time bounds
+that end with that ledger, and lower the ledger's limit first with an upgrade step:
+
+```yaml
+- id: two-operations-per-ledger
+  entry: …
+  upgrade: {maxtxsetsize: 2}
+- id: bid-300                       # bids 300, 200 and 100 per operation; 100 is left out
+  …
+- id: bid-100
+  same_ledger_as: bid-300
+  tx: {…, fee: 100, cond: {time: {min_time: "0", max_time: "${close_time}"}}}
+  expect_excluded: true
+```
+
+The set then carries a discounted `base_fee` (the lowest included bid, 200 here) that every included transaction is
+charged. Under surge pricing the `order` model's default guess of the set (the ledger's base fee) is wrong; `gen`
+learns the real shape from a first attempt (section 5.4).
+
+### 5.4 Several transactions in one ledger: `order`
+
+stellar-core applies a ledger's transactions in an order derived from the transaction-set hash: the classic phase
+in per-account batches, each batch sorted by transaction hash XOR set hash; the Soroban phase (Protocol 23 and
+later) cluster by cluster in the same key. The order therefore differs per passphrase and changes with every byte.
+To fix it, the first step of the ledger group (the one the others name in `same_ledger_as`) lists the group's
+transaction steps in the order wanted, and one template of the group uses `${order_nonce}`:
+
+```yaml
+- id: a-pays-b
+  entry: classic/…
+  order: [a-pays-b, b-pays-c]          # every transaction step of the ledger, in apply order
+  tx:
+    memo: {id: "${order_nonce}"}       # classic: a memo id; Soroban (no memo allowed): cond.time.min_time
+    …
+- id: b-pays-c
+  same_ledger_as: a-pays-b
+  …
+```
+
+`gen` builds the group for `${order_nonce}` = 0, 1, 2, … until its model of core's transaction set (the set's
+structure, every container sorted by full hash, `lessThanXored` apply sorting) gives that order, per network and
+protocol, and records the nonce and the shape it used in the chain index (`orders`, also in `run.json`). After the close it checks the order core
+really applied. If the model's guess of the set's structure (one component at the base fee; all Soroban
+transactions in one cluster) was wrong, it reads the structure core built from that ledger and runs the scenario
+again from a fresh node. The search is deterministic; `gen --check` repeats it and reports a nonce or shape other
+than the chain records as a difference. Transactions of one
+source account always apply in sequence-number order, and classic ones before Soroban ones; an order that
+contradicts this fails after 20,000 nonces. Put the nonce in a fixed-width field (a memo id, a time bound): twins
+must have equal blob lengths. With `order`, `expect.transactions[].index` is the same in every variant. A memo id
+nonce also becomes the payment's routing ID in classic events, which then differs per variant; a time bound does
+not. `gen` refuses two transactions of one ledger with the same fee: give each a distinct fee (another operation
+raises the fee without changing what it bids per operation).
+
+## 6. Checklist before you send an entry
+
+Answer each question for every entry, as someone who has not seen the work would; any "no" means the entry is not
+ready.
+
+1. Do the blob's bytes match the provenance (lake object and key, golden file and frame, or scenario run)?
+2. Is every expectation traceable to the scenario's intent or to a field in the decoded sidecar — and **not** to
+   the output of an SDK or indexer under test?
+3. Does the reference extractor agree with `participants`, `state_changes` and `movements`? Where it does not,
+   is the reason written down?
+4. Are the must-not facts present where the pattern is a trap?
+5. Does every known divergence cite an executed result, or say honestly that it does not?
+6. Are the field-table citations (`fields`) the right rows, under the right status?
+7. Is the entry one pattern, with variants rather than copies for other networks or protocols?
+8. Is `validity` right for what a correct reader does with the input, and do the `flags` name its bug class?
+
+Before sending a change, run `xdrcheck-corpus index` and `make repo-checks`: the checks validate the entries against
+the schema, check every blob, sidecar and captured object hash, every cited repository path, every entry ID, and
+that `corpus/index.json` matches the manifest.

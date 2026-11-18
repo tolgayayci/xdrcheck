@@ -1,0 +1,70 @@
+# `xdrcheck find`: from a question to example transactions
+
+`xdrcheck find` answers "which mainnet transactions show X?" with `ledger`, `tx` pairs that `xdrcheck data fetch` and
+`xdrcheck replay --tx` take as they are. It reads the dataset's plain index files ([data.md](data.md)); there is no
+query engine.
+
+```
+xdrcheck find (--token T | --class K|C | --token-contains S | --tag TAG | --cap N | --assumption KEY | --op TYPE | --set NAME)
+         [--order first|last|rarest|random] [--limit N] [--seed N] [--source auto|locate|kept]
+         [--format tsv|json|ledgers] [--dataset DIR] [--corpus DIR]
+xdrcheck find --list-assumptions
+```
+
+| Selector | Answered from |
+|---|---|
+| `--token` (text `K|class|path`, or the 32-hex token id), `--class K|class` | the locate index (every transaction in all history, through `xdrcheck-corpus scan locate`), else the kept-ledger index (kept ledgers only; a note says so) |
+| `--token-contains S` | the kept-ledger index |
+| `--tag TAG` (`u64>=2^63`, `text:nonutf8`, `token_event:nonsac:*`, …) | the value tags; a trailing `*` matches a prefix |
+| `--cap N` | the corpus ledgers captured from network history whose entry names the CAP (any network), and the dataset's `cap-N` set; local-core ledgers are left out, since their sequence numbers name unrelated network ledgers (`replay --cap` runs them from the corpus) |
+| `--assumption KEY` | an xdrlint assumption key (the `assumption` field of a diagnostic), mapped to a tag, a token class or a token substring by `go/internal/hunt/find/assumptions.json`; an unmapped key is reported as not available |
+| `--op TYPE` | the operation types of the kept-ledger index (`PAYMENT`, `LIQUIDITY_POOL_DEPOSIT`, …) |
+| `--set NAME` | a named set |
+
+Orders: `first` and `last` by ledger, `rarest` by the census occurrences of the rarest matched token, `random`
+with `--seed`.
+
+| Exit | Meaning |
+|---|---|
+| 0 | results |
+| 1 | no results |
+| 2 | bad arguments |
+| 3 | the source it needs is not available |
+
+## Worked examples
+
+```
+$ xdrcheck find --class 'V|u64band' --limit 5
+note: stopped at the first matches in ledger order: the matched count is a lower bound (use --order last or rarest for the full count)
+note: locate index: not available: table locate missing (…); answered from the kept-ledger index (kept ledgers only)
+5 transactions matched (kept-ledger index); 5 shown, order first
+ledger	tx	match	occurrences	source
+30941181	51	class:V|u64band	287792	kept
+30941857	13	class:V|u64band	287792	kept
+30942182	43	class:V|u64band	287792	kept
+30942415	11	class:V|u64band	916285	kept
+30942541	35	class:V|u64band	916285	kept
+
+$ xdrcheck find --cap 38 --limit 3
+3 transactions matched (corpus); 3 shown, order first
+ledger	tx	match	occurrences	source
+5521432	2	testnet corpus cap-0038/pool-issuers-order-by-bytes-not-strkey		corpus
+38115806	5	pubnet corpus protocol-18/upgrade-ledger-header-18-claim-atom-v0		corpus
+41232715	19	pubnet corpus cap-0038/claim-atoms-pool-and-order-book-mixed		corpus
+
+$ xdrcheck find --op LIQUIDITY_POOL_DEPOSIT --limit 2
+ledger	tx	match	occurrences	source
+38115811	134	op:LIQUIDITY_POOL_DEPOSIT		kept
+38115811	402	op:LIQUIDITY_POOL_DEPOSIT		kept
+
+$ xdrcheck find --list-assumptions
+text-to-db:memo              tag text:nonutf8                         strings (memos among them) with invalid UTF-8
+…
+```
+
+From a linter diagnostic to a replay:
+
+```
+xdrcheck find --assumption text-to-db:memo --limit 20 --format ledgers > l.txt
+xdrcheck replay --target wallet-backend --version <commit> --ledgers @l.txt
+```
