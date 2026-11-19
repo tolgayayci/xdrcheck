@@ -1,0 +1,18 @@
+# The Python corpus loader: one module, xdrcheck.py, documented in its module docstring.
+# The build backend is in-tree (_backend/) and uses the standard library only, so `pip install packages/python`
+# needs no network and no setuptools. Tests: python -m unittest discover -s tests (from this directory).
+[build-system]
+requires = []
+build-backend = "xdrcheck_build_backend"
+backend-path = ["_backend"]
+
+[project]
+name = "xdrcheck"
+version = "30.0.0"
+description = "Read the xdrcheck corpus (entries, verified blobs, expected SEP-51 JSON, expected-failure lists)"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+
+[project.optional-dependencies]
+# The zstd decoder for expected_json() before Python 3.14 (else the zstd program is used).
+zstd = ["zstandard==0.25.0"]

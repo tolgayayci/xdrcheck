@@ -1,0 +1,23 @@
+[package]
+name = "xdrcheck"
+version = "30.0.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Reads the xdrcheck corpus (release archive or directory) and keeps an SDK's expected-failure list"
+repository = "https://github.com/tolgayayci/xdrcheck"
+publish = false
+
+[lib]
+name = "xdrcheck"
+path = "src/lib.rs"
+
+[dependencies]
+flate2 = "=1.1.9"
+hex = "=0.4.3"
+serde = "=1.0.229"
+serde_json = { version = "=1.0.154", features = ["unbounded_depth"] }
+sha2 = "=0.10.9"
+zstd = "=0.13.4"
+
+# Standalone: not a member of the repository's root workspace.
+[workspace]
