@@ -1,0 +1,159 @@
+# Single source of every version the kit builds against or tests.
+# Tools read this file; `xdrcheck pins check` rejects any version named elsewhere.
+# Rationale: the Protocol 30 stable stack. Protocol 30 stable stack as of 2026-11-12.
+
+[protocol]
+max_supported = 30
+network_mainnet = 29          # mainnet protocol on 2026-11-14; `xdrcheck pins check --network` compares it with Horizon
+network_testnet = 30          # testnet upgraded at ledger 5540313
+
+# Dated network changes the pins depend on. `xdrcheck pins check` reads them against today's date (UTC): from 14
+# days before an event it warns; once the event's day has passed and `pin` still holds `until`, it fails with
+# `action`. `xdrcheck pins check --network` also warns about a scheduled upgrade or reset on the status page that is
+# missing here. Record a new event as soon as it is announced; remove one once its pin has moved.
+[[schedule]]
+event = "Mainnet vote on Protocol 30"
+date = "2026-11-23"           # 17:00 UTC
+source = "https://status.stellar.org scheduled maintenance 'Stellar Public Network Protocol Upgrade Vote', 2026-11-23T17:00Z (posted 2026-10-20)"
+pin = "protocol.network_mainnet"
+until = "29"
+action = "confirm the result with `xdrcheck pins check --network` (Horizon current_protocol_version), then set protocol.network_mainnet = 30; if the vote was postponed, move this event's date"
+
+[[schedule]]
+event = "Testnet reset"
+date = "2026-12-16"           # 17:00 UTC
+source = "https://developers.stellar.org/docs/networks (Testnet and Futurenet data reset: scheduled 2026 dates); not yet on status.stellar.org on 2026-11-14"
+pin = "public_lake.testnet"
+until = "testnet/2025-12-18"
+action = "move public_lake.testnet to the new epoch's prefix in the public lake, then run `xdrcheck-corpus refetch --network testnet` (docs/maintenance.md, section 8)"
+
+[ci]
+mise = "2026.8.10"           # the version mise-action installs; CI fails if absent
+actionlint = "1.7.12"
+
+[stellar_core]
+# renovate: datasource=github-tags depName=stellar/stellar-core extractVersion=^v(?<version>\d+\.\d+\.\d+)$
+version = "30.0.0"
+commit = "0e49751aa9ddf892302cca02cea7f3f5d97df9f1"
+deb_url = "https://apt.stellar.org/pool/noble/s/st/stellar-core_30.0.0-3642.0e49751aa.noble_amd64.deb"
+deb_sha256 = "2c1eb74aa1dcf1c4799feeb91cfaf3eb50667232308910165e6b7f8ddff19c30"
+binary_sha256 = "dd24eb86d322ca58345bcaa04dfe6bd5922f74fe49e4725cd36b92bc22ac3eac"
+image = "stellar/stellar-core:30.0.0-3642.0e49751aa.noble@sha256:eb7a7c81a29b8665c8878d55e1b3979f0d7527426350c4ff258a9c7647ae5c51"
+test_image = "stellar/unsafe-stellar-core:30.0.0-3642.0e49751aa.noble-buildtests@sha256:a8cb428ce497695321fdffc8cdb23b8102c1074ebe480f1c9e923fe1052e22ff"
+golden_tiers = ["test-lcm-current", "test-lcm-next"]
+
+[stellar_core.runtime_debs]   # runtime libraries for the release binary outside a container
+"libc++1-20_20.1.2-0ubuntu1~24.04.3_amd64.deb" = "a966949ca8d4b0bc97307852cf9c871966aaf8deb5f5aaf5aa9c6d23a17fd41f"
+"libc++abi1-20_20.1.2-0ubuntu1~24.04.3_amd64.deb" = "d2b76c929a9811faa237d97f398ef4bae1ddc1276833dfe3b562304d0739d200"
+"libunwind-20_20.1.2-0ubuntu1~24.04.3_amd64.deb" = "f050a1e4f8647fe1d5debbcdb22096cf79d4f70808ae5ce03f7d0d5d35f6b7cc"
+"libpq5_16.15-0ubuntu0.24.04.1_amd64.deb" = { url = "https://snapshot.ubuntu.com/ubuntu/20261112T000000Z/pool/main/p/postgresql-16/libpq5_16.15-0ubuntu0.24.04.1_amd64.deb", fallback_url = "http://archive.ubuntu.com/ubuntu/pool/main/p/postgresql-16/libpq5_16.15-0ubuntu0.24.04.1_amd64.deb", sha256 = "3f96dd36bcd7841172c1ead4965da20a193bb9ccf9a93a3f5a3ac7f56369dbb1" }
+# -updates builds leave archive.ubuntu.com/pool once superseded; the snapshot service keeps the archive as it
+# was at that instant. The plain pool is the fallback while the build is still current.
+llvm_base_url = "https://snapshot.ubuntu.com/ubuntu/20261112T000000Z/pool/universe/l/llvm-toolchain-20"
+llvm_fallback_base_url = "http://archive.ubuntu.com/ubuntu/pool/universe/l/llvm-toolchain-20"
+
+[stellar_xdr_definitions]
+# renovate: datasource=github-tags depName=stellar/stellar-xdr versioning=loose
+tag = "v30.0"
+commit = "4f524bbac80c781c06e4fb5fc93a2d0d331d6705"
+
+[rust]
+toolchain = "1.98.1"
+# renovate: datasource=crate depName=stellar-xdr
+stellar_xdr = "30.0.0"        # the oracle; crate commit 3c2aa43d2ab54d429ae44aa5143d805bf5dba7e2
+# renovate: datasource=crate depName=stellar-strkey
+stellar_strkey = "1.0.0"
+# renovate: datasource=crate depName=soroban-env-host
+soroban_env_host = "30.0.0"   # tag commit 0c99950e
+soroban_env_host_p29 = "29.0.2"  # host for Protocol 29 ledgers in offline simulation; core uses 29.0.0 (yanked)
+# renovate: datasource=crate depName=soroban-sdk
+soroban_sdk = "29.0.1"        # test contracts only; 30.0.0 exists only as rc.1
+# exact pins of other crates the tools depend on (also fixed in their Cargo.toml and Cargo.lock)
+jsonschema = "0.61.2"
+serde_yaml = "0.9.34"
+ed25519_dalek = "2.2.0"
+libc = "0.2.191"
+
+[go]
+toolchain = "1.26.11"
+# renovate: datasource=go depName=github.com/stellar/go-stellar-sdk
+go_stellar_sdk = "v0.9.0"     # commit 5410d3410e212331399d1518cc13150279969dac
+# renovate: datasource=go depName=golang.org/x/tools
+x_tools = "v0.52.0"
+# renovate: datasource=go depName=github.com/golangci/golangci-lint/v2
+golangci_lint = "v2.15.0"
+# renovate: datasource=go depName=github.com/BurntSushi/toml
+toml = "v1.5.0"              # github.com/BurntSushi/toml, used by go/internal/pins
+# renovate: datasource=go depName=github.com/fsouza/fake-gcs-server
+fake_gcs_server = "v1.49.2"  # github.com/fsouza/fake-gcs-server, GCS emulator for the stellar-etl adapter
+
+[js]
+node = "24.19.0"
+# renovate: datasource=npm depName=@stellar/stellar-sdk
+stellar_sdk = "17.4.0"
+
+[python]
+version = "3.13.16"
+# renovate: datasource=pypi depName=stellar-sdk
+stellar_sdk = "17.0.1"
+
+[java]
+jdk = "temurin-21.0.13+9.0.LTS"
+
+[images]
+seaweedfs = "chrislusf/seaweedfs:4.46@sha256:08d516132314207d10c8e37cbffc1f32b147d870169688734cc61c6231625b62"
+timescaledb = "timescale/timescaledb:2.28.2-pg17@sha256:909e2c7577c074517c8936b6d8799294b33f25fb5bad978a2199250665f1ce1a"
+# build container of the weekly next-protocol stellar-core build (scripts/nightly/vnext-core.sh); the index
+# digest of ubuntu:noble on 2026-11-14
+vnext_build_base = "ubuntu:noble@sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5"
+
+[services]
+# renovate: datasource=github-releases depName=stellar/stellar-rpc
+stellar_rpc = "v30.0.1"       # field types for the mock getLedgers
+# renovate: datasource=github-tags depName=stellar/stellar-galexie extractVersion=^galexie-(?<version>v\d+\.\d+\.\d+)$
+galexie = "v30.0.1"           # SEP-54 layout reference
+
+[pipelines.wallet_backend]
+repo = "https://github.com/stellar/wallet-backend"
+current = "f0c00cf5242048d0438d07151cc1ef1a4b98d7c7"
+go_toolchain = "1.25.9"
+max_decodable_protocol_before_a9bac8d2 = 29
+acceptance = [
+  { bug = "729", prefix = "2a0a84ea12523b6c92e278c0c84b443041240095", fixed = "2c873353c1f0f3c9b145e25a7d009023ad104a1c" },
+  { bug = "731", prefix = "764a4f5bcbff5abb0949d93da37f769063013ea0", fixed = "c152783c054c765c8b51fd26ed313fd1ebc1c50c" },
+  { bug = "716", prefix = "79ea2acd1dc65a07166133cc04b12e76db314db0", fixed = "bb0b162b072583c7dabffbdee664d1c117e5ba56" },
+]
+
+[pipelines.stellar_etl]
+repo = "https://github.com/stellar/stellar-etl"
+# renovate: datasource=github-releases depName=stellar/stellar-etl
+tag = "v2.8.35"
+commit = "7e3fc9af95359dad6ba939fa88791f49cdf531ae"
+go_toolchain = "1.27.3"      # from its go.mod; builds with CGO_ENABLED=1
+
+[docs]
+repo = "https://github.com/stellar/stellar-docs"
+commit = "48259204e3a3431896d4847358e27d8e50813099"
+
+[conformance.columns]
+# column sets live in drivers/sets.toml and the columns in drivers/sets.d/; versions below are the only ones
+# allowed there. One family per line, with a comment line between families, so a change to one family never
+# touches the lines of another.
+# JavaScript: @stellar/stellar-sdk, both API lines (drivers/sets.d/js.toml, js16.toml)
+js = ["17.4.0", "17.3.0", "17.2.1", "17.2.0", "16.4.1", "16.3.1", "16.3.0"]
+# Go: go-stellar-sdk (drivers/sets.d/go.toml)
+go = ["v0.9.0", "v0.8.0", "v0.7.3", "v0.7.2", "v0.7.1"]
+# Rust: stellar-xdr (drivers/sets.d/rust.toml)
+rust = ["30.0.0", "28.0.1", "28.0.0"]
+# Python: stellar-sdk (drivers/sets.d/python.toml)
+python = ["17.0.1", "17.0.0"]
+# Contract-spec reader (drivers/sets.d/spec.toml)
+soroban-spec = ["30.0.0-rc.1", "29.0.1"]   # contract-spec reader; 30.0.0 exists only as rc.1
+# XDR-JSON converter (the json level). rs-xdr-json 30.0.0+ebec5fb1c76e is rs-stellar-xdr main at commit
+# ebec5fb1c76e2bcd17ec2fe9aae4203a6251f660 (crate version 30.0.0, the commit as build metadata).
+rs-xdr-json = ["30.0.0", "30.0.0+ebec5fb1c76e"]
+
+[public_lake]
+bucket = "s3://aws-public-blockchain/v1.1/stellar/ledgers"
+pubnet = "pubnet"
+testnet = "testnet/2025-12-18"   # current testnet epoch; next reset 2026-12-16

@@ -1,0 +1,11 @@
+# Per-project runtimes (mise). Versions mirror pins.toml.
+[tools]
+go = "1.26.11"
+node = "24.19.0"
+python = "3.13.16"
+java = "temurin-21.0.13+9.0.LTS"
+
+[env]
+# Build caches live on /home: the root filesystem on the reference machine is full.
+CARGO_TARGET_DIR = "{{config_root}}/target"
+GOCACHE = "{{env.HOME}}/.cache/go-build"

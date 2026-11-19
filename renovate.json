@@ -1,0 +1,80 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Pin bumps for the kit (docs/maintenance.md, section 5.3). The pins that follow an upstream release carry a",
+    "`# renovate:` comment in pins.toml, which the regex manager below reads; `xdrcheck pins latest` reads the same",
+    "comments, so the nightly job and this bot see one list. One pull request per move; each must pass",
+    "`make verify-static` (xdrcheck pins check), and some need hand steps the pull request body names. The",
+    "conformance driver directories are historical columns pinned on purpose and are never bumped."
+  ],
+  "enabledManagers": ["custom.regex", "gomod", "github-actions"],
+  "ignorePaths": ["drivers/**", "contracts/**", "evidence/**", "examples/**", "packages/**", "corpus/**"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "Etc/UTC",
+  "prConcurrentLimit": 5,
+  "dependencyDashboard": true,
+  "rangeStrategy": "pin",
+  "separateMajorMinor": false,
+  "labels": ["pins"],
+  "postUpdateOptions": ["gomodTidy"],
+  "gomod": {
+    "managerFilePatterns": ["/^go/go\\.mod$/", "/^lint/go\\.mod$/"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "pins.toml entries annotated with `# renovate: datasource=... depName=... [versioning=...] [extractVersion=...]`",
+      "managerFilePatterns": ["/^pins\\.toml$/"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?(?:\\s+extractVersion=(?<extractVersion>\\S+))?\\s*\\n[A-Za-z0-9_-]+\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "In go.mod files only the modules pins.toml names move; everything else follows them through go mod tidy.",
+      "matchManagers": ["gomod"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["github.com/stellar/go-stellar-sdk", "github.com/BurntSushi/toml", "golang.org/x/tools"],
+      "enabled": true
+    },
+    {
+      "description": "A Go module moves in pins.toml and in go/go.mod and lint/go.mod together.",
+      "matchPackageNames": ["github.com/stellar/go-stellar-sdk", "github.com/BurntSushi/toml", "golang.org/x/tools"],
+      "groupName": "{{depName}}"
+    },
+    {
+      "matchDepNames": ["stellar/stellar-core"],
+      "prBodyNotes": [
+        "A stellar-core move is not only a version: also move `[stellar_core]` commit, deb_url, deb_sha256, binary_sha256, image and test_image, then `make fetch` and `make verify-static`. A new protocol is the upgrade procedure in docs/maintenance.md, section 5."
+      ]
+    },
+    {
+      "matchDepNames": ["stellar/stellar-xdr"],
+      "prBodyNotes": [
+        "Also move `[stellar_xdr_definitions]` commit, and `rust.stellar_xdr` with it. A new tag usually means a new protocol: docs/maintenance.md, section 5."
+      ]
+    },
+    {
+      "matchDepNames": ["stellar-xdr", "soroban-env-host", "soroban-sdk", "stellar-strkey"],
+      "prBodyNotes": [
+        "Crates are also pinned in Cargo.toml and Cargo.lock (root, or contracts/ for soroban-sdk): update both, rebuild, and run `make verify-static` and `make test`. Move `[conformance.columns]` only when adding a new driver column."
+      ]
+    },
+    {
+      "matchDepNames": ["@stellar/stellar-sdk", "stellar-sdk"],
+      "prBodyNotes": [
+        "An SDK move adds a conformance column: a new drivers/<sdk>/<version> directory with its lock file, the version in `[conformance.columns]` and a column in drivers/sets.d/<family>.toml (docs/maintenance.md, section 5.3). Review the nightly canary report first."
+      ]
+    },
+    {
+      "matchDepNames": ["stellar/stellar-etl"],
+      "prBodyNotes": [
+        "Also move `[pipelines.stellar_etl]` commit (and go_toolchain if its go.mod changed), then `make lint-stellar-etl`."
+      ]
+    }
+  ]
+}
