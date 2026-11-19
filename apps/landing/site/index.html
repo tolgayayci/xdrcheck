@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>XDRCheck</title>
+<meta name="description" content="XDRCheck is an open test kit for software that reads the Stellar ledger: a corpus of rare but valid ledger shapes emitted by stellar-core and tagged by CAP, a replay harness for indexers, an SDK conformance runner, a linter and an indexer-hardening guide.">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0d1424">
+<link rel="canonical" href="https://xdrcheck.dev/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#top">Skip to content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="XDRCheck, back to top">
+      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span class="b"></span><span></span><span class="b"></span><span></span><span class="o"></span><span></span><span></span></span>
+      XDRCheck
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a class="hide-sm" href="#corpus">Corpus</a>
+      <a class="hide-sm" href="#replay">Replay</a>
+      <a class="hide-sm" href="#sdks">SDKs</a>
+      <a class="hide-sm" href="#start">Start</a>
+      <a class="gh" data-link="dashboard" href="https://xdrcheck.dev/dashboard/">Dashboard</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top" tabindex="-1">
+  <section class="wrap hero">
+    <div class="hero-copy">
+      <span class="pill"><span class="live-dot"></span>Open source · for Stellar indexers and SDKs</span>
+      <h1>Test your Stellar app against the ledger's <span class="amber">strangest data.</span></h1>
+      <p class="lede">Rare but valid ledger shapes, emitted by stellar-core and tagged by CAP, run through your indexer or SDK. What the kit shows:</p>
+      <ol class="proof">
+        <li data-need="scan">
+          <strong>Pubnet history, scanned and checked.</strong>
+          Every ledger from <span data-k="scan.first_ledger">…</span> to <span data-k="scan.last_ledger">…</span> decoded, re-encoded byte for byte and checked: <span class="num" data-k="scan.failures_total">…</span> failures across <span data-k="scan.checks">…</span> integrity checks, including the header hash chain.
+        </li>
+        <li data-need="replay">
+          <strong>Real incidents, before and after the fix.</strong>
+          <span class="num" data-k="replay.pairs">…</span> wallet-backend incidents replayed from corpus entries on wallet-backend itself, unmodified: each fails on the commit before its fix and passes on the fix and at the current pinned commit, through both inputs wallet-backend reads.
+        </li>
+        <li data-need="siblings">
+          <strong>One defect, every SDK it reaches.</strong>
+          “<span data-k="siblings.top.title">…</span>” reproduces <span data-k="siblings.top.phrase">…</span>: <span data-list="siblings.top.labels">…</span>.
+        </li>
+      </ol>
+      <p class="found"><a data-link="dashboard" data-hash="#/problems?state=filed" href="https://xdrcheck.dev/dashboard/#/problems?state=filed"><span class="num" data-k="findings.filed">…</span> issues filed upstream in <span data-k="findings.filed_projects">…</span> projects</a>, and <span data-k="findings.known_upstream">…</span> known defects reproduced. <a class="more" data-link="dashboard" data-hash="#/problems" href="https://xdrcheck.dev/dashboard/#/problems">What problem exists where</a></p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#start">Quick start</a>
+        <a class="btn btn-ghost" data-link="dashboard" href="https://xdrcheck.dev/dashboard/">Open the dashboard</a>
+        <a class="btn btn-ghost" data-link="docs" href="https://docs.xdrcheck.dev/">Read the docs</a>
+        <a class="btn btn-ghost" data-link="repository" href="#start" hidden>Repository</a>
+      </div>
+    </div>
+
+    <figure class="board" aria-label="Illustration: one square per row of the corpus, lighting up as a reader is tested against it">
+      <div class="board-head" aria-hidden="true">
+        <span class="live"><span class="live-dot"></span>illustration</span>
+        <span>one square per corpus row</span>
+      </div>
+      <div class="cells" id="cells" aria-hidden="true"></div>
+      <figcaption class="legend" aria-hidden="true">
+        <span><i class="sw sw-a"></i>handled</span>
+        <span><i class="sw sw-b"></i>checking</span>
+        <span><i class="sw sw-m"></i>mishandled or dropped</span>
+      </figcaption>
+    </figure>
+  </section>
+
+  <section id="start" class="band start">
+    <div class="wrap section">
+      <h2 class="h2">Quick start</h2>
+      <p class="body">On Linux, with mise and rustup installed. The demo replays the fee-bump and muxed-account entries through a small indexer with one planted bug; after the first fetch, nothing touches the network.</p>
+      <pre class="code"><code>mise install
+make toolchain &amp;&amp; make fetch-replay &amp;&amp; make build
+make demo</code></pre>
+      <div class="ctas">
+        <a class="btn btn-primary" data-link="docs" href="https://docs.xdrcheck.dev/">Documentation</a>
+        <a class="btn btn-ghost" data-link="dashboard" href="https://xdrcheck.dev/dashboard/">Dashboard</a>
+        <a class="btn btn-ghost" data-link="repository" href="#start" hidden>Repository</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="corpus">
+    <div class="wrap section">
+      <p class="eyebrow">1 · The corpus is real</p>
+      <h2 class="h2">Bytes stellar-core emitted, next to a full scan of pubnet.</h2>
+      <div class="stats">
+        <div class="stat"><span class="v" data-k="scan.ledgers">…</span><span class="k">pubnet ledgers scanned, <span data-k="scan.first_ledger">…</span> to <span data-k="scan.last_ledger">…</span></span></div>
+        <div class="stat"><span class="v" data-k="scan.failures_total">…</span><span class="k">failures across <span data-k="scan.checks">…</span> integrity checks: hash chain, transaction-set and result hashes, byte-exact re-encode</span></div>
+        <div class="stat"><span class="v" data-k="corpus.core_emitted">…</span><span class="k">of <span data-k="corpus.entries">…</span> entries emitted by stellar-core: a local core, its own goldens, or network history</span></div>
+        <div class="stat"><span class="v" data-k="corpus.twins">…</span><span class="k">entries generated on both the testnet and the mainnet passphrase</span></div>
+      </div>
+      <p class="body">Each entry is one rare pattern, tagged with the CAP and protocol that introduced it and the values a correct reader must decode. Hand-made entries (<span data-k="corpus.synthetic">…</span>) are marked synthetic. The scan of pubnet history checks every ledger, counts the shapes transactions are made of, and gives mainnet counts and first and last ledgers for the rare union arms the corpus entries hold; it runs no pipeline.</p>
+      <a class="more" data-link="dashboard" data-hash="#/timeline" href="https://xdrcheck.dev/dashboard/#/timeline">See the ledger history by CAP</a>
+    </div>
+  </section>
+
+  <section id="replay" class="wrap section">
+    <p class="eyebrow">2 · Replay any indexer</p>
+    <h2 class="h2">Through an input it already reads, <span class="amber">before and after the fix.</span></h2>
+    <div class="grid-2">
+      <div>
+        <p class="body">The replay harness serves the corpus to an unmodified indexer as a Galexie data lake (SEP-54) or a mock <code>getLedgers</code> endpoint, through a small adapter you write in any language, and reports each entry as pass, mishandled or dropped.</p>
+        <p class="body">The reference adapter reproduces <span data-k="pipelines.acceptance_pairs">…</span> wallet-backend incidents on their pre-fix commits and passes on the fixed ones: a signed-payload signer (CAP-40) that halted ingestion, a trustline created by the Stellar Asset Contract (CAP-73) that left no state change, and muxed and signed-payload addresses stored truncated.</p>
+        <a class="more" data-link="dashboard" data-hash="#/replay" href="https://xdrcheck.dev/dashboard/#/replay">See the replay results</a>
+      </div>
+      <div class="report" role="img" aria-label="An example replay report with one row per entry">
+        <div class="report-bar" aria-hidden="true"><i></i><i></i><i></i><span>example report</span></div>
+        <div class="report-rows" aria-hidden="true">
+          <div class="report-row"><span>signed-payload signer</span><span class="chip chip-pass">pass</span></div>
+          <div class="report-row"><span>SAC-created trustline</span><span class="chip chip-drop">dropped</span></div>
+          <div class="report-row"><span>nested authorization</span><span class="chip chip-mis">mishandled</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sdks" class="band">
+    <div class="wrap section">
+      <p class="eyebrow">3 · Conformance across SDKs</p>
+      <h2 class="h2">One SDK's fix becomes <span class="amber">every SDK's regression test.</span></h2>
+      <p class="body">The conformance runner puts every entry through the JavaScript, Go, Rust and Python SDKs (<span data-k="sdk.sdk_columns_public">…</span> pinned versions and decode profiles) and reports where one disagrees with the network or with the others. The corpus holds the shapes that have tripped one SDK but not the rest:</p>
+      <ul class="shapes" id="shapes"><li>…</li></ul>
+      <a class="more" data-link="dashboard" data-hash="#/sdk" href="https://xdrcheck.dev/dashboard/#/sdk">See the SDK matrix</a>
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <div class="grid-2">
+      <div>
+        <p class="eyebrow">4 · Findings filed upstream</p>
+        <h2 class="h2 sm"><span data-k="findings.filed">…</span> issues filed in <span data-k="findings.filed_projects">…</span> projects.</h2>
+        <p class="body">Each finding names its component, severity, affected versions and the corpus entry that reproduces it. Besides the issues this project filed, <span data-k="findings.known_upstream">…</span> findings reproduce defects that were already known upstream.</p>
+        <a class="more" data-link="dashboard" data-hash="#/problems" href="https://xdrcheck.dev/dashboard/#/problems">See what problem exists where</a>
+      </div>
+      <div>
+        <p class="eyebrow">5 · Linter and guide</p>
+        <h2 class="h2 sm">The three ingestion mistakes, flagged in code.</h2>
+        <p class="body"><code>xdrlint</code> has <span data-k="lint.rules">…</span> rules for Go ingestion code: trusting fields stellar-core never validated, walking nested structures with no depth or size cap, and taking participants from the envelope instead of the meta. The indexer-hardening guide carries the same checks as a checklist for every other language.</p>
+        <a class="more" data-link="docs" href="https://docs.xdrcheck.dev/">Read the guide</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>XDRCheck · Apache-2.0 · figures on this page are read from the repository's data</span>
+    <a data-link="docs" href="https://docs.xdrcheck.dev/">Documentation</a>
+  </div>
+</footer>
+</body>
+</html>
