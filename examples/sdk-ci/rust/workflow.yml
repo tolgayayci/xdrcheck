@@ -1,0 +1,46 @@
+# XDRCheck corpus conformance for a Rust XDR library: copy this file to .github/workflows/xdrcheck.yml and this
+# example crate to xdrcheck/ in the library's repository (Cargo.toml, Cargo.lock, lib.rs, tests/,
+# expected-failures.txt). Point its stellar-xdr dependency at the library (path = "..", see Cargo.toml), refresh the
+# lock file once with `cargo update -p stellar-xdr` in xdrcheck/, and commit it: the job runs cargo with --locked.
+# The corpus release is pinned by version and sha256: a changed or truncated download fails the job before
+# anything reads it. Move to a new corpus release by changing both values in one commit, together with
+# expected-failures.txt regenerated (XDRCHECK_WRITE_EXPECTED_FAILURES=1) and reviewed.
+name: xdrcheck
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  corpus:
+    name: corpus conformance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      XDRCHECK_REPO: "OWNER/REPO"  # the corpus repository on GitHub
+      CORPUS_VERSION: "30.0.0"
+      # The sha256 of xdrcheck-30.0.0.tar.gz, from the release page; the job fails until it is set.
+      CORPUS_SHA256: "set-this-to-the-release-archive-sha256"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Fetch the corpus release
+        shell: bash
+        run: |
+          set -euo pipefail
+          file="xdrcheck-${CORPUS_VERSION}.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$file" \
+            "https://github.com/${XDRCHECK_REPO}/releases/download/v${CORPUS_VERSION}/${file}"
+          (cd "$RUNNER_TEMP" && echo "$CORPUS_SHA256  $file" | sha256sum -c)
+          echo "XDRCHECK_CORPUS=$RUNNER_TEMP/$file" >> "$GITHUB_ENV"
+      - name: Install the Rust toolchain
+        shell: bash
+        run: rustup toolchain install && rustc --version
+      - name: Run the corpus through the library
+        shell: bash
+        run: cargo test --locked --manifest-path xdrcheck/Cargo.toml -- --nocapture

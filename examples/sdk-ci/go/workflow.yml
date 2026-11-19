@@ -1,0 +1,46 @@
+# XDRCheck corpus conformance for go-stellar-sdk: copy this file to .github/workflows/xdrcheck.yml and this
+# example module to xdrcheck/ in the SDK's repository (go.mod, go.sum, corpus_test.go, expected-failures.txt).
+# The corpus release is pinned by version and sha256: a changed or truncated download fails the job before
+# anything reads it. Move to a new corpus release by changing both values in one commit, together with
+# expected-failures.txt regenerated (XDRCHECK_WRITE_EXPECTED_FAILURES=1) and reviewed.
+name: xdrcheck
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  corpus:
+    name: corpus conformance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      XDRCHECK_REPO: "OWNER/REPO"  # the corpus repository on GitHub
+      CORPUS_VERSION: "30.0.0"
+      # The sha256 of xdrcheck-30.0.0.tar.gz, from the release page; the job fails until it is set.
+      CORPUS_SHA256: "set-this-to-the-release-archive-sha256"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: xdrcheck/go.mod
+      - name: Fetch the corpus release
+        shell: bash
+        run: |
+          set -euo pipefail
+          file="xdrcheck-${CORPUS_VERSION}.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$file" \
+            "https://github.com/${XDRCHECK_REPO}/releases/download/v${CORPUS_VERSION}/${file}"
+          (cd "$RUNNER_TEMP" && echo "$CORPUS_SHA256  $file" | sha256sum -c)
+          echo "XDRCHECK_CORPUS=$RUNNER_TEMP/$file" >> "$GITHUB_ENV"
+          echo "XDRCHECK_CORPUS_SHA256=$CORPUS_SHA256" >> "$GITHUB_ENV"
+      - name: Run the corpus through the SDK
+        shell: bash
+        working-directory: xdrcheck
+        run: go test -count=1 -v ./...

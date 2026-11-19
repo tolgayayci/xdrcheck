@@ -1,0 +1,56 @@
+# XDRCheck corpus conformance for js-stellar-sdk (or js-stellar-base): copy this file to .github/workflows/xdrcheck.yml
+# and expected-failures.txt to xdrcheck/ in the SDK's repository. The job builds the SDK from the pull request's
+# own tree, installs the corpus runner (the npm package of one pinned corpus release, checked by sha256) outside
+# the SDK's dependencies, and puts every ledger and xdr variant of the corpus through the SDK just built. It fails
+# on a failure expected-failures.txt does not list, on a listed one that now passes, and on a variant never read.
+# Move to a new corpus release by changing both pins in one commit, together with expected-failures.txt
+# regenerated (--write-expected-failures xdrcheck/expected-failures.txt) and reviewed.
+name: xdrcheck
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  corpus:
+    name: corpus conformance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      XDRCHECK_REPO: "OWNER/REPO"  # the corpus repository on GitHub
+      CORPUS_VERSION: "30.0.0"
+      # The sha256 of xdrcheck-30.0.0.tgz (the npm package), from the release page; the job fails until it is set.
+      RUNNER_SHA256: "set-this-to-the-release-package-sha256"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Build the SDK from this tree
+        # The SDK's own install and build; any command that leaves the package's lib/ built will do.
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+          pnpm run build:prod
+      - name: Install the corpus runner
+        run: |
+          set -euo pipefail
+          file="xdrcheck-${CORPUS_VERSION}.tgz"
+          curl -fsSL -o "$RUNNER_TEMP/$file" \
+            "https://github.com/${XDRCHECK_REPO}/releases/download/v${CORPUS_VERSION}/${file}"
+          (cd "$RUNNER_TEMP" && echo "$RUNNER_SHA256  $file" | sha256sum -c)
+          mkdir -p "$RUNNER_TEMP/xdrcheck"
+          npm install --prefix "$RUNNER_TEMP/xdrcheck" --no-save --ignore-scripts "$RUNNER_TEMP/$file"
+      - name: Run the corpus through the SDK
+        run: |
+          "$RUNNER_TEMP/xdrcheck/node_modules/.bin/xdrcheck-corpus-run" --sdk . \
+            --expected-failures xdrcheck/expected-failures.txt --require-all-read

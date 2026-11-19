@@ -1,0 +1,56 @@
+# A GitHub Actions workflow for a stellar-sdk (py-stellar-base) repository: copy it to .github/workflows/xdrcheck.yml
+# and this directory to tests/corpus/. It downloads one pinned corpus release, checks its sha256, and runs
+# test_corpus.py against the SDK checkout with the expected-failure list next to it.
+#
+# The loader (xdrcheck.py) comes from the corpus repository at a pinned commit: either vendor that one
+# file into tests/corpus/, or install it as below. Raise CORPUS_VERSION, CORPUS_SHA256 and LOADER_COMMIT together.
+name: xdrcheck
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  XDRCHECK_REPO: "OWNER/REPO"  # the corpus repository on GitHub
+  CORPUS_VERSION: "30.0.0"
+  CORPUS_SHA256: "<sha256 of xdrcheck-30.0.0.tar.gz from the release page>"
+  LOADER_COMMIT: "<full commit of the corpus repository that holds packages/python>"
+
+jobs:
+  corpus:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - name: Download the corpus release
+        run: |
+          f="xdrcheck-${CORPUS_VERSION}.tar.gz"
+          curl -fsSL -o "$f" "https://github.com/${XDRCHECK_REPO}/releases/download/v${CORPUS_VERSION}/$f"
+          echo "$CORPUS_SHA256  $f" | sha256sum -c
+      - name: Install the SDK checkout, its pinned dependencies and the corpus loader
+        run: |
+          python -m venv .venv
+          # the dependency pins, without the stellar-sdk line: the SDK under test is this checkout
+          grep -v '^stellar-sdk==' tests/corpus/requirements.txt > "$RUNNER_TEMP/requirements.txt"
+          .venv/bin/pip install --require-hashes --only-binary=:all: -r "$RUNNER_TEMP/requirements.txt"
+          .venv/bin/pip install --no-deps .
+          .venv/bin/pip install --no-deps "xdrcheck @ git+https://github.com/${XDRCHECK_REPO}@${LOADER_COMMIT}#subdirectory=packages/python"
+          .venv/bin/pip check
+      - name: Run the corpus
+        env:
+          XDRCHECK_CORPUS: ${{ github.workspace }}/xdrcheck-${{ env.CORPUS_VERSION }}.tar.gz
+          XDRCHECK_CORPUS_SHA256: ${{ env.CORPUS_SHA256 }}
+        working-directory: tests/corpus
+        run: ../../.venv/bin/python -m unittest -v test_corpus

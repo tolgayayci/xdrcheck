@@ -1,0 +1,30 @@
+# The corpus as a test in a Rust XDR library's CI: every decodable variant of every non-stress entry goes
+# through stellar-xdr, and the result must equal the committed expected-failures.txt. Copied to xdrcheck/ in
+# the library's own repository: point the stellar-xdr dependency at the library itself (path = "..", same
+# features), pin xdrcheck to a commit of its repository (a git dependency with rev = the full
+# commit hash) instead of the local path used here, then refresh Cargo.lock (cargo update -p stellar-xdr) and
+# commit it.
+[package]
+name = "xdrcheck-sdk-ci-rust"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+autotests = false
+
+[lib]
+path = "lib.rs"
+
+[[test]]
+name = "corpus"
+path = "tests/corpus.rs"
+
+[dependencies]
+
+[dev-dependencies]
+stellar-xdr = { version = "=30.0.0", default-features = false, features = ["std", "serde", "serde_json", "type_enum"] }
+serde_json = "=1.0.154"
+xdrcheck = { path = "../../../packages/rust" }
+
+# Standalone: not a member of the repository's root workspace.
+[workspace]
