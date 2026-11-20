@@ -1,0 +1,316 @@
+---
+title: "Questions"
+sidebarTitle: "Questions"
+icon: "circle-help"
+description: "Short answers to the questions an author of a ledger reader asks, each with the corpus entry or page that proves it."
+---
+
+For authors of indexers, SDKs and other readers of Stellar ledger data. Each answer names a corpus entry or a page
+that holds the evidence. To open an entry (after `make build`, with `bin/` on your `PATH`):
+
+```sh
+xdrcheck entry <entry-id>                       # tags, why readers get it wrong, expected values
+xdrcheck entry --decoded <variant> <entry-id>   # the decoded bytes as JSON; <variant> is a key such as pubnet, testnet@30 or none
+```
+
+Statements about what stellar-core checks are those of the indexer-hardening guide, which refers to stellar-core
+v30.0.0 and has not yet been reviewed by a stellar-core or platform engineer ([The guide](/hardening/overview)).
+The terms (XDR, shape, CAP, meta, muxed account, signed payload) are defined on
+[XDR and ledger data](/concepts/xdr-and-ledger-data), [Shapes and CAPs](/concepts/shapes-and-caps) and
+[Addresses](/concepts/addresses).
+
+## Decoding
+
+### What does a clean decode prove?
+?
+That the bytes have a shape the XDR definitions allow: lengths, padding and union discriminants. It proves nothing
+about meaning, and nothing about the reader. A reader can decode a ledger and still store a wrong participant or a
+rounded amount, so compare what it stores with expected values. Each corpus entry carries them in its `expect`
+block.
+
+Evidence: [Decode, re-encode, round trip](/concepts/xdr-and-ledger-data#decode-re-encode-round-trip);
+`cap-0034/tx-too-late-with-fee-charged`.
+
+### Does a decoder have to be strict?
+?
+Yes. An XDR boolean is 0 or 1. stellar-core's decoder reads the value 2 as true, a decoder that tests for 1 reads
+it as false, and each re-encodes to bytes other than the input. A parser that accepts bytes after a value lets two
+different inputs parse to the same transaction. Decode raw bytes with the strict entry point of your SDK and check
+that every byte was consumed.
+
+Evidence: `xdr-strict/bool-value-2`, `xdr-strict/api-transaction-parse-trailing-bytes.one-byte-in-final-quantum`.
+
+### Can a few bytes of input make a decoder allocate gigabytes?
+?
+Yes, if the decoder allocates from a length prefix before it compares the length with the bytes that remain. The
+entry below is a vector whose 4-byte prefix promises 4,294,967,295 elements and has none. stellar-core's own
+decoder refuses it.
+
+Evidence: `xdr-strict/length-prefix-exceeds-input.6h`; [Where limits come in](/concepts/xdr-and-ledger-data#where-limits-come-in).
+
+### Can an XDR string be read as text?
+?
+No. An XDR `string` is bytes. Memo text has a length limit of 28 bytes and no UTF-8 check: a memo with the bytes
+`ff fe 00 c3 28 ed a0 80 41` was accepted into a ledger. On pubnet the token for a text memo that is not UTF-8
+occurs 336 times in ledgers 2 to 65,505,999. A conversion that replaces invalid bytes changes the value when it is
+encoded again.
+
+Evidence: `cap-0067/to-muxed-id-text-non-utf8-memo`, `classic/api-memo-text-non-utf8-roundtrip`.
+
+## Amounts and IDs
+
+### Why can an int64 amount or offer ID break a JavaScript reader?
+?
+A JavaScript number is a float64. 9007199254740993 (2^53 + 1) is the smallest positive integer a float64 cannot
+hold, so a reader that parses amounts or balances as JSON numbers stores 9007199254740992. Decoding is exact in
+every SDK tested; the losses happen in builders and native conversions. Carry 64-bit values as strings or big
+integers from end to end.
+
+Evidence: `classic/amount-above-2-pow-53-stroops`, `classic/api-offer-id-encoding.id-2-pow-53-plus-1-number`;
+"muxed and offer IDs" on [Known incidents](/results/incidents).
+
+### Which type holds a muxed ID?
+?
+An unsigned 64-bit integer. The pubnet transaction in the entry below has the muxed ID 15723465199396777564: a
+signed 64-bit column stores a negative number and a float loses the low digits. The token for a muxed source ID of
+2^63 or more occurs 268 times on pubnet. Store the ID as a decimal string or `NUMERIC(20)`.
+
+Evidence: `cap-0027/muxed-source-id-above-2-pow-63`; [Muxed accounts](/concepts/addresses#muxed-accounts).
+
+### Is the fee in the envelope the fee that was paid?
+?
+No. The envelope fee is a bid. The fee charged is `feeCharged` in the result, and the debit is in the fee changes
+of the meta. The inner fee of a fee bump is not charged at all: from Protocol 25 the inner result reports 0. From
+Protocol 23 the Soroban refund is applied after all transactions, outside the transaction meta.
+
+Evidence: `cap-0005/fee-charged-below-bid`, `cap-0015/fee-bump-soroban-inner-fee-zero-from-p25`,
+`cap-0063/post-tx-apply-fee-refund-golden`.
+
+### Do the sequence numbers of an account go up by one?
+?
+Not always. `BumpSequence` to INT64_MAX is valid, and with `minSeqNum` set the account's sequence number can jump
+by more than one. A transaction can also be in a ledger without having consumed its sequence number: the
+`txTOO_LATE` transaction below paid its fee and left the sequence number unchanged.
+
+Evidence: `cap-0001/bump-sequence-to-int64-max`, `cap-0021/precond-v2-all-fields`,
+`cap-0034/tx-too-late-with-fee-charged`.
+
+## Addresses
+
+### Which address forms can appear, and how wide is the widest?
+?
+Nine forms can appear in ledger data: G, M, C, W, P, T, X, L and B. The widest is a signed-payload signer (P): 165
+characters. M and W are 69 characters, B is 58. A 56-character column sized for G and C truncates or rejects the
+others. Parse addresses with the SDK instead of branching on the first character.
+
+Evidence: [The address forms](/concepts/addresses#the-address-forms);
+`strkey/synthetic-gap-vectors.signed-payload-64-byte`.
+
+### Is muxed ID 0 the same as no muxed ID?
+?
+No. ID 0 is a real ID: the source of the transaction below is the M address of the account with ID 0, not the plain
+G address. A reader that uses 0 to mean "no ID" drops the M form. A reader that keys on the M form splits one
+account into two. The token for a muxed source ID of 0 occurs 1,284 times on pubnet.
+
+Evidence: `cap-0027/muxed-source-id-zero`, `strkey/sep-0023-v1.4.0-vectors.valid-02`.
+
+### Why do two SDKs order liquidity-pool assets differently?
+?
+stellar-core requires the two assets of a pool in the order of their XDR bytes. An SDK that compares the issuers as
+strkey text gets another order for some pairs. In the entry below the two issuers sort one way as bytes and the
+other way as text: a reader that validates the order by text rejects this valid transaction, or computes a pool ID
+for the reversed pair, which does not exist.
+
+Evidence: `cap-0038/pool-issuers-order-by-bytes-not-strkey`; "issuer and map-key order" on
+[Known incidents](/results/incidents).
+
+### Can a memo be trusted?
+?
+No. stellar-core checks no arm of the memo for meaning: memo text is up to 28 arbitrary bytes, a memo ID is any
+64-bit value, a memo hash is any 32 bytes. The submitter chooses it. Never read a memo as an address, even when it
+looks like one. Core also copies the memo into `to_muxed_id` in the events it emits for classic operations, so the
+same bytes reach event readers.
+
+Evidence: `cap-0067/memo-text-that-looks-like-an-address`; row VF-19 on
+[What core validates](/concepts/what-core-validates#validated-and-passed-through-fields).
+
+## Soroban data and events
+
+### Does a transfer event prove that tokens moved?
+?
+No. The Soroban host records which contract emitted an event. The contract chooses the topics and the data, and
+anyone can deploy a contract. In the entry below a contract that is not the asset's contract emits a `transfer`
+event that names two accounts and the asset `USD:G…`, and no ledger entry changes. Key every movement on the
+emitting contract ID.
+
+Evidence: `cap-0067/forged-token-event-from-unrelated-contract`; xdrlint rule
+[XDR304](/reference/lint-rules#xdr304).
+
+### Does an address in the auth list mean that it authorized the call?
+?
+No. An authorization entry that a `require_auth` call matches is authenticated: its signature is verified and a
+nonce entry is written. An entry that no call matches is only decoded. In the entry below a transfer succeeds while
+its `auth` list holds two entries of an uninvolved account, with a void signature and an expiration at ledger 1.
+The proof that an address authenticated is the nonce entry created in the meta.
+
+Evidence: `cap-0046/auth-unmatched-entries-succeed`; xdrlint rule [XDR301](/reference/lint-rules#xdr301).
+
+### How deep can an authorization tree or an ScVal be?
+?
+It depends on where the value is. A value that reached the Soroban host (an event, contract data, a return value)
+obeys the host's nesting limit. A value in the envelope of a failed Soroban transaction is bound only by XDR
+validity and by the admission check on the envelope, so it can nest deeper than the host allows. How deep a tree of
+authorized sub-invocations can be is not established. The measured bounds for each decoder are in the guide's
+section "Caps"; set your decoder's limit explicitly, at or above them.
+
+Evidence: [Caps on depth and size](/concepts/what-core-validates#caps-on-depth-and-size);
+`cap-0046/auth-deep-tree-golden.6253e5d06cf58bd3`.
+
+### How many topics does a token event have?
+?
+Do not rely on a number. Stellar Asset Contract transfer events have four topics, custom tokens may use three or
+another layout, and an older and a current mint layout coexist. An event can have no topic at all. The number and
+shape of the topics never identify the Stellar Asset Contract; only the emitting contract ID does.
+
+Evidence: `cap-0067/legacy-layout-mint-with-admin-topic.pubnet-64870500`,
+`cap-0046/event-topic-count-extremes.zero-topics`.
+
+### Which events can a reader rely on?
+?
+Contract events and the return value of a Soroban call are consensus data. Events for classic operations and fees
+exist only when the node sets `EMIT_CLASSIC_EVENTS` (Protocol 23 and later) or `BACKFILL_STELLAR_ASSET_EVENTS`
+(earlier). Diagnostic events are not consensus data and are not a record of what happened: the failed transaction
+in the second entry below has diagnostic events that show transfers, and no ledger entry outside the fee changed.
+
+Evidence: `ledger/meta-profile-default-flags-txmeta-v2`,
+`cap-0046/failed-soroban-tx-with-sac-transfers-in-diagnostics`.
+
+### Can two keys of a contract map become one key after conversion?
+?
+Yes. `U32(1)` and `Symbol("1")` are distinct keys of an `ScVal` map. A conversion to a native object keyed by text
+turns both into `"1"`, and a converter that does not refuse drops one entry without an error.
+
+Evidence: `cap-0046/scval-map-keys-collide-u32-symbol`, `cap-0046/event-data-map-with-colliding-keys`; "colliding
+map keys" on [Known incidents](/results/incidents).
+
+## Meta and state changes
+
+### Why does a trustline appear with no change-trust operation?
+?
+A contract can call the `trust` function of a Stellar Asset Contract (CAP-73, Protocol 26). The trustline then
+appears only as a created ledger entry under an `InvokeHostFunction` operation: there is no `ChangeTrust` operation
+and the function emits no event. In the same way a native transfer to an account that does not exist creates the
+account with no `CreateAccount` operation. Derive state from ledger-entry changes.
+
+Evidence: `cap-0073/sac-trust-creates-trustline`, `cap-0073/native-sac-transfer-creates-account`.
+
+### Which accounts did a failed transaction affect?
+?
+The fee payer and the transaction source. The fee is charged. The changes of the operations are rolled back, even
+for an operation whose own result code is success. The transaction-level changes are kept: the sequence-number
+bump and the removal of one-time pre-authorized-transaction signers. Accounts that the operations name are claimed,
+not affected.
+
+Evidence: `classic/failed-tx-operations-rolled-back`, `cap-0015/fee-bump-muxed-fee-source-inner-failed`,
+`cap-0028/pre-auth-signer-removed-on-failed-tx`.
+
+### Can a transaction be in a ledger with txTOO_LATE?
+?
+Yes, in history. Pubnet ledger 30379767 (Protocol 13) holds one: 100 stroops are charged, the sequence number is
+unchanged and no operation has a result. The scan of pubnet finds this result in ledgers 16,247,791 to 32,567,505,
+all before the upgrade to Protocol 15, and in none after it. Whether it can still happen after CAP-34 is not
+established.
+
+Evidence: `cap-0034/tx-too-late-with-fee-charged`;
+[Participants come from the meta](/concepts/what-core-validates#participants-come-from-the-meta).
+
+### Is the index of a transaction in the set its index in the results?
+?
+No. The transaction set is in set order. The processing list, with the results and the meta, is in apply order. In
+the entry below the same transaction is index 187 in the set and index 135 in the processing list. Match by
+transaction hash.
+
+Evidence: `cap-0027/muxed-source-id-zero`; [Manifest, section 4.2](/reference/manifest#4-2-variants).
+
+### Do two nodes write the same meta bytes for one ledger?
+?
+Not always. The order of the changes inside an operation's change list and the timing values in diagnostic events
+depend on the node. Node flags also decide whether events for classic operations and diagnostic events are present.
+stellar-core's own comparison of golden files sorts the changes and zeroes the timing first. One ledger therefore
+has more than one valid encoding of its meta.
+
+Evidence: `cap-0038/pool-share-limit-only-change`;
+[Manifest, section 4.3](/reference/manifest#4-3-meta-versions-and-flag-profile).
+
+## Protocol upgrades
+
+### Which meta version do I get on which protocol?
+?
+`LedgerCloseMeta` is v0 up to Protocol 19, v1 from Protocol 20 and v2 from Protocol 23; each upgrade ledger keeps
+the older version. `TransactionMeta` depends
+on the stellar-core that wrote the bytes: the public data lake was regenerated and carries v4 even for Protocol 1
+ledgers, while a node that writes its own meta under default flags emits v2 at Protocols 13 and 19 and v3 at
+Protocols 20 to 22. Check the version in the bytes; do not derive it from the protocol.
+
+Evidence: [Which version on which ledger](/concepts/xdr-and-ledger-data#which-version-on-which-ledger);
+`protocol-01/earliest-ledger-v0-envelope-text-memo`, `ledger/meta-profile-default-flags-txmeta-v3`.
+
+### Which protocol applies on the upgrade ledger?
+?
+The old one. The header of the upgrade ledger shows the new protocol, but its transactions were applied under the
+old protocol and its `LedgerCloseMeta` version follows the old protocol. A reader that picks its parser from the
+header version gets that ledger wrong.
+
+Evidence: `protocol-13/upgrade-ledger-header-13-envelopes-v0`, `protocol-20/upgrade-ledger-lcm-v0-header-20`,
+`protocol-23/upgrade-ledger-lcm-v1-header-23`, `cap-0088/upgrade-ledger-header-30-whole-second-value`.
+
+### What changes for a reader in Protocol 30?
+?
+Three CAPs change what a reader sees. CAP-88 puts the close time in milliseconds into a new `StellarValue` arm in
+every header after the upgrade ledger, so a decoder generated before Protocol 30 rejects every later ledger. CAP-84
+adds muxed contract addresses (`W…`, 69 characters). CAP-87 adds no signer or signature XDR: its keys and signatures
+reach ledgers only as large byte arguments.
+
+Evidence: `cap-0088/first-ledger-with-signed-ms`, `cap-0084/sac-transfer-to-muxed-contract`,
+`cap-0087/ml-dsa-sized-byte-arguments`; [Protocol upgrades](/architecture/protocol-upgrades).
+
+### What should a reader do at a version it does not know?
+?
+Stop with a typed error that raises an alert. Declare the highest protocol version and `LedgerCloseMeta` version the
+reader has been reviewed for, and do not guess above them. Alert on a stalled tip, and test the SDK you plan to use
+on testnet before the mainnet vote. Versions are also not consecutive: pubnet went from Protocol 13 to 15, and no
+pubnet ledger has header version 14.
+
+Evidence: `protocol-15/upgrade-jump-13-to-15`; xdrlint rules [XDR401](/reference/lint-rules#xdr401) and
+[XDR406](/reference/lint-rules#xdr406).
+
+## Using the kit
+
+### How do I find the entries for a CAP or a shape?
+?
+`xdrcheck entry --cap 40` lists the entries tagged with a CAP, and `xdrcheck entry --list 'cap-0067/*'` lists by
+ID. `xdrcheck find --cap 40 --limit 5` gives captured ledgers; with the mainnet dataset installed, `find` also
+answers by token, token class or value tag from mainnet history.
+
+Evidence: [Find the entries of a CAP](/concepts/shapes-and-caps#find-the-entries-of-a-cap);
+[CAP coverage](/caps/overview).
+
+### How do I know whether a shape occurs on mainnet?
+?
+`xdrcheck entry <entry-id>` prints the entry's rarest shape token and how often it occurs on pubnet in ledgers 2 to
+65,505,999, or says that it never occurs. The count is that of the rarest token, not of transactions with the
+entry's whole shape.
+
+Evidence: [How rare a shape is on mainnet](/concepts/shapes-and-caps#how-rare-a-shape-is-on-mainnet);
+[Mainnet scan results](/results/mainnet-scan).
+
+### How do I test my own reader against these entries?
+?
+| Reader | Start at |
+|---|---|
+| An SDK | [For SDK maintainers](/start/for-sdk-maintainers), [SDK CI](/guides/sdk-ci) |
+| An indexer in Go | [For indexers](/start/for-indexers), [Go indexer](/guides/go-indexer) |
+| An indexer in another language | [Any-language indexer](/guides/any-language-indexer) |
+| Go ingestion code, without running it | [Lint Go code](/guides/lint-go) |
+
+Evidence: [Read an entry](/start/read-an-entry) shows what "expected values" are for one entry.

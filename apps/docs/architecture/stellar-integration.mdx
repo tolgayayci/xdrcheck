@@ -1,11 +1,28 @@
 ---
 title: "Stellar integration"
 sidebarTitle: "Stellar integration"
-description: "Every Stellar component XDRCheck builds on or tests: the version pinned in pins.toml, what the kit consumes from it, what it gives back, and where the integration lives."
+icon: "plug"
+description: "Every Stellar component XDRCheck builds on or tests, with its pinned version, what the kit consumes from it and what it gives back."
 ---
+
+This page lists every Stellar component XDRCheck builds on or tests, with its pinned version, what the kit consumes
+from it and what it gives back.
 
 Every version below is from `pins.toml`. `xdrcheck pins check` fails when a version is named anywhere else or a
 constant in the code differs from it.
+
+```mermaid
+flowchart LR
+  CORE["stellar-core and its goldens"] --> CORPUS[("corpus")]
+  LAKE["public data lake"] --> CORPUS
+  XDR["XDR definitions, rs-stellar-xdr"] --> CORPUS
+  CORPUS --> CONFORM["conformance columns"]
+  SDKS["js, go, rust and python SDKs"] --> CONFORM
+  CORPUS --> REPLAY["replay rigs"]
+  PIPES["wallet-backend, stellar-etl, Horizon"] --> REPLAY
+  CONFORM --> BACK["results and upstream issues"]
+  REPLAY --> BACK
+```
 
 ## Reference table
 

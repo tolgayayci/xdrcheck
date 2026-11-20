@@ -1,0 +1,176 @@
+---
+title: "Addresses"
+sidebarTitle: "Addresses"
+icon: "key"
+description: "Every strkey address form a ledger reader meets, where muxed IDs appear and where they are dropped, how long a signed-payload signer is, and the failures the kit has entries for."
+---
+
+For authors of readers that store, compare or display Stellar addresses. The statements on this page are those of
+the hardening guide's section "Muxed and signed-payload handling" (`guide/indexer-hardening.mdx`,
+[The guide](/hardening/overview)) and of the corpus entries named in each row.
+
+A strkey is the text form of a key or address, defined by SEP-23: a version byte, a payload and a 2-byte checksum,
+written in base32.
+
+## The address forms
+
+The table follows SEP-23 v1.4.0. Its 10 valid and 20 invalid test vectors are corpus entries
+(`strkey/sep-0023-v1.4.0-vectors.valid-01` to `.valid-10`, `.invalid-01` to `.invalid-20`).
+
+| Form | Prefix | Characters | Payload | XDR types that render to it | Entry to open |
+|---|---|---|---|---|---|
+| Account | G | 56 | 32-byte key | `AccountID`, `MuxedAccount` without ID, `ScAddress` account, `SignerKey` ed25519 | `strkey/sep-0023-v1.4.0-vectors.valid-01` |
+| Muxed account | M | 69 | key, then 64-bit ID | `MuxedAccount` with ID, `ScAddress` muxed account | `strkey/sep-0023-v1.4.0-vectors.valid-03` |
+| Contract | C | 56 | 32-byte ID | `ScAddress` contract, `ContractID` | `strkey/sep-0023-v1.4.0-vectors.valid-06` |
+| Muxed contract (CAP-84, Protocol 30) | W | 69 | contract ID, then 64-bit ID | `ScAddress` muxed contract | `strkey/sep-0023-v1.4.0-vectors.valid-10` |
+| Signed payload | P | 69 to 165 | key, 4-byte length, payload, zero padding | `SignerKey` signed payload | `strkey/sep-0023-v1.4.0-vectors.valid-05` |
+| Pre-authorized transaction | T | 56 | 32-byte hash | `SignerKey` | `strkey/synthetic-gap-vectors.pre-auth-tx` |
+| Hash-x | X | 56 | 32-byte hash | `SignerKey` | `strkey/synthetic-gap-vectors.hash-x` |
+| Liquidity pool | L | 56 | 32-byte ID | `ScAddress` liquidity pool, `PoolID` | `strkey/sep-0023-v1.4.0-vectors.valid-07` |
+| Claimable balance | B | 58 | type byte, then 32-byte hash | `ScAddress` claimable balance, `ClaimableBalanceID` | `strkey/sep-0023-v1.4.0-vectors.valid-08` |
+| Secret seed | S | 56 | 32 bytes | none: a secret seed never appears in ledger XDR | `strkey/synthetic-gap-vectors.secret-seed` |
+
+SEP-23 publishes no vector for the T, X and S forms; the `strkey/synthetic-gap-vectors.*` entries add them.
+
+```sh
+xdrcheck entry strkey/sep-0023-v1.4.0-vectors.valid-03    # the text, its type, why it matters
+xdrcheck entry --list 'strkey/*'                          # every address vector
+```
+
+The widest address a reader can meet at Protocol 30 is a signed-payload signer: 165 characters, 103 binary bytes
+(`strkey/synthetic-gap-vectors.signed-payload-64-byte`). Among addresses that hold or receive value the widest are
+M and W, at 69 characters.
+
+## Muxed accounts
+
+A muxed account is an account key plus a 64-bit ID that the submitter chooses. CAP-27 introduced it; a CAP is a
+numbered change to the Stellar protocol ([Shapes and CAPs](/concepts/shapes-and-caps)). stellar-core strips the ID
+before any check and uses only the key.
+
+| Where the ID appears | Where it is dropped |
+|---|---|
+| The transaction source, an operation source, the fee source of a fee bump | Ledger entries and results: only base-account entries change |
+| The destination of a payment, a path payment or an account merge; the `from` of a clawback | Topics of the events core emits: they carry the base G or C address |
+| From Protocol 23, event data, as `to_muxed_id` | Derived IDs: a claimable-balance ID comes from the un-muxed source |
+
+Entries: `cap-0027/muxed-source-and-destination-max-ids`, `cap-0027/account-merge-to-muxed-destination`,
+`cap-0035/clawback-from-muxed-account`, `cap-0023/balance-id-from-muxed-source`,
+`cap-0067/sac-transfer-to-muxed-account`.
+
+What the guide tells a reader to do:
+
+- Key identity, balances and participants on the base account. Store the ID separately as an unsigned 64-bit value:
+  a decimal string or `NUMERIC(20)`, never a signed 64-bit integer or a float
+  (`cap-0027/muxed-source-id-above-2-pow-63`).
+- ID 0 is a real ID. Do not use 0 to mean "no ID", and do not make up an M address with ID 0
+  (`cap-0027/muxed-source-id-zero`).
+- Store both forms, base first. Only the M form makes a query for the G account miss payments; only the G form
+  loses the routing ID.
+- Never build an M address from a memo (`cap-0067/memo-text-that-looks-like-an-address`).
+
+From Protocol 25 an `InvokeHostFunction` transaction must not have a muxed source. The Soroban maintenance
+operations still accept one: `cap-0046/soroban-ops-with-muxed-source`.
+
+**One address, decoded.** SEP-23 valid vector 3 is
+`MA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVAAAAAAAAAAAAAJLK`, 69 characters: the version byte `0x60`,
+the 32-byte key, the 8-byte ID `8000000000000000` (2^63, decimal 9223372036854775808) and the checksum. Store it as
+the base account `GA7QYNF7SOWQ3GLR2BGMZEHXAVIRZA4KVWLTJJFC7MGXUA74P7UJVSGZ` plus the ID as the decimal string
+`9223372036854775808`. A signed 64-bit column overflows on this ID.
+
+<Warning>
+
+In XDR the 64-bit ID comes before the key, in both the muxed account and the muxed contract. In the strkey the key
+or contract ID comes first. Never copy bytes between the two forms; convert field by field
+(`cap-0084/api-muxed-address-field-order.9e2`).
+
+</Warning>
+
+## Muxed contracts
+
+From Protocol 30 (CAP-84) a `W…` address is accepted only as the destination of a Stellar Asset Contract transfer.
+The envelope argument is the W address; the event carries the plain `C…` address in its topic and the ID in
+`to_muxed_id`. Entries: `cap-0084/sac-transfer-to-muxed-contract`,
+`cap-0084/sac-transfer-to-muxed-contract-local-twins`. A reader built on XDR definitions older than Protocol 30
+cannot decode the argument.
+
+## The event routing ID
+
+`to_muxed_id` in event data is not always a muxed ID. Switch on its type, and never build an address from it.
+
+| Value | When | Entry to open |
+|---|---|---|
+| u64 | The destination is muxed; this takes precedence over a memo | `cap-0067/to-muxed-id-u64-from-muxed-destination-over-memo` |
+| String of the raw memo bytes | A classic operation whose destination is an account that is not muxed, in a transaction with a text memo | `cap-0067/to-muxed-id-text-non-utf8-memo` |
+| u64 from the memo | The same, with an ID memo | `cap-0067/memo-id-and-memo-return-in-events.memo-id` |
+| 32 bytes | The same, with a hash or return-hash memo | `cap-0067/to-muxed-id-bytes-from-memo-hash` |
+| Absent | Every other case | `cap-0067/to-muxed-id-absent` |
+| Void | Emitted by custom token contracts, not by the Stellar Asset Contract | `cap-0067/to-muxed-id-void-custom-token` |
+
+## Signed-payload signers
+
+A signed-payload signer (CAP-40, Protocol 19) is an ed25519 key plus a payload. Its signature is an ed25519
+signature over the payload bytes.
+
+| Fact | Value | Entry to open |
+|---|---|---|
+| Where it appears | As an account signer set by `SetOptions` and stored in the account entry, and as an extra signer in a transaction's preconditions | `cap-0040/signed-payload-signer-added`, `cap-0021/extra-signers-two-signed-payload-keys` |
+| Payload length on ledger | 1 to 64 arbitrary bytes. XDR allows 0; stellar-core rejects an empty payload | `cap-0040/signed-payload-signers-1-byte-and-64-byte` |
+| Strkey length | 69 characters for a 1-byte payload, 114 for 29 bytes, 165 for 64 bytes | `strkey/synthetic-gap-vectors.signed-payload-1-byte`, `strkey/sep-0023-v1.4.0-vectors.valid-05`, `strkey/synthetic-gap-vectors.signed-payload-64-byte` |
+| Signature hint | The key's last 4 bytes XOR the payload's last 4 bytes, not the tail of the key | `cap-0040/tx-authorised-by-signed-payload-signature` |
+| Extra signer | A precondition of one transaction, not a signer of any account | `cap-0040/extra-signer-signed-payload-local` |
+
+Do not assume that a signer key is 32 bytes or has a G form, that signers are unique by ed25519 key, that the payload
+is text, or that P strings have one length.
+
+## Pre-authorized transaction and hash-x signers
+
+Both are signer keys of 32 bytes with their own strkey prefix. Neither is an account.
+
+| Signer | What authorizes | Entry to open |
+|---|---|---|
+| Pre-authorized transaction (T) | The transaction whose hash the signer holds. It consumes no signature, and the one-time signer is removed even when the transaction fails | `cap-0028/pre-auth-signer-removed-on-failed-tx` |
+| Hash-x (X) | A "signature" that is the preimage of the hash, 0 to 64 bytes long | `classic/hash-x-signer-preimage-0-and-64-bytes` |
+
+## Storing and decoding
+
+- A 56-character column sized for G and C addresses truncates or rejects M and W (69 characters), B (58) and P
+  (69 to 165). A 32- or 33-byte binary column loses the muxed ID, the claimable-balance type byte and the signed
+  payload.
+- Store addresses as text of at least 165 characters or unbounded text, or as the base key plus a nullable unsigned
+  64-bit ID plus a separate signer table.
+- A truncated address can pass the checksum. SEP-23 says the checksum does not guarantee that a strkey was not
+  truncated (`strkey/truncated-muxed-address-56-chars`).
+- Parse addresses with the SDK. Do not branch on the first character.
+- A strkey is valid only if encoding the decoded value again yields the same string: upper case, no padding
+  characters, unused bits zero, the length checked for each type (`strkey/non-ascii-lookalike-and-case.lowercase`,
+  `strkey/non-ascii-lookalike-and-case.padded`).
+
+## Failures the kit has entries for
+
+Each row is a failure that happened in a real reader. The entries let you check that yours does not repeat it.
+
+| Failure | What happened | Entries | Recorded on |
+|---|---|---|---|
+| A fixed-width address column | An indexer stored a signed-payload signer as 33 bytes, payload dropped; a 56-character column truncates an M address | `cap-0040/signed-payload-signers-1-byte-and-64-byte`, `strkey/truncated-muxed-address-56-chars` | [Known incidents](/results/incidents), [Replay results](/results/replay) |
+| A signer type with no branch | An indexer halted at the ledger that adds a signed-payload signer | `cap-0040/signed-payload-signer-added` | [Replay results](/results/replay) |
+| The muxed form stored as an identity | An indexer stored the M form of a Soroban operation's source as a participant, an account no ledger entry belongs to | `cap-0046/soroban-ops-with-muxed-source` | [Replay results](/results/replay) |
+| A 64-bit ID through a float | An SDK builder accepted the number 2^53+1 as an offer ID and encoded 2^53 | `classic/api-offer-id-encoding.id-2-pow-53-plus-1-number`, `cap-0027/api-muxed-account-id-encoding.id-2-pow-53-plus-1-number` | [Known incidents](/results/incidents) |
+| A decoder that accepts a malformed strkey | SDK decoders returned a payload for a truncated M address and for a signed payload that declares 0 bytes | `strkey/truncated-muxed-address-56-chars`, `strkey/synthetic-gap-vectors.signed-payload-empty` | [SDK matrix](/results/sdk-matrix) |
+| An encoder that emits what its decoder refuses | SDK encoders emit a P strkey for an empty payload | `strkey/api-encode-signed-payload-empty` | [SDK matrix](/results/sdk-matrix) |
+| Issuer keys compared as text | SDK parsers rejected a valid liquidity-pool transaction, because the two issuers sort one way as bytes and the other way as strkey text | `cap-0038/pool-issuers-order-by-bytes-not-strkey` | [Known incidents](/results/incidents) |
+| An address taken from a value that is not one | A transfer event whose `to` topic is a symbol | `cap-0067/transfer-event-with-non-address-to-topic` | [Known incidents](/results/incidents) |
+
+To run one of them against an SDK or an indexer:
+
+```sh
+xdrcheck conform run --entries 'strkey/truncated-muxed-address-56-chars'                                    # every SDK column of the pr set
+xdrcheck replay --adapter bin/baseline --target-version dev --entries cap-0040/signed-payload-signer-added  # the baseline adapter
+```
+
+## Related
+
+- [What core validates](/concepts/what-core-validates): why the muxed ID and the memo are submitter-controlled.
+- [xdrlint rules](/reference/lint-rules): XDR101 (address built from a memo), XDR102 (unnormalised address used as
+  an identity key).
+- [Findings](/results/findings): every defect the kit found, with its entry.
+- [Questions](/concepts/faq)

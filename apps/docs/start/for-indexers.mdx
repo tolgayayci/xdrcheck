@@ -1,22 +1,35 @@
 ---
-title: "For indexer authors and operators"
-sidebarTitle: "For indexers"
-description: "The short path for an indexer team: build the kit, replay the corpus through the adapter template, read the report, then point the adapter at your own indexer and run it in CI."
+title: "Start here: indexer authors"
+sidebarTitle: "Start here"
+description: "The first steps for an indexer team: build the kit, watch a planted bug get caught, replay the corpus through the adapter template, then point the adapter at your own indexer."
+icon: "database"
 ---
 
 For authors and operators of software that reads Stellar ledgers into a store: wallet-backend, stellar-etl,
-Horizon or your own. After this page you have replayed the corpus through an adapter, know how to point the
-adapter at your indexer, and can run the same replay on every pull request.
+Horizon or your own.
 
-The replay harness serves corpus ledgers to your unmodified indexer through an input it already reads, waits for
-it to ingest them, and compares what it stored with each entry's expected values. Your indexer talks to the
-harness through a small adapter: a program that speaks JSON lines over stdin and stdout. How that works step by
-step is on [Replay](/architecture/replay).
+## What you get
+
+- A replay of every corpus ledger through your unmodified indexer, through an input it already reads.
+- One result per entry: `pass`, or how the indexer failed (crashed, halted, dropped the ledger without an error,
+  stored a wrong value).
+- For each failure, what the ledger holds against what the indexer stored, and the command that replays that
+  entry alone.
+
+The harness talks to your indexer through an adapter: a small program that speaks JSON lines over stdin and
+stdout, starts the indexer on the ledgers the harness serves, and reads back what it stored.
+[Replay](/architecture/replay) explains each step.
+
+## Before you start
+
+- Linux, with [mise](https://mise.jdx.dev) and [rustup](https://rustup.rs) ([requirements](/quickstart#requirements)).
+- A checkout of this repository. Commands run from its root.
+- Docker only if your indexer reads from an S3 API (`--input sep54-s3`).
+
+## Steps
 
 <Steps>
   <Step title="Build the kit once">
-
-    On Linux with [mise](https://mise.jdx.dev) and [rustup](https://rustup.rs):
 
     ```sh
     mise install
@@ -24,48 +37,58 @@ step is on [Replay](/architecture/replay).
     export PATH="$PWD/bin:$PATH"
     ```
 
-    `make fetch-replay` is the only networked step; everything after it runs offline.
+    `make fetch-replay` is the only networked step. Everything after it runs offline.
 
   </Step>
-  <Step title="See a failing indexer first">
+  <Step title="Watch a planted bug get caught">
 
     ```sh
     make demo
     ```
 
-    The demo replays the fee-bump and muxed-account entries through a small indexer with one planted bug (it
-    skips failed transactions). The report, `reports-demo/REPORT.md`, shows each entry it got wrong, what the
-    ledger holds against what it stored, and the command that replays that entry alone. Expected output is on
-    [Quickstart](/quickstart).
+    The demo replays the fee-bump and muxed-account entries through a small indexer with one planted bug: it
+    skips failed transactions. `reports-demo/REPORT.md` shows each entry it got wrong, what the ledger holds
+    against what it stored, and the command that replays that entry alone. `make demo` exits 0 when the replay
+    finds the bug. The expected output is on [Quickstart](/quickstart).
 
   </Step>
   <Step title="Replay the whole corpus through the adapter template">
 
     ```sh
+    xdrcheck replay --adapter bin/minimal --selftest
     xdrcheck replay --adapter bin/minimal --target-version 0.1.0 --input sep54-dir --report reports/minimal
     ```
 
-    `--input` is how the ledgers reach the indexer: `sep54-dir` (the SEP-54 layout in a directory, no Docker),
-    `sep54-s3` (the same layout behind an S3 API, needs Docker) or `rpc` (a mock stellar-rpc `getLedgers`). The
-    run ends with one line: rows per class, failures and harness faults. The template must pass.
+    The selftest checks the adapter's protocol without scoring anything. The replay ends with one line: rows per
+    class, failures and harness faults. The template must pass. `--input` is how the ledgers reach the indexer:
+    `sep54-dir` (the SEP-54 layout in a directory, no Docker), `sep54-s3` (the same layout behind an S3 API) or
+    `rpc` (a mock stellar-rpc `getLedgers`).
 
   </Step>
   <Step title="Point the adapter at your indexer">
 
-    Copy the template into your own module and fill in the places marked `REPLACE`: how to start your indexer on
-    the harness's ledgers, and how to read back what it stored.
+    Copy the template's `main.go` and `protocol_test.go` from `go/adapters/minimal` into a module of your own,
+    then fill in the places marked `REPLACE`: how to start your indexer on the harness's ledgers, and how to read
+    back what it stored.
 
-    - Go: [Go indexer](/guides/go-indexer) (`go/adapters/minimal`).
-    - Any other language: [Indexer in any language](/guides/any-language-indexer) (`examples/adapter-ts`).
+    ```sh
+    go mod init example.com/my-indexer-adapter
+    go get github.com/OWNER/REPO/go@<commit>   # or a replace to a local checkout
+    go mod tidy && go test ./... && go build -o my-adapter .
+    xdrcheck replay --adapter ./my-adapter --selftest
+    xdrcheck replay --adapter ./my-adapter --target-version 0.1.0 --input sep54-dir --report reports/mine
+    ```
+
+    - Go, step by step: [Go adapter](/guides/go-indexer).
+    - Any other language: [Other languages](/guides/any-language-indexer) (`examples/adapter-ts`).
     - The messages in full: [Adapter protocol](/reference/adapter-protocol).
-    - Every observation kind in one adapter: [Baseline adapter](/reference/replay-harness#baseline-adapter). The
-      wallet-backend adapter is `go/adapters/walletbackend`.
 
   </Step>
   <Step title="Run it on every pull request">
 
     The GitHub Action runs the same replay from a pinned corpus release, with an expected-failure list that
-    keeps known failures from failing the build until they are fixed: [CI recipes: replay](/guides/ci#2-indexer-authors-replay).
+    keeps known failures from failing the build until they are fixed:
+    [GitHub Action: replay](/guides/github-action#2-indexer-authors-replay).
 
   </Step>
 </Steps>
@@ -82,15 +105,20 @@ Each entry variant comes out in one class:
 | `not_applicable`, `not_reached` | was not asked: outside the envelope its adapter declared, or stopped at an earlier ledger |
 | `harness_fault` | nothing: the adapter or the harness failed, and the row says which |
 
-The full list of classes and how each is decided is on [Replay, step 4](/architecture/replay#step-4-classification).
+How each class is decided is on [Replay, step 4](/architecture/replay#step-4-classification).
+
+## If it fails
+
 A run exits 0 when no row fails, 1 when one does, and 2 when the harness itself could not run. Exit 2 usually
-means a tool was not built (`make build`) or the adapter's command line is wrong (`--selftest` checks it).
+means a tool was not built (`make build`) or the adapter's command line is wrong (`--selftest` checks it). For a
+row that fails, `REPORT.md` in the report directory gives the reproduce command for that entry.
 
 ## Limits
 
 - The harness, the rigs and `xdrcheck replay` run on Linux only.
 - A verdict covers only the observation kinds your adapter reports. The template reports receipts and
-  transactions; participants, state changes, movements and addresses are added kind by kind.
+  transactions; participants, state changes, movements and addresses are added kind by kind
+  ([Baseline adapter](/reference/replay-harness#baseline-adapter) reports every kind).
 - The corpus holds rare shapes, not traffic volume. For real mainnet ledgers through wallet-backend, stellar-etl or
   Horizon, use the service rigs: [Replay real ledgers](/reference/replay-target).
 
@@ -98,10 +126,10 @@ means a tool was not built (`make build`) or the adapter's command line is wrong
 
 | To | Read |
 |---|---|
-| See what the harness serves and how it judges | [Replay](/architecture/replay) |
-| Write the adapter | [Go indexer](/guides/go-indexer), [Indexer in any language](/guides/any-language-indexer) |
-| Run it in CI | [CI recipes](/guides/ci#2-indexer-authors-replay) |
-| Replay chosen mainnet ledgers through a pipeline | [Replay real ledgers](/reference/replay-target) |
-| Check Go ingestion code | [Lint Go code](/guides/lint-go) |
+| Write the adapter | [Go adapter](/guides/go-indexer), [Other languages](/guides/any-language-indexer) |
+| Run it in CI | [CI recipes](/guides/ci), [GitHub Action](/guides/github-action) |
+| Check Go ingestion code | [Lint your code](/guides/lint-go) |
 | Harden the reader by design | [Hardening guide](/hardening/overview) |
+| See what the harness serves and how it judges | [Replay](/architecture/replay) |
+| Replay chosen mainnet ledgers through a pipeline | [Replay real ledgers](/reference/replay-target) |
 | See what the pinned pipelines get wrong | [Replay results](/results/replay) |

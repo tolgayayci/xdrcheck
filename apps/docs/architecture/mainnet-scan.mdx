@@ -1,8 +1,12 @@
 ---
 title: "Mainnet scan and the mainnet tier"
 sidebarTitle: "Mainnet scan"
-description: "How every pubnet ledger from 2 to 65,505,999 was read and checked, the shape-token grammar that describes real traffic, the 6,158-transaction tier that holds every transaction-level token, and what the scan does not claim."
+icon: "radar"
+description: "How every pubnet ledger from 2 to 65,505,999 was read, checked and reduced to shape tokens, and how the mainnet tier was selected from the result."
 ---
+
+This page explains how every pubnet ledger from 2 to 65,505,999 was read, checked and reduced to shape tokens, and
+how the mainnet tier was selected from the result.
 
 The corpus holds rare shapes one entry at a time. The scan describes the other side: which shapes real pubnet
 traffic contains, and how often each occurs, so an indexer operator can see what the indexer will meet. It read every pubnet
@@ -31,15 +35,15 @@ By `LedgerCloseMeta` arm (`census-facts.tsv`, summed per arm):
 
 ```mermaid
 flowchart LR
-  L["scan list-lake<br/>scan plan-ranges"] --> R["scan run / supervise<br/>N workers, units of 2,000"]
-  R --> V["scan verify<br/>every planned ledger once"]
+  L["scan list-lake, scan plan-ranges"] --> R["scan run or supervise: workers, units of 2,000 ledgers"]
+  R --> V["scan verify: every planned ledger once"]
   V --> M["scan merge"]
-  M --> C["scan chain-check<br/>hash chain"]
-  M --> CE["census-extract<br/>census-merge"]
+  M --> C["scan chain-check: hash chain"]
+  M --> CE["census-extract, census-merge"]
   M --> T["token-census"]
   CE --> CV["cover-stream"]
   T --> CV
-  CV --> TIER["mainnet build<br/>corpus/mainnet/"]
+  CV --> TIER["mainnet build: corpus/mainnet"]
 ```
 
 Every step is a subcommand of `xdrcheck-corpus scan`; the full command list is in `evidence/mainnet-scan/README.md`.
@@ -110,7 +114,7 @@ vocabularies of event names and data-map keys.
 **Levels.** A level is a filter on the same tokens: G0 keeps `T`; G1 adds `A O E`; G2 adds `L V S K X`; G3 adds
 `D R`. A component shape is the hash of its sorted token set; a whole-transaction shape is the hash of its E, R, F,
 M (and A) shapes, the set of its distinct O shapes with a repeat class, and an operation-count class. Operation
-order is not part of it. Detail: [Shapes, tokens and levels](/architecture/mainnet-scan#the-shape-grammar-xcc-shape-v1).
+order is not part of it.
 
 ## What the census found
 
@@ -166,7 +170,7 @@ your code at least once.
 |---|---|
 | `entry-prevalence.json` | per corpus entry, the mainnet occurrences of its rarest token. Of 326 walked entries, 117 hold a token pubnet never produced: those shapes exist only because a local stellar-core emitted them. Shown on each [CAP page](/caps/overview) |
 | the mainnet tier | `make verify-mainnet` in the full CI; replays of real traffic |
-| token census and locate index (not in the repository) | `xdrcheck find --token`, `--class`, `--tag`: the `(ledger, transaction)` pairs that hold a shape, for `xdrcheck data fetch` and `xdrcheck replay --tx` ([Data](/architecture/mainnet-scan)) |
+| token census and locate index (not in the repository) | `xdrcheck find --token`, `--class`, `--tag`: the `(ledger, transaction)` pairs that hold a shape, for `xdrcheck data fetch` and `xdrcheck replay --tx` ([CLI](/reference/cli)) |
 | `evidence/results/mainnet-coverage.json` | the curated corpus holds 2,422 of the 15,186 transaction-level tokens; the mainnet tier holds all 15,186 |
 
 ## What the scan does not claim
@@ -183,4 +187,4 @@ your code at least once.
 - **The per-ledger output is not in the repository.** It is tens of gigabytes. The token table, the covers and the
   locate index are kept outside it; the committed files are the aggregates, and the commands to rebuild them.
 
-Related: [Mainnet scan results](/results/mainnet-scan), [Shapes, tokens and levels](/architecture/mainnet-scan#the-shape-grammar-xcc-shape-v1).
+Related: [Mainnet scan results](/results/mainnet-scan), [CAP coverage](/caps/overview), [Replay](/architecture/replay).

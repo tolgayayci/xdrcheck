@@ -1,0 +1,151 @@
+---
+title: "What core validates"
+sidebarTitle: "Core validation"
+icon: "shield-check"
+description: "Which transaction fields stellar-core checks and which it stores unchecked, why participants come from the meta, and which caps the hardening guide recommends."
+---
+
+For authors of indexers, explorers and other ledger readers. This page is a short form of the indexer-hardening
+guide (`guide/indexer-hardening.mdx`). It states nothing the guide does not state; the guide gives the stellar-core
+source lines for each row. Its statements refer to stellar-core v30.0.0 and have not yet been reviewed by a
+stellar-core or platform engineer ([The guide](/hardening/overview)).
+
+Two rules carry most of it:
+
+1. stellar-core validates some transaction fields and passes others through untouched. A field that core passes
+   through is whatever the submitter put there. Read it as attacker-controlled input.
+2. Work out who a transaction affected from the ledger meta, not from the envelope. The envelope records what the
+   submitter claimed; the meta records what core changed
+   ([what each one holds](/concepts/xdr-and-ledger-data#what-a-reader-receives-for-each-ledger)).
+
+## What being in a ledger proves
+
+| A transaction in a ledger | Proves | Does not prove |
+|---|---|---|
+| With a successful result | It passed the checks again at apply time, and its operations were applied | Anything about the fields core passes through |
+| With a failed result | It passed the stateless checks against the last closed ledger, and it paid a fee | That any operation took effect, or that any account its operations name exists |
+
+Branch on the result code of the transaction, never on the envelope alone. A closed ledger is final: a failed
+transaction stays in it with the result it got.
+
+## Validated and passed-through fields
+
+"Validated" means core rejects a transaction whose field breaks the rule. "Passed through" means core stores the
+value without checking its meaning. The rows are a selection from the guide's field table, which is generated from
+`corpus/fields.yaml`; the ID is the row's ID there. A muxed ID is the 64-bit ID inside a muxed account address
+([Addresses](/concepts/addresses#muxed-accounts)).
+
+| Field | Status | You may assume | You must not assume | Entry to open |
+|---|---|---|---|---|
+| Source account (VF-02a, VF-02b) | the key is validated; the muxed ID is passed through | The key names a real account that authorized the transaction | Anything about the muxed ID: it is an arbitrary 64-bit label and is never checked | `cap-0027/muxed-source-id-above-2-pow-63` |
+| Muxed ID in any source or destination (VF-20) | passed through | The base key identifies the account that was debited or credited | That the ID was validated or changes which account was affected | `cap-0027/muxed-source-and-destination-max-ids` |
+| Fee in the envelope (VF-03) | validated | The fee source could afford the bid when the transaction was applied | That the envelope fee was paid. Use `feeCharged` in the result and the fee changes in the meta | `cap-0005/fee-charged-below-bid` |
+| Fee of the inner transaction of a fee bump (VF-12) | passed through | | That the inner fee was paid. Never add it to fees paid | `cap-0015/fee-bump-soroban-inner-fee-zero-from-p25` |
+| Sequence number (VF-04) | validated | It is consumed for every transaction that got past the stateless checks at apply | That it is consumed when the transaction failed those checks at apply, as with `txTOO_LATE` | `cap-0034/tx-too-late-with-fee-charged` |
+| Signature bytes (VF-08) | validated | Each signature of a transaction that passed the check that every signature is used satisfied one signer | That a signature is a 64-byte ed25519 signature: for a hash-x signer it is the preimage | `classic/hash-x-signer-preimage-0-and-64-bytes` |
+| Signature hint (VF-07b) | passed through | | That a hint identifies a signer: it is 4 bytes and may be XOR-ed with a payload | `cap-0040/tx-authorised-by-signed-payload-signature` |
+| Time bounds (VF-14a) | validated | For `txSUCCESS` and `txFAILED` results the bounds held at the close time | That every transaction in a ledger satisfied its bounds | `cap-0034/tx-too-late-with-fee-charged` |
+| Extra signers (VF-18) | validated | Each extra signer really signed | That extra signers are account signers on the ledger: they are preconditions only | `cap-0040/extra-signer-signed-payload-local` |
+| Memo, all arms (VF-19) | passed through | Memo text is at most 28 bytes | That memo text is UTF-8, printable, free of NUL bytes, or an identifier of anything | `cap-0067/to-muxed-id-text-non-utf8-memo` |
+| Event data `to_muxed_id` (VF-21) | passed through | In events core emits for classic operations and the Stellar Asset Contract, address topics are base forms | That `to_muxed_id` is a u64 or a muxed ID at all: it can be text or 32 bytes taken from the memo | `cap-0067/to-muxed-id-bytes-from-memo-hash` |
+| Payment destination, asset, amount (VF-24a) | validated | A successful payment credited the destination's base account | That the destination of a failed payment was affected or even exists | `classic/amount-above-2-pow-53-stroops` |
+| Path of a path payment (VF-25) | validated | Assets in the path are well formed | That the path describes what was traded: the offers and pools crossed are in the result and the meta | `cap-0038/claim-atoms-pool-and-order-book-mixed` |
+| Asset codes (VF-26) | validated | Asset codes are ASCII alphanumeric | That an issued asset's code differs from `XLM` or `native` | `classic/asset-issued-with-code-xlm` |
+| Offer ID (VF-27) | validated | Offer IDs in ledgers from Protocol 15 are non-negative | That an offer ID fits in a 53-bit float | `classic/manage-offer-id-int64-max-not-found` |
+| Manage-data value (VF-31b) | passed through | The data name is printable ASCII | That the value is text: it is up to 64 arbitrary bytes | `classic/manage-data-binary-value-and-delete.binary-value` |
+| Liquidity-pool assets (VF-32) | validated | Pool assets in a ledger are ordered by their XDR bytes | That they are ordered by strkey text | `cap-0038/pool-issuers-order-by-bytes-not-strkey` |
+| Soroban footprint (VF-43) | validated | Footprint keys are well formed | That a footprint key was read or written, or that the entry exists | `cap-0073/sac-trust-creates-trustline` |
+| Soroban authorization entry (VF-48a, VF-48b) | validated when a `require_auth` call matches it; passed through when none does | A nonce entry created in the meta proves that address authenticated | That an address listed in `auth` authorized anything | `cap-0046/auth-unmatched-entries-succeed` |
+| Authorization invocation tree (VF-49b) | passed through for sub-trees no call exercised | | That the tree describes what was called | `cap-0046/auth-unmatched-entries-succeed` |
+| Contract event (VF-53a, VF-53b) | the emitting contract ID is validated; topics and data are passed through | The event was emitted by the contract named in `contractID` | That a transfer-shaped event moved the asset or touched the accounts it names | `cap-0067/forged-token-event-from-unrelated-contract` |
+
+To see the evidence for a row, open its entry. The `fields` block of the entry's manifest names the rows it
+demonstrates:
+
+```sh
+xdrcheck entry cap-0046/auth-unmatched-entries-succeed          # summary and expected values
+xdrcheck entry --json cap-0046/auth-unmatched-entries-succeed   # the manifest, with its fields block
+```
+
+The full table has one line per field or part of a field, with the check, the source lines, and the result code core
+returns. `make verify-guide OFFLINE=1` fails when it disagrees with the corpus.
+
+## Participants come from the meta
+
+A participant is an account or contract that a transaction affected. The sources that settle it are the fee
+changes, the transaction-level changes before and after the operations, each operation's ledger-entry changes, and
+contract events keyed by the contract that emitted them. Addresses in the envelope are claims.
+
+One transaction where the two disagree: `a11c4fcc…22cb0` in pubnet ledger 30379767, entry
+`cap-0034/tx-too-late-with-fee-charged`.
+
+| | Envelope | Meta and result |
+|---|---|---|
+| Source account | `GC4XWL3F…5GKV`, sequence number 101289369087770714 | The sequence number stays 101289369087770713 |
+| Operation | `CreateAccount` of `GBSDKSFI…CL24` with 49,004,696,112 stroops | No operation result and no ledger-entry change |
+| Fee | A bid of 100 stroops | `feeCharged` 100; the source's balance drops by 100 stroops |
+| Time bounds | `maxTime` 1593508579 | Close time 1593508580; result `txTOO_LATE` |
+
+From the meta, the only participant is the source account, as the fee payer. A reader that takes participants from
+the envelope also records `GBSDKSFI…CL24` and an account creation that did not happen. The entry states both facts
+in its `expect` block (`participants.must_include`, `participants.must_not_include`). The reference extractor
+derives them again from the ledger's own changes:
+
+```sh
+xdrcheck entry cap-0034/tx-too-late-with-fee-charged
+xdrcheck-corpus extract cap-0034/tx-too-late-with-fee-charged
+```
+
+Other cases where the envelope and the meta disagree:
+
+| Case | Envelope says | Meta shows | Entry to open |
+|---|---|---|---|
+| Fee bump | The inner source | The fee debited from the outer fee source | `cap-0015/fee-bump-muxed-fee-source-inner-failed` |
+| Muxed IDs | M addresses | Only base-account entries change | `cap-0027/muxed-source-and-destination-max-ids` |
+| Stellar Asset Contract `trust` | One `InvokeHostFunction`, no `ChangeTrust` | A created trustline, no event | `cap-0073/sac-trust-creates-trustline` |
+| Path payment | Source, destination, path assets | Every crossed offer's seller, trustlines and liquidity pools | `cap-0038/claim-atoms-pool-and-order-book-mixed` |
+| Soroban authorization | Addresses in `auth` | A nonce entry only for each matched entry | `cap-0046/auth-unmatched-entries-succeed` |
+| Failed operation with its own success code | A payment | Nothing: the transaction failed and the operation was rolled back | `classic/failed-tx-operations-rolled-back` |
+
+The replay harness applies the same rule to an indexer: it compares the indexer's stored rows with each entry's
+expected participants ([Replay](/architecture/replay)).
+
+## Caps on depth and size
+
+The guide separates two readers. A reader of ledger meta must never use a cap below what stellar-core admitted into
+the ledger: the ledger is valid, so a lower cap halts ingestion or drops data. A service that reads untrusted input
+before submission may use tighter caps, and must document that it rejects transactions core would accept.
+
+| Cap | Reader of ledger meta | Reader of untrusted input |
+|---|---|---|
+| Decode depth | Set it explicitly, in your decoder's own unit, at or above core's bound. Do not rely on an SDK default | No looser than core's admission limit for the current protocol |
+| Value nesting | No cap of its own: a value in the envelope of a failed transaction can nest deeper than the Soroban host allows | May cap at the host's limit, if documented |
+| Length prefix | Never allocate more than the bytes that remain | The same |
+| Envelope size | No fixed cap | The network's transaction size limit, read from the network configuration: 132,096 bytes on mainnet at ledger 65438008 |
+| Ledger size | No fixed cap: no protocol rule caps it, and pubnet ledger 19967410 alone is 6.47 MB | Not applicable |
+| Counts | From the XDR definitions: 20 signatures, 2 extra signers, 100 operations (1 for Soroban), memo text of 28 bytes | The same |
+
+Further recommendations for meta readers: make application-level recursion iterative or bound it like the decoder;
+never use votable network settings as decode limits; process one ledger at a time; decide in advance what the reader
+does at a bound, and keep the raw XDR so the value can be derived again. A panic, an exit or a silent truncation that
+nobody chose is never acceptable.
+
+The numeric depth bounds, in the unit of each decoder, are in the guide's section "Caps". This site does not repeat
+them. Entries to open: `xdr-strict/length-prefix-exceeds-input.6h` for the length rule,
+`cap-0003/p10-upgrade-liabilities-50936-changes` for the largest ledger, `classic/operations-100-signatures-20` for
+the counts.
+
+## Check your own reader
+
+| Reader | Check | Page |
+|---|---|---|
+| Go code on the go-stellar-sdk ingest packages | `xdrlint` reports code that trusts unvalidated fields, walks recursive values without a bound, or takes participants from the envelope | [Lint Go code](/guides/lint-go), [rules](/reference/lint-rules) |
+| An indexer in any language | Replay the corpus through it and compare its rows with the expected values | [For indexers](/start/for-indexers) |
+| Any reader, by hand | The guide's checklist, one item per check | [Outline and review state](/hardening/outline) |
+
+## Related
+
+- [The guide](/hardening/overview): the files, and how they are kept equal to the corpus.
+- [Verification report](/hardening/verification): how each statement of the guide was checked.
+- [Addresses](/concepts/addresses): muxed IDs, signed payloads and the other address forms.
+- [Questions](/concepts/faq)

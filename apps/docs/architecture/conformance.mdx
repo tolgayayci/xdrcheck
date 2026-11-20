@@ -1,8 +1,12 @@
 ---
 title: "Conformance: the corpus through your SDK"
 sidebarTitle: "Conformance"
-description: "How xdrcheck conform drives one SDK version per column, what one cell checks at each level, how known divergences are declared and when a run fails, and how a defect found in one SDK becomes a check on the others."
+icon: "table"
+description: "How the conformance runner drives one SDK version per column, what one cell checks at each level, and when a run fails."
 ---
+
+This page explains how the conformance runner drives one SDK version per column, what one cell checks at each
+level, and when a run fails.
 
 `xdrcheck conform` puts every corpus entry through every pinned SDK version and writes a matrix
 `entry × SDK@version × level`. Each cell is judged against the manifest, never against another SDK. The
@@ -133,7 +137,8 @@ Evidence: `evidence/js-1766/`, `evidence/js-1785/`, `evidence/js-1789/`.
 
 Entries are SDK-neutral. When a defect is found in one SDK, its entry runs on every column of every family on the
 next run. `findings/SIBLINGS.md` records the result per defect class and family, read from executed cells
-(34 classes × 9 families: 38 reproduce, 43 not affected, the rest not run or outside the runs).
+(34 classes × 9 families: 38 reproduce, 43 not affected, the rest not run, not applicable or shown by other means).
+How the matrix is built: [Findings pipeline](/architecture/findings#the-sibling-matrix).
 
 Example, liquidity-pool asset order compared as strkey text instead of bytes:
 

@@ -1,96 +1,353 @@
 ---
-title: "Architecture overview"
+title: "Technical overview"
 sidebarTitle: "Overview"
-description: "The problem XDRCheck solves in Stellar terms, the design decisions and why they matter to an SDK maintainer or an indexer operator, and how the parts fit together."
+icon: "map"
+description: "One page that explains every part of XDRCheck, how the parts connect, and which page holds the detail of each."
 ---
 
-XDRCheck tests two kinds of Stellar software against the same set of ledger bytes: **SDKs and XDR libraries**
-(js-stellar-sdk, go-stellar-sdk, rs-stellar-xdr, py-stellar-base) and **indexers** (wallet-backend, stellar-etl,
-Horizon, and any third-party indexer). This tab explains how it works, step by step, so you can judge what a
-passing or failing result means for your code.
+This page explains the whole kit in one place: each part, how the parts connect, and where the detail is.
 
-## The problem in Stellar terms
+XDRCheck is a test kit for software that reads the Stellar ledger. It tests two kinds of reader against the same
+bytes: **SDKs and XDR libraries** (js-stellar-sdk, go-stellar-sdk, rs-stellar-xdr, py-stellar-base) and
+**indexers**, the programs that read every closed ledger and store rows from it (wallet-backend, stellar-etl,
+Horizon, or your own).
 
-A ledger reader meets three kinds of input that ordinary test fixtures rarely contain.
+Four terms are used on every page of this tab:
 
-1. **Fields stellar-core passes through without checking.** stellar-core validates an envelope in stages
-   (`TransactionFrame::commonValidPreSeqNum`, `commonValid`, each operation's `doCheckValid`), but not every field.
-   `corpus/fields.yaml` lists 53 envelope and event fields: 35 validated, 14 partially validated, 4 passed through.
-   The four passed through are the memo (any arm, any bytes), the `id` of a `KEY_TYPE_MUXED_ED25519`
-   `MuxedAccount`, the `fee` of the inner transaction of a fee bump, and the `to_muxed_id` of CAP-67 classic events.
-   A reader that stores a memo as SQL text, or treats a muxed ID as meaningful, trusts input nobody checked.
-2. **Envelope versus meta.** The `TransactionEnvelope` states what the submitter asked for. The
-   `TransactionMeta` (`LedgerEntryChanges` per operation, fee processing, contract events) states what happened.
-   A failed transaction still lands in the ledger with its envelope. A `SorobanAuthorizationEntry` can name an
-   address that authorized nothing: an unmatched entry is never authenticated and its nonce is not consumed
-   (`corpus/fields.yaml`, VF-48). Participants and balances must come from the meta.
-3. **Rare shapes.** Protocol-gated union arms and edge values: a `SIGNER_KEY_TYPE_ED25519_SIGNED_PAYLOAD` signer,
-   `TransactionMeta` v2, v3 and v4 in one history, fee bumps whose inner transaction fails, `SCV_MAP` keys that
-   collide after native conversion. Of the 326 corpus entries the mainnet scan could walk, 117 hold a shape token
-   that never occurs in pubnet ledgers 2 to 65,505,999 (`evidence/mainnet-scan/entry-prevalence.json`, `totals`).
-   A reader can run on mainnet for years before meeting one, then halt on it.
-
-## Design decisions, and why they matter to you
-
-| # | Decision | What it means for you |
-|---|---|---|
-| 1 | **Corpus bytes come from stellar-core or the network.** Each entry is a `LedgerCloseMeta` (or a smaller XDR value) emitted by stellar-core 30.0.0 on a local standalone node, imported from stellar-core's own `--check-lcm` goldens, or copied unmodified from the public SEP-54 data lake. Bytes built by hand are marked `synthetic: true` with the reason | A failure is a failure on bytes your reader can receive. The corpus is not a fuzzer |
-| 2 | **Expected values never come from a reader under test.** They come from the bytes (rs-stellar-xdr 30.0.0, the oracle), from hand-written pinpoints, and from a reference extractor that reads `LedgerEntryChanges` and consensus events, never the envelope | Your SDK or indexer cannot pass by agreeing with itself or with another SDK. A driver or adapter never sees the expected values |
-| 3 | **Your indexer runs unmodified, through an input it already reads.** The harness serves ledgers as a SEP-54 (Galexie) data lake on disk or behind an S3-compatible store, or as a mock stellar-rpc `getLedgers` | No test hook in your code. The same ledgers reach your indexer the way production ledgers do |
-| 4 | **Verdicts are computed from what your indexer stored.** An adapter reads your database rows or exported files back and reports them as neutral observations. The harness decodes stored addresses itself and compares exact values. Log text is never parsed | A wrong row is caught even when your indexer logs nothing. A crash, a halt and a silent drop are told apart |
-| 5 | **Known defects are declared data.** An entry names the target, the version range and the expected outcome of each known divergence. Inside the range the outcome must be observed; outside it the entry must pass | Your CI fails on a new divergence, and also when a declared defect stops reproducing. A fix is confirmed, not assumed |
-| 6 | **Everything is pinned, and every check runs offline after one fetch.** `pins.toml` names every version and image digest; `make fetch` downloads them once; `OFFLINE=1` runs a check in a network namespace with only loopback | A run is reproducible. A check that needs the network fails instead of fetching silently |
-| 7 | **One `make` target per check, and the same target in CI.** | You can run locally exactly what CI runs, and read its report |
-| 8 | **Unknown input fails closed.** The oracle refuses a ledger above protocol 30 or a `LedgerCloseMeta` arm above v2; drivers report an unknown arm as `union_arm_undeclared` | A protocol upgrade shows up as a named failure, never as a silently skipped entry |
+| Term | Meaning |
+|---|---|
+| XDR | External Data Representation, the binary encoding Stellar uses for transactions, results and ledger data |
+| `LedgerCloseMeta` | the XDR value stellar-core emits for each closed ledger: the header, the transaction set, and for each transaction its result and its meta (ledger-entry changes and events) |
+| CAP | Core Advancement Proposal, a numbered change to the Stellar protocol. A CAP can add union arms, enum values or meta versions that a reader must handle |
+| shape | one structural pattern in ledger data, for example a signer of type `SIGNER_KEY_TYPE_ED25519_SIGNED_PAYLOAD` (CAP-40) or a fee bump whose inner transaction fails |
 
 ## How the parts fit together
 
 ```mermaid
 flowchart LR
-  CORE["stellar-core 30.0.0<br/>local runs and goldens"] --> CORPUS[("corpus/<br/>manifest + blobs")]
-  LAKE["public data lake<br/>pubnet, testnet"] --> CORPUS
-  LAKE --> SCAN["mainnet scan<br/>ledgers 2 to 65,505,999"]
-  SCAN --> TIER[("mainnet tier<br/>6,158 transactions")]
-  ORACLE["oracle<br/>rs-stellar-xdr 30.0.0"] --> CORPUS
-  CORPUS --> REPLAY["xdrcheck replay"]
-  REPLAY --> ADP["adapter"] --> IDX["your indexer<br/>unmodified"]
-  CORPUS --> CONF["xdrcheck conform"]
-  CONF --> DRV["driver"] --> SDK["your SDK<br/>at a pinned version"]
-  LINT["xdrlint"] --> GO["your Go ingestion code"]
-  CORPUS --> GUIDE["hardening guide<br/>field table"]
+  CORPUS[("corpus")] --> REPLAY["replay harness"]
+  CORPUS --> CONFORM["SDK conformance runner"]
+  LINT["linter"] --> ROWS["failure rows"]
+  REPLAY --> ROWS
+  CONFORM --> ROWS
+  ROWS --> FINDINGS["findings"]
+  FINDINGS --> ISSUES["upstream issues"]
+  CORPUS --> GUIDE["hardening guide"]
 ```
 
-Every arrow out of `corpus/` reads the same manifest (`corpus/manifest/<group>/<entry>.json`) and the same
-content-addressed blobs (`corpus/blobs/<aa>/<sha256>.xdr`). No tool keeps a private list of cases.
+The **corpus** is a set of rare but valid ledger shapes, one entry per shape, each with the values a correct reader
+must produce. Three tools use it or the rules behind it:
 
-## If you maintain an SDK or an XDR library
+- The **replay harness** (`xdrcheck replay`) feeds corpus ledgers to an unmodified indexer and judges the rows it stored.
+- The **conformance runner** (`xdrcheck conform`) puts every entry through every pinned SDK version.
+- The **linter** (`xdrlint`) reads Go ingestion code and reports the patterns that cause the failures replay finds.
 
-1. [The corpus](/architecture/corpus): where each entry's bytes come from, and how its expected values are
-   established without your SDK.
-2. [Conformance](/architecture/conformance): what one cell checks (decode, re-encode, identical bytes, values,
-   strkeys), how a known divergence is declared, and when a run fails.
-3. [CI](/architecture/ci): the loaders and the expected-failure list for your own CI.
-4. [Protocol upgrades](/architecture/protocol-upgrades): how a new protocol's shapes reach your CI before the
-   mainnet vote.
+Every failing result is a row in a report. Each row is tied to a finding under `findings/`, and each finding to an
+upstream issue or a ruling. The **hardening guide** states the rules for indexer authors, with a field table
+generated from the corpus. The corpus holds 446 entries (`corpus/COVERAGE.md`). The public tree holds 92 findings: 48 filed upstream by this
+kit, 34 already known upstream, 10 ruled not a defect (`evidence/results/findings.json`, `totals`).
 
-## If you run or write an indexer
+## Corpus and generator
 
-1. [Replay](/architecture/replay): how ledgers reach your indexer, what the adapter does, and how a verdict is
-   computed from the rows you stored.
-2. [Mainnet scan](/architecture/mainnet-scan): what the scan of all pubnet history says about real traffic, and
-   the 6,158-transaction tier that holds every transaction-level shape token.
-3. [Linter and guide](/architecture/linter-and-guide): what `xdrlint` catches in Go code built on go-stellar-sdk,
-   and what the hardening guide tells you to trust.
-4. [CI](/architecture/ci): wiring replay and the linter into your pipeline.
+```mermaid
+flowchart LR
+  HIST["network history, public data lake"] --> CAPTURE["capture"]
+  CORE["local stellar-core scenarios"] --> GEN["generator"]
+  GOLD["stellar-core golden files"] --> IMPORT["import"]
+  RECIPE["synthetic recipes, marked"] --> SYNTH["synth"]
+  CAPTURE --> ENTRY[("manifest entry and blob")]
+  GEN --> ENTRY
+  IMPORT --> ENTRY
+  SYNTH --> ENTRY
+```
 
-[Stellar integration](/architecture/stellar-integration) lists every Stellar component the kit consumes, its pinned
-version, and what the kit gives back.
+An entry's bytes come from one of these sources (`corpus/index.json`, field `sources`; an entry can have variants
+from more than one):
+
+| Source | Entries | What it is |
+|---|---|---|
+| `history` | 141 | one object copied unmodified from the public SEP-54 data lake (pubnet or testnet) |
+| `local-core` | 138 | a scenario run on the pinned stellar-core 30.0.0 as a private standalone node |
+| `core-golden` | 53 | one frame of a stellar-core `--check-lcm` golden file at tag v30.0.0 |
+| `synthetic` | 33 | built from a recipe, with the reason stellar-core does not emit it; the entry carries `synthetic: true` |
+| `contract-code`, `history-archive` | 3, 2 | a contract's Wasm read from the network; a record cut from a history-archive bucket file |
+
+A **manifest entry** (`corpus/manifest/<group>/<entry>.json`) holds the entry's `id`, its `caps`, the protocol that
+introduced the shape (`protocol.introduced`), one `source` per variant, the `synthetic` flag, and `expect`: the
+decoded values and facts a correct reader must produce. The bytes are content-addressed files under `corpus/blobs/`.
+
+**Generation is reproducible.** Every `local-core` scenario runs on both the testnet and the pubnet passphrase from
+the same seed labels; 138 entries have such twins. `make verify-generate` regenerates the scenarios with the network
+cut and requires equal header hashes, transaction hashes and results, and equal bytes after stellar-core's own
+golden normalisation.
+
+Details: [Corpus](/architecture/corpus), [Manifest format](/reference/manifest).
+
+## Ground truth
+
+```mermaid
+flowchart TD
+  BLOB["entry bytes"] --> RT["round trip through rs-stellar-xdr 30.0.0"]
+  BLOB --> GOLDEN["agreement with stellar-core goldens"]
+  BLOB --> EXTRACT["reference extractor"]
+  RT --> DECODED["decoded value, SEP-51 JSON"]
+  EXTRACT --> FACTS["expected facts"]
+  DECODED --> EXPECT[("expect")]
+  FACTS --> EXPECT
+```
+
+Expected values never come from a reader under test. `make verify-corpus` establishes them in three ways:
+
+1. **Round trip.** Every positive entry decodes with explicit limits in rs-stellar-xdr 30.0.0 and re-encodes to the
+   same bytes; every negative entry is refused for its declared reason. The decoded value is stored as SEP-51
+   XDR-JSON.
+2. **Golden agreement.** stellar-core checks its own `LedgerCloseMeta` goldens with `--check-lcm`. Imported golden
+   entries must equal the named frame of the golden file byte for byte. A `local-core` entry is compared by shape
+   with the golden transactions: 20 of 138 match one, 118 do not (`corpus/mirrors.json`, `counts`). The pinned
+   stellar-core test binary re-checks the golden tree with `--check-lcm` in `make verify-goldens-nightly`.
+3. **Reference extractor.** `xdrcheck-corpus extract` derives participants, state changes and movements from
+   ledger-entry changes and consensus events, never from the envelope. Every fact in `expect` must be one it derives.
+
+Details: [Corpus: expected values](/architecture/corpus#how-expected-values-are-established).
+
+## Replay harness
+
+```mermaid
+flowchart LR
+  CORPUS[("corpus ledgers")] --> SERVER["ledger server"]
+  SERVER --> INDEXER["indexer, unmodified"]
+  INDEXER --> DB[("stored rows")]
+  DB --> ADAPTER["adapter"]
+  ADAPTER --> MATCH["matcher"]
+  EXPECT[("expect")] --> MATCH
+  MATCH --> CLASS["outcome class"]
+```
+
+**Adapter interface.** An adapter is a small program that knows one indexer. It speaks `xcc.adapter/1`, one JSON
+message per line on stdio, with five methods: `describe`, `prepare`, `ingest`, `observe`, `teardown`. It reports
+what the indexer stored and never judges.
+
+**Ledger delivery.** The repository supports three inputs. `xdrcheck` does not serve the layout over a GCS API; the
+stellar-etl adapter runs its own GCS emulator over `sep54-dir`.
+
+| Input | What the indexer reads |
+|---|---|
+| `sep54-dir` | a directory in the SEP-54 data-lake layout, one zstd `LedgerCloseMetaBatch` per ledger |
+| `sep54-s3` | the same layout behind an S3 API (a pinned SeaweedFS image) |
+| `rpc` | a mock stellar-rpc on loopback that answers `getHealth` and `getLedgers` |
+
+**Outcome per entry.**
+
+| Class | Sub-classes |
+|---|---|
+| `pass` | every expected fact matched, at least one of them positive |
+| `mishandled` | `crash`, `hang`, `halt`, `wrong_value` |
+| `dropped` | `silent`, `partial`, `refused` (a declared gate, confirmed by the manifest, nothing written) |
+| no result about the indexer | `not_applicable`, `not_reached`, `harness_fault`, `flaky` |
+
+**Rigs.** wallet-backend (the reference adapter, built at any commit against a fresh TimescaleDB), stellar-etl
+(its export commands), and Horizon (its own `db reingest range` over a lake directory). On wallet-backend at
+`f0c00cf5`, 319 entries run per input: 302 `pass`, 7 `mishandled`, 5 `dropped`, 5 not run
+(`evidence/results/replay-summary.json`).
+
+Details: [Replay](/architecture/replay), [Adapter protocol](/reference/adapter-protocol).
+
+## SDK conformance
+
+```mermaid
+flowchart LR
+  ENTRY[("corpus entry")] --> RUNNER["xdrcheck conform"]
+  RUNNER --> DRIVER["driver, one SDK version"]
+  DRIVER --> ANSWER["what the SDK did"]
+  ANSWER --> VERDICT["verdict against the manifest"]
+  VERDICT --> MATRIX["divergence matrix"]
+  MATRIX --> SIBLINGS["sibling check across SDK families"]
+```
+
+A **driver** wraps one SDK at one version and speaks `xcc.driver/1`. It never sees expected values. Each driver is a
+**column** (`drivers/sets.toml`):
+
+| Set | Columns |
+|---|---|
+| `required` | js-stellar-sdk 17.4.0, go-stellar-sdk v0.9.0, rs-stellar-xdr 30.0.0 under two decode profiles |
+| `pr`, 16 columns | `required`, plus js-stellar-sdk 17.2.0, 17.2.1, 17.3.0; go-stellar-sdk v0.7.1, v0.7.2, v0.7.3, v0.8.0; rs-stellar-xdr 28.0.0 and 28.0.1 under both profiles; py-stellar-base 17.0.1 |
+| `public`, 21 columns | `pr`, plus js-stellar-sdk 16.3.0, 16.3.1, 16.4.1; py-stellar-base 17.0.0; stellar-core 30.0.0 as a decoder |
+
+- **Levels.** L0 decode and re-encode to identical bytes; L1 the SDK's transaction layer; L2 decoded values against
+  the entry's pinpoints; L3 native conversion; L4 building or encoding through the SDK's API.
+- **Divergence matrix.** The output is `entry × column × level`. A cell that differs from the manifest diverges
+  from the network. An entry declares each known divergence with its target, version range and expected outcome; a
+  run fails on an undeclared divergence and on a declared one that no longer shows.
+- **Sibling check.** A defect found in one SDK is run on every other SDK family: 34 defect classes across 9
+  families, 38 cells reproduce (`evidence/results/sibling-matrix.json`, `totals`).
+
+Details: [Conformance](/architecture/conformance), [Driver protocol](/reference/driver-protocol).
+
+## Linter
+
+```mermaid
+flowchart LR
+  CODE["Go ingestion code"] --> XDRLINT["xdrlint"]
+  RULES["rule families XDR1xx to XDR4xx"] --> XDRLINT
+  XDRLINT --> REPORTS["reports"]
+  REPORTS --> EXPECTED["frozen expected list"]
+```
+
+`xdrlint` analyses Go code built on go-stellar-sdk. Its first three rule families are the three ingestion mistakes:
+
+| Family | Mistake |
+|---|---|
+| XDR1xx | trusting fields stellar-core never validated |
+| XDR2xx | walking self-referential structures with no depth or size bound |
+| XDR3xx | deriving participants from the envelope instead of the meta |
+| XDR4xx | assumptions about the ledger's form, ranges and outcomes |
+
+**Fixtures.** Every rule has seeded violations and compliant code under `lint/testdata/`; `make lint-fixtures`
+requires each rule to report exactly the seeded violations.
+
+**Current pipelines.** `make lint-wallet-backend` runs the linter on wallet-backend at `f0c00cf5` and compares the
+result with a frozen list: 3 reports, each suppressed with a reason. `make lint-stellar-etl` does the same for
+stellar-etl at `7e3fc9af`. `make lint-before-after` shows each rule reporting at the commit before a wallet-backend
+fix and silent after it.
+
+Details: [Linter and guide](/architecture/linter-and-guide), [xdrlint rules](/reference/lint-rules).
+
+## Hardening guide
+
+```mermaid
+flowchart LR
+  FIELDS["corpus/fields.yaml"] --> TABLE["field table"]
+  MANIFEST["corpus manifest"] --> TABLE
+  SOURCES["stellar-core code, CAPs and SEPs, corpus entries, probes"] --> CLAIMS["guide/claims.yaml"]
+  TABLE --> GUIDE["indexer-hardening guide"]
+  CLAIMS --> GUIDE
+  RULES["xdrlint rule registry"] --> CHECKLIST["checklist"]
+  CHECKLIST --> GUIDE
+```
+
+`guide/indexer-hardening.mdx` tells an indexer author what to trust in a ledger. It covers:
+
+- **Validated versus unvalidated fields**: one row per field, with what stellar-core checks and what a reader may assume.
+- **Depth and size caps** for recursive values.
+- **Participants from meta**, not from the envelope.
+- **Muxed and signed-payload addresses.** A muxed account is an ed25519 key plus a 64-bit ID; stellar-core uses
+  only the key and accepts any ID. A signed-payload signer is an ed25519 key plus a payload of 1 to 64 bytes (CAP-40).
+- **A checklist**, one item per linter rule, for indexers in any language.
+
+**Each claim is tied to a source.** Every normative sentence carries a claim tag that resolves to a record in
+`guide/claims.yaml`: 462 claims, each citing stellar-core code at a pinned commit, a CAP or SEP section, a corpus
+entry or an executed probe. `make verify-guide` fails when the field table differs from the one generated from
+`corpus/fields.yaml` and the manifest. The guide has not yet been reviewed by a stellar-core or platform engineer.
+
+Details: [Linter and guide](/architecture/linter-and-guide#the-indexer-hardening-guide),
+[Hardening guide](/hardening/overview), [Verification](/hardening/verification).
+
+## Findings pipeline
+
+```mermaid
+flowchart LR
+  ROW["failure row"] --> FINDING["finding: severity, CAP, minimal entry"]
+  FINDING --> SEARCH["upstream search"]
+  SEARCH --> FILED["filed: new upstream issue"]
+  SEARCH --> DUP["duplicate-of: known upstream"]
+  FINDING --> NAD["not-a-defect: ruling with a reason"]
+  FILED --> TRACK["state tracking"]
+  DUP --> TRACK
+```
+
+A failure row is one failing result in a tool's report. A finding (`findings/<id>/finding.json`) is one defect in
+one project: its severity, its CAPs, the corpus entries that demonstrate it (the first is the minimal one), the
+reproduction and the upstream state.
+
+A finding ends in one of three states: `filed` (this kit opened the upstream issue), `duplicate-of` (the defect was
+already reported or fixed upstream) or `not-a-defect` (a ruling with the reviewer's reason). The findings check
+(`make verify-findings`) fails when a failure row has no finding or a finding has no row.
+
+Details: [Findings pipeline](/architecture/findings), [Findings](/results/findings).
+
+## Mainnet scan and the mainnet tier
+
+```mermaid
+flowchart LR
+  LAKE["pubnet data lake, ledgers 2 to 65,505,999"] --> SCAN["scan: decode, check, tokenise"]
+  SCAN --> CENSUS["token census"]
+  CENSUS --> COVER["greedy cover"]
+  COVER --> TIER[("mainnet tier")]
+  CENSUS --> PREVALENCE["per-entry prevalence"]
+```
+
+The scan read 65,505,998 pubnet ledgers (10,869,626,939 transactions), checked each ledger's decode, re-encode,
+header hash and hash chain, and reduced every transaction to **shape tokens**: strings that record an arm, an
+optional state, a length class or an entry-change pattern, without any ledger data.
+
+The **mainnet tier** (`corpus/mainnet/`) lists 6,158 pubnet transactions that together hold all 15,186
+transaction-level tokens. `make verify-mainnet` re-cuts and re-tokenises them from their lake objects. The curated
+corpus holds 2,422 of those tokens (`evidence/results/mainnet-coverage.json`), and 117 of its 326 walked entries
+hold a token pubnet never produced (`evidence/mainnet-scan/entry-prevalence.json`, `totals`).
+
+Details: [Mainnet scan](/architecture/mainnet-scan), [Scan results](/results/mainnet-scan).
+
+## CI tiers and offline runs
+
+```mermaid
+flowchart LR
+  FETCH["make fetch, the one networked step"] --> CACHE[("pinned caches")]
+  CACHE --> PR["pull-request CI, pr.yml"]
+  CACHE --> FULL["full CI, full.yml"]
+  PR --> TARGETS["one make target per job, OFFLINE=1"]
+  FULL --> TARGETS
+```
+
+Every check is one `make` target, and CI runs that same target. `pins.toml` names every version; `make fetch`
+downloads everything once, checked by hash; `OFFLINE=1` then runs a check in a network namespace with only loopback.
+
+| Tier | Trigger | Scope |
+|---|---|---|
+| Pull-request CI (`pr.yml`, `make verify-pr`) | every pull request and branch push | static, corpus, generation, guide and coverage checks at full size; replay, conformance and linter in reduced form |
+| Full CI (`full.yml`, `make verify-acceptance`) | by hand and on release tags | every check at full size, plus the whole corpus through wallet-backend, the `public` column set and the mainnet tier |
+
+Details: [CI](/architecture/ci), [CI timings](/reference/ci-timings).
+
+## Protocol 30, the next protocol and maintenance
+
+```mermaid
+flowchart LR
+  WATCH["watch unreleased XDR"] --> NEXT["next channel, release candidates"]
+  NEXT --> PINS["move pins at the stable release"]
+  PINS --> ENTRIES["new entries on both passphrases"]
+  ENTRIES --> GATES["raise gates, stable release"]
+```
+
+- **Protocol 30 coverage.** The three Protocol 30 CAPs that change what a reader sees each have entries
+  (`corpus/COVERAGE.md`): CAP-84 muxed contract addresses (16), CAP-87 ML-DSA host functions (2), CAP-88
+  millisecond-resolution close times (7).
+- **Gates.** `pins.toml` sets `protocol.max_supported = 30`. The oracle refuses a ledger above it, and drivers
+  report an unknown arm as `union_arm_undeclared`, so a new protocol shows up as a named failure.
+- **Next-protocol channel.** A `-next` release (`31.0.0-rc.N`) carries the next protocol's shapes before the
+  protocol ships; the stable channel leaves them out until `max_supported` is raised.
+- **Maintenance.** `docs/maintenance.md` commits to one year from the production release, and in any case through
+  the first protocol upgrade after it.
+
+Details: [Protocol upgrades](/architecture/protocol-upgrades), [Maintain the kit](/guides/maintain-kit).
+
+## Security model
+
+```mermaid
+flowchart TD
+  ASSET1["corpus bytes and expected values"] --> CONTROL1["content hashes, regeneration, immutable releases"]
+  ASSET2["what downstream CI executes"] --> CONTROL2["pinned versions, hashed downloads, no secrets in workflows"]
+  ASSET3["defects not yet reported upstream"] --> CONTROL3["report first, publish after"]
+```
+
+The kit is offline: command-line tools, data files and CI workflows, with no service and no user data. The threat
+model lists each threat, its control and where it is implemented, and the risk that remains.
+
+Details: [Threat model](/reference/threat-model), [Stellar integration](/architecture/stellar-integration).
 
 ## Limits stated up front
 
 - **The guide has not been reviewed** by a stellar-core or platform engineer. All 462 claims in
   `guide/claims.yaml` are `reviewer_status: unreviewed`.
-- **Golden agreement is of shape, and partial.** Of 138 local-core entries, 20 match a transaction in stellar-core's
-  golden set; 118 do not (`corpus/mirrors.json`, `counts`).
+- **Golden agreement is of shape, and partial.** 20 of 138 `local-core` entries match a golden transaction.
 - **Horizon is not pinned.** The Horizon rig builds whatever `--version` names; `pins.toml` has no Horizon entry.
 - **Pipelines were not replayed over all of mainnet.** The scan computes shapes and integrity checks only.

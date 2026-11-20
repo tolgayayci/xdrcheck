@@ -1,13 +1,15 @@
 ---
 title: "Protocol upgrades and maintenance"
 sidebarTitle: "Protocol upgrades"
-description: "Protocol 30 coverage, how the kit fails loudly on a newer protocol, how it sees an upgrade coming, the upgrade procedure step by step, and what an SDK or an indexer gets at each upgrade."
+icon: "circle-arrow-up"
+description: "What the kit covers at Protocol 30, how it fails on a newer protocol, and the procedure that turns a new protocol into corpus entries before the mainnet vote."
 ---
 
+This page explains what the kit covers at Protocol 30, how it fails when a newer protocol appears, how it sees an
+upgrade coming, and the procedure that turns a new protocol into corpus entries before the mainnet vote.
+
 Each protocol upgrade adds union arms, enum values and meta versions that your SDK must decode and your indexer must
-store correctly. This page covers what the kit covers at Protocol 30, how it fails when a newer protocol appears,
-how it sees an upgrade coming, and the procedure that turns a new protocol into corpus entries before the mainnet
-vote. Every command: [Maintenance and protocol upgrades](/guides/maintain-kit).
+store correctly. Every command: [Maintenance and protocol upgrades](/guides/maintain-kit).
 
 ## Protocol 30 today
 
@@ -85,13 +87,13 @@ All of these run by hand. None has a schedule and none gates a pull request.
 Each step has an output that can be inspected.
 
 ```mermaid
-flowchart LR
-  W["0 · Watch<br/>xdr watch · schedule events"] --> F["1 · Shape freeze<br/>decode next goldens · vnext core · SDK diff"]
-  F --> P["2–3 · Stable core release<br/>move pins · import goldens"]
-  P --> N["4–5 · New shapes<br/>CAP rows · scenarios on both passphrases"]
-  N --> T["6–8 · Testnet upgrade<br/>capture ledgers · guide · linter"]
-  T --> R["9 · Before mainnet vote<br/>readiness matrix"]
-  R --> X["10 · After the vote<br/>raise gates · release 31.0.0"]
+flowchart TD
+  W["0 Watch: xdr watch, schedule events"] --> F["1 Shape freeze: decode next goldens, next-protocol core, SDK diff"]
+  F --> P["2 to 3 Stable core release: move pins, import goldens"]
+  P --> N["4 to 5 New shapes: CAP rows, scenarios on both passphrases"]
+  N --> T["6 to 8 Testnet upgrade: capture ledgers, guide, linter"]
+  T --> R["9 Before the mainnet vote: readiness matrix"]
+  R --> X["10 After the vote: raise gates, release 31.0.0"]
 ```
 
 | Step | When | Action | Output |

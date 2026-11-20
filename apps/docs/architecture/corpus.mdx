@@ -1,12 +1,29 @@
 ---
 title: "The corpus: bytes and expected values"
 sidebarTitle: "Corpus"
-description: "Where every corpus byte comes from, how expected values are established without any reader under test, the round-trip and golden checks, and one real entry walked through."
+icon: "database"
+description: "Where every corpus byte comes from and how each entry's expected values are established and checked without any reader under test."
 ---
+
+This page explains where every corpus byte comes from and how each entry's expected values are established and
+checked without any reader under test.
 
 The corpus is a directory of plain files: one JSON manifest per entry under `corpus/manifest/`, the XDR bytes
 under `corpus/blobs/`, the decoded values under `corpus/decoded/`. Any SDK's or indexer's CI can read it without
 this kit's tools. Counts on this page are from `corpus/COVERAGE.md` and `corpus/index.json` (corpus `30.0.0-dev`).
+
+```mermaid
+flowchart LR
+  LAKE["public data lake object"] --> BLOB[("blob, named by its sha256")]
+  CORE["local stellar-core scenario"] --> BLOB
+  GOLD["stellar-core golden frame"] --> BLOB
+  RECIPE["recipe, marked synthetic"] --> BLOB
+  BLOB --> VERIFY["xdrcheck-corpus verify"]
+  AUTHOR["author writes expect"] --> MANIFEST[("manifest entry")]
+  VERIFY --> SIDECAR[("decoded sidecar, SEP-51 JSON")]
+  VERIFY --> MANIFEST
+  MANIFEST --> TOOLS["replay, conform, guide table, coverage"]
+```
 
 ## Entries
 
@@ -135,13 +152,14 @@ The round trip can be repeated with the stock `stellar-xdr` CLI at 30.0.0
 ## Agreement with stellar-core's goldens
 
 stellar-core checks its own `LedgerCloseMeta` goldens (`test-lcm-current`) in CI with `--check-lcm`.
-`--check-lcm` re-runs core's own tests and cannot check anyone else's bytes, so agreement is three mechanical
+`--check-lcm` re-runs core's own tests and cannot check anyone else's bytes, so agreement is four mechanical
 checks:
 
 | Check | Statement | Where it runs |
 |---|---|---|
 | Pinned import | every `core-golden` variant's bytes equal the named frame of the named golden file at v30.0.0, byte for byte | `make verify-corpus` |
 | Emission proof | the pinned stellar-core test image runs core's `[tx]` tests with `--rng-seed 12345 --check-lcm` against the cached golden tree, with no network, and accepts it | `make verify-goldens-nightly` (manual nightly workflow) |
+| Decoder consistency | every golden decodes and re-encodes byte-exactly in the oracle and in every SDK driver | `make verify-corpus` for the curated tier; `make verify-goldens-nightly` for the whole golden set |
 | Golden mirror | a local-core entry whose focus transaction has the shape of a golden transaction is compared with it | `make verify-corpus` (needs the golden cache) |
 
 **The golden mirror, exactly.** For each local-core variant, two measures of the focus transaction are recomputed

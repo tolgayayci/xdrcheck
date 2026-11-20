@@ -1,0 +1,203 @@
+---
+title: "Shapes and CAPs"
+sidebarTitle: "Shapes and CAPs"
+icon: "shapes"
+description: "What a shape is, how the kit names shapes, how a CAP or a protocol version adds them, how entries are tagged, and how to find the entries of a CAP."
+---
+
+For readers of the corpus and of the mainnet scan. After this page you can read the tags of an entry, read a shape
+token, and list the entries that belong to a CAP.
+
+## What a shape is
+
+A shape is the structure of a piece of ledger data with its values left out: which union arms it takes, which
+optional fields are present, which enum values it holds, how long its lists are, how its recursive values nest, and
+which ledger entries it changed. Two payments that differ only in the keys of their accounts have the same shape.
+A payment whose source is a muxed account (an account address that carries a 64-bit ID) has another one.
+
+Readers break on shapes they did not expect: an arm with no branch, an optional field assumed present, a list longer
+than the column that stores it, a value outside the range of the type that holds it. A corpus entry holds one such
+pattern with the values a correct reader produces from it. The mainnet scan counts how often each shape occurs.
+
+## How the kit names shapes
+
+The kit uses two vocabularies.
+
+**Shape tags** are the `shapes` list of a corpus entry: short words chosen by the entry's author, in kebab case.
+They are for people and for search. `xdrcheck entry <id>` prints them:
+
+```text
+cap-0027/muxed-source-id-above-2-pow-63
+  Path payment whose muxed transaction source has a muxed ID above 2^63
+
+kind        ledger
+CAPs        CAP-0027
+protocol    introduced 13
+validity    valid
+synthetic   false
+sources     history
+shapes      muxed-transaction-source, muxed-id-above-2-pow-63, path-payment-strict-receive, offers-and-pools-crossed
+```
+
+**Shape tokens** are what the mainnet scan computes from the bytes, with the grammar `xcc.shape/v1`. A token is one
+string `<kind>|<class>|<body>`. No token holds a key, an address, an amount or a contract ID; the only ledger text
+in tokens comes from two closed lists, of event names and of data-map keys. Real tokens, each the rarest token of a
+corpus entry:
+
+```text
+A|arm|res.result::txTOO_LATE
+L|len|env.ENVELOPE_TYPE_TX.tx.cond.PRECOND_V2.extraSigners#len=1
+V|u64band|env.ENVELOPE_TYPE_TX.tx.sourceAccount.KEY_TYPE_MUXED_ED25519.id#u64=>=2^63
+V|utf8|env.ENVELOPE_TYPE_TX.tx.memo.MEMO_TEXT#non-utf8
+D|upd|op:BUMP_SEQUENCE#upd:ACCOUNT:{data.ACCOUNT.seqNum}
+```
+
+| Kind | What the token records |
+|---|---|
+| `T` | A union arm, an enum value or an optional state, wherever it occurs |
+| `A`, `O`, `E` | An arm, an optional state or an enum value at one field path |
+| `L`, `V` | A length class, or a value class such as the band a muxed ID falls in |
+| `S`, `K` | A summary of a recursive value (`ScVal`, authorization invocations, claim predicates); the arms of a list of unions |
+| `X` | The signature of a contract event |
+| `D` | A ledger-entry change and the fields it changed |
+| `R` | What an operation asked for against what the meta shows |
+
+The scan cuts each transaction into components: `E` the envelope without its operations, `A` its authorization
+entries, `O` one operation with its result and meta, `R` the result, `F` the fee processing, `M` the transaction
+meta frame. Each ledger adds one `L` component. A component shape is the hash of the component's sorted token set.
+The grammar and its four levels of detail are on [Mainnet scan](/architecture/mainnet-scan).
+
+## How a CAP or a protocol version adds shapes
+
+A CAP (Core Advancement Proposal) is a numbered change to the Stellar protocol. A protocol version is the set of
+rules a ledger was applied under; an implemented CAP ships in a protocol version. A CAP adds shapes when it adds
+union arms, enum values, fields or a meta version, or when it changes what stellar-core emits for existing ones.
+
+| Change | CAP and protocol | What a reader sees | Entries |
+|---|---|---|---|
+| A new address form in sources and destinations | CAP-27, Protocol 13 | `MuxedAccount`; the ID is never validated | [CAP-27](/caps/overview#cap-27) |
+| A new signer key type | CAP-40, Protocol 19 | A signed-payload signer: a key plus a payload of up to 64 bytes | [CAP-40](/caps/overview#cap-40) |
+| A new meta version and new events | CAP-67, Protocol 23 | `TransactionMetaV4`, events for classic operations and fees, `to_muxed_id` | [CAP-67](/caps/overview#cap-67) |
+| A new arm in the ledger header | CAP-88, Protocol 30 | `STELLAR_VALUE_SIGNED_MS` in every header after the upgrade | [CAP-88](/caps/overview#cap-88) |
+| A state change with no operation of its own | CAP-73, Protocol 26 | A trustline created by a contract call, with no `ChangeTrust` operation and no event | [CAP-73](/caps/overview#cap-73) |
+| A protocol version with no CAP | Protocol 29 | Liquidity-pool hops exempt from the offer-crossing limit | [protocol-29](/caps/overview#protocol-29) |
+
+Three consequences for a reader:
+
+- **Old shapes stay.** A new protocol does not remove older envelopes and results from history. A full-history
+  reader still meets `ENVELOPE_TYPE_TX_V0` envelopes (`protocol-13/upgrade-ledger-header-13-envelopes-v0`) and the inflation operation
+  that Protocol 12 removed (`cap-0026/last-successful-inflation`).
+- **Not every CAP changes what a reader sees.** `corpus/caps.toml` has one record for each CAP file of
+  stellar-protocol at the pinned commit. It says whether the CAP is visible to a ledger reader and, if not, why.
+- **Take arms and enum values from the XDR definitions at a release tag**, never from CAP text. An entry's
+  `protocol.introduced` is set the same way.
+
+## How entries are tagged
+
+Each entry is one JSON file under `corpus/manifest/`. These fields say where it belongs
+([Manifest and index format](/reference/manifest#4-1-top-level)):
+
+| Field | Meaning |
+|---|---|
+| `id` | `<group>/<slug>`. The group is `cap-NNNN` for the CAP that first made the shape possible, or one of the groups below |
+| `caps` | Every CAP whose shapes the entry holds. The entry counts under each of them |
+| `protocol.introduced` | The first protocol at which stellar-core can emit the shape |
+| `protocol.removed` | The first protocol at which it no longer can, when there is one |
+| `variants[].protocol` | The protocol applied when these bytes were emitted. `header_protocol` is added on an upgrade ledger, where the header differs |
+| `variants[].network` | The passphrase the bytes were made under: `pubnet`, `testnet`, `core-test` or `none` |
+| `variants[].source.kind` | Where the bytes come from, below |
+| `synthetic` | `true` only when stellar-core did not emit the bytes |
+| `validity` | What a correct reader does with the input: `valid`, `malformed`, `invalid` or `acceptable` |
+| `shapes` | The shape tags |
+
+| `source.kind` | The bytes are |
+|---|---|
+| `history` | A ledger captured from the public data lake of pubnet or testnet |
+| `local-core` | A ledger that the pinned stellar-core emitted on a local network, from a scenario file |
+| `core-golden` | A ledger from stellar-core's own golden test files |
+| `history-archive` | A record cut from a history-archive file, such as a bucket |
+| `synthetic` | Built by a recipe, because stellar-core cannot or would not emit them |
+| `contract-code` | The code of a contract read from the network, for contract-interface entries |
+
+Every negative entry (input a correct reader must reject, such as `xdr-strict/bool-value-2`) is synthetic. A
+local-core entry is not: the pinned stellar-core emitted its bytes. Local-core entries cover shapes mainnet has not
+produced, and give a shape under both the testnet and the pubnet passphrase.
+
+## Entries with no CAP number
+
+Some entries have `caps: []` and a `caps_note` that says why. Their shape predates the CAP process, shipped in a
+protocol upgrade without a CAP, or is an encoding rule. They are still tagged with `protocol.introduced` and counted
+under the row of their group. The header of `corpus/COVERAGE.md` gives the current count for each group.
+
+| Group | Holds | Example |
+|---|---|---|
+| `classic` | Shapes that predate CAPs or belong to no single CAP: 64-bit amounts and IDs, result codes, maximum-length lists | `classic/amount-above-2-pow-53-stroops` |
+| `protocol-NN` | Behaviour gated by a protocol with no CAP, and the ledgers where a protocol or a meta version first appears | `protocol-29/path-payment-pool-hops-beyond-crossing-limit` |
+| `ledger` | Ledger-level shapes: upgrade ledgers, configuration upgrades, empty ledgers, meta written under other flags | `ledger/empty-ledger-no-transactions` |
+| `xdr-strict` | Input a correct decoder must reject | `xdr-strict/length-prefix-exceeds-input.6h` |
+| `limits` | Values at the nesting limits of readers | listed in `corpus/COVERAGE.md` |
+| `strkey` | Text address vectors: the published SEP-23 vectors and vectors for the forms they leave out | `strkey/synthetic-gap-vectors.hash-x` |
+| `xdr-json` | XDR-JSON input vectors | `xdr-json/vector-longer-than-declared-max` |
+
+## How rare a shape is on mainnet
+
+The scan read every pubnet ledger from 2 to 65,505,999: 65,505,998 ledgers and 10,869,626,939 transactions. It found
+15,884 distinct tokens and 3,270,052 distinct component shapes at transaction level. Of the 26,418,998 distinct
+whole-transaction shapes, 18,066,711 occur in exactly one transaction (`evidence/mainnet-scan/README.md`).
+
+For each corpus entry the kit records the entry's rarest token and how often it occurs on mainnet:
+
+| Entry | What is rare in it | Occurrences | First and last ledger |
+|---|---|---|---|
+| `cap-0040/extra-signer-signed-payload-local` | One extra signer in the preconditions | 81 | 41,573,647 and 65,288,361 |
+| `cap-0027/muxed-source-id-above-2-pow-63` | A muxed source ID of 2^63 or more | 268 | 46,584,023 and 64,962,234 |
+| `cap-0067/to-muxed-id-text-non-utf8-memo` | A text memo that is not UTF-8 | 336 | 30,727,710 and 65,024,796 |
+| `cap-0034/tx-too-late-with-fee-charged` | A `txTOO_LATE` result in a closed ledger | 66,186 | 16,247,791 and 32,567,505 |
+| `cap-0084/sac-transfer-to-muxed-contract` | A muxed contract address, new in Protocol 30 | never | the scan ends before Protocol 30 |
+| `cap-0046/auth-unmatched-entries-succeed` | The form of its three-level authorization tree | never | made on a local stellar-core |
+
+The count is that of the entry's rarest token. It is not a count of transactions with the entry's whole shape.
+`xdrcheck entry <id>` prints the same figures under "on mainnet"; all entries are on
+[Mainnet scan results](/results/mainnet-scan#prevalence-by-entry).
+
+## Find the entries of a CAP
+
+<Steps>
+  <Step title="List the entries tagged with a CAP">
+
+    ```sh
+    xdrcheck entry --cap 88
+    ```
+
+    ```text
+    cap-0088/first-ledger-with-signed-ms	ledger	CAP-0088	p30	valid	First ledger whose StellarValue uses the STELLAR_VALUE_SIGNED_MS arm with a millisecond close time
+    cap-0088/signed-ms-local-twins	ledger	CAP-0088	p30	valid	Ordinary Protocol 30 ledger from a local core: STELLAR_VALUE_SIGNED_MS and LedgerCloseMeta ext.v1
+    …
+    7 entries
+    ```
+
+    `xdrcheck entry --list 'strkey/*'` lists by ID instead; `*` crosses `/`. Without a build, `corpus/index.json`
+    holds the CAP, protocol, source and validity tags of every entry.
+
+  </Step>
+  <Step title="Find ledgers that hold the shape">
+
+    ```sh
+    xdrcheck find --cap 88 --limit 5
+    ```
+
+    Without the mainnet dataset this answers from the corpus's captured ledgers. With it, `--token`, `--class` and
+    `--tag` answer from mainnet history ([find](/reference/find)).
+
+  </Step>
+</Steps>
+
+[CAP coverage](/caps/overview) has one section for each CAP and group: what changed for a reader, every entry, its
+sources and its mainnet count.
+
+## Related
+
+- [XDR and ledger data](/concepts/xdr-and-ledger-data): the structures these shapes live in.
+- [The corpus](/architecture/corpus): where the bytes come from and how expected values are set.
+- [Read an entry](/start/read-an-entry): one entry, field by field.
+- [Entry IDs](/reference/entry-ids): the rules for groups and names.

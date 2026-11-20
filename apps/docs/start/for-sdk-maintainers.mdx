@@ -1,18 +1,47 @@
 ---
-title: "For SDK maintainers"
-sidebarTitle: "For SDK maintainers"
-description: "The short path for an SDK or XDR-library team: copy a recipe, pin a corpus release, commit the list of failures you expect, and every corpus entry goes through your decoder on each pull request."
+title: "Start here: SDK maintainers"
+sidebarTitle: "Start here"
+description: "The first steps for an SDK or XDR-library team: run a recipe here, copy it into your repository, commit the list of failures you expect, and test a branch before you tag it."
+icon: "package"
 ---
 
-For maintainers of a Stellar SDK or XDR library in Go, JavaScript, Rust or Python. After this page your CI puts
-every corpus entry through your decoder on each pull request, fails on a new divergence, and tells you when a
-known one is fixed.
+For maintainers of a Stellar SDK or XDR library in Go, JavaScript, Rust or Python.
 
-Each corpus entry carries bytes stellar-core emitted (or a marked synthetic value) and the values a correct reader
-decodes from them. The expected values come from the bytes and the pinned oracle (rs-stellar-xdr), never from
-another SDK. A defect found in one SDK becomes a regression test in yours.
+## What you get
+
+- A test in your own repository that puts every corpus entry through your decoder on each pull request.
+- A job that fails on a new divergence (`NEW-FAILURE`) and on a listed one that is now fixed (`UNEXPECTED-PASS`),
+  so the list of known failures only shrinks with real fixes.
+- Expected values that come from the bytes and from the pinned oracle, rs-stellar-xdr, never from another SDK. A
+  defect found in one SDK becomes a regression test in yours.
+
+A corpus entry is one rare but valid shape: its XDR bytes, the CAP that introduced it and the values a correct
+reader decodes. [Read an entry](/start/read-an-entry) walks one field by field.
+
+## Before you start
+
+- A checkout of this repository, and a checkout of your SDK beside it.
+- Your SDK's own toolchain and a zstd decoder. The Go, Rust and Python recipes need none of this repository's
+  build; the JavaScript recipe installs the npm runner of a corpus release.
+- Step 1 and step 5 use the kit's own tools: Linux, [mise](https://mise.jdx.dev) and [rustup](https://rustup.rs)
+  ([requirements](/quickstart#requirements)).
+
+## Steps
 
 <Steps>
+  <Step title="Run the recipes here, against the pinned SDKs">
+
+    ```sh
+    mise install && make toolchain
+    make fetch-sdk && make build      # the one networked step, then the tools
+    export PATH="$PWD/bin:$PATH"
+    make sdk-ci-examples              # the Go, Rust and Python recipes, offline
+    ```
+
+    Each recipe runs the corpus through the SDK release pinned in `pins.toml` and compares the result with the
+    `expected-failures.txt` beside it. The run passes as committed.
+
+  </Step>
   <Step title="Pick the recipe for your language">
 
     | Language | Recipe | Loader | Test step |
@@ -22,31 +51,54 @@ another SDK. A defect found in one SDK becomes a regression test in yours.
     | Python | `examples/sdk-ci/python` | `packages/python` | `python -m unittest` in `tests/corpus` |
     | JavaScript | `examples/sdk-ci/js` | `packages/npm` | `npx xdrcheck-corpus-run --sdk .` |
 
-    The recipes need none of this repository's build. Go, Rust and Python need your SDK's language and a zstd
-    decoder; JavaScript installs the corpus release's npm runner.
-
   </Step>
   <Step title="Copy it into your repository">
 
-    Copy `workflow.yml` to `.github/workflows/xdrcheck.yml` and the rest of the recipe where the workflow's header
-    comment says (`xdrcheck/` for Go, Rust and JavaScript; `tests/corpus/` for Python). The workflow downloads one corpus release pinned by version and sha256, and stops before reading anything if the
-    archive does not match.
+    For Go, from this checkout, with your SDK at `../go-stellar-sdk`:
+
+    ```sh
+    mkdir -p ../go-stellar-sdk/xdrcheck ../go-stellar-sdk/.github/workflows
+    cp examples/sdk-ci/go/workflow.yml ../go-stellar-sdk/.github/workflows/xdrcheck.yml
+    cp examples/sdk-ci/go/go.mod examples/sdk-ci/go/go.sum examples/sdk-ci/go/corpus_test.go \
+       examples/sdk-ci/go/expected-failures.txt ../go-stellar-sdk/xdrcheck/
+    ```
+
+    Then follow the comments in the copied files: in `go.mod`, replace `github.com/stellar/go-stellar-sdk` with
+    `../` and pin the loader by commit; in the workflow, set `XDRCHECK_REPO`, `CORPUS_VERSION` and `CORPUS_SHA256`.
+    The header comment of each language's `workflow.yml` says where its files go (`xdrcheck/` for Go, Rust and
+    JavaScript; `tests/corpus/` for Python). The workflow downloads one corpus release pinned by version and
+    sha256, and stops before reading anything if the archive does not match.
 
   </Step>
   <Step title="Write, review and commit the expected-failure list">
 
-    Run the test once with `XDRCHECK_WRITE_EXPECTED_FAILURES=1` (JavaScript: `--write-expected-failures FILE`).
-    Read each line, then commit the list with the pinned version. From then on the job fails on a failure the list
-    does not name (`NEW-FAILURE`) and on a listed failure that now passes (`UNEXPECTED-PASS`): remove that line in
-    the same change as the fix.
+    `XDRCHECK_CORPUS` names a release archive, an extracted release or a corpus directory. Against the corpus of
+    this checkout, when it is the directory `xdrcheck` beside your SDK:
+
+    ```sh
+    cd ../go-stellar-sdk/xdrcheck
+    XDRCHECK_CORPUS=../../xdrcheck/corpus XDRCHECK_WRITE_EXPECTED_FAILURES=1 go test -count=1 ./...
+    XDRCHECK_CORPUS=../../xdrcheck/corpus go test -count=1 ./...
+    ```
+
+    The first command writes `expected-failures.txt` from the run; the second checks the run against it. Read each
+    line, then commit the list with the pinned corpus version. JavaScript: `--write-expected-failures FILE`.
 
   </Step>
-  <Step title="Test an unreleased branch">
+  <Step title="Test an unreleased branch at every level">
 
-    The recipes judge bytes only (decode, consume every byte, re-encode identically; Rust and Python also compare
-    the SEP-51 JSON). For decoded values, transaction parsing and the `api` operations, run
-    `xdrcheck conform run --sdk ../your-sdk-checkout` from a checkout of this repository
-    ([SDK CI, section 8](/guides/sdk-ci#8-an-unreleased-sdk-branch-xdrcheck-conform-sdk)).
+    The recipes judge the bytes only: decode, consume every byte, re-encode identically (Rust and Python also
+    compare the SEP-51 JSON). For decoded values, transaction parsing and the `api` operations, point a
+    conformance column at your checkout, from this repository:
+
+    ```sh
+    xdrcheck conform fetch --columns 'go@v0.9.0' --sdk ../go-stellar-sdk   # network: the checkout's dependencies
+    xdrcheck conform build --columns 'go@v0.9.0' --sdk ../go-stellar-sdk
+    xdrcheck conform run --columns 'go@v0.9.0' --sdk ../go-stellar-sdk --report out
+    ```
+
+    `SUMMARY.md` in the report directory names the checkout. The same works for Rust and Python columns
+    ([Add to CI, section 8](/guides/sdk-ci#8-an-unreleased-sdk-branch-xdrcheck-conform-sdk)).
 
   </Step>
 </Steps>
@@ -73,11 +125,10 @@ another SDK. A defect found in one SDK becomes a regression test in yours.
 
 | To | Read |
 |---|---|
-| Read one entry field by field | [How to read a corpus entry](/start/read-an-entry) |
+| Set up the recipes, loaders and npm runner in full | [Add to CI](/guides/sdk-ci) |
+| Use the GitHub Action instead of a recipe | [GitHub Action: conform](/guides/github-action#3-sdk-maintainers-conform) |
+| Prepare for the next protocol | [Protocol upgrades](/guides/protocol-upgrade-sdk) |
 | See how a cell is judged | [Conformance](/architecture/conformance) |
-| Set up the recipes, loaders and npm runner in full | [SDK CI](/guides/sdk-ci) |
-| Use the GitHub Action instead | [CI recipes: conform](/guides/ci#3-sdk-maintainers-conform) |
-| Prepare for the next protocol | [Protocol upgrade (SDK)](/guides/protocol-upgrade-sdk) |
+| Write a driver for another SDK | [Driver protocol](/reference/driver-protocol) |
 | Look up a CAP's shapes | [CAP coverage](/caps/overview) |
-| Write a driver | [Driver protocol and rules](/reference/driver-protocol) |
-| See where each pinned SDK release stands | [SDK conformance matrix](/results/sdk-matrix) |
+| See where each pinned SDK release stands | [SDK matrix](/results/sdk-matrix) |

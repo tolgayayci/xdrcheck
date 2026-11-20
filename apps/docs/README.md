@@ -8,16 +8,21 @@ Most pages are generated from the repository so the site cannot drift from it: t
 coverage page (`caps/overview.mdx`, a section per coverage row) from `corpus/index.json`, `corpus/coverage.json` and
 `data/cap-prevalence.json`. The results pages (`results/`, including the findings table `results/findings.mdx`) and
 `start/read-an-entry.mdx` come from `evidence/results/*.json`, `evidence/mainnet-scan/` and the corpus;
-`hardening/outline.mdx` from `guide/`. The introduction (`index.mdx`), `guides/ci.mdx` and
+`hardening/outline.mdx` from `guide/`; the acceptance checks page (`results/acceptance.mdx`) from
+`docs/acceptance.md` and `evidence/results/acceptance.json`. The introduction (`index.mdx`), `guides/ci.mdx` and
 `guides/add-corpus-entries.mdx` start from hand-written templates in `data/*.mdx.in`: edit the template (the
-introduction's `@@name@@` figures are filled from the same files as the results pages). Each generated page says its
-source in its first line; edit the source, not the page. The quickstart, `start/for-sdk-maintainers.mdx`,
-`start/for-indexers.mdx`, `architecture/` and `hardening/overview.mdx` are written by hand. The navigation in
-`docs.json` is written by hand too.
+introduction's `@@name@@` figures are filled from the same files as the results pages, from `pins.toml` and from
+`drivers/sets.toml`). Each generated page says its source in its first line; edit the source, not the page. The
+quickstart, `start/how-it-works.mdx`, `start/for-sdk-maintainers.mdx`, `start/for-indexers.mdx`, `concepts/`,
+`architecture/` and `hardening/overview.mdx` are written by hand.
+
+The navigation in `docs.json` (tabs, groups, page order) and its icon library are written by `generate.py` from the
+table `NAV` in the script: add a page there, not in `docs.json`. The same table holds the sidebar label and icon of
+every generated page. A hand-written page carries its own `sidebarTitle`, `icon` (a Lucide name) and `description`.
 
 `--check` fails when a generated page is stale, when a page breaks a page rule, when an internal link names a page
-or a heading anchor that does not exist (anchors as Mintlify slugs headings), and when a page is in no navigation
-group. A change to any of the sources above therefore needs `generate.py` run and its pages committed with it.
+or a heading anchor that does not exist (anchors as Mintlify slugs headings), when a page is in no navigation
+group, and when a page has no description, no icon or a sidebar label longer than three words. A change to any of the sources above therefore needs `generate.py` run and its pages committed with it.
 
 ```sh
 python3 apps/docs/scripts/generate.py           # from the repository root: regenerate the generated pages

@@ -1,14 +1,20 @@
 ---
 title: "Quickstart"
 description: "Read the corpus offline from a fresh clone, then fetch once, build, and run the demo, the judge and find."
+icon: "rocket"
 ---
 
-For an SDK maintainer or an indexer author trying the kit for the first time. After this page you have read a
-corpus entry from a fresh clone, watched the replay harness catch a planted indexer bug, and know where each tool
-lives.
+For an SDK maintainer or an indexer author trying the kit for the first time.
 
-Part 1 needs a clone and Python 3. Part 2 fetches pinned dependencies once and builds the tools; after that every
-step runs offline.
+## What you get
+
+- Part 1: a corpus entry read from a fresh clone, with its bytes checked against their hash. It needs a clone and
+  Python 3, no build and no network.
+- Part 2: the tools built, the replay harness catching a planted indexer bug, the judge's facts for one ledger, and
+  a search for the ledgers of a CAP. It fetches pinned dependencies once; after that every step runs offline.
+
+A corpus entry is one rare but valid shape of Stellar ledger data: its XDR bytes, the CAP (Core Advancement
+Proposal) that introduced it and the values a correct reader must produce.
 
 ## Part 1: read the corpus (offline, no build)
 
@@ -173,6 +179,16 @@ You need [mise](https://mise.jdx.dev) and [rustup](https://rustup.rs).
 
 Every version the kit builds against or tests is pinned in `pins.toml`.
 
+## Conventions on this site
+
+- The command-line tools are `xdrcheck`, `xdrcheck-corpus`, `xdrlint`, `xdrcheck-judge` and `xdrcheck-tagger`
+  ([Command line](/reference/cli)).
+- Commands run from the root of a checkout of the repository unless a step says otherwise. After `make build`,
+  the tools are in `./bin`; add them to your `PATH` with `export PATH="$PWD/bin:$PATH"`.
+- `OWNER/REPO` stands for the XDRCheck repository on GitHub, in URLs, `uses:` lines and Go module paths alike.
+- A corpus release is named by the protocol it covers: `30.0.0` covers Protocol 30. Read `<version>` and `<commit>`
+  in commands as the release or commit you pin ([Release and channels](/reference/release)).
+
 ## If it does not work
 
 <AccordionGroup>
@@ -191,13 +207,14 @@ Every version the kit builds against or tests is pinned in `pins.toml`.
   <Accordion title="You are on macOS">
 
     The replay harness, the rigs and the conformance runner are Linux-only. On macOS you can read the corpus,
-    lint Go code ([Lint Go code](/guides/lint-go)) and use the corpus in an SDK's CI ([SDK CI](/guides/sdk-ci)).
+    lint Go code ([Lint your code](/guides/lint-go)) and use the corpus in an SDK's CI ([Add to CI](/guides/sdk-ci)).
 
   </Accordion>
 </AccordionGroup>
 
 ## Next steps
 
-- SDK or XDR library: [For SDK maintainers](/start/for-sdk-maintainers).
-- Indexer: [For indexer authors and operators](/start/for-indexers).
-- Every command: [Command-line reference](/reference/cli).
+- SDK or XDR library: [Start here: SDK maintainers](/start/for-sdk-maintainers).
+- Indexer: [Start here: indexer authors](/start/for-indexers).
+- The parts of the kit and how they connect: [How it works](/start/how-it-works).
+- Every command: [Command line](/reference/cli).
