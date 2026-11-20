@@ -1,0 +1,70 @@
+# Next-protocol stellar-core build, run by hand (docs/maintenance.md, section 5.4): stellar-core master configured with
+# --enable-next-protocol-version-unsafe-for-production, built in the pinned build container and checked to support
+# a ledger protocol above pins.toml protocol.max_supported. The binary, its C++ runtime libraries and a manifest
+# (commit, flags, sha256, protocol) are the run's artefact; it tracks an unpinned branch and is never a pinned
+# input. None of this gates a pull request. Its only network use is reading the public stellar-core repository and
+# pulling the pinned build image; nothing is written outside this run (the result is the run's artifact). A run with
+# `plan` set resolves the commit and prints the build without building (`gh workflow run vnext-core.yml -f plan=true`).
+name: vnext-core
+
+on:
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: Print the plan (the resolved commit and every build command) and build nothing (VNEXT_PLAN=1)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vnext-core
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  vnext-core:
+    name: next-protocol stellar-core (make vnext-core)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: ""
+          fetch: "false"
+          build: "false"
+      - name: make vnext-core
+        env:
+          PLAN: ${{ inputs.plan && '1' || '' }}
+        run: make vnext-core VNEXT_PLAN="$PLAN"
+      - name: Failure summary
+        if: failure()
+        env:
+          JOB: ${{ github.job }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TARGET: make vnext-core
+        run: |
+          {
+            echo "### Job \`$JOB\` failed"
+            echo
+            echo "Rerun locally: \`$TARGET\` (VNEXT_PLAN=1 prints the plan). Log: $RUN_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::job $JOB failed; see the job summary"
+      - name: Upload the build
+        if: success()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: stellar-core-vnext
+          path: |
+            ~/.cache/xdrcheck/stellar-core-vnext/*/pkg/
+            ~/.cache/xdrcheck/stellar-core-vnext/*/manifest.json
+            reports-nightly/
+          if-no-files-found: error
+          retention-days: 30

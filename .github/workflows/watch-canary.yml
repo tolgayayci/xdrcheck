@@ -1,0 +1,75 @@
+# Staying in sync (docs/maintenance.md, section 5.3): how far the pins are behind upstream releases. The canary
+# job reports drift and fails only when it could not look or could not run. The self-test runs the scripts of the
+# watch jobs and of the next-protocol build against fixtures, offline. Every request is a read-only GET of a
+# public endpoint.
+# None gates a pull request. A failed job writes what failed and the command to rerun it to the run's job summary.
+name: watch-canary
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: watch-canary
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  canary:
+    name: pins behind upstream and latest-SDK canary (make nightly-canary)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: cargo go npm
+      - name: make nightly-canary
+        run: make nightly-canary
+      - name: Drift summary
+        if: always()
+        run: |
+          if [ -f reports-nightly/canary.summary.txt ]; then
+            {
+              echo "### Pins and the newest upstream releases"
+              echo
+              echo '```'
+              cat reports-nightly/canary.summary.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports-nightly/
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: watch-canary
+          path: reports-nightly/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  maint-selftest:
+    name: maintenance scripts self-test (make maint-selftest)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: go
+          fetch: "false"
+          build: "false"
+      - name: make maint-selftest
+        run: make maint-selftest

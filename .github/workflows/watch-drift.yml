@@ -1,0 +1,50 @@
+# Staying in sync (docs/maintenance.md, section 5.2): the networks' live state against pins.toml. The job fails
+# when a network runs a protocol above the kit's maximum, testnet was reset, or a dated event has passed without its
+# pin moving; it warns (green, with the warning in the log) when a pin is merely stale. Every request is a read-only
+# GET of a public endpoint.
+# None gates a pull request. A failed job writes what failed and the command to rerun it to the run's job summary.
+name: watch-drift
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: watch-drift
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  network-state:
+    name: network state (make watch-network)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: go
+          fetch: "false"
+          build: "false"
+      - name: make watch-network
+        run: make watch-network
+      - name: Failure summary
+        if: failure()
+        env:
+          JOB: ${{ github.job }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TARGET: make watch-network
+        run: |
+          {
+            echo "### Watch job \`$JOB\` failed"
+            echo
+            echo "Each FAIL line in the log names what to do. Rerun locally: \`$TARGET\`. Log: $RUN_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::watch job $JOB failed; see the job summary"

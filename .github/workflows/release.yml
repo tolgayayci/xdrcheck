@@ -1,0 +1,128 @@
+# Release assets for a version tag (docs/release.md sections 8 to 10): the corpus archive and npm package, the
+# prebuilt binaries of every platform, SHA256SUMS and the release provenance, checked together with the container
+# image's smoke test. A tag vMAJOR.MINOR.PATCH builds the stable channel; vMAJOR.MINOR.PATCH-rc.N the -next
+# channel. A manual run on a branch is a dry run of the same jobs with the version corpus.json states.
+#
+# The result is one workflow artifact, xdrcheck-release-<version>, holding exactly the files to attach to the
+# GitHub release. Attaching them needs a token that can write to the repository; this workflow only reads (the
+# repository's CI rules allow no write permission), so the maintainer attaches the verified artifact by hand
+# (docs/release.md section 9). Nothing here publishes, tags, pushes an image or uploads to a registry, on a tag or by
+# hand: a manual run (`gh workflow run release.yml --ref main`) is the dry run, and its artifact is what a tag
+# would produce.
+name: release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # The tag; empty on a manual run, where scripts/release.sh takes the version corpus.json states.
+  TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+
+jobs:
+  corpus:
+    name: corpus archive and npm package (make release)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache-name: release-corpus
+          caches: cargo go npm
+          # What make release reads: the build dependencies and the public columns' driver packages (the npm
+          # package's check runs against the pinned JavaScript SDK), and the goldens for the archive's ag1/ag3 run.
+          fetch: sdk goldens
+          free-disk: "true"
+      - name: make release
+        run: make release VERSION="${TAG#v}"
+      - name: Upload the corpus assets
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-corpus
+          path: |
+            dist/xdrcheck-*.tar.gz
+            dist/xdrcheck-*.tgz
+          if-no-files-found: error
+          retention-days: 7
+
+  # Go cross-compiles every platform; xdrcheck-corpus (Rust, with C in its zstd dependency) is built natively on a
+  # runner of each Linux architecture. The macOS archives carry xdrlint only (docs/release.md section 9).
+  binaries:
+    name: binaries ${{ matrix.platforms }} (make dist-bin)
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platforms: linux-amd64 darwin-amd64 darwin-arm64
+          - runner: ubuntu-24.04-arm
+            platforms: linux-arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: cargo go
+          fetch: "false"
+          build: "false"
+      - name: make dist-bin
+        env:
+          DIST_PLATFORMS: ${{ matrix.platforms }}
+        run: make dist-bin DIST_STRICT=1 VERSION="${TAG#v}"
+      - name: Upload the binaries
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-binaries-${{ matrix.runner }}
+          path: dist/xdrcheck-*-*-*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  assemble:
+    name: SHA256SUMS, provenance, image smoke test (make release-assets)
+    needs: [corpus, binaries]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download the assets
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: make release-assets
+        run: make release-assets VERSION="${TAG#v}"
+      - name: Upload the release
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: xdrcheck-release-${{ github.ref_name }}
+          path: |
+            dist/SHA256SUMS
+            dist/xdrcheck-*.provenance.json
+            dist/xdrcheck-*.tar.gz
+            dist/xdrcheck-*.tgz
+            dist/xdrcheck-*-*-*.tar.gz
+          if-no-files-found: error
+          retention-days: 30

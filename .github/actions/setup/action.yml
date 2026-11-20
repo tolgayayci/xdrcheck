@@ -1,0 +1,329 @@
+# Shared job setup: toolchains from mise.toml, the caches the job asks for, the fetch step (the only networked
+# step: `make fetch FETCH_ONLY=<parts>`, so a job fetches only what its target needs), the offline proof, and an
+# optional offline `make build`.
+#
+# Caches. Every cache has one key per content, and in each CI workflow (pr.yml, full.yml) exactly one job saves each
+# one, so a job never restores a cache another job filled with different content:
+#   cargo         ~/.cargo registry, keyed by Cargo.lock
+#   cargo-target  ./target (release tools), keyed by Cargo.toml (its build profiles), Cargo.lock and
+#                 rust-toolchain.toml: the compiled crates; cargo rebuilds the workspace's own crates (their sources
+#                 are newer after a checkout)
+#   cargo-test    ./target (the test build of `make test-rust` and `make test-rust-fast`), the same keys under its
+#                 own name; without the tests' scratch copies (target/tmp) and the release tools (target/release)
+#   go            the Go module cache of go/ and lint/, keyed by their go.sum files
+#   go-build      the Go build cache, keyed by `go-build-name` (default `cache-name`) and the go.sum files (Go checks content, so
+#                 an older cache is only slower, never wrong)
+# A job that builds in its own step (pr.yml and full.yml: build, unit-rust, unit-go) saves cargo-target, cargo-test
+# and go-build after that step itself, with the keys and hit flags this action outputs.
+#   npm           the npm cache, keyed by the drivers' package-lock.json files
+# The fetch output (the parts this job fetches under ~/.cache/xdrcheck) is cached under the job's `cache-name`,
+# keyed by the fetch scripts, pins.toml and every lock file; large build directories the fetch makes and the run
+# does not need (the wallet-backend module and build caches) are left out. `save` names the caches this job saves.
+# Container images are pulled by digest during the fetch; `images` caches them by digest instead (nightly jobs).
+# After this action the job is configured offline: the job's own step runs one `make` target.
+name: setup
+description: Install pinned toolchains, restore caches, fetch the job's parts, prove the network is gone, build offline.
+outputs:
+  cargo-target-key:
+    value: ${{ steps.cargo-target.outputs.cache-primary-key }}
+  cargo-target-hit:
+    value: ${{ steps.cargo-target.outputs.cache-hit }}
+  cargo-test-key:
+    value: ${{ steps.cargo-test.outputs.cache-primary-key }}
+  cargo-test-hit:
+    value: ${{ steps.cargo-test.outputs.cache-hit }}
+  go-build-key:
+    value: ${{ steps.go-build.outputs.cache-primary-key }}
+  go-build-hit:
+    value: ${{ steps.go-build.outputs.cache-hit }}
+inputs:
+  cache-name:
+    description: The job's name in cache keys (fetch output, Go build cache). Required when `fetch` or go-build is used.
+    default: ""
+  go-build-name:
+    description: The Go build cache to restore, by the name of the job that saves it (default `cache-name`).
+    default: ""
+  caches:
+    description: Space-separated caches to restore (cargo cargo-target cargo-test go go-build npm). Empty restores none.
+    default: cargo go
+  save:
+    description: >-
+      Space-separated caches this job saves on a miss (the names of `caches`, plus `fetch` for the fetch output). The
+      default saves every cache it restores and the fetch output (the nightly and release workflows, one job each).
+    default: all
+  rust:
+    description: Install the Rust toolchain of rust-toolchain.toml (jobs that only run built tools do not need it).
+    default: "true"
+  tools:
+    description: Download the tools the `build` job built (artifact `tools`) and point the Makefile at them.
+    default: "false"
+  own-gomod:
+    description: >-
+      Keep the Go module cache inside the fetch output (~/.cache/xdrcheck/gomod) instead of ~/go/pkg/mod, so it is
+      cached with the job's own fetch output: for a job whose fetch adds modules no other job uses (lint).
+    default: "false"
+  free-disk:
+    description: Remove preinstalled SDKs the kit does not use (Android, .NET, GHC, CodeQL) before anything else.
+    default: "false"
+  images:
+    description: Space-separated pins.toml keys of container images to cache by digest, e.g. stellar_core.image.
+    default: ""
+  fetch:
+    description: >-
+      The parts `make fetch FETCH_ONLY=...` fetches (scripts/fetch.sh lists them), `all` for everything, or `false`
+      (or empty) for no fetch. The rest of the job is configured offline either way.
+    default: all
+  build:
+    description: Run `make build` inside the offline namespace after the fetch.
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Runner resources
+      shell: bash
+      env:
+        FREE_DISK: ${{ inputs.free-disk }}
+      run: |
+        echo "cpus: $(nproc)"; free -h | head -2; df -h / | tail -1
+        if [ "$FREE_DISK" = "true" ]; then
+          # Preinstalled SDKs no target uses; removing them leaves room for the driver packages and builds.
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          echo "after freeing: $(df -h / | tail -1)"
+        fi
+
+    - name: Read pins
+      id: keys
+      shell: bash
+      env:
+        IMAGES: ${{ inputs.images }}
+        FETCH: ${{ inputs.fetch }}
+        CACHES: ${{ inputs.caches }}
+        SAVE: ${{ inputs.save }}
+        OWN_GOMOD: ${{ inputs.own-gomod }}
+      run: |
+        # Every version and digest comes from pins.toml; a missing mise pin fails here instead of floating.
+        mise=$(python3 -I scripts/ci/pins.py get ci.mise)
+        mise_sha256=$(python3 -I scripts/ci/pins.py get ci.mise_sha256 2>/dev/null || true)
+        images=$(python3 -I scripts/ci/pins.py cache-key "images=${IMAGES// /,}")
+        parts=$FETCH
+        [ "$parts" != "false" ] || parts=""
+        # save=all: every restored cache and the fetch output.
+        save=$SAVE
+        [ "$save" != "all" ] || save="$CACHES fetch"
+        {
+          echo "mise=$mise"
+          echo "mise-sha256=$mise_sha256"
+          echo "images=xdrcheck-images-$RUNNER_OS-$images"
+          echo "parts=$parts"
+          echo "parts-key=$(printf '%s' "$parts" | sha256sum | cut -c1-12)"
+          echo "save= $save "
+          echo "caches= $CACHES "
+        } >> "$GITHUB_OUTPUT"
+        echo "MISE_TRUSTED_CONFIG_PATHS=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+        if [ "$OWN_GOMOD" = "true" ]; then echo "GOMODCACHE=$HOME/.cache/xdrcheck/gomod" >> "$GITHUB_ENV"; fi
+
+    - name: Install toolchains with mise (mise.toml)
+      uses: jdx/mise-action@6be3c7ed4c21d4f76b208d351d95aac273ebb76d # v5.2.4
+      with:
+        version: ${{ steps.keys.outputs.mise }}
+        sha256: ${{ steps.keys.outputs.mise-sha256 }}
+        install: "true"
+        cache: "true"
+    - name: Install the Rust toolchain (rust-toolchain.toml)
+      if: inputs.rust == 'true'
+      shell: bash
+      run: rustup toolchain install && rustc --version
+
+    - name: Restore cargo registry
+      id: cargo-registry
+      if: contains(steps.keys.outputs.caches, ' cargo ')
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+        key: xdrcheck-cargo-registry-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+        restore-keys: xdrcheck-cargo-registry-${{ runner.os }}-
+    - name: Restore cargo target (release tools)
+      id: cargo-target
+      if: contains(steps.keys.outputs.caches, ' cargo-target ')
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: target
+        key: xdrcheck-cargo-target-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml') }}
+        restore-keys: xdrcheck-cargo-target-${{ runner.os }}-
+    - name: Restore cargo target (test build)
+      id: cargo-test
+      if: contains(steps.keys.outputs.caches, ' cargo-test ')
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        # The jobs that save it name the same paths (pr.yml and full.yml, unit-rust).
+        path: |
+          target
+          !target/tmp
+          !target/release
+          !target/test-parallel
+          !target/test-drivers
+        key: xdrcheck-cargo-test-${{ runner.os }}-${{ hashFiles('Cargo.toml', 'Cargo.lock', 'rust-toolchain.toml') }}
+        restore-keys: xdrcheck-cargo-test-${{ runner.os }}-
+    - name: Restore Go module cache
+      id: go-mod
+      if: contains(steps.keys.outputs.caches, ' go ')
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/go/pkg/mod
+        key: xdrcheck-go-mod-${{ runner.os }}-${{ hashFiles('go/go.sum', 'lint/go.sum') }}
+    - name: Restore Go build cache
+      id: go-build
+      if: contains(steps.keys.outputs.caches, ' go-build ')
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/go-build
+        key: xdrcheck-go-build-${{ inputs.go-build-name || inputs.cache-name }}-${{ runner.os }}-${{ hashFiles('go/go.sum', 'lint/go.sum', 'mise.toml') }}
+        restore-keys: xdrcheck-go-build-${{ inputs.go-build-name || inputs.cache-name }}-${{ runner.os }}-
+    - name: Restore npm cache (driver lock files)
+      id: npm
+      if: contains(steps.keys.outputs.caches, ' npm ')
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.npm
+        key: xdrcheck-npm-${{ runner.os }}-${{ hashFiles('drivers/**/package-lock.json') }}
+
+    # After the cache restores: a restored ./target (cargo-test) holds the release tools of the run that saved it,
+    # and unpacking first would let that older copy overwrite this commit's tools.
+    - name: Download the built tools (job build)
+      if: inputs.tools == 'true'
+      uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      with:
+        name: tools
+        path: ${{ runner.temp }}/tools
+    - name: Unpack the built tools and point the Makefile at them
+      if: inputs.tools == 'true'
+      shell: bash
+      run: |
+        tar -xf "$RUNNER_TEMP/tools/tools.tar"
+        # The job passes these on the make command line, where the Makefile uses a tool as it is (`need`): the
+        # binaries were built from this commit by the build job, so no job rebuilds them. The fetch parts read
+        # XDRCHECK and CORPUS from the environment the same way.
+        {
+          echo "CORPUS=$PWD/target/release/xdrcheck-corpus"
+          echo "MUTATE=$PWD/target/release/xdrcheck-mutate"
+          echo "XDRCHECK=$PWD/go/bin/xdrcheck"
+        } >> "$GITHUB_ENV"
+        ls -l bin/
+
+    - name: Restore the fetch output (this job's parts)
+      id: fetch-output
+      if: steps.keys.outputs.parts != ''
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/xdrcheck
+          !~/.cache/xdrcheck/tmp
+          !~/.cache/xdrcheck/early-warning
+          !~/.cache/xdrcheck/adapters/wallet-backend/go
+          !~/.cache/xdrcheck/adapters/wallet-backend/work
+        key: xdrcheck-fetch-${{ inputs.cache-name }}-${{ steps.keys.outputs.parts-key }}-${{ runner.os }}-${{ hashFiles('pins.toml', 'Cargo.lock', '**/go.sum', 'drivers/**/package-lock.json', 'drivers/**/Cargo.lock', 'drivers/**/requirements.txt', 'drivers/sets.toml', 'drivers/sets.d/*', 'lint/expected/wallet-backend/plan.json', 'scripts/py/requirements.txt', 'scripts/fetch.sh', 'scripts/fetch.d/*.sh') }}
+    - name: Restore container images (by digest)
+      id: images
+      if: inputs.images != ''
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/xdrcheck-ci/images
+        key: ${{ steps.keys.outputs.images }}
+    - name: Load cached container images
+      if: inputs.images != '' && steps.images.outputs.cache-hit == 'true'
+      shell: bash
+      run: scripts/ci/images.sh load ~/.cache/xdrcheck-ci/images
+
+    - name: Fetch this job's parts (network on; pinned downloads only, hashes verified)
+      if: steps.keys.outputs.parts != ''
+      shell: bash
+      env:
+        PARTS: ${{ steps.keys.outputs.parts }}
+      run: |
+        make fetch FETCH_ONLY="$PARTS"
+        du -sh ~/.cache/xdrcheck ~/go/pkg/mod ~/.cargo/registry 2>/dev/null || true
+        df -h / | tail -1
+
+    # Caches are saved here, before the job's own step, so a red check still leaves warm caches behind.
+    - name: Save the fetch output
+      if: steps.keys.outputs.parts != '' && contains(steps.keys.outputs.save, ' fetch ') && steps.fetch-output.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cache/xdrcheck
+          !~/.cache/xdrcheck/tmp
+          !~/.cache/xdrcheck/early-warning
+          !~/.cache/xdrcheck/adapters/wallet-backend/go
+          !~/.cache/xdrcheck/adapters/wallet-backend/work
+        key: ${{ steps.fetch-output.outputs.cache-primary-key }}
+    - name: Save container images
+      id: images-save
+      if: inputs.images != '' && steps.images.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        IMAGES: ${{ inputs.images }}
+      run: |
+        read -ra keys <<< "$IMAGES"
+        scripts/ci/images.sh save ~/.cache/xdrcheck-ci/images "${keys[@]}"
+        if compgen -G "$HOME/.cache/xdrcheck-ci/images/*.tar" > /dev/null; then echo "saved=true" >> "$GITHUB_OUTPUT"; fi
+    - name: Upload container image cache
+      if: steps.images-save.outputs.saved == 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/xdrcheck-ci/images
+        key: ${{ steps.keys.outputs.images }}
+    - name: Save cargo registry
+      if: contains(steps.keys.outputs.save, ' cargo ') && steps.cargo-registry.outcome == 'success' && steps.cargo-registry.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/.cargo/registry/index
+          ~/.cargo/registry/cache
+          ~/.cargo/git/db
+        key: ${{ steps.cargo-registry.outputs.cache-primary-key }}
+    - name: Save Go module cache
+      if: contains(steps.keys.outputs.save, ' go ') && steps.go-mod.outcome == 'success' && steps.go-mod.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ steps.go-mod.outputs.cache-primary-key }}
+    - name: Save npm cache
+      if: contains(steps.keys.outputs.save, ' npm ') && steps.npm.outcome == 'success' && steps.npm.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.npm
+        key: ${{ steps.npm.outputs.cache-primary-key }}
+
+    - name: Configure the rest of the job offline
+      shell: bash
+      run: |
+        # Tools fail fast instead of reaching for the network; the namespace below is what enforces it.
+        {
+          echo "CARGO_NET_OFFLINE=true"
+          echo "GOPROXY=off"
+          echo "GOTOOLCHAIN=local"
+          echo "PIP_NO_INDEX=1"
+        } >> "$GITHUB_ENV"
+    - name: Prove the offline namespace has no route out
+      shell: bash
+      run: scripts/ci/offline-check.sh
+
+    - name: Build (network off)
+      if: inputs.build == 'true'
+      shell: bash
+      run: scripts/offline-run.sh make build
+    - name: Save cargo target
+      if: inputs.build == 'true' && contains(steps.keys.outputs.save, ' cargo-target ') && steps.cargo-target.outcome == 'success' && steps.cargo-target.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: target
+        key: ${{ steps.cargo-target.outputs.cache-primary-key }}
+    - name: Save Go build cache
+      if: inputs.build == 'true' && contains(steps.keys.outputs.save, ' go-build ') && steps.go-build.outcome == 'success' && steps.go-build.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/go-build
+        key: ${{ steps.go-build.outputs.cache-primary-key }}

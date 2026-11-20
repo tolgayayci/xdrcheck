@@ -1,0 +1,1146 @@
+# The full CI (tier 2): every check at full size, one job per check in docs/architecture.md (section CI), each running
+# exactly one `make` target, the same command a contributor runs locally. It runs by hand (workflow_dispatch) and on
+# release tags; the pull-request CI (pr.yml, tier 1) runs the fast forms of the slow checks on every
+# pull request and branch. The build job runs `make build` once and hands the tools to every other job (artifact
+# `tools`); a job names them on the make command line (CORPUS, MUTATE, XDRCHECK, set by the setup action), and the
+# Makefile runs a tool given that way as it is instead of building it again. Each job then fetches only the parts its
+# target needs (`make fetch FETCH_ONLY=...` through .github/actions/setup, the only networked step) and restores only
+# its own caches; the job's own step runs with OFFLINE=1, so the Makefile wraps it in scripts/offline-run.sh (a
+# namespace with no network). No job downloads a data set, apart from P18, which fetches the mainnet tier's public-lake
+# objects into its cache (docs/ci-timings.md lists what each job fetches). A job whose tool is not built fails loudly;
+# nothing here hides a failure. No schedule and no run on a push: a manual run and release tags (v*) are the triggers.
+# P14 to P16 add the full-size runs the pull-request CI does not make, P12b the findings check in strict mode (rows
+# awaiting finding review alone fail it only on a release tag; on main they leave a warning), and P13 one table of
+# every job's result and key numbers. Each job writes the key lines of its own reports to its job summary
+# (scripts/ci/job-summary.py). stellar-core's golden emission (AG-2, make verify-goldens-nightly) takes about 20 minutes on 8 CPUs and
+# stays in the manual nightly-goldens workflow.
+name: full
+
+on:
+  push:
+    # A release tag runs the whole tier.
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+
+  build:
+    name: P0 build (make build)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # A tag's run checks that the tag is on the default branch, which needs the history.
+          fetch-depth: ${{ github.ref_type == 'tag' && '0' || '1' }}
+      - name: Release tags must point at the default branch
+        if: github.ref_type == 'tag'
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/$DEFAULT_BRANCH"; then
+            echo "::error::tag $GITHUB_REF_NAME is not on $DEFAULT_BRANCH"
+            exit 1
+          fi
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: build
+          caches: cargo cargo-target go go-build
+          save: cargo go
+          fetch: cargo gomod
+          build: "false"
+      - name: make build (network off)
+        run: scripts/offline-run.sh make build
+      - name: Save cargo target
+        if: steps.setup.outputs.cargo-target-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: target
+          key: ${{ steps.setup.outputs.cargo-target-key }}
+      - name: Save Go build cache
+        if: steps.setup.outputs.go-build-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.setup.outputs.go-build-key }}
+      - name: Pack the tools
+        run: |
+          mapfile -t rust < <(find target/release -maxdepth 1 -type f -executable)
+          tar -cf "$RUNNER_TEMP/tools.tar" bin go/bin lint/bin "${rust[@]}"
+          ls -l "$RUNNER_TEMP/tools.tar"
+      - name: Upload the tools
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: tools
+          path: ${{ runner.temp }}/tools.tar
+          retention-days: 1
+
+  static:
+    name: P1 static (make verify-static)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: static
+          caches: ""
+          fetch: py
+          save: ""
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-static OFFLINE=1
+        run: make verify-static OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-static
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  corpus:
+    name: P2 corpus (make verify-corpus)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: corpus
+          caches: ""
+          fetch: goldens
+          save: fetch
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-corpus OFFLINE=1
+        run: make verify-corpus OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job corpus --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-corpus
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  generate:
+    name: P3 generate (make verify-generate)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: generate
+          caches: ""
+          fetch: core
+          save: fetch
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-generate OFFLINE=1
+        run: make verify-generate OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-generate
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit-rust:
+    name: P4a unit-rust (make test-rust)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-rust
+          caches: cargo cargo-test
+          fetch: deps seaweedfs goldens core
+          save: fetch
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make test-rust OFFLINE=1
+        # The stellar-core package is fetched (part core), so the tests that run it (tests/gen*.rs) fail instead of
+        # skipping when it cannot be found. The pull-request CI does not fetch it, and they skip there.
+        env:
+          XDRCHECK_REQUIRE_CORE: "1"
+        run: make test-rust OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Save cargo target (test build)
+        if: always() && steps.setup.outputs.cargo-test-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          # The same paths as the restore in .github/actions/setup (cargo-test): the test build, not the scratch
+          # copies the tests leave in target/tmp, the tools of target/release or the runners' logs.
+          path: |
+            target
+            !target/tmp
+            !target/release
+            !target/test-parallel
+            !target/test-drivers
+          key: ${{ steps.setup.outputs.cargo-test-key }}
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-rust --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-rust
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit-go:
+    name: P4b unit-go (make test-go GO_MODULES=go)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-go
+          caches: go go-build
+          fetch: deps seaweedfs goldens
+          save: fetch
+          tools: "true"
+          build: "false"
+      - name: make test-go OFFLINE=1 GO_MODULES=go
+        run: make test-go OFFLINE=1 GO_MODULES=go CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Save Go build cache
+        if: always() && steps.setup.outputs.go-build-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.setup.outputs.go-build-key }}
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-go --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-go
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+
+  unit-lint:
+    name: P4e unit-lint (make test-go GO_MODULES=lint)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-lint
+          caches: go go-build
+          fetch: py gomod
+          save: fetch
+          tools: "true"
+          build: "false"
+      - name: make test-go OFFLINE=1 GO_MODULES=lint
+        run: make test-go OFFLINE=1 GO_MODULES=lint CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Save Go build cache
+        if: always() && steps.setup.outputs.go-build-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build
+          key: ${{ steps.setup.outputs.go-build-key }}
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-lint --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-lint
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit-drivers-a:
+    name: P4c unit-drivers-a (make test-drivers, Python)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-drivers-a
+          caches: ""
+          fetch: py driver:python
+          save: fetch
+          rust: "false"
+          tools: "true"
+          free-disk: "false"
+          build: "false"
+      - name: make test-drivers OFFLINE=1 DRIVERS=python@17.0.0,python@17.0.1
+        run: make test-drivers OFFLINE=1 DRIVERS=python@17.0.0,python@17.0.1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-drivers-a --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-drivers-a
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit-drivers-b:
+    name: P4c unit-drivers-b (make test-drivers, JavaScript, stellar-core)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-drivers-b
+          caches: ""
+          fetch: py driver:js driver:js16 driver:core driver:stub
+          save: fetch
+          rust: "false"
+          tools: "true"
+          free-disk: "false"
+          build: "false"
+      - name: make test-drivers OFFLINE=1 DRIVERS=js,js16,core,stub
+        run: make test-drivers OFFLINE=1 DRIVERS=js,js16,core,stub CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-drivers-b --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-drivers-b
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit-drivers-c:
+    name: P4c unit-drivers-c (make test-drivers, Go v0.7.x)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-drivers-c
+          caches: ""
+          fetch: py driver:go/v0.7.1 driver:go/v0.7.2 driver:go/v0.7.3
+          save: fetch
+          rust: "false"
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make test-drivers OFFLINE=1 DRIVERS=go@v0.7.1,go@v0.7.2,go@v0.7.3
+        run: make test-drivers OFFLINE=1 DRIVERS=go@v0.7.1,go@v0.7.2,go@v0.7.3 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-drivers-c --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-drivers-c
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit-drivers-d:
+    name: P4c unit-drivers-d (make test-drivers, Go v0.8.0 and v0.9.0, soroban-spec)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-drivers-d
+          caches: ""
+          fetch: py driver:go/v0.8.0 driver:go/v0.9.0 driver:soroban-spec
+          save: fetch
+          rust: "true"
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make test-drivers OFFLINE=1 DRIVERS=go@v0.8.0,go@v0.9.0,soroban-spec
+        run: make test-drivers OFFLINE=1 DRIVERS=go@v0.8.0,go@v0.9.0,soroban-spec CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-drivers-d --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-drivers-d
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  unit-drivers-e:
+    name: P4c unit-drivers-e (make test-drivers, Rust, XDR-JSON)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: unit-drivers-e
+          caches: ""
+          fetch: py driver:rust driver:rs-xdr-json
+          save: fetch
+          rust: "true"
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make test-drivers OFFLINE=1 DRIVERS=rust,rs-xdr-json@30.0.0,rs-xdr-json@main
+        run: make test-drivers OFFLINE=1 DRIVERS=rust,rs-xdr-json@30.0.0,rs-xdr-json@main CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job unit-drivers-e --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-unit-drivers-e
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  cli:
+    name: P4d cli (make test-cli)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          caches: ""
+          fetch: "false"
+          save: ""
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make test-cli OFFLINE=1
+        run: make test-cli OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job cli --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-cli
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  harness-selftest:
+    name: P5 harness-selftest (make harness-selftest)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: harness-selftest
+          go-build-name: build
+          caches: go go-build
+          fetch: gomod driver:go/v0.9.0
+          save: fetch
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make harness-selftest OFFLINE=1
+        run: make harness-selftest OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job harness-selftest --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-harness-selftest
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  memory:
+    name: P6 memory (make verify-memory)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: memory
+          go-build-name: build
+          caches: go go-build
+          fetch: gomod goldens
+          save: fetch
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-memory OFFLINE=1
+        run: make verify-memory OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job memory --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-memory
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  replay-acceptance:
+    name: P7 replay (make verify-replay)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: replay-acceptance
+          go-build-name: build
+          caches: go go-build
+          fetch: gomod wallet-backend
+          save: fetch
+          rust: "false"
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make verify-replay OFFLINE=1
+        run: make verify-replay OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job replay-acceptance --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-replay
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  conformance:
+    name: P8 conformance (make verify-conformance)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: conformance
+          caches: ""
+          fetch: conform-pr
+          save: fetch
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make verify-conformance OFFLINE=1
+        run: make verify-conformance OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job conformance --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-conformance
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  lint:
+    name: P9 lint (make verify-lint)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: lint
+          go-build-name: build
+          caches: go-build
+          own-gomod: "true"
+          fetch: py gomod lint-sources
+          save: fetch
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-lint OFFLINE=1
+        run: make verify-lint OFFLINE=1
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job lint --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-lint
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  guide:
+    name: P10 guide (make verify-guide)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: guide
+          go-build-name: build
+          caches: go go-build
+          fetch: py gomod docs
+          save: fetch
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-guide
+        # The fetch caches the pinned docs repository and its packages, so the documentation repository's own
+        # commands run here with the network unreachable too.
+        run: make verify-guide OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job guide --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-guide
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  coverage:
+    name: P11 coverage (make verify-coverage)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          caches: ""
+          fetch: "false"
+          save: ""
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-coverage OFFLINE=1
+        run: make verify-coverage OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job coverage --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-coverage
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # The full-size runs only this tier makes: the whole corpus against wallet-backend, the declared stellar-etl
+  # divergences, and the public conformance column set with stellar-core's own decoder as a column, so a divergence
+  # from the network is shown in CI. Their reports are runs of the findings check's required set, so P12 and P12b
+  # read them.
+  replay-full:
+    name: P14 replay-full (make replay-full)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: replay-acceptance
+          go-build-name: build
+          caches: go go-build
+          fetch: gomod wallet-backend
+          # P7 saves this fetch output (same parts, same key); this job only restores it.
+          save: ""
+          rust: "false"
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make replay-full OFFLINE=1
+        run: make replay-full OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job replay-full --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-replay-full
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  replay-etl-known:
+    name: P15 replay-etl-known (make replay-etl-known)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: replay-etl-known
+          go-build-name: build
+          caches: go go-build
+          fetch: gomod replay-etl
+          save: fetch
+          rust: "false"
+          tools: "true"
+          free-disk: "false"
+          build: "false"
+      - name: make replay-etl-known OFFLINE=1
+        run: make replay-etl-known OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job replay-etl-known --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-replay-etl-known
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  conformance-public:
+    name: P16 conformance-public (make verify-conformance-public)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: conformance-public
+          caches: ""
+          fetch: conform
+          save: fetch
+          rust: "true"
+          tools: "true"
+          free-disk: "true"
+          build: "false"
+      - name: make verify-conformance-public OFFLINE=1
+        run: make verify-conformance-public OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job conformance-public --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-conformance-public
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  sdk-ci-recipes:
+    name: P17 sdk-ci-recipes (make sdk-ci-recipes)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: sdk-ci-recipes
+          caches: ""
+          # sdk: the build dependencies, the Rust example's crates and the pinned SDKs' packages (the driver caches).
+          fetch: sdk
+          save: fetch
+          rust: "true"
+          tools: "false"
+          free-disk: "true"
+          build: "false"
+      - name: make sdk-ci-recipes OFFLINE=1
+        run: make sdk-ci-recipes OFFLINE=1
+
+  mainnet:
+    # The mainnet tier (corpus/mainnet/README.md): its 6,150 public-lake objects (about 1 GB, the fetch part
+    # `mainnet`) are fetched once and kept in this job's fetch cache; a run with the cache restored fetches nothing
+    # (an object a changed tier.jsonl adds is fetched then). The check reads only the cache, with the network cut.
+    name: P18 mainnet (make verify-mainnet)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          cache-name: mainnet
+          caches: ""
+          fetch: mainnet
+          save: fetch
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-mainnet OFFLINE=1
+        run: make verify-mainnet OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" MAINNET_JOBS=2 |& tee "$RUNNER_TEMP/job.log"
+      - name: Summary of the reports
+        if: always()
+        run: python3 -I scripts/ci/job-summary.py job mainnet --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-mainnet
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  findings:
+    name: P12 findings (make verify-findings)
+    needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, harness-selftest, memory, replay-acceptance, conformance, lint, guide, coverage, replay-full, replay-etl-known, conformance-public]
+    # Runs after failed checks too: its job is to account for them. It needs the tools, so not without them.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download the reports of the jobs above
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: reports-*
+          path: reports
+          merge-multiple: true
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          caches: ""
+          fetch: "false"
+          save: ""
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-findings OFFLINE=1
+        run: make verify-findings OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& tee "$RUNNER_TEMP/job.log"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Summary of the reports
+        if: always() && steps.withhold.outcome == 'success'
+        run: python3 -I scripts/ci/job-summary.py job findings --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: reports-findings
+          path: reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  findings-acceptance:
+    name: P12b findings-check-strict
+    needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, harness-selftest, memory, replay-acceptance, conformance, lint, guide, coverage, replay-full, replay-etl-known, conformance-public]
+    # The findings check in strict mode over every report of the run (findings/README.md): every failure row links a
+    # finding record, and every record is filed or resolved. A linter report withheld from the upload is counted from
+    # its tally (<target>.tally.json). On main and by hand (PENDING_OK=1) rows awaiting finding review alone do not
+    # fail the job: it ends with a warning annotation and the job summary line "N failure rows have no linked issue".
+    # Every other failure (a failure row with no finding ID and no pending entry, a stale or expired pending entry, a
+    # record not filed, a missing report, a tool error) fails it. On a release tag (v*) the pending rows fail it too.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download the reports of the jobs above
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: reports-*
+          path: reports
+          merge-multiple: true
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          caches: ""
+          fetch: "false"
+          save: ""
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make verify-findings-acceptance OFFLINE=1
+        env:
+          PENDING_OK: ${{ github.ref_type != 'tag' && '1' || '' }}
+        # GITHUB_ACTIONS and GITHUB_STEP_SUMMARY are emptied for the tool so that it writes no annotation and no
+        # summary line of its own; its pending-only line is reworded, and the next step writes the summary.
+        run: |
+          GITHUB_ACTIONS= GITHUB_STEP_SUMMARY= make verify-findings-acceptance OFFLINE=1 PENDING_OK="$PENDING_OK" CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK" |& sed -u -E 's/^[A-Z]+-[0-9]+ not met: ([0-9]+) rows? awaits? finding review.*$/\1 failure rows have no linked issue/' | tee "$RUNNER_TEMP/job.log"
+      - name: Summary of the reports
+        if: always()
+        run: python3 -I scripts/ci/job-summary.py job findings-acceptance --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
+
+  acceptance-report:
+    name: P13 run-summary
+    needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, harness-selftest, memory, replay-acceptance, conformance, lint, guide, coverage, replay-full, replay-etl-known, conformance-public, sdk-ci-recipes, findings]
+    # Runs after failed checks too: one table of every job above with its result and the key numbers its own
+    # summary states (reports/ci-summary/<job>.txt in its reports artifact). It needs the tools, so not without them.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download the reports of the jobs above
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: reports-*
+          path: reports
+          merge-multiple: true
+      - id: setup
+        uses: ./.github/actions/setup
+        with:
+          caches: ""
+          fetch: "false"
+          save: ""
+          rust: "false"
+          tools: "true"
+          build: "false"
+      - name: make acceptance-report OFFLINE=1
+        # Writes its report files for the artifact below; its table is not printed (stdout is discarded).
+        run: |
+          exec > /dev/null
+          make acceptance-report OFFLINE=1 CORPUS="$CORPUS" MUTATE="$MUTATE" XDRCHECK="$XDRCHECK"
+      - name: Run summary
+        if: always()
+        env:
+          JOB_RESULTS: "build=${{ needs.build.result }} static=${{ needs.static.result }} corpus=${{ needs.corpus.result }} generate=${{ needs.generate.result }} unit-rust=${{ needs.unit-rust.result }} unit-go=${{ needs.unit-go.result }} unit-lint=${{ needs.unit-lint.result }} unit-drivers-a=${{ needs.unit-drivers-a.result }} unit-drivers-b=${{ needs.unit-drivers-b.result }} unit-drivers-c=${{ needs.unit-drivers-c.result }} unit-drivers-d=${{ needs.unit-drivers-d.result }} unit-drivers-e=${{ needs.unit-drivers-e.result }} cli=${{ needs.cli.result }} harness-selftest=${{ needs.harness-selftest.result }} memory=${{ needs.memory.result }} replay-acceptance=${{ needs.replay-acceptance.result }} conformance=${{ needs.conformance.result }} lint=${{ needs.lint.result }} guide=${{ needs.guide.result }} coverage=${{ needs.coverage.result }} replay-full=${{ needs.replay-full.result }} replay-etl-known=${{ needs.replay-etl-known.result }} conformance-public=${{ needs.conformance-public.result }} sdk-ci-recipes=${{ needs.sdk-ci-recipes.result }} findings=${{ needs.findings.result }}"
+        run: python3 -I scripts/ci/job-summary.py run --summary "$GITHUB_STEP_SUMMARY"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/
+      - name: Upload the run's reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: run-summary-reports
+          path: reports/
+          if-no-files-found: warn
+          retention-days: 30

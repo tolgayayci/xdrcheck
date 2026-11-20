@@ -1,0 +1,199 @@
+# Nightly corpus and golden checks: regenerate every scenario, decode the stellar-core goldens with every
+# decoder, the early warning against stellar-core master, and the cold refetch of every pinned download. Jobs that
+# need the driver packages or the stellar-core test image fetch them with scripts/nightly/fetch.sh after the shared
+# setup (a second networked step; the check itself still runs with OFFLINE=1). No job loads the private overlay.
+# The early-warning job tracks an unpinned branch: it prints counts and the new arms' names only and uploads no
+# report.
+# Failure path (no secrets, no external service): a failed job writes what failed and the command to rerun it to
+# the run's job summary, and the run turns red. The workflow runs by hand only (workflow_dispatch).
+# None of the jobs gates a pull request; docs/architecture.md (CI) lists the jobs.
+name: nightly-goldens
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Run one job only (each costs runner minutes), or all of them
+        type: choice
+        default: all
+        options: [all, regenerate-all, goldens, early-warning, refetch]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-goldens
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  regenerate-all:
+    if: inputs.job == 'all' || inputs.job == 'regenerate-all'
+    name: N1 regenerate-all (make nightly-regenerate)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: cargo go
+      - name: make nightly-regenerate OFFLINE=1
+        run: make nightly-regenerate OFFLINE=1
+      - name: Failure summary
+        if: failure()
+        env:
+          JOB: ${{ github.job }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TARGET: make nightly-regenerate
+        run: |
+          {
+            echo "### Nightly job \`$JOB\` failed"
+            echo
+            echo "Rerun locally: \`$TARGET\`. Logs and reports: $RUN_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::nightly job $JOB failed; see the job summary"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/ reports-nightly/
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nightly-regenerate-all
+          path: |
+            reports/
+            reports-nightly/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  goldens:
+    if: inputs.job == 'all' || inputs.job == 'goldens'
+    # N2 golden-emission (AG-2, the stellar-core test image) and N3 bulk-decode (AG-3) are one make target.
+    name: N2+N3 goldens (make verify-goldens-nightly)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          # Only the parts this target reads (goldens.sh: the golden tree and stellar-core, plus what `make build`
+          # needs); `all` fills the runner's disk.
+          cache-name: nightly-goldens
+          caches: cargo go npm
+          fetch: cargo gomod goldens core
+          free-disk: "true"
+      - name: Fetch the driver packages and the stellar-core test image (network)
+        run: scripts/nightly/fetch.sh images drivers
+      - name: make verify-goldens-nightly OFFLINE=1
+        run: make verify-goldens-nightly OFFLINE=1
+      - name: Failure summary
+        if: failure()
+        env:
+          JOB: ${{ github.job }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TARGET: make verify-goldens-nightly
+        run: |
+          {
+            echo "### Nightly job \`$JOB\` failed"
+            echo
+            echo "Rerun locally: \`$TARGET\`. Logs and reports: $RUN_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::nightly job $JOB failed; see the job summary"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/ reports-nightly/
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nightly-goldens
+          path: |
+            reports/
+            reports-nightly/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  early-warning:
+    if: inputs.job == 'all' || inputs.job == 'early-warning'
+    # Reads stellar-core's next-protocol goldens at master (the target's own fetch), then decodes them offline.
+    # Counts only, and no report upload: the branch is not pinned.
+    name: N6 early-warning (make nightly-early-warning)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: cargo go
+      - name: make nightly-early-warning OFFLINE=1
+        run: make nightly-early-warning OFFLINE=1
+      - name: Failure summary
+        if: failure()
+        env:
+          JOB: ${{ github.job }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TARGET: make nightly-early-warning
+        run: |
+          {
+            echo "### Nightly job \`$JOB\` failed"
+            echo
+            echo "Rerun locally: \`$TARGET\`. Logs and reports: $RUN_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::nightly job $JOB failed; see the job summary"
+
+  refetch:
+    if: inputs.job == 'all' || inputs.job == 'refetch'
+    # Every pinned download fetched again from cold caches and verified by hash, then the pins check, the golden
+    # tree against the bulk index, and every vendored public-lake object against its recorded hash.
+    name: N8 refetch (make nightly-refetch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          caches: ""
+          fetch: "false"
+          build: "false"
+      - name: make nightly-refetch
+        run: make nightly-refetch
+      - name: Failure summary
+        if: failure()
+        env:
+          JOB: ${{ github.job }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TARGET: make nightly-refetch
+        run: |
+          {
+            echo "### Nightly job \`$JOB\` failed"
+            echo
+            echo "Rerun locally: \`$TARGET\`. Logs and reports: $RUN_URL"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::nightly job $JOB failed; see the job summary"
+      - name: Withhold sites awaiting finding review
+        id: withhold
+        if: always()
+        run: python3 -I scripts/ci/withhold-pending.py reports/ reports-nightly/
+      - name: Upload reports
+        if: always() && steps.withhold.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nightly-refetch
+          path: |
+            reports/
+            reports-nightly/
+          if-no-files-found: ignore
+          retention-days: 14
