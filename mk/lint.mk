@@ -1,0 +1,2 @@
+# Make targets of the lint area. The Makefile includes every mk/*.mk in name order; give each target a `## text`
+# line so `make help` and docs/cli.md list it.
