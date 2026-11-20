@@ -107,7 +107,7 @@ person. Linter errors pending finding review at the pinned current commit keep `
 
 ## Not built yet
 
-The kit is under active development toward its first release ([CHANGELOG.md](../CHANGELOG.md)). Not built yet:
+Not built as of release `30.0.0` ([CHANGELOG.md](../CHANGELOG.md)):
 serving the lake layout over a GCS API from `xdrcheck` (the stellar-etl adapter runs its own emulator) and `xdrcheck replay
 --resume`. `make verify-goldens-nightly`
 needs the stellar-core test image and runs by hand only (`.github/workflows/nightly-goldens.yml`): its golden emission

@@ -12,8 +12,10 @@ known-divergence changes.
 
 ## [Unreleased]
 
-The first release, `30.0.0`: Protocol 30 coverage, built against the Protocol 30 stable stack pinned in
-`pins.toml` (stellar-core 30.0.0, rs-stellar-xdr 30.0.0). The tag is not cut yet.
+## [30.0.0] - 2026-11-20
+
+The first release: Protocol 30 coverage, built against the Protocol 30 stable stack pinned in
+`pins.toml` (stellar-core 30.0.0, rs-stellar-xdr 30.0.0).
 
 ### Added
 

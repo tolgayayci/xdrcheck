@@ -19,10 +19,10 @@ and a job of the same name in the [full CI](.github/workflows/full.yml).
 
 | | |
 |---|---|
-| **Corpus** | 446 entries over 37 CAP rows and 16 protocol-gated or encoding rows ([coverage](corpus/COVERAGE.md)); 138 local-core entries with testnet and pubnet twins, rebuilt byte for byte by `make verify-generate`; stellar-core's goldens and public-lake ledgers imported; hand-made entries flagged `synthetic` |
+| **Corpus** | 446 entries in 36 of 37 CAP rows and 16 protocol-gated or encoding rows ([coverage](corpus/COVERAGE.md)); 138 local-core entries with testnet and pubnet twins, rebuilt byte for byte by `make verify-generate`; stellar-core's goldens and public-lake ledgers imported; hand-made entries flagged `synthetic` |
 | **Mainnet, all of it** | a scan of pubnet ledgers 2 to 65,505,999 (10,869,626,939 transactions, 0 gaps) found 3,270,052 transaction-part shapes and 15,884 shape tokens; the [mainnet tier](corpus/mainnet/README.md) holds 6,158 real transactions that together contain **every one of the 15,186 transaction-level tokens**, checked against the public lake by `make verify-mainnet` |
 | **Indexers** | wallet-backend built at seven commits, fed by a mock `getLedgers` RPC and by a Galexie (SEP-54) data lake; stellar-etl and Horizon rigs; an independent judge computes from each ledger's own entry changes what the stored rows must be |
-| **SDKs** | one divergence matrix over stellar-core 30.0.0 and 20 SDK releases: go-stellar-sdk v0.7.1 to v0.9.0, js-stellar-sdk 16.3.0 to 17.4.0, py-stellar-base 17.0.0 and 17.0.1, rs-stellar-xdr 28.0.0 to 30.0.0 (default and no limits) ([matrix](evidence/results/conformance-matrix.json), [siblings](findings/SIBLINGS.md)) |
+| **SDKs** | one divergence matrix over stellar-core 30.0.0 and 17 SDK releases in 20 columns: go-stellar-sdk v0.7.1 to v0.9.0, js-stellar-sdk 16.3.0 to 17.4.0, py-stellar-base 17.0.0 and 17.0.1, rs-stellar-xdr 28.0.0 to 30.0.0 (default and no limits) ([matrix](evidence/results/conformance-matrix.json), [siblings](findings/SIBLINGS.md)) |
 | **Linter** | `xdrlint`: the three ingestion mistakes as rules with IDs, 87 seeded-violation fixtures, run on the current wallet-backend and stellar-etl ([rules](lint/docs/README.md)) |
 | **Guide** | indexer-hardening guide for developers.stellar.org: 462 claims (407 facts, 55 recommendations), each with its sources: stellar-core source lines, corpus entries and runs ([verification](guide/VERIFICATION.md)) |
 | **Findings** | **48 issues filed upstream in 10 projects**: 7 already fixed (3 in rs-stellar-xdr, 3 in py-stellar-base, 1 in java-stellar-sdk), 1 fix awaiting merge in js-stellar-sdk ([details](#found-and-filed-upstream)) |
@@ -436,7 +436,7 @@ project runs them here. The generated data is [evidence/results/known-defects.js
 
 ## Status
 
-Under active development toward the first release ([CHANGELOG.md](CHANGELOG.md)). Every acceptance check holds on
+The first release is `30.0.0` ([CHANGELOG.md](CHANGELOG.md)). Every acceptance check holds on
 the current tree but one: the guide's review by a core or platform engineer has not taken place, and the guide is
 not published until it has ([docs/acceptance.md](docs/acceptance.md)). The linter is clean on the pinned current
 wallet-backend because each of its three reports there is in a frozen expected list, with a reason and a finding
