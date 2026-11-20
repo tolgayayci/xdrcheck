@@ -25,7 +25,7 @@ and a job of the same name in the [full CI](.github/workflows/full.yml).
 | **SDKs** | one divergence matrix over stellar-core 30.0.0 and 20 SDK releases: go-stellar-sdk v0.7.1 to v0.9.0, js-stellar-sdk 16.3.0 to 17.4.0, py-stellar-base 17.0.0 and 17.0.1, rs-stellar-xdr 28.0.0 to 30.0.0 (default and no limits) ([matrix](evidence/results/conformance-matrix.json), [siblings](findings/SIBLINGS.md)) |
 | **Linter** | `xdrlint`: the three ingestion mistakes as rules with IDs, 87 seeded-violation fixtures, run on the current wallet-backend and stellar-etl ([rules](lint/docs/README.md)) |
 | **Guide** | indexer-hardening guide for developers.stellar.org: 462 claims (407 facts, 55 recommendations), each with its sources: stellar-core source lines, corpus entries and runs ([verification](guide/VERIFICATION.md)) |
-| **Findings** | **48 issues filed upstream in 10 projects**: 5 already fixed (3 in rs-stellar-xdr, 2 in py-stellar-base), 1 fix awaiting merge in js-stellar-sdk ([details](#found-and-filed-upstream)) |
+| **Findings** | **48 issues filed upstream in 10 projects**: 7 already fixed (3 in rs-stellar-xdr, 3 in py-stellar-base, 1 in java-stellar-sdk), 1 fix awaiting merge in js-stellar-sdk ([details](#found-and-filed-upstream)) |
 
 ## Acceptance checks
 
@@ -33,7 +33,7 @@ Each check is one `make` target; [docs/acceptance.md](docs/acceptance.md) gives 
 
 | Check | Condition | Result | Run it | Evidence |
 |---|---|---|---|---|
-| `roundtrip` | entries round-trip through rs-stellar-xdr | met: 734 round-trip and reject rows | `make verify-corpus` | [manifest schema](corpus/schema/manifest-entry.schema.json), [format](docs/manifest.md) |
+| `roundtrip` | entries round-trip through rs-stellar-xdr | met: 738 round-trip and reject rows | `make verify-corpus` | [manifest schema](corpus/schema/manifest-entry.schema.json), [format](docs/manifest.md) |
 | `golden-agreement` | entries agree with the `--check-lcm` goldens | met: imported goldens equal byte for byte; local-core entries compared with the golden transaction of the same shape ([mirrors](corpus/mirrors.json)); stellar-core's own `--check-lcm` accepts the golden tree (`nightly-goldens`) | `make verify-corpus`, `make verify-goldens-nightly` | [golden mirror](evidence/golden-mirror/README.md) |
 | `replay-regression` (case `wallet-backend-729`) | wallet-backend#729 reproduced before the fix, passes after | met: halt at `2a0a84ea`, pass at `2c873353` | `make verify-replay` | [evidence](evidence/wallet-backend-replay/README.md) |
 | `replay-regression` (case `wallet-backend-731`) | wallet-backend#731 reproduced before the fix, passes after | met: dropped at `764a4f5b`, pass at `c152783c` | `make verify-replay` | [evidence](evidence/wallet-backend-731/README.md) |
@@ -78,12 +78,14 @@ reported to the project that owns it. Upstream states below were checked on 2026
 
 - **48 issues filed in 10 projects**: wallet-backend 12, go-stellar-sdk 13, js-stellar-sdk 8, rs-stellar-xdr 4,
   Horizon 3, py-stellar-base 3, stellar-etl 2, java-stellar-sdk, stellar-cli and rs-stellar-rpc-client 1 each.
-- **5 already fixed upstream.** In rs-stellar-xdr the maintainers merged fixes for three of our issues
+- **7 already fixed upstream.** In rs-stellar-xdr the maintainers merged fixes for three of our issues
   ([#622](https://github.com/stellar/rs-stellar-xdr/issues/622), [#625](https://github.com/stellar/rs-stellar-xdr/issues/625),
   and [#626](https://github.com/stellar/rs-stellar-xdr/issues/626), closed as a duplicate of the maintainers' own issue
-  and fixed with it). In py-stellar-base two are fixed:
+  and fixed with it). In py-stellar-base all three are fixed:
   [#1256](https://github.com/StellarCN/py-stellar-base/issues/1256) by the maintainer and
-  [#1258](https://github.com/StellarCN/py-stellar-base/issues/1258) by our merged pull request.
+  [#1258](https://github.com/StellarCN/py-stellar-base/issues/1258) by our merged pull request, and
+  [#1278](https://github.com/StellarCN/py-stellar-base/issues/1278) by the maintainer. In java-stellar-sdk the maintainers merged a fix
+  for [#834](https://github.com/lightsail-network/java-stellar-sdk/issues/834).
 - **1 fix awaiting merge**: an SDF developer opened a pull request for js-stellar-sdk
   [#1901](https://github.com/stellar/js-stellar-sdk/issues/1901).
 - **Siblings**: when a defect is found in one SDK, the conformance runner checks the same shape in the others, and the
@@ -173,13 +175,13 @@ reports give each one: [pipelines](findings/REPORT-pipelines.md), [SDKs](finding
 |---|---|---|---|
 | [#1256](https://github.com/StellarCN/py-stellar-base/issues/1256) | medium | Signed payload signer: an empty or 65+ byte payload is encoded into a P key that the SDK itself cannot decode | fixed |
 | [#1258](https://github.com/StellarCN/py-stellar-base/issues/1258) | medium | StrKey decodes a signed payload key whose padding bytes are not zero | fixed (our PR merged) |
-| [#1278](https://github.com/StellarCN/py-stellar-base/issues/1278) | low | SorobanServer.get_ledger_entries drops the extXdr field, so the sponsor of a ledger entry cannot be read | open |
+| [#1278](https://github.com/StellarCN/py-stellar-base/issues/1278) | low | SorobanServer.get_ledger_entries drops the extXdr field, so the sponsor of a ledger entry cannot be read | fixed (maintainer PR merged) |
 
 **java-stellar-sdk** (1)
 
 | Issue | Severity | What breaks | State |
 |---|---|---|---|
-| [#834](https://github.com/lightsail-network/java-stellar-sdk/issues/834) | low | Sep45Challenge.readChallengeAuthorizationEntries throws IllegalArgumentException instead of InvalidSep45ChallengeException for some malformed input | open |
+| [#834](https://github.com/lightsail-network/java-stellar-sdk/issues/834) | low | Sep45Challenge.readChallengeAuthorizationEntries throws IllegalArgumentException instead of InvalidSep45ChallengeException for some malformed input | fixed (maintainer PR merged) |
 
 **stellar-cli** (1)
 

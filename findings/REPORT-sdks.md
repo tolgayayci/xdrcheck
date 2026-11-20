@@ -151,7 +151,7 @@ whose inner transaction is nil) and js-stellar-sdk (F-0083, #1911, open: `buildF
 inner transaction without time bounds), both executed by hand; no conformance fact fee-bumps a parsed transaction.
 
 The `extXdr` field of an RPC `getLedgerEntries` result, which holds the entry's sponsor (CAP-33): js-stellar-sdk (F-0085,
-#1913, open), py-stellar-base (F-0090, #1278, open) and rs-stellar-rpc-client (F-0091, #124, open, also seen through
+#1913, open), py-stellar-base (F-0090, #1278, fixed by the maintainer) and rs-stellar-rpc-client (F-0091, #124, open, also seen through
 stellar-cli's `ledger entry fetch`) drop it, all executed by hand; no corpus entry drives an RPC client.
 
 Error values outside a `Result` (a `#[contracterror]` argument, or a `soroban_sdk::Error` nested in a struct or a vec):
