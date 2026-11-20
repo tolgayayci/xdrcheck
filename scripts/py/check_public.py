@@ -53,7 +53,7 @@ BANNED = [
     (re.compile(r"/home/[A-Za-z0-9]"), "machine-local home path"),
     (re.compile(r"/Users/[A-Za-z0-9]"), "machine-local home path"),
     (re.compile(r"(?<![\w.-])/root/"), "machine-local root path"),
-    (re.compile(r"/tmp/claude"), "machine-local scratch path"),
+    (re.compile(r"/tmp/[a-z]+-\d{3,}/"), "machine-local scratch path"),
     (re.compile(r"(?<![\w-])references/"), "internal research folder"),
     (re.compile(r"\(not published\)"), "citation of an unpublished internal document"),
     (re.compile(r"\bTRACKING\.md\b|\bBUILD_PLAN\.md\b|\bdesign-review-2026|\bresearch-gap-review"), "internal working file"),
@@ -102,7 +102,7 @@ LABELS_EXEMPT = ("corpus/plan.json", "corpus/schema/examples/plan/")
 HANDLE = re.compile(r"(?i)tolga")
 HANDLE_OK = re.compile(r"github\.com/tolgayayci/xdrcheck\b|ghcr\.io/tolgayayci/xdrcheck-core-next\b|Tolga Yaycı \(\[@tolgayayci\]|\[@tolgayayci\]\(https://github\.com/|github\.com/tolgayayci\)")
 # Files that hold the rules themselves, or that never ship: only the private-name rules apply to them.
-SKIP = {"scripts/py/check_public.py", "scripts/py/check_slug.py", "CLAUDE.md", "AGENTS.md", ".gitignore"}
+SKIP = {"scripts/py/check_public.py", "scripts/py/check_slug.py", ".gitignore"}
 BINARY = (".zst", ".xdr", ".gz", ".wasm", ".b64", ".png", ".jar", ".lock", ".woff2", ".woff", ".ttf")
 # A report header's run block naming the machine (`"host": "<name>"`); the schema's own `"host": {` is not a value.
 # Single-quoted on purpose: `xdrcheck report redact` drops the host field itself and must not read this as a pattern.
