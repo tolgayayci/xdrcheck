@@ -7,15 +7,22 @@
 
 What is generated, and from what:
 
-- `reference/cli.mdx`: every command on one page, from `docs/cli.md` (whose `--help` blocks
-  `scripts/py/check_cli_reference.py` keeps equal to the built binaries) and, for the two tools that file does
-  not cover, from `apps/docs/data/help/*.txt` (captured with `--capture-help`).
+- `reference/cli.mdx` and `reference/cli/*.mdx`: the command-line reference, an index page (the tools, their shared
+  conventions, a table of commands per tool) and a page per tool or group of `xdrcheck` commands (CLI_PAGES), from
+  `docs/cli.md` (whose `--help` blocks `scripts/py/check_cli_reference.py` keeps equal to the built binaries) and,
+  for the two tools that file does not cover, from `apps/docs/data/help/*.txt` (captured with `--capture-help`).
 - `reference/make-targets.mdx`, the specifications under `reference/` and the guides under `guides/`, each from
   its Markdown source in `docs/`, `go/adapters/`, `examples/` or `crates/` (the table PAGES below). A page may
   append further sources as sections (`Part`), may start from a hand-written template
   `apps/docs/data/*.mdx.in` instead of a Markdown source, and may keep a one-sentence section that points to a
   topic with a page of its own (`Moved`).
-- `reference/lint-rules.mdx`: every xdrlint rule on one page, a section per rule ID, from `lint/docs/*.md`.
+- `reference/lint-rules.mdx` and `reference/lint-rules/*.mdx`: the xdrlint rules, an index page (the rule table,
+  running and configuring the linter) and a page per rule family with a section per rule ID (LINT_PAGES), from
+  `lint/docs/*.md`.
+- `reference/manifest.mdx` and `reference/manifest/*.mdx`: `docs/manifest.md` as an index page and a page per
+  group of its top-level sections (MANIFEST_PAGES). These three references are split when the site is generated;
+  their sources stay whole. Links written for the one page are pointed at the page that holds the heading
+  (`retarget`), and `--check` fails on a hand-written link that still names the old route and anchor.
 - `caps/overview.mdx`: the CAP, pattern and ledger relation, a section per coverage row, from
   `corpus/index.json`, `corpus/coverage.json` and the compact data file `apps/docs/data/cap-prevalence.json`
   (written by `cap_prevalence.py`).
@@ -25,7 +32,7 @@ What is generated, and from what:
   `evidence/results/acceptance.json`. `index.mdx` from the template `apps/docs/data/index.mdx.in`, whose
   `@@name@@` figures come from the same files as the results pages, from `pins.toml` and from `drivers/sets.toml`.
 - The navigation and the icon library of `docs.json`, and the sidebar label and icon of every generated page, from
-  the table NAV below. The other keys of `docs.json` are kept as they stand.
+  the table NAV below (a group may hold a nested `Group`). The other keys of `docs.json` are kept as they stand.
 
 Hand-written pages (the quickstart, `start/how-it-works.mdx`, `start/for-sdk-maintainers.mdx`,
 `start/for-indexers.mdx`, `concepts/`, `architecture/` and `hardening/overview.mdx`) are never touched.
@@ -82,8 +89,8 @@ MAIN, CORPUS = TOOLS["main"], TOOLS["corpus"]
 ACCEPTANCE_COMMANDS = ["findings", "overlay", "report acceptance", "conform sdk-regression", "conform scoreboard",
                        "conform siblings"]
 # xdrcheck commands with a page of their own, in the order of the sidebar.
-MAIN_COMMANDS = ["replay", "serve", "conform", "xcheck", "find", "data", "repro", "runs", "report", "mutate",
-                 "pins", "xdr"]
+MAIN_COMMANDS = ["replay", "serve", "conform", "xcheck", "entry", "find", "data", "repro", "runs", "report",
+                 "mutate", "pins", "xdr"]
 HELP_CAPTURE = {"judge": ["", "facts", "verdict"], "tagger": ["", "run", "merge"]}
 
 # The known upstream defects the acceptance checks reproduce; they may appear on any page.
@@ -457,8 +464,18 @@ def slugify(text: str) -> str:
 # page is its path alone, and carries its own `sidebarTitle`, `icon` and `description`. --check fails on a page that
 # is not here, on a path with no page, on a page without an icon or a description, and on a label longer than three
 # words.
+# A page list may hold a `Group`: a group inside a group, with its own label (at most three words) and icon.
 # Icon names, in the frontmatter of every page and in this table, are names of this one library.
 ICON_LIBRARY = "lucide"
+
+
+@dataclass(frozen=True)
+class Group:
+    label: str
+    icon: str
+    pages: tuple
+
+
 NAV: list[tuple[str, str, list[tuple[str, list]]]] = [
     ("Guides", "book-open", [
         ("Get started", [
@@ -514,7 +531,7 @@ NAV: list[tuple[str, str, list[tuple[str, list]]]] = [
         ("Results", [
             ("results/overview", "At a glance", "gauge"),
             ("results/findings", "Findings", "bug"),
-            ("results/incidents", "Known incidents", "history"),
+            ("results/incidents", "Known defects", "history"),
             ("results/sdk-matrix", "SDK matrix", "table"),
             ("results/replay", "Replay results", "repeat"),
             ("results/mainnet-scan", "Mainnet scan", "globe"),
@@ -527,11 +544,28 @@ NAV: list[tuple[str, str, list[tuple[str, list]]]] = [
     ]),
     ("Reference", "library", [
         ("Command line", [
-            ("reference/cli", "Command line", "terminal"),
+            ("reference/cli", "All commands", "terminal"),
+            Group("xdrcheck", "square-terminal", (
+                ("reference/cli/xdrcheck-replay", "replay and serve", "repeat"),
+                ("reference/cli/xdrcheck-conform", "conform and xcheck", "git-compare-arrows"),
+                ("reference/cli/xdrcheck-data", "Data, runs, reports", "database"),
+                ("reference/cli/xdrcheck-mutate-pins-xdr", "mutate, pins, xdr", "pin"),
+            )),
+            ("reference/cli/xdrcheck-corpus", "xdrcheck-corpus", "boxes"),
+            ("reference/cli/xdrlint", "xdrlint", "search-code"),
+            ("reference/cli/judge-and-tagger", "Judge and tagger", "tags"),
             ("reference/make-targets", "make targets", "hammer"),
         ]),
         ("Corpus", [
-            ("reference/manifest", "Manifest", "file-json"),
+            Group("Manifest", "file-json", (
+                ("reference/manifest", "Manifest overview", "file-json"),
+                ("reference/manifest/files-and-index", "Files and index", "folder-tree"),
+                ("reference/manifest/entry-fields", "Entry fields", "braces"),
+                ("reference/manifest/expected-values", "Expected values", "target"),
+                ("reference/manifest/divergences-and-replay", "Divergences and replay", "split"),
+                ("reference/manifest/kinds-and-levels", "Kinds and levels", "layers"),
+                ("reference/manifest/checks-and-versioning", "Checks and versioning", "shield-check"),
+            )),
             ("reference/entry-ids", "Entry IDs", "fingerprint"),
             ("reference/release", "Release and channels", "archive"),
         ]),
@@ -551,7 +585,11 @@ NAV: list[tuple[str, str, list[tuple[str, list]]]] = [
             ("reference/mutation", "Mutation", "shuffle"),
         ]),
         ("Linter", [
-            ("reference/lint-rules", "Lint rules", "list"),
+            ("reference/lint-rules", "Rule index", "list"),
+            ("reference/lint-rules/xdr000-xdr1xx", "XDR000 and XDR1xx", "shield-x"),
+            ("reference/lint-rules/xdr2xx", "XDR2xx: bounds", "ruler"),
+            ("reference/lint-rules/xdr3xx", "XDR3xx: participants", "users"),
+            ("reference/lint-rules/xdr4xx", "XDR4xx: ledger assumptions", "triangle-alert"),
         ]),
         ("Operations", [
             ("reference/ci-timings", "Timings", "timer"),
@@ -560,8 +598,26 @@ NAV: list[tuple[str, str, list[tuple[str, list]]]] = [
         ]),
     ]),
 ]
+
+
+def nav_flat(pages) -> list:
+    """The pages of a page list, those of its nested groups included, in order."""
+    out = []
+    for p in pages:
+        out += nav_flat(p.pages) if isinstance(p, Group) else [p]
+    return out
+
+
+def nav_groups(pages) -> list[Group]:
+    out = []
+    for p in pages:
+        if isinstance(p, Group):
+            out += [p] + nav_groups(p.pages)
+    return out
+
+
 SIDEBAR: dict[str, tuple[str, str]] = {p[0]: (p[1], p[2]) for _, _, groups in NAV for _, pages in groups
-                                       for p in pages if not isinstance(p, str)}
+                                       for p in nav_flat(pages) if not isinstance(p, str)}
 
 # ------------------------------------------------------------------ pages from sources
 
@@ -595,6 +651,7 @@ class Page:
     public: bool = True
     parts: list[Part] = field(default_factory=list)
     moved: list[Moved] = field(default_factory=list)
+    split: Callable | None = None  # writes the page as an index and sub-pages (see "pages split" below)
 
 
 def demote(text: str) -> str:
@@ -680,7 +737,239 @@ class Out:
         unique_headings(page.dest, body)
         srcs = [page.src] + [p.src for p in page.parts]
         src = srcs[0] if len(srcs) == 1 else ", ".join(srcs[:-1]) + " and " + srcs[-1]
-        self.emit(page.dest, src, page.title or title, description, body)
+        if page.split:
+            page.split(self, page.dest, src, page.title or title, description, body)
+        else:
+            self.emit(page.dest, src, page.title or title, description, body)
+
+
+# ------------------------------------------------------------------ pages split into an index and sub-pages
+
+# A reference page too long to scan is written as an index page and sub-pages. Its sections are moved whole: every
+# `## ` section is on exactly one page. Links are first written as for the one page (its route, an anchor per
+# heading); `retarget` then points each at the page that holds the heading, so no source needs to know the split.
+SPLIT_MOVES: dict[str, dict[str, str]] = {}  # route of the index -> {anchor: route of the sub-page that holds it}
+SPLIT_FAMILY: dict[str, str] = {}            # route of an index or a sub-page -> route of its index
+MANIFEST_SECTIONS: dict[str, tuple[str, str]] = {}  # section number of docs/manifest.md -> (route, anchor)
+RETARGETED: collections.Counter = collections.Counter()
+
+
+def h2_sections(body: str) -> tuple[str, list[tuple[str, str]]]:
+    """The text before the first `## ` heading, and (heading, text) of every `## ` section, in order."""
+    lines = body.split("\n")
+    hs = [(i, t) for i, lv, t in headings(lines) if lv == 2]
+    if not hs:
+        return body, []
+    out = []
+    for n, (i, t) in enumerate(hs):
+        end = hs[n + 1][0] if n + 1 < len(hs) else len(lines)
+        out.append((t, "\n".join(lines[i:end]).strip("\n")))
+    return "\n".join(lines[: hs[0][0]]).rstrip("\n"), out
+
+
+def emit_sub(out: "Out", index_dest: str, dest: str, src: str, title: str, description: str, lead: str,
+             sections: list[str]) -> None:
+    """One sub-page of a split page: a line that points back to the index, then the sections, unchanged."""
+    index_route, route = "/" + index_dest[:-4], "/" + dest[:-4]
+    body = "\n\n".join(sections)
+    SPLIT_FAMILY[index_route] = SPLIT_FAMILY[route] = index_route
+    for anchor in page_anchors(body):
+        SPLIT_MOVES.setdefault(index_route, {})[anchor] = route
+    out.emit(dest, src, title, description, lead + "\n\n" + body)
+
+
+def outside_code(text: str, fn: Callable[[str], str]) -> str:
+    """`fn` applied to the text outside fenced code blocks."""
+    out, chunk, fence = [], [], None
+    for line in text.split("\n"):
+        m = FENCE_RE.match(line)
+        if m or fence is not None:
+            if chunk:
+                out.append(fn("\n".join(chunk)))
+                chunk = []
+            if m:
+                mark = m.group(2)
+                if fence is None:
+                    fence = mark[0] * len(mark)
+                elif mark.startswith(fence) and line.strip() == mark:
+                    fence = None
+            out.append(line)
+            continue
+        chunk.append(line)
+    if chunk:
+        out.append(fn("\n".join(chunk)))
+    return "\n".join(out)
+
+
+MANIFEST_REF = re.compile(r"\[((?:[^\[\]]|\[[^\]]*\])*)\]\(/reference/manifest\)(\s+sections?\s+)?(\d+(?:\.\d+)?)?")
+
+
+def retarget(out: "Out") -> None:
+    """Point every link of a generated page at the page that holds its heading, once the split pages exist: a
+    link to the old route and anchor, a link inside a split page to a heading now on a sibling, and a link to the
+    manifest that names a section number (`[manifest.md §6](…)`, `[manifest.md](…) section 4.4`)."""
+    for dest, text in out.pages.items():
+        route = "/" + dest[:-4]
+        own = page_anchors(text)
+        family = SPLIT_FAMILY.get(route)
+
+        def to(new: str, anchor: str, kind: str) -> str:
+            RETARGETED[kind] += 1
+            return f"](#{anchor})" if new == route else f"]({new}#{anchor})"
+
+        def absolute(m: re.Match) -> str:
+            new = SPLIT_MOVES.get(m.group(1), {}).get(m.group(2))
+            return to(new, m.group(2), "to a sub-page, from the old route and anchor") if new else m.group(0)
+
+        def local(m: re.Match) -> str:
+            anchor = m.group(1)
+            new = SPLIT_MOVES.get(family, {}).get(anchor)
+            if new and new != route and (route == family or anchor not in own):
+                return to(new, anchor, "between the pages of a split page")
+            if not new and anchor not in own and route != family:
+                return to(family, anchor, "between the pages of a split page")
+            return m.group(0)
+
+        def manifest(m: re.Match) -> str:
+            label, word, after = m.groups()
+            num = after if word else None
+            if num is None:
+                inlabel = re.search(r"§\s*(\d+(?:\.\d+)?)", label)
+                num = inlabel.group(1) if inlabel else None
+            if num not in MANIFEST_SECTIONS:
+                return m.group(0)
+            new, anchor = MANIFEST_SECTIONS[num]
+            tail = m.group(0)[m.group(0).index("](/reference/manifest)") + len("](/reference/manifest)"):]
+            return f"[{label}" + to(new, anchor, "to a manifest section, from its number") + tail
+
+        def fix(chunk: str) -> str:
+            chunk = re.sub(r"\]\((/[a-z0-9/-]+)#([^)\s]+)\)", absolute, chunk)
+            if family:
+                chunk = re.sub(r"\]\(#([^)\s]+)\)", local, chunk)
+            return MANIFEST_REF.sub(manifest, chunk)
+
+        out.pages[dest] = outside_code(text, fix)
+
+
+MANIFEST_INDEX = "reference/manifest.mdx"
+# The sub-pages of the manifest reference: (page, title, description, the numbered top-level sections it holds).
+# Section 1 and the sections without a number stay on the index page.
+MANIFEST_PAGES = [
+    ("reference/manifest/files-and-index.mdx", "Manifest: files, layout and the corpus index",
+     "Where the corpus files are and what the corpus index (corpus.json) and the entry index (index.json) hold.",
+     (2, 3)),
+    ("reference/manifest/entry-fields.mdx", "Manifest: entry fields",
+     "Every field of a manifest entry: the top level, variants, meta, the source kinds, blobs, derived values and "
+     "the golden mirror record; and the entry ID.", (4, 5)),
+    ("reference/manifest/expected-values.mdx", "Manifest: expected values and matching",
+     "How an entry states what a correct reader produces and how a reader's output is matched against it: layers, "
+     "scope, exactness, participants, state changes, movements and addresses.", (6,)),
+    ("reference/manifest/divergences-and-replay.mdx", "Manifest: known divergences and the replay block",
+     "How an entry declares a reader that is known to get it wrong, and the replay block: its fields, chain "
+     "indexes and how a ledger blob is served.", (7, 8)),
+    ("reference/manifest/kinds-and-levels.mdx", "Manifest: api, strkey and negative entries, conformance levels",
+     "The api, strkey, spec and negative entries, the validity and flags vocabulary, and the conformance levels "
+     "each kind of entry supports.", (9, 10)),
+    ("reference/manifest/checks-and-versioning.mdx", "Manifest: checks and versioning",
+     "The checks every entry must pass beyond the JSON Schema, and the versioning and compatibility rules of the "
+     "schema.", (11, 12)),
+]
+
+
+def link_section_refs(text: str, route: str) -> str:
+    """`§N` and `§N.M` in running text as links to that section of the manifest reference. A reference that
+    follows a link names a section of the linked document, and stays as it is."""
+    def refs(seg: str, after_link: bool) -> str:
+        def one(m: re.Match) -> str:
+            if (after_link and not seg[: m.start()].strip()) or m.group(1) not in MANIFEST_SECTIONS:
+                return m.group(0)
+            new, anchor = MANIFEST_SECTIONS[m.group(1)]
+            RETARGETED["manifest section numbers made links"] += 1
+            return f"[§{m.group(1)}]({'' if new == route else new}#{anchor})"
+        return re.sub(r"§(\d+(?:\.\d+)?)", one, seg)
+
+    def block(b: str) -> str:
+        """One paragraph, list or table row: a code span may run over a line break, so it is read as one text."""
+        if b.startswith("#"):
+            return b
+        out, pos, after_link = [], 0, False
+        for m in re.finditer(r"`+[^`]*`+|" + LINK_RE.pattern, b):
+            out += [refs(b[pos: m.start()], after_link), m.group(0)]
+            pos, after_link = m.end(), not m.group(0).startswith("`")
+        return "".join(out + [refs(b[pos:], after_link)])
+
+    def chunk(c: str) -> str:
+        blocks, cur = [], []
+        for l in c.split("\n"):
+            if not l.strip() or l.lstrip().startswith(("|", "#")):
+                blocks += ["\n".join(cur)] * bool(cur) + [l]
+                cur = []
+            else:
+                cur.append(l)
+        blocks += ["\n".join(cur)] * bool(cur)
+        return "\n".join(block(b) for b in blocks)
+
+    return outside_code(text, chunk)
+
+
+def smallest_manifest() -> tuple[str, dict, str]:
+    """The smallest manifest file of the corpus that a public page may show: its path, the entry and its text."""
+    files = sorted(glob.glob(os.path.join(ROOT, "corpus", "manifest", "**", "*.json"), recursive=True),
+                   key=lambda f: (os.path.getsize(f), f))
+    for f in files:
+        text = open(f, encoding="utf-8").read()
+        if not any(bad(l) for l in text.split("\n")):
+            return os.path.relpath(f, ROOT), json.loads(text), text.rstrip("\n")
+    sys.exit("generate: no manifest file under corpus/manifest")
+
+
+def split_manifest(out: "Out", dest: str, src: str, title: str, description: str, body: str) -> None:
+    """reference/manifest.mdx as an index (what the manifest is, the smallest manifest file, the table of
+    sections) and one page per group of top-level sections (MANIFEST_PAGES)."""
+    index_route = "/" + dest[:-4]
+    pre, sections = h2_sections(body)
+    number = lambda t: int(m.group(1)) if (m := re.match(r"(\d+)\. ", t)) else None
+    by_num = {number(t): (t, text) for t, text in sections if number(t) is not None}
+    where = {n: "/" + d[:-4] for d, _, _, nums in MANIFEST_PAGES for n in nums}
+    if sorted(where) != sorted(n for n in by_num if n != 1) or 1 not in by_num:
+        sys.exit(f"generate: {src}: its numbered sections are no longer 1 and those MANIFEST_PAGES names")
+    for n, (t, text) in by_num.items():
+        for _, _, h in headings(text.split("\n")):
+            m = re.match(r"(\d+(?:\.\d+)?)\.? ", h)
+            if m:
+                MANIFEST_SECTIONS[m.group(1)] = (where.get(n, index_route), mint_slug(h))
+    for sub_dest, sub_title, sub_desc, nums in MANIFEST_PAGES:
+        lead = (f"Part of [{title}]({index_route}), which lists every section. Section numbers (§) are those of "
+                "that document.")
+        emit_sub(out, dest, sub_dest, src, sub_title, sub_desc, lead,
+                 [link_section_refs(by_num[n][1], "/" + sub_dest[:-4]) for n in nums])
+
+    rows = ["| Section | Page | Subsections |", "|---|---|---|"]
+    for n in sorted(by_num):
+        t, text = by_num[n]
+        route = where.get(n, index_route)
+        page = "this page" if n == 1 else f"[{SIDEBAR[route[1:]][0]}]({route})"
+        subs = [h for _, lv, h in headings(text.split("\n")) if lv == 3]
+        at = "" if route == index_route else route
+        rows.append(f"| [{md_cell(t)}]({at}#{mint_slug(t)}) | {page} | "
+                    + ("<br />".join(f"[{md_cell(h)}]({at}#{mint_slug(h)})" for h in subs) or "—") + " |")
+    path, entry, text = smallest_manifest()
+    kind_section = {"api": "9.1", "strkey": "9.2", "spec": "9.4"}.get(entry["kind"])
+    fields = ["4.1"] + ([kind_section] if kind_section else []) + (["9.3"] if entry.get("negative") else [])
+    example = [
+        "## The smallest manifest file", "",
+        f"`{path}` is the smallest manifest file in the corpus: an entry of kind `{entry['kind']}`"
+        + ("" if entry.get("variants") else ", which has no `variants`") + ". This is the whole file:", "",
+        "```json", text, "```", "",
+        "Its fields are specified in " + ", ".join(f"§{n}" for n in fields[:-1]) + f" and §{fields[-1]}. An entry of kind `ledger` or `xdr` "
+        "adds `variants`, the bytes per network and protocol (§4.2), each with a `source` (§4.4); every entry states "
+        "its expected facts under `expect` (§6). [Read an entry](/start/read-an-entry) walks one such entry field by field."]
+    rest = [text for t, text in sections if number(t) is None]
+    index = "\n\n".join([pre, "## Sections\n\n" + "\n".join(rows), by_num[1][1], "\n".join(example)] + rest)
+    index = link_section_refs(index, index_route)
+    SPLIT_FAMILY[index_route] = index_route
+    unique_headings(dest, index)
+    out.emit(dest, f"{src} and the smallest file under corpus/manifest/", title, description, index)
 
 
 # --- per-source edits (what the generic scrub cannot express)
@@ -748,9 +1037,9 @@ def edit_verification(text: str) -> str:
 
 PAGES: list[Page] = [
     Page("docs/manifest.md", "reference/manifest.mdx",
-         "The corpus manifest and index: entries, variants, sources, expected values, validity and conformance "
-         "levels.",
-         title="Manifest and index format", edit=edit_manifest,
+         "The index of the manifest reference: what a manifest entry is, the smallest manifest file, and where "
+         "each section of the format is specified.",
+         title="Manifest and index format", edit=edit_manifest, split=split_manifest,
          moved=[Moved("Entry IDs", "/reference/entry-ids", "The grammar of entry IDs, their groups and families, "
                       "and how to request a new one are on")]),
     Page("docs/entry-ids.md", "reference/entry-ids.mdx",
@@ -902,8 +1191,50 @@ def clean_help(body: str) -> str:
     return body
 
 
+# The pages of the command-line reference: (page, title, description, the `## ` sections it holds). The index
+# page keeps the introduction, the conventions, the cookbook and one table of commands per tool.
+CLI_INDEX = "reference/cli.mdx"
+CLI_PAGES = [
+    ("reference/cli/xdrcheck-replay.mdx", f"{MAIN} replay and serve",
+     f"{MAIN} replay and {MAIN} serve: replay the corpus or chosen ledgers through an indexer, an SDK target or a "
+     "rig, and serve corpus ledgers to an indexer by hand; each command's full --help.",
+     [f"{MAIN} replay", f"{MAIN} serve"]),
+    ("reference/cli/xdrcheck-conform.mdx", f"{MAIN} conform and xcheck",
+     f"{MAIN} conform and {MAIN} xcheck: run the corpus through the SDK conformance drivers and compare two or "
+     "more SDK targets on the same transactions; each command's full --help.",
+     [f"{MAIN} conform", f"{MAIN} xcheck"]),
+    ("reference/cli/xdrcheck-data.mdx", f"{MAIN} entry, find, data, repro, runs and report",
+     f"{MAIN} entry, find, data, repro, runs and report: look up corpus entries and example transactions, manage "
+     "the dataset, pack and compare runs, and handle reports; each command's full --help.",
+     [f"{MAIN} entry", f"{MAIN} find", f"{MAIN} data", f"{MAIN} repro", f"{MAIN} runs", f"{MAIN} report"]),
+    ("reference/cli/xdrcheck-mutate-pins-xdr.mdx", f"{MAIN} mutate, pins and xdr",
+     f"{MAIN} mutate, pins and xdr: mutate corpus values through every reader, check versions against pins.toml, "
+     "and diff XDR definition sets; each command's full --help.",
+     [f"{MAIN} mutate", f"{MAIN} pins", f"{MAIN} xdr"]),
+    ("reference/cli/xdrcheck-corpus.mdx", CORPUS,
+     f"{CORPUS}, the corpus toolchain: what each command does and its full --help.", [CORPUS]),
+    ("reference/cli/xdrlint.mdx", TOOLS["lint"],
+     f"{TOOLS['lint']}, the linter for Go indexer source: how it runs, its exit codes and its full flag list.",
+     [TOOLS["lint"]]),
+    ("reference/cli/judge-and-tagger.mdx", f"{TOOLS['judge']} and {TOOLS['tagger']}",
+     f"{TOOLS['judge']} and {TOOLS['tagger']}, the two helper tools: the full --help of each command.",
+     [TOOLS["judge"], TOOLS["tagger"]]),
+]
+
+
+def help_commands(block: str) -> list[tuple[str, str]]:
+    """(command, one-line purpose) from the command list of a --help text."""
+    m = re.search(r"(?mi)^commands:\n((?:  \S.*\n?)+)", block)
+    if not m:
+        return []
+    rows = [re.match(r"  (\S+)\s+(.+)$", l) for l in m.group(1).rstrip("\n").split("\n")]
+    return [(r.group(1), r.group(2).strip()) for r in rows if r and r.group(1) != "help"]
+
+
 def build_cli(out: Out) -> None:
-    """reference/cli.mdx: every command on one page, a section per tool or `xdrcheck` command."""
+    """The command-line reference: `reference/cli.mdx`, the index (the tools, the conventions they share, the
+    cookbook, a table of commands per tool), and the pages of CLI_PAGES, a `## ` section per tool or `xdrcheck`
+    command with every --help block."""
     src = "docs/cli.md"
     route = "/reference/cli"
     text = read(src)
@@ -912,54 +1243,61 @@ def build_cli(out: Out) -> None:
     corpus_part, rest = split_at(rest, r"`%s`" % re.escape(MAIN), src)
     main_part, lint_part = split_at(rest, r"`%s`" % re.escape(TOOLS["lint"]), src)
 
-    commands = ["- [`%s`](#%s): the corpus toolchain, the generator and the scan" % (CORPUS, mint_slug(CORPUS))]
-    commands += ["- [`%s %s`](#%s)" % (MAIN, c, mint_slug(f"{MAIN} {c}")) for c in MAIN_COMMANDS]
-    commands += ["- [`%s`](#%s): the linter" % (TOOLS["lint"], mint_slug(TOOLS["lint"])),
-                 "- [`%s`](#%s): facts and verdicts" % (TOOLS["judge"], mint_slug(TOOLS["judge"])),
-                 "- [`%s`](#%s): value tags" % (TOOLS["tagger"], mint_slug(TOOLS["tagger"])),
-                 "- `make` targets: [make targets](/reference/make-targets)"]
+    # the row of `xdrcheck` in the table of tools, without the two commands the site leaves out
+    intro = sub(intro, r", finding records \(`findings`\)", "", src)
+    intro = sub(intro, r", the overlay audit \(`overlay`\) and the pins check \(`pins`\)",
+                " and the pins check (`pins`)", src)
+    # two sentences of the introduction describe the reference as one page
+    intro = sub(intro, r"Each section\s+below has", "Each tool's page has", src)
+    intro = sub(intro, r"the table\s+of `make` targets at the end lists", "the table of `make` targets lists", src)
     title, body = strip_h1(scrub(intro))
-    parts = [md_to_mdx(body, Ctx(src, route)), "## Commands\n\n" + "\n".join(commands)]
+    body = md_to_mdx(body, Ctx(src, route))
+    tools = dict(re.findall(r"(?m)^\| `([\w-]+)` \|[^|]*\|[^|]*\| (.+?) \|$", body))
+    sections: dict[str, str] = {}  # heading of a `## ` section -> its text
 
     # xdrcheck-corpus: its summary table and every help block
     head = corpus_part.split("<!-- BEGIN GENERATED", 1)[0]
-    sections = help_sections(corpus_part)
-    body = scrub(re.sub(r"^## .*\n", "", head, count=1)) + "\n" + "\n".join(
-        help_block(c, clean_help(b)) for c, b in sections)
-    parts.append(f"## {CORPUS}\n\n" + md_to_mdx(body, Ctx(src, route)))
+    corpus_help = help_sections(corpus_part)
+    sec = scrub(re.sub(r"^## .*\n", "", head, count=1)) + "\n" + "\n".join(
+        help_block(c, clean_help(b)) for c, b in corpus_help)
+    sections[CORPUS] = f"## {CORPUS}\n\n" + md_to_mdx(sec, Ctx(src, route))
 
     # xdrcheck: a section per command, without the commands that serve the findings process
     table = [l for l in main_part.split("\n") if l.startswith("| `")]
-    sections = help_sections(main_part)
+    main_help = help_sections(main_part)
     held_rows = [row for row in table
                  if any(row.split("|")[1].strip().strip("`").startswith(a) for a in ACCEPTANCE_COMMANDS)]
-    top = next((b for c, b in sections if c == MAIN), "")
+    top = next((b for c, b in main_help if c == MAIN), "")
     docs = {"replay": "docs/replay.md", "data": "docs/data.md", "find": "docs/find.md", "repro": "docs/repro.md",
             "runs": "docs/run-directory.md", "xcheck": "docs/xcheck.md", "mutate": "docs/mutation.md",
             "conform": "docs/conformance-protocol.md", "serve": "docs/replay-harness.md"}
+    purpose = {}
     for cmd in MAIN_COMMANDS:
         rows = [r for r in table if r.split("|")[1].strip().strip("`").split(" ")[0] == cmd and r not in held_rows]
-        blocks = [help_block(c, clean_help(b)) for c, b in sections
+        blocks = [help_block(c, clean_help(b)) for c, b in main_help
                   if (c == f"{MAIN} {cmd}" or c.startswith(f"{MAIN} {cmd} "))
                   and not any(c[len(MAIN) + 1:].startswith(a) for a in ACCEPTANCE_COMMANDS)]
         if not blocks:
             sys.exit(f"generate: {src}: no --help block for {MAIN} {cmd}")
         desc = re.search(r"^  %s\s+(.+)$" % re.escape(cmd), top, re.M)
         desc = desc.group(1).strip() if desc else f"{MAIN} {cmd}"
-        sec = [desc[0].upper() + desc[1:] + "."]
+        purpose[cmd] = desc[0].upper() + desc[1:]
+        sec = [purpose[cmd] + "."]
         if rows:
             sec.append(scrub("| Command | Does | Used for |\n|---|---|---|\n" + "\n".join(rows)))
         if cmd in docs:
             sec.append(f"The full description is on [its reference page]({route_of(docs[cmd])}).")
         sec += blocks
-        parts.append(f"## {MAIN} {cmd}\n\n" + md_to_mdx("\n\n".join(sec), Ctx(src, route)))
+        sections[f"{MAIN} {cmd}"] = f"## {MAIN} {cmd}\n\n" + md_to_mdx("\n\n".join(sec), Ctx(src, route))
 
     # xdrlint
-    body = scrub(clean_help(re.sub(r"^## .*\n", "", lint_part, count=1)))
-    body = re.sub(r"(?m)^#### `([^`]+?) -h`\s*$", r"### `\1 -h`", body)
-    parts.append(f"## {TOOLS['lint']}\n\nThe rules: [xdrlint rules](/reference/lint-rules).\n\n" + md_to_mdx(body, Ctx(src, route)))
+    sec = scrub(clean_help(re.sub(r"^## .*\n", "", lint_part, count=1)))
+    sec = re.sub(r"(?m)^#### `([^`]+?) -h`\s*$", r"### `\1 -h`", sec)
+    sections[TOOLS["lint"]] = (f"## {TOOLS['lint']}\n\nThe rules: [xdrlint rules](/reference/lint-rules).\n\n"
+                               + md_to_mdx(sec, Ctx(src, route)))
 
     # the judge and the tagger, from captured help
+    captured: dict[str, str] = {}
     for role, desc, doc in (("judge", "Facts from a ledger's own entry changes, and verdicts on an indexer's rows.",
                              "[Judge](/reference/judge)"),
                             ("tagger", "Tag dangerous values in ledger bytes, partition by partition.",
@@ -971,13 +1309,74 @@ def build_cli(out: Out) -> None:
             if not os.path.exists(path):
                 sys.exit(f"generate: {os.path.relpath(path, ROOT)} missing: run with --capture-help BIN_DIR")
             with open(path, encoding="utf-8") as f:
-                blocks.append(f"### `{name}{' ' + subcmd if subcmd else ''} --help`\n\n```text\n{f.read().rstrip()}\n```\n")
-        parts.append(f"## {name}\n\n{desc} What it computes: {doc}.\n\n" + "\n".join(blocks))
-    body = "\n\n".join(parts)
-    unique_headings("reference/cli.mdx", body)
-    out.emit("reference/cli.mdx", f"{src} and apps/docs/data/help/*.txt", "Command-line reference",
-             "Every command of the kit's tools on one page: the conventions they share, what each command does and "
-             "its full --help.", body)
+                helptext = f.read().rstrip()
+            captured.setdefault(name, helptext)
+            blocks.append(f"### `{name}{' ' + subcmd if subcmd else ''} --help`\n\n```text\n{helptext}\n```\n")
+        sections[name] = f"## {name}\n\n{desc} What it computes: {doc}.\n\n" + "\n".join(blocks)
+
+    unique_headings("the pages of reference/cli", "\n\n".join([body] + list(sections.values())))
+    placed = [h for _, _, _, hs in CLI_PAGES for h in hs]
+    if sorted(placed) != sorted(sections):
+        sys.exit("generate: CLI_PAGES does not place every section of the command-line reference exactly once: "
+                 + ", ".join(sorted(set(placed) ^ set(sections))))
+    home = {h: "/" + d[:-4] for d, _, _, hs in CLI_PAGES for h in hs}
+    lead = (f"Exit codes, network use, pins and report formats are the same for every tool: "
+            f"[conventions]({route}#conventions-shared-by-every-tool). Every tool and command: "
+            f"[{SIDEBAR[route[1:]][0].lower()}]({route}).")
+    for dest, ptitle, pdesc, hs in CLI_PAGES:
+        emit_sub(out, CLI_INDEX, dest, f"{src} and apps/docs/data/help/*.txt", ptitle, pdesc, lead,
+                 [sections[h] for h in hs])
+
+    # the index: one table per tool, a row per command, each linked to its section or --help block
+    def helps(section: str) -> dict[str, str]:
+        """command -> the anchor of its --help block, for the `### ` headings of a section."""
+        return {re.sub(r" (?:--help|-h)$", "", t.strip("`")): mint_slug(t)
+                for _, lv, t in headings(sections[section].split("\n")) if lv == 3}
+
+    def command_table(tool: str, commands: list[tuple[str, str]]) -> list[str]:
+        anchors = helps(tool)
+        rows = ["| Command | Does |", "|---|---|"]
+        for cmd, what in commands:
+            full = f"{tool} {cmd}"
+            if bad(what):
+                continue
+            cell = f"[`{full}`]({home[tool]}#{anchors[full]})" if full in anchors else f"`{full}`"
+            rows.append(f"| {cell} | {escape_line(md_cell(what))} |")
+        return rows
+
+    index = ["## Commands", "",
+             "One table per tool. Each command links to its section or its `--help` block.", "",
+             f"### {MAIN}", "",
+             "| Command | Does | Subcommands with their own `--help` |", "|---|---|---|"]
+    for cmd in MAIN_COMMANDS:
+        h = f"{MAIN} {cmd}"
+        subs = [f"[`{c[len(h) + 1:]}`]({home[h]}#{a})" for c, a in helps(h).items() if c != h]
+        index.append(f"| [`{h}`]({home[h]}#{mint_slug(h)}) | {escape_line(md_cell(purpose[cmd]))} | "
+                     f"{', '.join(subs) or '—'} |")
+    corpus_top = next((b for c, b in corpus_help if c == CORPUS), "")
+    lint = TOOLS["lint"]
+    index += ["", f"### {CORPUS}", "",
+              f"The summary of every command, with its arguments: [{CORPUS}]({home[CORPUS]}#{mint_slug(CORPUS)}).", "",
+              *command_table(CORPUS, help_commands(clean_help(corpus_top))),
+              "", f"### {lint}", "",
+              f"One command; its flags are in [`{lint} -h`]({home[lint]}#{helps(lint)[lint]}) and its rules on "
+              "[xdrlint rules](/reference/lint-rules).", "",
+              "| Command | Does |", "|---|---|",
+              f"| [`{lint}`]({home[lint]}#{mint_slug(lint)}) | Run the rules over Go packages and print findings with "
+              f"rule IDs (`{lint} [flags] <packages>`) |",
+              f"| `go vet -vettool=$(which {lint})` | The same analyzers as a `go vet` tool |"]
+    for role in ("judge", "tagger"):
+        name = TOOLS[role]
+        index += ["", f"### {name}", "", *command_table(name, help_commands(captured[name]))]
+    index += ["", "### make", "", "The `Makefile` runs the tools above: [make targets](/reference/make-targets)."]
+    for name in (MAIN, CORPUS, TOOLS["lint"], TOOLS["judge"], TOOLS["tagger"]):
+        if not tools.get(name):
+            sys.exit(f"generate: {src}: the table of tools has no row for {name}")
+    page = body + "\n\n" + "\n".join(index)
+    unique_headings(CLI_INDEX, page)
+    out.emit(CLI_INDEX, f"{src} and apps/docs/data/help/*.txt", "Command-line reference",
+             "The index of the command-line reference: what each tool is, the conventions the tools share, a "
+             "cookbook, and every command of every tool with a link to its --help.", page)
 
     # make targets
     rows_held = [l for l in make.split("\n") if re.match(
@@ -1005,37 +1404,77 @@ MISTAKES = {
 }
 
 
+# The pages of the lint rule reference: (page, title, description, the rule families it holds, by ID prefix).
+LINT_INDEX = "reference/lint-rules.mdx"
+LINT_PAGES = [
+    ("reference/lint-rules/xdr000-xdr1xx.mdx", "xdrlint rules XDR000 and XDR1xx",
+     "The full rule pages of XDR000 (suppression hygiene) and XDR101 to XDR105 (trusting fields stellar-core does "
+     "not validate): what each reports, why, examples, limits and how to suppress it.", ("XDR0", "XDR1")),
+    ("reference/lint-rules/xdr2xx.mdx", "xdrlint rules XDR2xx",
+     "The full rule pages of XDR201 to XDR207 (no depth or size cap on recursive structures): what each reports, "
+     "why, examples, limits and how to suppress it.", ("XDR2",)),
+    ("reference/lint-rules/xdr3xx.mdx", "xdrlint rules XDR3xx",
+     "The full rule pages of XDR301 to XDR304 (participants taken from the envelope instead of the meta): what "
+     "each reports, why, examples, limits and how to suppress it.", ("XDR3",)),
+    ("reference/lint-rules/xdr4xx.mdx", "xdrlint rules XDR4xx",
+     "The full rule pages of XDR401 to XDR406 (assumptions about the ledger's form, ranges and outcomes): what "
+     "each reports, why, examples, limits and how to suppress it.", ("XDR4",)),
+]
+
+
 def build_lint(out: Out) -> None:
-    """reference/lint-rules.mdx: the rule index, then a section per family and one per rule (anchor: the rule ID in
-    lower case). A rule page's own headings become bold labels, so the page has no repeated anchors."""
+    """The lint rule reference: `reference/lint-rules.mdx`, the index (the rule table, how to run and configure
+    the linter, and a short section per rule ID that keeps the address `#xdrNNN` of the page as it was and links
+    on), and the pages of LINT_PAGES: a section per family and one per rule (anchor: the rule ID in lower case). A
+    rule page's own headings become bold labels, so a page has no repeated anchors."""
     src = "lint/docs/README.md"
     route = "/reference/lint-rules"
     text = read(src)
     text, _ = cut_sections(text, [r"The wallet-backend check"], src)
     title, body = strip_h1(scrub(text))
-    parts = [md_to_mdx(body, Ctx(src, route))]
+    index = [md_to_mdx(body, Ctx(src, route))]
     rules = sorted(os.path.basename(f)[:-3] for f in glob.glob(os.path.join(ROOT, "lint", "docs", "XDR*.md")))
+    families: dict[str, str] = {}  # ID prefix -> the family's section
+    what_of: dict[str, str] = {}
     for prefix, label in MISTAKES.items():
         group = [r for r in rules if r.startswith(prefix)]
         if not group:
             continue
-        parts.append(f"## {label}")
+        parts = [f"## {label}"]
         for rule in group:
             psrc = f"lint/docs/{rule}.md"
             rtitle, rbody = strip_h1(scrub(lint_rule_edit(rule)(read(psrc))))
             what = rtitle.split(": ", 1)[1] if ": " in rtitle else rtitle
+            what_of[rule] = escape_line(what[0].upper() + what[1:])
             lines = rbody.split("\n")
             for i, _, t in headings(lines):
                 lines[i] = f"**{t}**"
-            parts.append(f"### {rule}\n\n" + escape_line(f"**{what[0].upper() + what[1:]}.**") + "\n\n"
+            parts.append(f"### {rule}\n\n" + f"**{what_of[rule]}.**" + "\n\n"
                          + md_to_mdx("\n".join(lines), Ctx(psrc, route)))
+        families[prefix] = "\n\n".join(parts)
     if sum(1 for r in rules if any(r.startswith(p) for p in MISTAKES)) != len(rules):
         sys.exit("generate: a lint rule outside the families of MISTAKES")
-    body = "\n\n".join(parts)
-    unique_headings("reference/lint-rules.mdx", body)
-    out.emit("reference/lint-rules.mdx", "lint/docs/README.md and lint/docs/XDR*.md", title,
-             "Every xdrlint rule on one page: what it reports, why it matters, examples, limits and how to suppress it; "
-             "how to run the linter, its output formats and configuration.", body)
+    if sorted(p for _, _, _, ps in LINT_PAGES for p in ps) != sorted(families):
+        sys.exit("generate: LINT_PAGES does not place every rule family exactly once")
+    unique_headings("the pages of reference/lint-rules", "\n\n".join(index + list(families.values())))
+    lead = (f"The table of every rule, and how to run the linter, configure it and accept a report: "
+            f"[{title}]({route}).")
+    home = {}
+    for dest, ptitle, pdesc, prefixes in LINT_PAGES:
+        emit_sub(out, LINT_INDEX, dest, "lint/docs/XDR*.md", ptitle, pdesc, lead, [families[p] for p in prefixes])
+        home.update({r: "/" + dest[:-4] for r in rules if r.startswith(prefixes)})
+    # The address /reference/lint-rules#xdrNNN was each rule's address while the rules were on one page; a short
+    # section per rule keeps it working and links on. Links inside the site go to the rule's page (see `retarget`).
+    stubs = ["## Rules by ID", "",
+             "One line per rule, with a link to its full page."]
+    for rule in rules:
+        stubs += ["", f"### {rule}", "",
+                  f"{what_of[rule]}. Full page: [{rule}]({home[rule]}#{rule.lower()})."]
+    page = "\n\n".join(index) + "\n\n" + "\n".join(stubs)
+    unique_headings(LINT_INDEX, page)
+    out.emit(LINT_INDEX, "lint/docs/README.md and lint/docs/XDR*.md", title,
+             "The index of the xdrlint rules: every rule with what it reports, its default severity and a link to its "
+             "full page; how to run the linter, its output formats and configuration.", page)
 
 
 # ------------------------------------------------------------------ the CAP, pattern and ledger relation
@@ -1424,7 +1863,7 @@ def safe_text(s: str) -> str:
 SEVERITY_ORDER = ["critical", "high", "medium", "low"]
 # pins.toml names each wallet-backend acceptance pair by its issue; the pages name it by its row number in
 # evidence/results/known-defects.json (the README's known upstream defects table) instead.
-INCIDENT_ROW = {"729": 3, "731": 2, "716": 8}
+DEFECT_ROW = {"729": 3, "731": 2, "716": 8}
 KNOWN_DEFECTS = "evidence/results/known-defects.json"
 
 
@@ -1435,7 +1874,7 @@ RESULT_SOURCES = "evidence/results/*.json"
 
 
 def build_results(out: Out) -> dict:
-    """The Results tab: SDK matrix, replay summary, known incidents, the findings table and the overview."""
+    """The Results tab: SDK matrix, replay summary, known upstream defects, the findings table and the overview."""
     conf = read_json("evidence/results/conformance-matrix.json")
     rep = read_json("evidence/results/replay-summary.json")
     known = read_json(KNOWN_DEFECTS)
@@ -1495,7 +1934,7 @@ def build_results(out: Out) -> dict:
               "The entries where a `required` column diverges: what the current release of each SDK still gets "
               "wrong. Each link goes to the entry's row on [CAP coverage](/caps/overview). To see the cell yourself, "
               f"run `{MAIN} conform run --columns 'COLUMN' --entries ENTRY` "
-              f"([commands]({route_of('docs/cli.md')})).", ""]
+              f"([commands]({route_of('docs/cli.md')}#{mint_slug(MAIN + ' conform')})).", ""]
     for c in req:
         ents = sorted(e for e, cells in conf["entries"].items() if cells.get(c, {}).get("class") == "diverges")
         lines.append(f"- `{c}`: " + (", ".join(entry_link(e, out) for e in ents) if ents else "none"))
@@ -1504,7 +1943,7 @@ def build_results(out: Out) -> dict:
               "defects (pool asset and map-key order, colliding map keys, muxed and offer IDs). Each runs on the release "
               "before its fix, which shows the declared divergence, and on the next release, which agrees "
               "(`make verify-conformance OFFLINE=1`). The transcripts are in `evidence/js-1766/`, `evidence/js-1785/` "
-              "and `evidence/js-1789/`; [Known incidents](/results/incidents) lists every public incident.", "",
+              "and `evidence/js-1789/`; [Known upstream defects](/results/incidents) lists every one.", "",
               "## Across SDK families", "",
               "Whether a defect class first found in one SDK also reproduces in the others, with the versions, is on "
               "[Findings](/results/findings#across-sdk-families).", "",
@@ -1586,18 +2025,18 @@ def build_results(out: Out) -> dict:
     lines += ["## Three wallet-backend defects, before and after their fixes", "",
               "The wallet-backend adapter (`go/adapters/walletbackend`) runs each before-and-after pair that `pins.toml` "
               "lists under `[pipelines.wallet_backend]`: the commit before the fix and the commit that fixed it, on "
-              "both inputs (`make verify-replay OFFLINE=1`). The incident numbers refer to "
-              "[Known incidents](/results/incidents).", "",
-              "| Incident | Entry | Before the fix | After the fix |", "|---|---|---|---|"]
+              "both inputs (`make verify-replay OFFLINE=1`). The defect numbers refer to "
+              "[Known upstream defects](/results/incidents).", "",
+              "| Defect | Entry | Before the fix | After the fix |", "|---|---|---|---|"]
     with open(os.path.join(ROOT, "pins.toml"), "rb") as f:
         pairs = tomllib.load(f)["pipelines"]["wallet_backend"]["acceptance"]
     topics = {row_number(x["id"]): x for x in known["defects"]}
-    incident = {}
-    for bug, n in INCIDENT_ROW.items():
+    defect = {}
+    for bug, n in DEFECT_ROW.items():
         x = topics.get(n)
         if not x or x["project"] != "wallet-backend" or x["coverage"] != "reproduced":
-            sys.exit(f"generate: {KNOWN_DEFECTS} row {n} is no longer the reproduced wallet-backend incident")
-        incident[bug] = f"{md_cell(x['topic'])} (incident {n:02d})"
+            sys.exit(f"generate: {KNOWN_DEFECTS} row {n} is no longer the reproduced wallet-backend defect")
+        defect[bug] = f"{md_cell(x['topic'])} (defect {n:02d})"
     for n in sorted({p["pair"] for p in pipes.values() if p.get("pair")}):
         pre = next(k for k, p in pipes.items() if p.get("pair") == n and p["role"] == "prefix")
         fix = next(k for k, p in pipes.items() if p.get("pair") == n and p["role"] == "fixed")
@@ -1606,9 +2045,9 @@ def build_results(out: Out) -> dict:
                 a = sorted({c["class"] for c in cells.get(pre, {}).values()})
                 b = sorted({c["class"] for c in cells.get(fix, {}).values()})
                 bug = pairs[n - 1]["bug"]
-                if bug not in INCIDENT_ROW or pairs[n - 1]["prefix"][:12] != pipes[pre]["commit"][:12]:
+                if bug not in DEFECT_ROW or pairs[n - 1]["prefix"][:12] != pipes[pre]["commit"][:12]:
                     sys.exit(f"generate: pins.toml acceptance pair {n} does not match replay-summary.json")
-                lines.append(f"| {incident[bug]} | {entry_link(e, out)} | {', '.join(a) or 'not run'} | {', '.join(b) or 'not run'} |")
+                lines.append(f"| {defect[bug]} | {entry_link(e, out)} | {', '.join(a) or 'not run'} | {', '.join(b) or 'not run'} |")
     lines += ["", "The transcripts are in `evidence/wallet-backend-replay/` and `evidence/wallet-backend-731/`.", ""]
     for key in sorted(pipes):
         p = pipes[key]
@@ -1627,7 +2066,8 @@ def build_results(out: Out) -> dict:
         lines.append("")
     lines += ["Each entry links to its row on [CAP coverage](/caps/overview); the [findings table](/results/findings) "
               f"describes each defect. To replay one entry yourself: `{MAIN} replay --adapter ADAPTER "
-              f"--target-version VERSION --entries ENTRY` ([commands]({route_of('docs/cli.md')})).", "",
+              f"--target-version VERSION --entries ENTRY` "
+              f"([commands]({route_of('docs/cli.md')}#{mint_slug(MAIN + ' replay')})).", "",
               "## Limits", "",
               "- These are results on corpus entries, not on all of mainnet. How often each shape occurs on pubnet is "
               "on [Mainnet scan](/results/mainnet-scan#prevalence-by-entry).",
@@ -1643,10 +2083,10 @@ def build_results(out: Out) -> dict:
 
     # --- known upstream defects
     cov_names = {"reproduced": "reproduced", "run": "run", "checked": "checked", "agreement": "agreement", "input": "input"}
-    lines = ["For maintainers of the projects listed and for anyone running them: public incidents in which a "
-             "Stellar reader (stellar-core tooling, an SDK, an XDR library or an indexer) met a shape it handled wrong, "
-             "the corpus entries that hold each shape, and how far this kit goes in reproducing it. Use the entries to "
-             "check that your own reader does not repeat the incident.", "",
+    lines = ["For maintainers of the projects listed and for anyone running them: known upstream defects, each a "
+             "public report of a Stellar reader (stellar-core tooling, an SDK, an XDR library or an indexer) that met "
+             "a shape it handled wrong, the corpus entries that hold each shape, and how far this kit goes in "
+             "reproducing it. Use the entries to check that your own reader does not repeat the defect.", "",
              "## How to read the coverage column", "",
              "| Coverage | Meaning |", "|---|---|",
              "| **reproduced** | A `make` target runs the affected project before and after its fix and shows the defect "
@@ -1657,8 +2097,8 @@ def build_results(out: Out) -> dict:
              "| **input** | Corpus entries hold the shape; no reader of that project runs them here. Run them through "
              "your own reader |", "",
              "Totals: " + ", ".join(f"{known['totals'].get(k, 0)} {v}" for k, v in cov_names.items()) + ".", "",
-             "## Incidents", "",
-             "| # | Project | Incident | Coverage | How | Entries | Run with | Evidence |", "|---|---|---|---|---|---|---|---|"]
+             "## Defects", "",
+             "| # | Project | Defect | Coverage | How | Entries | Run with | Evidence |", "|---|---|---|---|---|---|---|---|"]
     for s in known["defects"]:
         how = md_cell(s["how"]) if s.get("how") else ""
         lines.append(f"| {row_number(s['id']):02d} | {s['project']} | {md_cell(s['topic'])} | {s['coverage']} | {how} | "
@@ -1668,13 +2108,13 @@ def build_results(out: Out) -> dict:
     lines += ["", "An entry pattern ending in `.*` names every variant entry of that ID. The **Evidence** folder holds "
               "the transcript of the run and the command that repeats it.", "",
               "## Limits", "",
-              "- The list is the set of public incidents the repository's README names, one row each; it is not every "
+              "- The list is the set of known upstream defects the repository's README names, one row each; it is not every "
               "bug ever reported against these projects.",
               "- An **input** row proves nothing about the affected project: no reader of it runs here.", "",
               "The data is `evidence/results/known-defects.json` (`make results-known-defects`); the README's table names "
               "the upstream item of each row."]
-    out.emit("results/incidents.mdx", KNOWN_DEFECTS, "Known incidents",
-             "Public incidents in Stellar SDKs, XDR libraries and indexers, the corpus entries that hold each shape, "
+    out.emit("results/incidents.mdx", KNOWN_DEFECTS, "Known upstream defects",
+             "Known upstream defects in Stellar SDKs, XDR libraries and indexers, the corpus entries that hold each shape, "
              "and whether the kit reproduces it before and after the fix, runs it, checks it or holds it as input.",
              escape_mdx("\n".join(lines)))
     stats["known_defects"] = known["totals"]
@@ -1780,8 +2220,8 @@ def build_results(out: Out) -> dict:
              f"passphrase; captured from network history; from stellar-core's goldens; synthetic (marked) | "
              f"{f['entries']}; {f['both_passphrases']}; {f['captured']}; {f['golden']}; {f['synthetic']} | "
              "[CAP coverage](/caps/overview) | `make verify-corpus OFFLINE=1`, `make verify-generate` |",
-             f"| Public incidents reproduced before and after their fix, of {sum(f['known_defects'].values())} listed | "
-             f"{f['known_defects'].get('reproduced', 0)} | [Known incidents](/results/incidents) | `make verify-replay OFFLINE=1`, "
+             f"| Known upstream defects reproduced before and after their fix, of {sum(f['known_defects'].values())} listed | "
+             f"{f['known_defects'].get('reproduced', 0)} | [Known upstream defects](/results/incidents) | `make verify-replay OFFLINE=1`, "
              "`make verify-conformance OFFLINE=1` |",
              f"| SDK columns in the conformance matrix ({', '.join(f['sdks'])}, plus stellar-core) | {f['sdk_columns']} | "
              "[SDK matrix](/results/sdk-matrix) | `make verify-conformance-public` |",
@@ -1790,7 +2230,7 @@ def build_results(out: Out) -> dict:
              "## Where to start", "",
              "| You maintain | Read first | Then |", "|---|---|---|",
              "| An SDK or XDR library | [SDK matrix](/results/sdk-matrix): your release's column and the entries it "
-             "diverges on | [Findings](/results/findings) for your project; [Known incidents](/results/incidents) for "
+             "diverges on | [Findings](/results/findings) for your project; [Known upstream defects](/results/incidents) for "
              "shapes that broke other readers |",
              "| An indexer, or run one | [Replay](/results/replay): what wallet-backend and stellar-etl store wrong, and "
              "what each class means for your data | [Mainnet scan](/results/mainnet-scan) for how often each shape "
@@ -1804,7 +2244,7 @@ def build_results(out: Out) -> dict:
              "- [Guide verification](/hardening/verification): how each statement of the hardening guide was checked.",
              "- [How it works](/start/how-it-works): the parts of the kit that produce these results."]
     out.emit("results/overview.mdx", f"{RESULT_SOURCES}, evidence/mainnet-scan/ and corpus/index.json", "Results",
-             "What the runs show for SDK maintainers and indexer operators: the mainnet scan, the corpus, incidents "
+             "What the runs show for SDK maintainers and indexer operators: the mainnet scan, the corpus, known defects "
              "reproduced, the SDK matrix and the findings, each with its page and the command that reproduces it.",
              escape_mdx("\n".join(lines)))
     return stats
@@ -2161,10 +2601,14 @@ def update_nav() -> str:
     with open(os.path.join(SITE, "docs.json"), encoding="utf-8") as f:
         cfg = json.load(f)
     cfg["icons"] = {"library": ICON_LIBRARY}
+
+    def items(pages) -> list:
+        return [{"group": p.label, "icon": p.icon, "pages": items(p.pages)} if isinstance(p, Group)
+                else p if isinstance(p, str) else p[0] for p in pages]
+
     cfg["navigation"] = {"tabs": [
         {"tab": tab, "icon": icon,
-         "groups": [{"group": group, "pages": [p if isinstance(p, str) else p[0] for p in pages]}
-                    for group, pages in groups]}
+         "groups": [{"group": group, "pages": items(pages)} for group, pages in groups]}
         for tab, icon, groups in NAV]}
     return json.dumps(cfg, indent=2, ensure_ascii=False) + "\n"
 
@@ -2183,6 +2627,12 @@ def sidebar_problems(pages: dict[str, str], nav: list[str]) -> list[str]:
         for key in ("description", "icon"):
             if not fm.get(key):
                 problems.append(f"apps/docs/{p}.mdx: no {key} in the frontmatter")
+    for _, _, groups in NAV:
+        for name, group_pages in groups:
+            for g in nav_groups(group_pages):
+                if not g.icon or not 1 <= len(g.label.split()) <= 3:
+                    problems.append(f"NAV: the group {g.label!r} inside {name!r} needs an icon and a label of one to "
+                                    "three words")
     return problems
 
 
@@ -2229,11 +2679,14 @@ def page_anchors(text: str) -> set[str]:
 
 def nav_pages(cfg_text: str) -> list[str]:
     cfg = json.loads(cfg_text)
-    out = []
-    for tab in cfg["navigation"]["tabs"]:
-        for g in tab["groups"]:
-            out += [p for p in g["pages"] if isinstance(p, str)]
-    return out
+
+    def walk(pages: list) -> list[str]:
+        out = []
+        for p in pages:
+            out += [p] if isinstance(p, str) else walk(p["pages"])
+        return out
+
+    return [p for tab in cfg["navigation"]["tabs"] for g in tab["groups"] for p in walk(g["pages"])]
 
 
 def capture_help(bin_dir: str) -> None:
@@ -2269,6 +2722,7 @@ def main() -> int:
     build_hardening(out)
     build_acceptance(out)
     build_index(out, stats["results"])
+    retarget(out)
     nav = update_nav()
 
     stale = []
@@ -2304,6 +2758,9 @@ def main() -> int:
                 anchor = (m.group(2) or m.group(4) or "#")[1:]
             if route not in routes and route != "/index":
                 problems.append(f"apps/docs/{dest}: link to {route}, which has no page")
+            elif anchor and anchor in SPLIT_MOVES.get(route, {}):
+                problems.append(f"apps/docs/{dest}: link to {route}#{anchor}; that section is now on "
+                                f"{SPLIT_MOVES[route][anchor]}#{anchor}")
             elif anchor and anchor not in anchors.get(route, set()):
                 problems.append(f"apps/docs/{dest}: link to {route}#{anchor}, which has no such heading")
     orphans = sorted(p[:-4] for p in pages if p[:-4] not in set(nav_pages(nav)))
@@ -2320,6 +2777,8 @@ def main() -> int:
     print(f"generate: {len(out.pages)} generated pages; coverage rows {stats['rows']} ({caps} CAPs), entries listed "
           f"{len(stats['entries'])} of {stats['entries_total']}, entries with prevalence "
           f"{len(stats['entries_with_prevalence'])}, entries held back {len(stats['held'])}")
+    print("generate: links pointed at the pages of split reference pages: "
+          + "; ".join(f"{n} {kind}" for kind, n in sorted(RETARGETED.items())))
     return 1 if (stale or problems or missing or orphans) else 0
 
 

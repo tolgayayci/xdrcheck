@@ -167,7 +167,7 @@ change, answer each question of the [checklist](#6-checklist-before-you-send-an-
 - [Authoring reference](#authoring-reference), below: the full workflow, scenario syntax and worked examples.
 - [Manifest and index format](/reference/manifest): every field.
 - [CAP coverage](/caps/overview): every coverage row and its entries.
-- [CLI reference](/reference/cli#xdrcheck-corpus): every `xdrcheck-corpus` command.
+- [CLI reference](/reference/cli/xdrcheck-corpus): every `xdrcheck-corpus` command.
 
 
 ## Authoring reference
@@ -185,7 +185,7 @@ workflow, the scenario syntax and the checklist to answer before you send an ent
 2. **Pick the source** in this order: a local stellar-core scenario (reproducible by anyone, on both passphrases);
    a stellar-core golden at the pinned tag; an unmodified public-lake object; and only when stellar-core cannot or
    would not emit the bytes, a synthetic recipe (`synthetic: true`, with the reason). The five source kinds and
-   what each must record are in [`manifest.md`](/reference/manifest) section 4.4.
+   what each must record are in [`manifest.md`](/reference/manifest/entry-fields#4-4-source-six-kinds) section 4.4.
 3. **Never edit bytes.** A blob is exactly what stellar-core emitted or the lake served. A smaller value cut out of
    a ledger is an `xdr` entry with `slice_of` pointing to its parent, not an edit. A synthetic ledger is an `xdr`
    entry of type `LedgerCloseMeta` whose recipe edits a local-core entry's blob (the hashes the edit invalidates,
@@ -201,26 +201,26 @@ workflow, the scenario syntax and the checklist to answer before you send an ent
 
 Never take an expected value from the output of an SDK or indexer under test.
 
-Then let the reference extractor (`xdrcheck-corpus extract <entry>`, [`manifest.md`](/reference/manifest) section 6.11) derive
+Then let the reference extractor (`xdrcheck-corpus extract <entry>`, [`manifest.md`](/reference/manifest/expected-values#6-11-the-reference-extractor) section 6.11) derive
 participants, state changes and movements from ledger-entry changes and consensus events, and resolve every
 disagreement by reading the bytes again. Do not resolve a disagreement by copying either side.
 
 | Block | What to put in it | Common mistakes |
 |---|---|---|
-| `expect.ledger` | Counts of transactions, operations, events and entry changes for the **whole** ledger (counting rules in [`manifest.md`](/reference/manifest) section 6.2) | Counting diagnostic events; forgetting failed transactions' operations |
+| `expect.ledger` | Counts of transactions, operations, events and entry changes for the **whole** ledger (counting rules in [`manifest.md`](/reference/manifest/expected-values#6-2-whole-ledger-receipts-expect-ledger-and-expect-transactions) section 6.2) | Counting diagnostic events; forgetting failed transactions' operations |
 | `expect.transactions` | Every transaction with hash and `successful`; result codes for the focus transaction | Listing only the focus transaction (the whole-ledger receipts need all of them) |
-| `expect.values` | A few JSON Pointer pinpoints into the sidecar for the fields the pattern is about; a ledger-entry change is selected by its ledger key (`select: {in, key, change}`, [`manifest.md`](/reference/manifest) section 6.1), not its position | Pinpointing values that are incidental to the pattern; a positional pointer into an operation's change list (core writes it in no fixed order) |
+| `expect.values` | A few JSON Pointer pinpoints into the sidecar for the fields the pattern is about; a ledger-entry change is selected by its ledger key (`select: {in, key, change}`, [`manifest.md`](/reference/manifest/expected-values#6-1-three-layers) section 6.1), not its position | Pinpointing values that are incidental to the pattern; a positional pointer into an operation's change list (core writes it in no fixed order) |
 | `participants.must_include` | Base addresses whose ledger entries the focus transaction changed | Adding an address because it appears in the envelope or in an authorization entry |
 | `participants.must_not_include` | Addresses a sloppy reader would wrongly add, each with `because` | Leaving it empty on entries whose point is a trap (memo, unmatched authorization, failed destination, forged event) |
-| `state_changes` | One item per reader-visible change, using the fixed `detail` keys for its kind ([`manifest.md`](/reference/manifest) section 6.6) | Inventing detail keys; stating limits or IDs that differ by reader model |
-| `movements` | Value movements with decimal-string amounts and the typed routing ID ([`manifest.md`](/reference/manifest) section 6.7) | Treating `text` or `bytes` routing as an address; forgetting `count: 0` pins |
-| `*_exact` | Set when the pattern is "this and nothing else" in the focus transaction ([`manifest.md`](/reference/manifest) section 6.4) | Expecting exactness to cover fee rows (it never does) |
+| `state_changes` | One item per reader-visible change, using the fixed `detail` keys for its kind ([`manifest.md`](/reference/manifest/expected-values#6-6-state-changes) section 6.6) | Inventing detail keys; stating limits or IDs that differ by reader model |
+| `movements` | Value movements with decimal-string amounts and the typed routing ID ([`manifest.md`](/reference/manifest/expected-values#6-7-movements-and-routing) section 6.7) | Treating `text` or `bytes` routing as an address; forgetting `count: 0` pins |
+| `*_exact` | Set when the pattern is "this and nothing else" in the focus transaction ([`manifest.md`](/reference/manifest/expected-values#6-4-presence-extras-and-exactness) section 6.4) | Expecting exactness to cover fee rows (it never does) |
 
 Passphrase-dependent values (transaction hashes, contract IDs, fees that differ per protocol) go under each
-variant's `derived` and are referenced as `${derived.<name>}` ([`manifest.md`](/reference/manifest) section 4.6).
+variant's `derived` and are referenced as `${derived.<name>}` ([`manifest.md`](/reference/manifest/entry-fields#4-6-derived-and-derived-substitution) section 4.6).
 
 A value you state that the extractor cannot derive from the bytes (a modelling detail no ledger field carries) fails
-`verify`. Correct it, or keep it with `"unverified": "<reason>"` on the item ([`manifest.md`](/reference/manifest) sections
+`verify`. Correct it, or keep it with `"unverified": "<reason>"` on the item ([`manifest.md`](/reference/manifest/expected-values#6-4-presence-extras-and-exactness) sections
 6.4 and 6.11). Two variant fields are derived, not written: `requires` (XDR features the bytes need; mandatory on
 every variant, `[]` when none) and `derived.l1` (what an SDK's object layer reads from the focus, section 10.1).
 `xdrcheck-corpus render <entry>` fills both (with the sidecar fields), `synth`, `slice` and `gen` fill them for the
@@ -229,7 +229,7 @@ render sets its `requires` to `[]` unless you state the feature its defect needs
 
 A variant whose SEP-51 JSON does not round-trip declares `"json_roundtrip": {"skip": true, "reason": "…"}` (section 4.2).
 
-Every entry states its `validity` ([`manifest.md`](/reference/manifest) section 9.5), right after `synthetic` (or
+Every entry states its `validity` ([`manifest.md`](/reference/manifest/kinds-and-levels#9-5-validity-and-flags-the-negative-case-vocabulary) section 9.5), right after `synthetic` (or
 `negative`):
 
 | The input is | `validity` | Also write |
@@ -247,7 +247,7 @@ row); confirm it. After adding or changing entries, run `xdrcheck-corpus index` 
 ### 3. Known divergences
 
 A known divergence records that a specific reader gets this entry wrong in a version range
-([`manifest.md`](/reference/manifest) section 7). It must cite an **executed** result (a transcript, a report, a
+([`manifest.md`](/reference/manifest/divergences-and-replay#7-known-divergences) section 7). It must cite an **executed** result (a transcript, a report, a
 reproduction under `evidence/`), the target and the version range or commit range, the level (`L0`–`L4` or
 `replay`) and the outcome; for `replay` also the qualifier (`halt`, `wrong_value`, `partial`, …). A divergence known
 only from source reading or an upstream report is recorded with `observed: source-reading` or `reported`, and is

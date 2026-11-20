@@ -51,16 +51,16 @@ The baseline is the kit's complete example indexer (`go/adapters/baseline`); its
 
 ## Three wallet-backend defects, before and after their fixes
 
-The wallet-backend adapter (`go/adapters/walletbackend`) runs each before-and-after pair that `pins.toml` lists under `[pipelines.wallet_backend]`: the commit before the fix and the commit that fixed it, on both inputs (`make verify-replay OFFLINE=1`). The incident numbers refer to [Known incidents](/results/incidents).
+The wallet-backend adapter (`go/adapters/walletbackend`) runs each before-and-after pair that `pins.toml` lists under `[pipelines.wallet_backend]`: the commit before the fix and the commit that fixed it, on both inputs (`make verify-replay OFFLINE=1`). The defect numbers refer to [Known upstream defects](/results/incidents).
 
-| Incident | Entry | Before the fix | After the fix |
+| Defect | Entry | Before the fix | After the fix |
 |---|---|---|---|
-| CAP-40 signed-payload signer (incident 03) | [`cap-0040/signed-payload-signer-added`](/caps/overview#cap-40) | halt | pass |
-| CAP-40 signed-payload signer (incident 03) | [`cap-0040/signed-payload-signers-1-byte-and-64-byte`](/caps/overview#cap-40) | halt | pass |
-| CAP-73 SAC trustline (incident 02) | [`cap-0073/sac-trust-creates-trustline`](/caps/overview#cap-73) | dropped | pass |
-| AddressBytea truncation (incident 08) | [`cap-0040/signed-payload-signer-added`](/caps/overview#cap-40) | mishandled | pass |
-| AddressBytea truncation (incident 08) | [`cap-0040/signed-payload-signers-1-byte-and-64-byte`](/caps/overview#cap-40) | mishandled | pass |
-| AddressBytea truncation (incident 08) | [`cap-0046/soroban-ops-with-muxed-source`](/caps/overview#cap-46) | mishandled | pass |
+| CAP-40 signed-payload signer (defect 03) | [`cap-0040/signed-payload-signer-added`](/caps/overview#cap-40) | halt | pass |
+| CAP-40 signed-payload signer (defect 03) | [`cap-0040/signed-payload-signers-1-byte-and-64-byte`](/caps/overview#cap-40) | halt | pass |
+| CAP-73 SAC trustline (defect 02) | [`cap-0073/sac-trust-creates-trustline`](/caps/overview#cap-73) | dropped | pass |
+| AddressBytea truncation (defect 08) | [`cap-0040/signed-payload-signer-added`](/caps/overview#cap-40) | mishandled | pass |
+| AddressBytea truncation (defect 08) | [`cap-0040/signed-payload-signers-1-byte-and-64-byte`](/caps/overview#cap-40) | mishandled | pass |
+| AddressBytea truncation (defect 08) | [`cap-0046/soroban-ops-with-muxed-source`](/caps/overview#cap-46) | mishandled | pass |
 
 The transcripts are in `evidence/wallet-backend-replay/` and `evidence/wallet-backend-731/`.
 
@@ -89,7 +89,7 @@ Only the entries that declare a known divergence for stellar-etl ran (scope `kno
 - [`cap-0073/native-sac-transfer-creates-account-local-twins`](/caps/overview#cap-73): dropped
 - [`cap-0085/instance-with-external-ref-executable.testnet-4372196`](/caps/overview#cap-85): dropped
 
-Each entry links to its row on [CAP coverage](/caps/overview); the [findings table](/results/findings) describes each defect. To replay one entry yourself: `xdrcheck replay --adapter ADAPTER --target-version VERSION --entries ENTRY` ([commands](/reference/cli)).
+Each entry links to its row on [CAP coverage](/caps/overview); the [findings table](/results/findings) describes each defect. To replay one entry yourself: `xdrcheck replay --adapter ADAPTER --target-version VERSION --entries ENTRY` ([commands](/reference/cli/xdrcheck-replay#xdrcheck-replay)).
 
 ## Limits
 

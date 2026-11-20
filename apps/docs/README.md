@@ -2,9 +2,9 @@
 
 Mintlify project for the XDRCheck documentation (`docs.json`, `.mdx` pages).
 
-Most pages are generated from the repository so the site cannot drift from it: the one-page CLI reference from
+Most pages are generated from the repository so the site cannot drift from it: the CLI reference from
 `docs/cli.md`, the specifications and guides from `docs/`, `go/adapters/`, `examples/` and `crates/xdrcheck-judge/`
-(a page may append further sources as sections), the one-page lint rule reference from `lint/docs/`, and the CAP
+(a page may append further sources as sections), the lint rule reference from `lint/docs/`, and the CAP
 coverage page (`caps/overview.mdx`, a section per coverage row) from `corpus/index.json`, `corpus/coverage.json` and
 `data/cap-prevalence.json`. The results pages (`results/`, including the findings table `results/findings.mdx`) and
 `start/read-an-entry.mdx` come from `evidence/results/*.json`, `evidence/mainnet-scan/` and the corpus;
@@ -16,8 +16,16 @@ introduction's `@@name@@` figures are filled from the same files as the results 
 quickstart, `start/how-it-works.mdx`, `start/for-sdk-maintainers.mdx`, `start/for-indexers.mdx`, `concepts/`,
 `architecture/` and `hardening/overview.mdx` are written by hand.
 
-The navigation in `docs.json` (tabs, groups, page order) and its icon library are written by `generate.py` from the
-table `NAV` in the script: add a page there, not in `docs.json`. The same table holds the sidebar label and icon of
+Three references are long, so the generator writes each as an index page and sub-pages: the CLI reference
+(`reference/cli.mdx` and `reference/cli/`, a page per tool or group of commands), the manifest format
+(`reference/manifest.mdx` and `reference/manifest/`, a page per group of top-level sections of `docs/manifest.md`) and
+the lint rules (`reference/lint-rules.mdx` and `reference/lint-rules/`, a page per rule family). The sources stay
+whole. A link in a source names the document and its heading as before; the generator points it at the page that
+holds the heading. A hand-written page must name the sub-page itself, and `--check` says which one when it does not.
+The lint index keeps a short section per rule ID, so `/reference/lint-rules#xdr301` still resolves.
+
+The navigation in `docs.json` (tabs, groups, nested groups, page order) and its icon library are written by
+`generate.py` from the table `NAV` in the script: add a page there, not in `docs.json`. The same table holds the sidebar label and icon of
 every generated page. A hand-written page carries its own `sidebarTitle`, `icon` (a Lucide name) and `description`.
 
 `--check` fails when a generated page is stale, when a page breaks a page rule, when an internal link names a page

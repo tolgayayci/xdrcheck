@@ -453,7 +453,7 @@ The documentation site is in [`apps/docs`](apps/docs/README.md) (Mintlify; `pnpm
 Its reference pages are generated from [`docs/`](docs/README.md), `lint/docs/` and the corpus; the CAP coverage page
 (`apps/docs/caps/overview.mdx`) lists every entry by CAP with its pattern, protocol, origin, source ledger and, where it
 can be joined exactly, mainnet prevalence. The results pages (`apps/docs/results/`: the mainnet scan, the SDK matrix,
-replay, the known incidents and the findings table) are generated from
+replay, the known upstream defects and the findings table) are generated from
 [`evidence/results/`](evidence/results/README.md) and [`evidence/mainnet-scan/`](evidence/mainnet-scan/README.md);
 `apps/docs/scripts/generate.py --check` (in `make repo-checks`) fails when one is stale or a link or anchor is broken.
 The dashboard and the landing page (`apps/dashboard/`, `apps/landing/`) read the same files and are not deployed from

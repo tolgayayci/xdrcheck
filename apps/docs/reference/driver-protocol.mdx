@@ -111,7 +111,7 @@ exits 2.
 | **spec** contract interface | For `spec` entries: does the SDK's contract-spec reader return the entries the bytes hold, and refuse a module with several `contractspecv0` sections or a stream that does not end cleanly? | a reader that takes the first of two sections shows half the interface |
 | **json** XDR-JSON | On the XDR-JSON columns, for every ledger and xdr variant: does the converter's SEP-51 JSON validate against its own schema and come back to the same bytes, and do converters agree? | a `StringM` escaped beyond its schema's `maxLength` |
 
-Which levels apply to which entry kind is in [manifest.md §10](/reference/manifest).
+Which levels apply to which entry kind is in [manifest.md §10](/reference/manifest/kinds-and-levels#10-conformance-levels-by-kind).
 
 ## 5. Outcomes and reasons
 
@@ -287,7 +287,7 @@ the module. A driver whose SDK decodes entry streams but reads no Wasm (go-stell
 section, and answers `n_a/no_object_layer` when there is none or several: which section to read is then the
 application's choice, not the SDK's. An accepted cell reports `actual.spec.entries`, each entry rendered from the
 SDK's own objects as `{kind, name, args[{name, type}], outputs}` in the vocabulary of
-[manifest.md §9.4](/reference/manifest); the engine compares them, in order, with `expect.spec.entries`. A Wasm with no spec
+[manifest.md §9.4](/reference/manifest/kinds-and-levels#9-4-spec-contract-interfaces); the engine compares them, in order, with `expect.spec.entries`. A Wasm with no spec
 section conforms both when the reader returns no entries and when it reports the absence as an error. More than one
 section, or a stream that does not end in whole entries, must be refused (`spec_sections`, `trailing_bytes`,
 `length_exceeds_input`, `length_exceeds_max`). The cross-SDK comparison fingerprints the entry list.

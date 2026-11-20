@@ -43,7 +43,7 @@ marked `private`, so `npm publish` is refused.
 
 Every loader opens the same three things: a release archive `xdrcheck-<version>.tar.gz` (read in memory,
 never extracted; an expected sha256 can be given and must match), an extracted release, or a corpus directory
-holding `index.json`. It walks the flat entry index `corpus/index.json` ([manifest.md §3.1](/reference/manifest)); an
+holding `index.json`. It walks the flat entry index `corpus/index.json` ([manifest.md §3.1](/reference/manifest/files-and-index#3-1-the-entry-index-index-json)); an
 entry of the `stress` tier is read from the release's `stress/` root ([release.md §3](/reference/release)). The same
 concepts in each language:
 
@@ -54,7 +54,7 @@ concepts in each language:
 | variant | `key` (the report's variant key: the network, or `network@protocol` when the entry's variants do not share one protocol), `network`, `protocol`, `ledger_seq`, `xdr_type`, `validity` (the variant's own, else the entry's), blob path, `sha256`, `bytes`, sidecar path and `decoded_sha256`; `framing` from the manifest |
 | `blob()` | the bytes, refused unless their sha256 and length are the index's |
 | `expected_json()` | the SEP-51 JSON the pinned oracle decoded the bytes to (the zstd sidecar, refused unless the sha256 of its uncompressed bytes is the index's); none when the bytes do not decode |
-| `must_refuse()` | validity `malformed` or `invalid`: a byte decoder must refuse the bytes ([manifest.md §9.5](/reference/manifest)) |
+| `must_refuse()` | validity `malformed` or `invalid`: a byte decoder must refuse the bytes ([manifest.md §9.5](/reference/manifest/kinds-and-levels#9-5-validity-and-flags-the-negative-case-vocabulary)) |
 | `decodable()` | a `ledger` or `xdr` entry whose blob is one plain value (not a record-marked stream): what the recipes judge |
 | expected failures | the list format of section 7 (`<entry> <variant or -> <level or unread>`), a results collector (`pass`, `fail`, `unread`, `select`), the comparison with its `NEW-FAILURE`, `UNEXPECTED-PASS`, `NEW-UNREAD` and `NOT-RUN` lines, and writing a list from a run |
 
@@ -151,7 +151,7 @@ through the JavaScript SDK under test. It is built from a release with `npm pack
 tarball.
 
 Each selected entry's bytes go through the SDK's own generated XDR classes at the byte level (conformance level
-L0, [manifest.md §10](/reference/manifest)):
+L0, [manifest.md §10](/reference/manifest/kinds-and-levels#10-conformance-levels-by-kind)):
 
 | Entry | Conforms when |
 |---|---|

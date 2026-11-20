@@ -13,7 +13,7 @@ codes mean.
 
 The harness feeds corpus ledgers to an indexer through an input the indexer already reads, drives it through an
 adapter ([adapter-protocol.md](/reference/adapter-protocol)), compares what it stored with the manifest
-([manifest.md §6](/reference/manifest)) and classifies every entry. Commands and flags: [cli.md](/reference/cli).
+([manifest.md §6](/reference/manifest/expected-values#6-expected-values-and-how-they-are-matched)) and classifies every entry. Commands and flags: [cli.md](/reference/cli).
 
 ## 1. Shape of the harness
 
@@ -113,7 +113,7 @@ sets `replay.requires_prior_state: true` and is never served outside its chain.
 
 A scenario run starts at genesis on a fresh network, so everything a later ledger depends on is in the chain. Its
 ledgers, passphrase, protocol and settings come from its chain index (`corpus/chains/<scenario>/…json`,
-[manifest.md §8.2](/reference/manifest)). All entries produced by that run are scored from one session. If the indexer
+[manifest.md §8.2](/reference/manifest/divergences-and-replay#8-2-chain-indexes)). All entries produced by that run are scored from one session. If the indexer
 stops at ledger K, entries before K are scored from their facts, the entry at K takes the stop's class, and
 entries after K are `not_reached`.
 
@@ -164,7 +164,7 @@ entry variant.
 
 ## 6. Matching observations against `expect`
 
-The matcher implements [manifest.md §6](/reference/manifest), which is normative. In short:
+The matcher implements [manifest.md §6](/reference/manifest/expected-values#6-expected-values-and-how-they-are-matched), which is normative. In short:
 
 - **Exact comparison everywhere.** Amounts, IDs and counts are compared as decimal strings or integers; no
   tolerance, rounding, case folding or prefix matching.
@@ -236,7 +236,7 @@ With `--report DIR` a run writes:
 ## 9. Known divergences: how they are asserted
 
 An entry's `conformance.known_divergences` may name an indexer with `level: "replay"`
-([manifest.md §7](/reference/manifest)). For a run against target T at version V:
+([manifest.md §7](/reference/manifest/divergences-and-replay#7-known-divergences)). For a run against target T at version V:
 
 1. Divergences whose `target` is T and whose `versions` range contains V apply. For packages with tags the harness
    evaluates the range; for repositories without tags the adapter answers through `prepare.resolve_ranges`.

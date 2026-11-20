@@ -67,7 +67,7 @@ every SDK tested; the losses happen in builders and native conversions. Carry 64
 integers from end to end.
 
 Evidence: `classic/amount-above-2-pow-53-stroops`, `classic/api-offer-id-encoding.id-2-pow-53-plus-1-number`;
-"muxed and offer IDs" on [Known incidents](/results/incidents).
+"muxed and offer IDs" on [Known upstream defects](/results/incidents).
 
 ### Which type holds a muxed ID?
 ?
@@ -122,7 +122,7 @@ other way as text: a reader that validates the order by text rejects this valid 
 for the reversed pair, which does not exist.
 
 Evidence: `cap-0038/pool-issuers-order-by-bytes-not-strkey`; "issuer and map-key order" on
-[Known incidents](/results/incidents).
+[Known upstream defects](/results/incidents).
 
 ### Can a memo be trusted?
 ?
@@ -144,7 +144,7 @@ event that names two accounts and the asset `USD:G…`, and no ledger entry chan
 emitting contract ID.
 
 Evidence: `cap-0067/forged-token-event-from-unrelated-contract`; xdrlint rule
-[XDR304](/reference/lint-rules#xdr304).
+[XDR304](/reference/lint-rules/xdr3xx#xdr304).
 
 ### Does an address in the auth list mean that it authorized the call?
 ?
@@ -153,7 +153,7 @@ nonce entry is written. An entry that no call matches is only decoded. In the en
 its `auth` list holds two entries of an uninvolved account, with a void signature and an expiration at ledger 1.
 The proof that an address authenticated is the nonce entry created in the meta.
 
-Evidence: `cap-0046/auth-unmatched-entries-succeed`; xdrlint rule [XDR301](/reference/lint-rules#xdr301).
+Evidence: `cap-0046/auth-unmatched-entries-succeed`; xdrlint rule [XDR301](/reference/lint-rules/xdr3xx#xdr301).
 
 ### How deep can an authorization tree or an ScVal be?
 ?
@@ -191,7 +191,7 @@ Yes. `U32(1)` and `Symbol("1")` are distinct keys of an `ScVal` map. A conversio
 turns both into `"1"`, and a converter that does not refuse drops one entry without an error.
 
 Evidence: `cap-0046/scval-map-keys-collide-u32-symbol`, `cap-0046/event-data-map-with-colliding-keys`; "colliding
-map keys" on [Known incidents](/results/incidents).
+map keys" on [Known upstream defects](/results/incidents).
 
 ## Meta and state changes
 
@@ -230,7 +230,7 @@ No. The transaction set is in set order. The processing list, with the results a
 the entry below the same transaction is index 187 in the set and index 135 in the processing list. Match by
 transaction hash.
 
-Evidence: `cap-0027/muxed-source-id-zero`; [Manifest, section 4.2](/reference/manifest#4-2-variants).
+Evidence: `cap-0027/muxed-source-id-zero`; [Manifest, section 4.2](/reference/manifest/entry-fields#4-2-variants).
 
 ### Do two nodes write the same meta bytes for one ledger?
 ?
@@ -240,7 +240,7 @@ stellar-core's own comparison of golden files sorts the changes and zeroes the t
 has more than one valid encoding of its meta.
 
 Evidence: `cap-0038/pool-share-limit-only-change`;
-[Manifest, section 4.3](/reference/manifest#4-3-meta-versions-and-flag-profile).
+[Manifest, section 4.3](/reference/manifest/entry-fields#4-3-meta-versions-and-flag-profile).
 
 ## Protocol upgrades
 
@@ -281,8 +281,8 @@ reader has been reviewed for, and do not guess above them. Alert on a stalled ti
 on testnet before the mainnet vote. Versions are also not consecutive: pubnet went from Protocol 13 to 15, and no
 pubnet ledger has header version 14.
 
-Evidence: `protocol-15/upgrade-jump-13-to-15`; xdrlint rules [XDR401](/reference/lint-rules#xdr401) and
-[XDR406](/reference/lint-rules#xdr406).
+Evidence: `protocol-15/upgrade-jump-13-to-15`; xdrlint rules [XDR401](/reference/lint-rules/xdr4xx#xdr401) and
+[XDR406](/reference/lint-rules/xdr4xx#xdr406).
 
 ## Using the kit
 

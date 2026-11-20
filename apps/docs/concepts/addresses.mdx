@@ -151,14 +151,14 @@ Each row is a failure that happened in a real reader. The entries let you check 
 
 | Failure | What happened | Entries | Recorded on |
 |---|---|---|---|
-| A fixed-width address column | An indexer stored a signed-payload signer as 33 bytes, payload dropped; a 56-character column truncates an M address | `cap-0040/signed-payload-signers-1-byte-and-64-byte`, `strkey/truncated-muxed-address-56-chars` | [Known incidents](/results/incidents), [Replay results](/results/replay) |
+| A fixed-width address column | An indexer stored a signed-payload signer as 33 bytes, payload dropped; a 56-character column truncates an M address | `cap-0040/signed-payload-signers-1-byte-and-64-byte`, `strkey/truncated-muxed-address-56-chars` | [Known upstream defects](/results/incidents), [Replay results](/results/replay) |
 | A signer type with no branch | An indexer halted at the ledger that adds a signed-payload signer | `cap-0040/signed-payload-signer-added` | [Replay results](/results/replay) |
 | The muxed form stored as an identity | An indexer stored the M form of a Soroban operation's source as a participant, an account no ledger entry belongs to | `cap-0046/soroban-ops-with-muxed-source` | [Replay results](/results/replay) |
-| A 64-bit ID through a float | An SDK builder accepted the number 2^53+1 as an offer ID and encoded 2^53 | `classic/api-offer-id-encoding.id-2-pow-53-plus-1-number`, `cap-0027/api-muxed-account-id-encoding.id-2-pow-53-plus-1-number` | [Known incidents](/results/incidents) |
+| A 64-bit ID through a float | An SDK builder accepted the number 2^53+1 as an offer ID and encoded 2^53 | `classic/api-offer-id-encoding.id-2-pow-53-plus-1-number`, `cap-0027/api-muxed-account-id-encoding.id-2-pow-53-plus-1-number` | [Known upstream defects](/results/incidents) |
 | A decoder that accepts a malformed strkey | SDK decoders returned a payload for a truncated M address and for a signed payload that declares 0 bytes | `strkey/truncated-muxed-address-56-chars`, `strkey/synthetic-gap-vectors.signed-payload-empty` | [SDK matrix](/results/sdk-matrix) |
 | An encoder that emits what its decoder refuses | SDK encoders emit a P strkey for an empty payload | `strkey/api-encode-signed-payload-empty` | [SDK matrix](/results/sdk-matrix) |
-| Issuer keys compared as text | SDK parsers rejected a valid liquidity-pool transaction, because the two issuers sort one way as bytes and the other way as strkey text | `cap-0038/pool-issuers-order-by-bytes-not-strkey` | [Known incidents](/results/incidents) |
-| An address taken from a value that is not one | A transfer event whose `to` topic is a symbol | `cap-0067/transfer-event-with-non-address-to-topic` | [Known incidents](/results/incidents) |
+| Issuer keys compared as text | SDK parsers rejected a valid liquidity-pool transaction, because the two issuers sort one way as bytes and the other way as strkey text | `cap-0038/pool-issuers-order-by-bytes-not-strkey` | [Known upstream defects](/results/incidents) |
+| An address taken from a value that is not one | A transfer event whose `to` topic is a symbol | `cap-0067/transfer-event-with-non-address-to-topic` | [Known upstream defects](/results/incidents) |
 
 To run one of them against an SDK or an indexer:
 
