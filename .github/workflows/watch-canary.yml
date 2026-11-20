@@ -4,6 +4,7 @@
 # public endpoint.
 # None gates a pull request. A failed job writes what failed and the command to rerun it to the run's job summary.
 name: watch-canary
+run-name: "watch-canary ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
 
 on:
   workflow_dispatch:

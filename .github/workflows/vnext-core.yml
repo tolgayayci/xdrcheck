@@ -6,6 +6,7 @@
 # pulling the pinned build image; nothing is written outside this run (the result is the run's artifact). A run with
 # `plan` set resolves the commit and prints the build without building (`gh workflow run vnext-core.yml -f plan=true`).
 name: vnext-core
+run-name: "vnext-core ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
 
 on:
   workflow_dispatch:

@@ -4,6 +4,7 @@
 # GET of a public endpoint.
 # None gates a pull request. A failed job writes what failed and the command to rerun it to the run's job summary.
 name: watch-drift
+run-name: "watch-drift ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
 
 on:
   workflow_dispatch:

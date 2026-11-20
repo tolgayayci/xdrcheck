@@ -8,6 +8,7 @@
 # the run's job summary, and the run turns red. The workflow runs by hand only (workflow_dispatch).
 # None of the jobs gates a pull request; docs/architecture.md (CI) lists the jobs.
 name: nightly-goldens
+run-name: "nightly-goldens ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
 
 on:
   workflow_dispatch:

@@ -10,6 +10,7 @@
 # hand: a manual run (`gh workflow run release.yml --ref main`) is the dry run, and its artifact is what a tag
 # would produce.
 name: release
+run-name: "release ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
 
 on:
   push:

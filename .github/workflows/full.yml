@@ -15,6 +15,7 @@
 # (scripts/ci/job-summary.py). stellar-core's golden emission (AG-2, make verify-goldens-nightly) takes about 20 minutes on 8 CPUs and
 # stays in the manual nightly-goldens workflow.
 name: full
+run-name: "full ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
 
 on:
   push:

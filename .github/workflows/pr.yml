@@ -15,6 +15,7 @@
 # job's own step runs with OFFLINE=1 (scripts/offline-run.sh: no network). No job downloads a data set
 # (docs/ci-timings.md lists what each job fetches); nothing here hides a failure.
 name: pull-request
+run-name: "pull-request ${{ github.event_name == 'pull_request' && format('#{0}', github.event.pull_request.number) || github.ref_name }}"
 
 on:
   pull_request:
