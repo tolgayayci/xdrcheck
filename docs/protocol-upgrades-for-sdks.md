@@ -134,5 +134,5 @@ xdrcheck conform readiness --protocol N --report out       # out/readiness.md an
   `xdrcheck conform` (the Action's `conform` mode, or `--sdk` on a checkout).
 - `xdrcheck conform --sdk` builds Go, Rust and Python checkouts; for a JavaScript checkout use the npm runner
   with `--sdk .`, which covers bytes only.
-- No corpus release is published yet. Until one is, run the recipes against a checkout of this repository
+- No next-protocol release candidate is published yet (the stable release is `30.0.0`). Until one is, run the recipes against a checkout of this repository
   (`make sdk-ci-examples`) and read `N.0.0-rc.K` as the release you will pin.

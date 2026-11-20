@@ -386,6 +386,10 @@ def check_replay_file(d, recs, index):
 
 # ---------------------------------------------------------------- findings
 
+# The states an issue filed upstream can be in (corpus/schema/finding-record.schema.json, `upstream.state`).
+UPSTREAM_STATES = ("open", "fixed", "fix-merged-unreleased", "wont-fix", "closed-other", "acknowledged-private")
+
+
 def findings():
     recs = public_findings()
     index = corpus_index()
@@ -408,10 +412,13 @@ def findings():
             upstream = (d.get("upstream") or {}).get("url")
             if not upstream:
                 raise Fail(f"{fid}: filed without an upstream URL")
+            upstream_state = (d.get("upstream") or {}).get("state")
+            if upstream_state not in UPSTREAM_STATES:
+                raise Fail(f"{fid}: upstream state {upstream_state!r}")
         elif state == "duplicate-of":
-            upstream = "known upstream"
+            upstream, upstream_state = "known upstream", None
         else:
-            upstream = None
+            upstream, upstream_state = None, None
         row = {
             "id": fid,
             "title": strip_refs(d["title"]),
@@ -425,6 +432,7 @@ def findings():
             "versions_affected": strip_refs(d["target"].get("versions_affected")),
             "fixed_in": strip_refs(d["target"].get("fixed_in")),
             "upstream": upstream,
+            "upstream_state": upstream_state,
         }
         for k in ("title", "versions_affected", "fixed_in"):
             if isinstance(row[k], str) and FOREIGN_REF.search(row[k]):

@@ -1697,11 +1697,37 @@ def build_results(out: Out) -> dict:
     lines += [f"| {state_names.get(k, k)} | {v} |" for k, v in sorted(ft["state"].items())]
     lines += [f"| severity {k} | {ft['severity'].get(k, 0)} |" for k in SEVERITY_ORDER]
     lines += [f"| component {k} | {v} |" for k, v in sorted(ft["component"].items())]
+    # The issues this kit filed, by where each stands upstream: fixed first, then open.
+    up_names = {"fixed": "fixed", "fix-merged-unreleased": "fix merged, not yet released", "open": "open",
+                "wont-fix": "closed, not fixed", "closed-other": "closed", "acknowledged-private": "acknowledged"}
+    up_groups = [("Fixed upstream", ("fixed", "fix-merged-unreleased")), ("Open", ("open", "acknowledged-private")),
+                 ("Closed without a fix", ("wont-fix", "closed-other"))]
+
+    def issue_link(f):
+        m = re.fullmatch(r"https://github\.com/([^/]+/[^/]+)/(?:issues|pull)/(\d+)", f["upstream"])
+        return f"[{m.group(1)}#{m.group(2)}]({f['upstream']})" if m else f"[issue]({f['upstream']})"
+
+    filed = [f for f in rows if f["state"] == "filed" and f.get("upstream")]
+    lines += ["", "## Issues filed by this kit", "",
+              f"{len(filed)} issues, each opened in the affected project's tracker. The state is the one read from "
+              "the tracker when the record was last checked.", "", "| Upstream state | Issues |", "|---|---|"]
+    lines += [f"| {title.lower()} | {sum(1 for f in filed if f.get('upstream_state') in states)} |"
+              for title, states in up_groups if any(f.get("upstream_state") in states for f in filed)]
+    for title, states in up_groups:
+        group = [f for f in filed if f.get("upstream_state") in states]
+        if not group:
+            continue
+        lines += ["", f"### {title}", "", "| Issue | Severity | Finding | Entries | State |", "|---|---|---|---|---|"]
+        for f in sorted(group, key=lambda f: (f["target"], f["upstream"])):
+            ents = ", ".join(entry_link(e, out) for e in f["entries"][:2]) + (f" and {len(f['entries']) - 2} more"
+                                                                              if len(f["entries"]) > 2 else "")
+            lines.append(f"| {issue_link(f)} | {f['severity']} | {safe_text(f['title'])} | {ents} | "
+                         f"{up_names.get(f.get('upstream_state'), f.get('upstream_state'))} |")
     lines += ["", "## Every finding", "", "| ID | Severity | Component | Project | Finding | Entries | State |",
               "|---|---|---|---|---|---|---|"]
     for f in rows:
-        state = (f"[filed]({f['upstream']})" if f["state"] == "filed" and f.get("upstream")
-                 else state_names.get(f["state"], f["state"]))
+        state = (f"{issue_link(f)}, {up_names.get(f.get('upstream_state'), 'filed')}"
+                 if f["state"] == "filed" and f.get("upstream") else state_names.get(f["state"], f["state"]))
         ents = ", ".join(entry_link(e, out) for e in f["entries"][:3]) + (f" and {len(f['entries']) - 3} more"
                                                                           if len(f["entries"]) > 3 else "")
         lines.append(f"| {f['id']} | {f['severity']} | {f['component']} | {f['target']} | {safe_text(f['title'])} | "

@@ -24,7 +24,8 @@ that makes it and a `--check` that fails when the committed file no longer match
   pins and column sets, and runs of the public column sets and pinned pipelines. A cell or row that waits on a
   finding review says `"pending"` and nothing more.
 - Finding IDs (`F-NNNN`) refer to `findings/F-NNNN/finding.json`; `findings.json` has the row for each.
-- Upstream references: `findings.json` gives the URL only of an issue this kit filed (`state: filed`).
+- Upstream references: `findings.json` gives the URL only of an issue this kit filed (`state: filed`), with
+  `upstream_state`: where that issue stood when last checked (`open`, `fix-merged-unreleased`, `fixed`, …).
 
 ## conformance-matrix.json
 
