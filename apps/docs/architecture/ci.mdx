@@ -44,14 +44,14 @@ workstation. This page covers how that is enforced and what each job proves.
 
 ```mermaid
 flowchart LR
-  PR["pull request or branch push"] --> T1["pr.yml"]
-  T1 --> B1["P0 build"] --> J1["P1 static, P2 corpus, P3 generate,<br/>P10 guide, P11 coverage, P4d cli"]
-  T1 --> U1["P4 unit tests, fast form"]
-  T1 --> R1["P7 replay pairs, rpc input<br/>P8 js regressions<br/>P9 lint, current wallet-backend"]
-  J1 & U1 & R1 --> S1["P12 findings check, P13 summary"]
-  M["by hand, or a v* tag"] --> T2["full.yml"]
-  T2 --> B2["P0 build"] --> J2["every check at full size<br/>P1 to P11, P14 to P18"]
-  J2 --> S2["P12, P12b, P13"]
+  PR["pull request or branch push"] --> T1["Pull request (pr.yml)"]
+  T1 --> B1["build"] --> J1["static, corpus, generate,<br/>guide, coverage, cli"]
+  T1 --> U1["unit tests, fast form"]
+  T1 --> R1["replay pairs, rpc input<br/>conformance-js regressions<br/>lint, current wallet-backend"]
+  J1 & U1 & R1 --> S1["findings, run-summary"]
+  M["by hand, or a v* tag"] --> T2["CI (full.yml)"]
+  T2 --> B2["build"] --> J2["every check at full size,<br/>plus replay-full to mainnet"]
+  J2 --> S2["findings, findings-check-strict,<br/>run-summary"]
 ```
 
 Both tiers run on GitHub's standard runners (2 vCPUs, 7.7 GiB), with `permissions: contents: read` and no secrets.
@@ -60,46 +60,48 @@ artifact.
 
 ### Pull-request CI (`.github/workflows/pr.yml`)
 
-Trigger: every pull request, every push to a branch other than main, and by hand. Locally: `make verify-pr`.
+The workflow is named "Pull request" in the GitHub Actions UI. Trigger: every pull request, every push to a branch
+other than main, and by hand. Locally: `make verify-pr`.
 
 | Job | Target | What it proves |
 |---|---|---|
-| P0 build | `make build` | every tool builds offline from the fetched caches |
-| P1 static | `make verify-static` | every manifest and chain index matches its schema; every blob's hash and length; every sidecar's hash; entry IDs registered; `xdrcheck pins check` |
-| P2 corpus | `make verify-corpus` | the round trip, pinpoints, recomputed hashes, the reference extractor, the golden import and the golden mirror ([Corpus](/architecture/corpus)) |
-| P3 generate | `make verify-generate` | the scenarios in `corpus/scenarios/pr.list` regenerate on the pinned stellar-core, on both passphrases, to the committed chains |
-| P4a, P4b, P4e | `make test-rust-fast`, `make test-go-fast` | the Rust tests, and the Go tests of `go/` and `lint/` with `-short` |
-| P4c a to e | `make test-drivers DRIVERS=…` | every driver's own tests, in five groups (Python; JavaScript and stellar-core; Go v0.7.x; Go v0.8.0, v0.9.0 and soroban-spec; Rust and XDR-JSON) |
-| P4d cli | `make test-cli` | `docs/cli.md` equals the built tools' `--help` |
-| P7 replay | `make verify-replay-pr` | the wallet-backend#729, #731, #716 pairs on the `rpc` input, with the row-by-row assertions ([Replay](/architecture/replay)) |
-| P8 conformance-js | `make verify-conformance-js` | js-stellar-sdk#1766, #1785, #1789 on 17.2.0, 17.2.1, 17.3.0 |
-| P9 lint | `make verify-lint-pr` | the linter fixtures, and the run on wallet-backend `f0c00cf5` equal to its frozen list |
-| P10 guide | `make verify-guide` | the guide's tables and claims equal their sources; stellar-docs' checks pass |
-| P11 coverage | `make verify-coverage` | `corpus/COVERAGE.md` is current; every CAP row has an entry or a stated reason |
-| P12, P13 | `make verify-findings`, summary | every failure row of the jobs above is linked to an upstream issue or declared; one table of every job's result |
+| build | `make build` | every tool builds offline from the fetched caches |
+| static | `make verify-static` | every manifest and chain index matches its schema; every blob's hash and length; every sidecar's hash; entry IDs registered; `xdrcheck pins check` |
+| corpus | `make verify-corpus` | the round trip, pinpoints, recomputed hashes, the reference extractor, the golden import and the golden mirror ([Corpus](/architecture/corpus)) |
+| generate | `make verify-generate` | the scenarios in `corpus/scenarios/pr.list` regenerate on the pinned stellar-core, on both passphrases, to the committed chains |
+| unit-rust, unit-go, unit-lint | `make test-rust-fast`, `make test-go-fast` | the Rust tests, and the Go tests of `go/` and `lint/` with `-short` |
+| unit-drivers-a to unit-drivers-e | `make test-drivers DRIVERS=…` | every driver's own tests, in five groups (Python; JavaScript and stellar-core; Go v0.7.x; Go v0.8.0, v0.9.0 and soroban-spec; Rust and XDR-JSON) |
+| cli | `make test-cli` | `docs/cli.md` equals the built tools' `--help` |
+| replay | `make verify-replay-pr` | the wallet-backend#729, #731, #716 pairs on the `rpc` input, with the row-by-row assertions ([Replay](/architecture/replay)) |
+| conformance-js | `make verify-conformance-js` | js-stellar-sdk#1766, #1785, #1789 on 17.2.0, 17.2.1, 17.3.0 |
+| lint | `make verify-lint-pr` | the linter fixtures, and the run on wallet-backend `f0c00cf5` equal to its frozen list |
+| guide | `make verify-guide` | the guide's tables and claims equal their sources; stellar-docs' checks pass |
+| coverage | `make verify-coverage` | `corpus/COVERAGE.md` is current; every CAP row has an entry or a stated reason |
+| findings, run-summary | `make verify-findings`, summary | every failure row of the jobs above is linked to an upstream issue or declared; one table of every job's result |
 
-Measured: about 15 minutes with warm caches, 25 cold; the longest path is P4a (`docs/ci-timings.md`, measured
+Measured: about 15 minutes with warm caches, 25 cold; the longest path is unit-rust (`docs/ci-timings.md`, measured
 2026-11-19).
 
 ### Full CI (`.github/workflows/full.yml`)
 
-Trigger: by hand (`workflow_dispatch`) and on `v*` release tags. No schedule and no run on a push. Locally:
-`make verify` plus the full-size targets below. It runs P0 to P4 and P10, P11 as above (P4 at full size: `make
-test-rust` with `XDRCHECK_REQUIRE_CORE=1`, so the tests that run stellar-core cannot skip), and adds:
+The workflow is named "CI" in the GitHub Actions UI. Trigger: by hand (`workflow_dispatch`) and on `v*` release
+tags. No schedule and no run on a push. Locally: `make verify` plus the full-size targets below. It runs build,
+static, corpus, generate, the unit and driver tests, cli, guide and coverage as above (the unit tests at full size:
+`make test-rust` with `XDRCHECK_REQUIRE_CORE=1`, so the tests that run stellar-core cannot skip), and adds:
 
 | Job | Target | What it proves | Time |
 |---|---|---|---|
-| P5 harness-selftest | `make harness-selftest` | seeded-bug indexers land in their documented classes; the baseline passes | 6 min |
-| P6 memory | `make verify-memory` | the harness's memory stays bounded in a 256 MiB group; a non-streaming control fails | 10 min |
-| P7 replay | `make verify-replay` | the three wallet-backend pairs and the current commit on both `rpc` and `sep54-s3` | 14 min |
-| P8 conformance | `make verify-conformance` | the js-stellar-sdk regressions, then the 16-column `pr` matrix and `xdrcheck conform check` | 22 min |
-| P9 lint | `make verify-lint` | fixtures, wallet-backend, the before/after table, stellar-etl, the linter self-test | 18 min |
-| P14 replay-full | `make replay-full` | the whole corpus through wallet-backend `f0c00cf5` on both inputs, each entry judged from stored rows | 21 min |
-| P15 replay-etl-known | `make replay-etl-known` | the entries that declare a stellar-etl divergence, at `7e3fc9af` | |
-| P16 conformance-public | `make verify-conformance-public` | the 21-column `public` set, including the JavaScript 16.x line and stellar-core's decoder | 30 min |
-| P17 sdk-ci-recipes | `make sdk-ci-recipes` | the Go, Rust, Python and npm recipes in `examples/sdk-ci/` run against the pinned SDKs | |
-| P18 mainnet | `make verify-mainnet` | the 6,158 mainnet-tier transactions re-cut and re-tokenised from their lake objects, holding all 15,186 tokens ([Mainnet scan](/architecture/mainnet-scan)) | 11 min |
-| P12, P12b, P13 | findings checks, summary | every failure row of every job is linked; on a release tag no row may be undecided | |
+| harness-selftest | `make harness-selftest` | seeded-bug indexers land in their documented classes; the baseline passes | 6 min |
+| memory | `make verify-memory` | the harness's memory stays bounded in a 256 MiB group; a non-streaming control fails | 10 min |
+| replay | `make verify-replay` | the three wallet-backend pairs and the current commit on both `rpc` and `sep54-s3` | 14 min |
+| conformance | `make verify-conformance` | the js-stellar-sdk regressions, then the 16-column `pr` matrix and `xdrcheck conform check` | 22 min |
+| lint | `make verify-lint` | fixtures, wallet-backend, the before/after table, stellar-etl, the linter self-test | 18 min |
+| replay-full | `make replay-full` | the whole corpus through wallet-backend `f0c00cf5` on both inputs, each entry judged from stored rows | 21 min |
+| replay-etl-known | `make replay-etl-known` | the entries that declare a stellar-etl divergence, at `7e3fc9af` | |
+| conformance-public | `make verify-conformance-public` | the 21-column `public` set, including the JavaScript 16.x line and stellar-core's decoder | 30 min |
+| sdk-ci-recipes | `make sdk-ci-recipes` | the Go, Rust, Python and npm recipes in `examples/sdk-ci/` run against the pinned SDKs | |
+| mainnet | `make verify-mainnet` | the 6,158 mainnet-tier transactions re-cut and re-tokenised from their lake objects, holding all 15,186 tokens ([Mainnet scan](/architecture/mainnet-scan)) | 11 min |
+| findings, findings-check-strict, run-summary | findings checks, summary | every failure row of every job is linked; on a release tag no row may be undecided | |
 
 Times: `README.md`, "Check every claim yourself" (jobs on a 2-CPU GitHub runner); about 40 minutes wall time with
 jobs side by side. The local emulation of both tiers from cold caches (`make ci-local`, 2 CPUs, 7 GiB per job) is in
@@ -111,14 +113,14 @@ None of these gates a pull request, and none has a schedule.
 
 | Workflow | Job | Target | What it checks |
 |---|---|---|---|
-| `nightly-goldens.yml` | N1 | `make nightly-regenerate` | every scenario under `corpus/scenarios/`, at every protocol and network it declares, regenerates to the committed chains |
-| | N2, N3 | `make verify-goldens-nightly` | stellar-core's own test binary (`stellar/unsafe-stellar-core:30.0.0-3642.0e49751aa.noble-buildtests` by digest) runs `test '[tx]' --rng-seed 12345 --check-lcm` against the golden tree with no network and a memory limit (about 21 minutes on 8 CPUs); then the bulk tier decoded and re-encoded by the oracle and by every `public` SDK column at L0 |
-| | N6 | `make nightly-early-warning` | stellar-core's `test-lcm-next` goldens at `master` decode, re-encode and JSON-round-trip in the pinned oracle; counts only, because the branch is not pinned |
-| | N8 | `make nightly-refetch` | `make fetch` into an empty cache, `xdrcheck pins check`, the golden tree against `corpus/bulk/`, every vendored lake object against the lake |
-| `vnext-core.yml` | | `make vnext-core` | stellar-core master built with `--enable-next-protocol-version-unsafe-for-production` in a pinned container, checked to support a protocol above `max_supported` |
-| `watch-drift.yml` | | `make watch-network` | mainnet and testnet protocol versions (Horizon `current_protocol_version`), testnet resets and dated events against `pins.toml` |
-| `watch-canary.yml` | | `make nightly-canary` | how far each pin is behind upstream; a canary column for the newest release of each SDK family, diffed with the newest pinned column |
-| `release.yml` | | `make release`, `make dist-bin`, `make release-assets` | the release artifact (below); publishes nothing |
+| `nightly-goldens.yml` (Golden ledgers) | regenerate-all | `make nightly-regenerate` | every scenario under `corpus/scenarios/`, at every protocol and network it declares, regenerates to the committed chains |
+| | goldens | `make verify-goldens-nightly` | stellar-core's own test binary (`stellar/unsafe-stellar-core:30.0.0-3642.0e49751aa.noble-buildtests` by digest) runs `test '[tx]' --rng-seed 12345 --check-lcm` against the golden tree with no network and a memory limit (about 21 minutes on 8 CPUs); then the bulk tier decoded and re-encoded by the oracle and by every `public` SDK column at L0 |
+| | early-warning | `make nightly-early-warning` | stellar-core's `test-lcm-next` goldens at `master` decode, re-encode and JSON-round-trip in the pinned oracle; counts only, because the branch is not pinned |
+| | refetch | `make nightly-refetch` | `make fetch` into an empty cache, `xdrcheck pins check`, the golden tree against `corpus/bulk/`, every vendored lake object against the lake |
+| `vnext-core.yml` (Next-protocol core) | next-protocol stellar-core | `make vnext-core` | stellar-core master built with `--enable-next-protocol-version-unsafe-for-production` in a pinned container, checked to support a protocol above `max_supported` |
+| `watch-drift.yml` (Network watch) | network state | `make watch-network` | mainnet and testnet protocol versions (Horizon `current_protocol_version`), testnet resets and dated events against `pins.toml` |
+| `watch-canary.yml` (SDK canary) | pins behind upstream and latest-SDK canary | `make nightly-canary` | how far each pin is behind upstream; a canary column for the newest release of each SDK family, diffed with the newest pinned column |
+| `release.yml` (Release) | | `make release`, `make dist-bin`, `make release-assets` | the release artifact (below); publishes nothing |
 
 ## Release artifacts
 
@@ -148,5 +150,5 @@ Guides: [CI recipes](/guides/ci), [GitHub Action](/guides/ci#github-action), [CI
 ## Limits
 
 - The full CI runs by hand and on tags only; a push to main runs neither tier.
-- The golden emission proof (N2) takes about 21 minutes on 8 CPUs and is not part of the full CI.
+- The golden emission proof (the goldens job of Golden ledgers) takes about 21 minutes on 8 CPUs and is not part of the full CI.
 - The release provenance is not signed yet.
