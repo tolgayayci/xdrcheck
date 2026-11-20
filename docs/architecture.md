@@ -311,22 +311,22 @@ None of them changed: the full CI runs them as before.
 
 ### Nightly jobs
 
-The nightly workflow `nightly-goldens.yml` (N1, N2, N3, N6, N8) runs by hand only (`workflow_dispatch`; it has
+The nightly workflow `nightly-goldens.yml` (regenerate-all, goldens, early-warning, refetch) runs by hand only (`workflow_dispatch`; it has
 no schedule). None of its jobs gates a pull request. Each job is one `make` target that runs the same way on a workstation. A job prints one summary line per
 part (`PASS`, `FAIL`, `BLOCKED` or `SKIPPED`, with its time) and writes its logs and reports under
 `reports-nightly/`; a `BLOCKED` part fails the job like a failed check.
 
 | Job | Target | What it checks | Network |
 |---|---|---|---|
-| N1 | `make nightly-regenerate` | `xdrcheck-corpus gen --check --all`: every scenario under `corpus/scenarios/`, at every protocol and network it declares, regenerates to the committed chains (the pull-request check runs `pr.list`) | none |
-| N2, N3 | `make verify-goldens-nightly` | AG-2: the pinned stellar-core test image runs core's `[tx]` tests with `--rng-seed 12345 --check-lcm` against the cached golden tree, in a container with no network. AG-3 on the bulk tier: `xdrcheck-corpus verify --tier bulk --checks hashes,roundtrip,ag3`, then `xdrcheck conform run --tier bulk --levels L0` on the `public` column set | none in the run step; `make fetch-nightly` pulls the test image and the driver packages |
-| N6 | `make nightly-early-warning` | stellar-core's `test-lcm-next` goldens at `master` (a blobless, sparse checkout) decode, re-encode and JSON-round-trip in the pinned oracle; the protocol gate is raised to the tier's protocol for this check only. The branch is not pinned, so the job prints counts only and uploads nothing | the fetch only |
-| N8 | `make nightly-refetch` | `make fetch` into an empty cache (and the public driver packages), then `xdrcheck pins check`, the fetched golden tree against `corpus/bulk/`, and `xdrcheck-corpus refetch` over every vendored public-lake object | all of it |
+| regenerate-all | `make nightly-regenerate` | `xdrcheck-corpus gen --check --all`: every scenario under `corpus/scenarios/`, at every protocol and network it declares, regenerates to the committed chains (the pull-request check runs `pr.list`) | none |
+| goldens | `make verify-goldens-nightly` | AG-2: the pinned stellar-core test image runs core's `[tx]` tests with `--rng-seed 12345 --check-lcm` against the cached golden tree, in a container with no network. AG-3 on the bulk tier: `xdrcheck-corpus verify --tier bulk --checks hashes,roundtrip,ag3`, then `xdrcheck conform run --tier bulk --levels L0` on the `public` column set | none in the run step; `make fetch-nightly` pulls the test image and the driver packages |
+| early-warning | `make nightly-early-warning` | stellar-core's `test-lcm-next` goldens at `master` (a blobless, sparse checkout) decode, re-encode and JSON-round-trip in the pinned oracle; the protocol gate is raised to the tier's protocol for this check only. The branch is not pinned, so the job prints counts only and uploads nothing | the fetch only |
+| refetch | `make nightly-refetch` | `make fetch` into an empty cache (and the public driver packages), then `xdrcheck pins check`, the fetched golden tree against `corpus/bulk/`, and `xdrcheck-corpus refetch` over every vendored public-lake object | all of it |
 
 `make <target> OFFLINE=1` wraps the run steps in `scripts/offline-run.sh`, as for the pull-request checks. The
 jobs that need driver packages or the test image fetch them with `scripts/nightly/fetch.sh` after the shared setup.
 `XDRCHECK_NIGHTLY_SKIP` (comma-separated: `ag2`, `bulk-oracle`, `bulk-drivers`) skips parts on purpose (reported `SKIPPED`). Public nightly runs never load the private
-overlay; on a maintainer's machine `XDRCHECK_OVERLAY` runs N3 on the `all` set with the overlay's columns and writes those
+overlay; on a maintainer's machine `XDRCHECK_OVERLAY` runs on the `all` set with the overlay's columns and writes those
 reports under the overlay, outside the working tree. A nightly failure files nothing upstream.
 
 AG-2 runs the published test image `stellar/unsafe-stellar-core:30.0.0-3642.0e49751aa.noble-buildtests` by the

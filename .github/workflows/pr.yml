@@ -5,7 +5,7 @@
 # in reduced form with the same assertions: the wallet-backend pairs on one input (`make verify-replay-pr`), the
 # three js-stellar-sdk assertions on their JavaScript columns without the rest of the matrix (`make
 # verify-conformance-js`), the linter on its fixtures and the current wallet-backend commit (`make verify-lint-pr`).
-# The findings check reads what these jobs made, and P13 prints one table of every job's result and key numbers;
+# The findings check reads what these jobs made, and run-summary prints one table of every job's result and key numbers;
 # each job writes the key lines of its own reports to its job summary (scripts/ci/job-summary.py). The full CI
 # (full.yml, tier 2) runs every check at full size, by hand and on release tags. Each job runs exactly one `make` target, the same command a contributor runs locally. The build job runs `make
 # build` once and hands the tools to the jobs that need them (artifact `tools`), which name them on the make command
@@ -14,8 +14,8 @@
 # fetch FETCH_ONLY=...` through .github/actions/setup, the only networked step) and restores only its own caches; the
 # job's own step runs with OFFLINE=1 (scripts/offline-run.sh: no network). No job downloads a data set
 # (docs/ci-timings.md lists what each job fetches); nothing here hides a failure.
-name: pull-request
-run-name: "pull-request ${{ github.event_name == 'pull_request' && format('#{0}', github.event.pull_request.number) || github.ref_name }}"
+name: Pull request
+run-name: "Pull request ${{ github.event_name == 'pull_request' && format('#{0}', github.event.pull_request.number) || github.ref_name }}"
 
 on:
   pull_request:
@@ -40,7 +40,7 @@ env:
 jobs:
 
   build:
-    name: P0 build (make build)
+    name: build (make build)
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -82,7 +82,7 @@ jobs:
           retention-days: 1
 
   static:
-    name: P1 static (make verify-static)
+    name: static (make verify-static)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -116,7 +116,7 @@ jobs:
           retention-days: 14
 
   corpus:
-    name: P2 corpus (make verify-corpus)
+    name: corpus (make verify-corpus)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -153,7 +153,7 @@ jobs:
           retention-days: 14
 
   generate:
-    name: P3 generate (make verify-generate)
+    name: generate (make verify-generate)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -187,7 +187,7 @@ jobs:
           retention-days: 14
 
   unit-rust:
-    name: P4a unit-rust (make test-rust-fast)
+    name: unit-rust (make test-rust-fast)
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     # It needs nothing the build job makes, so it starts with it. It fetches the golden tree: the tests that run the
@@ -240,7 +240,7 @@ jobs:
           retention-days: 14
 
   unit-go:
-    name: P4b unit-go (make test-go-fast GO_MODULES=go)
+    name: unit-go (make test-go-fast GO_MODULES=go)
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     # It needs nothing the build job makes, so it starts with it.
@@ -284,7 +284,7 @@ jobs:
 
 
   unit-lint:
-    name: P4e unit-lint (make test-go-fast GO_MODULES=lint)
+    name: unit-lint (make test-go-fast GO_MODULES=lint)
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     # It needs nothing the build job makes, so it starts with it.
@@ -327,7 +327,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-a:
-    name: P4c unit-drivers-a (make test-drivers, Python)
+    name: unit-drivers-a (make test-drivers, Python)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # It needs nothing the build job makes, so it starts with it.
@@ -365,7 +365,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-b:
-    name: P4c unit-drivers-b (make test-drivers, JavaScript, stellar-core)
+    name: unit-drivers-b (make test-drivers, JavaScript, stellar-core)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # It needs nothing the build job makes, so it starts with it.
@@ -403,7 +403,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-c:
-    name: P4c unit-drivers-c (make test-drivers, Go v0.7.x)
+    name: unit-drivers-c (make test-drivers, Go v0.7.x)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # It needs nothing the build job makes, so it starts with it.
@@ -441,7 +441,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-d:
-    name: P4c unit-drivers-d (make test-drivers, Go v0.8.0 and v0.9.0, soroban-spec)
+    name: unit-drivers-d (make test-drivers, Go v0.8.0 and v0.9.0, soroban-spec)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # It needs nothing the build job makes, so it starts with it.
@@ -479,7 +479,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-e:
-    name: P4c unit-drivers-e (make test-drivers, Rust, XDR-JSON)
+    name: unit-drivers-e (make test-drivers, Rust, XDR-JSON)
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     # It needs nothing the build job makes, so it starts with it.
@@ -517,7 +517,7 @@ jobs:
           retention-days: 14
 
   cli:
-    name: P4d cli (make test-cli)
+    name: cli (make test-cli)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 6
@@ -553,7 +553,7 @@ jobs:
           retention-days: 14
 
   replay:
-    name: P7 replay (make verify-replay-pr)
+    name: replay (make verify-replay-pr)
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     # It needs nothing the build job makes, so it starts with it. The make target builds xdrcheck; the script builds the adapter.
@@ -592,7 +592,7 @@ jobs:
           retention-days: 14
 
   conformance-js:
-    name: P8 conformance-js (make verify-conformance-js)
+    name: conformance-js (make verify-conformance-js)
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     # It needs nothing the build job makes, so it starts with it. The make target builds xdrcheck.
@@ -630,7 +630,7 @@ jobs:
           retention-days: 14
 
   lint:
-    name: P9 lint (make verify-lint-pr)
+    name: lint (make verify-lint-pr)
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     # It needs nothing the build job makes, so it starts with it. The lint script builds xdrlint.
@@ -669,7 +669,7 @@ jobs:
           retention-days: 14
 
   guide:
-    name: P10 guide (make verify-guide)
+    name: guide (make verify-guide)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -709,7 +709,7 @@ jobs:
           retention-days: 14
 
   coverage:
-    name: P11 coverage (make verify-coverage)
+    name: coverage (make verify-coverage)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -745,7 +745,7 @@ jobs:
           retention-days: 14
 
   findings:
-    name: P12 findings (make verify-findings)
+    name: findings (make verify-findings)
     needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, replay, conformance-js, lint, guide, coverage]
     # Runs after failed checks too: its job is to account for them. It needs the tools, so not without them.
     if: ${{ !cancelled() && needs.build.result == 'success' }}
@@ -789,7 +789,7 @@ jobs:
           retention-days: 14
 
   acceptance-report:
-    name: P13 run-summary
+    name: run-summary
     needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, replay, conformance-js, lint, guide, coverage, findings]
     # Runs after failed checks too: one table of every job above with its result and the key numbers its own
     # summary states (reports/ci-summary/<job>.txt in its reports artifact). It needs the tools, so not without them.

@@ -50,9 +50,9 @@ a failure is a maintainer's step.
 | What | How | Response | Status |
 |---|---|---|---|
 | Corpus integrity | Every pull request: hashes, round trip, golden import, extractor agreement (`make verify-static`, `make verify-corpus`) | A mismatch blocks the merge | In place |
-| Reproducibility | Every pull request: the scenario subset in `corpus/scenarios/pr.list` (`make verify-generate`); nightly (job N1, `nightly-goldens.yml`): every scenario (`make nightly-regenerate`) | A regeneration difference blocks the merge or turns the nightly run red | In place |
-| Pinned downloads still available | Nightly: `make fetch` from cold caches, every artefact verified by hash (job N8, `nightly-goldens.yml`) | A missing or changed artefact turns the nightly run red | In place |
-| Golden agreement with stellar-core's own test binary | Nightly: `make verify-goldens-nightly` (jobs N2 and N3 in `nightly-goldens.yml`, `scripts/nightly/goldens.sh`) | A failure turns the nightly run red | In place |
-| History sources | `xdrcheck-corpus refetch`: every vendored lake object fetched again and compared; nightly in job N8 (`make nightly-refetch`, `nightly-goldens.yml`) | Perishable objects reported, others fail | In place |
-| Upstream drift | Early-warning decode of stellar-core's next-protocol goldens (N6, `make nightly-early-warning`, `nightly-goldens.yml`); the watch list ([maintenance.md §6](/guides/maintain-kit)) | A watch-log entry; a pin-move pull request | In place |
+| Reproducibility | Every pull request: the scenario subset in `corpus/scenarios/pr.list` (`make verify-generate`); nightly (job regenerate-all, `nightly-goldens.yml`): every scenario (`make nightly-regenerate`) | A regeneration difference blocks the merge or turns the nightly run red | In place |
+| Pinned downloads still available | Nightly: `make fetch` from cold caches, every artefact verified by hash (job refetch, `nightly-goldens.yml`) | A missing or changed artefact turns the nightly run red | In place |
+| Golden agreement with stellar-core's own test binary | Nightly: `make verify-goldens-nightly` (jobs and in `nightly-goldens.yml`, `scripts/nightly/goldens.sh`) | A failure turns the nightly run red | In place |
+| History sources | `xdrcheck-corpus refetch`: every vendored lake object fetched again and compared; nightly in job refetch (`make nightly-refetch`, `nightly-goldens.yml`) | Perishable objects reported, others fail | In place |
+| Upstream drift | Early-warning decode of stellar-core's next-protocol goldens (early-warning, `make nightly-early-warning`, `nightly-goldens.yml`); the watch list ([maintenance.md §6](/guides/maintain-kit)) | A watch-log entry; a pin-move pull request | In place |
 | Findings | Each filed issue or private report tracked to closure; when a fix ships, the known-divergence range is closed and the next run asserts the fix | A status update (public findings only) | In place (`xdrcheck findings list`) |

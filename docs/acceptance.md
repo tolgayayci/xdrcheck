@@ -57,9 +57,9 @@ make verify-acceptance       # the same with the findings check in acceptance mo
 ```
 
 The full CI (`.github/workflows/full.yml`, run by hand and on release tags) runs every target of
-`make verify-acceptance`, one job each; its P13 run-summary job runs `make acceptance-report` over all of their
+`make verify-acceptance`, one job each; its run-summary job runs `make acceptance-report` over all of their
 reports and uploads the table with the run's reports (the job summary shows only each job's result and key
-numbers), so `findings-linked` is computed there. Its P12b findings-check-strict job runs `make verify-findings-acceptance`: on a
+numbers), so `findings-linked` is computed there. Its findings-check-strict job runs `make verify-findings-acceptance`: on a
 release tag it fails while any row awaits finding review, so a release cannot be cut while `findings-linked` is not met; on main
 and by hand it runs with `PENDING_OK=1` (`xdrcheck findings check --pending-ok`), which passes with the warning
 "N failure rows have no linked issue" when those rows are the only failure, and fails on anything else. `findings-linked` itself and the acceptance table are the same either way. `make results-acceptance` turns a local run's table

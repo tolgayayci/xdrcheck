@@ -6,16 +6,17 @@
 # Makefile runs a tool given that way as it is instead of building it again. Each job then fetches only the parts its
 # target needs (`make fetch FETCH_ONLY=...` through .github/actions/setup, the only networked step) and restores only
 # its own caches; the job's own step runs with OFFLINE=1, so the Makefile wraps it in scripts/offline-run.sh (a
-# namespace with no network). No job downloads a data set, apart from P18, which fetches the mainnet tier's public-lake
+# namespace with no network). No job downloads a data set, apart from mainnet, which fetches the mainnet tier's public-lake
 # objects into its cache (docs/ci-timings.md lists what each job fetches). A job whose tool is not built fails loudly;
 # nothing here hides a failure. No schedule and no run on a push: a manual run and release tags (v*) are the triggers.
-# P14 to P16 add the full-size runs the pull-request CI does not make, P12b the findings check in strict mode (rows
-# awaiting finding review alone fail it only on a release tag; on main they leave a warning), and P13 one table of
+# replay-full, replay-etl-known and conformance-public add the full-size runs the pull-request CI does not make,
+# findings-check-strict the findings check in strict mode (rows
+# awaiting finding review alone fail it only on a release tag; on main they leave a warning), and run-summary one table of
 # every job's result and key numbers. Each job writes the key lines of its own reports to its job summary
 # (scripts/ci/job-summary.py). stellar-core's golden emission (AG-2, make verify-goldens-nightly) takes about 20 minutes on 8 CPUs and
 # stays in the manual nightly-goldens workflow.
-name: full
-run-name: "full ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
+name: CI
+run-name: "CI ${{ github.ref_name }}${{ github.event_name == 'workflow_dispatch' && ' (manual)' || '' }}"
 
 on:
   push:
@@ -40,7 +41,7 @@ env:
 jobs:
 
   build:
-    name: P0 build (make build)
+    name: build (make build)
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
@@ -93,7 +94,7 @@ jobs:
           retention-days: 1
 
   static:
-    name: P1 static (make verify-static)
+    name: static (make verify-static)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -127,7 +128,7 @@ jobs:
           retention-days: 14
 
   corpus:
-    name: P2 corpus (make verify-corpus)
+    name: corpus (make verify-corpus)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -164,7 +165,7 @@ jobs:
           retention-days: 14
 
   generate:
-    name: P3 generate (make verify-generate)
+    name: generate (make verify-generate)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -198,7 +199,7 @@ jobs:
           retention-days: 14
 
   unit-rust:
-    name: P4a unit-rust (make test-rust)
+    name: unit-rust (make test-rust)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 50
@@ -252,7 +253,7 @@ jobs:
           retention-days: 14
 
   unit-go:
-    name: P4b unit-go (make test-go GO_MODULES=go)
+    name: unit-go (make test-go GO_MODULES=go)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -295,7 +296,7 @@ jobs:
 
 
   unit-lint:
-    name: P4e unit-lint (make test-go GO_MODULES=lint)
+    name: unit-lint (make test-go GO_MODULES=lint)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -337,7 +338,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-a:
-    name: P4c unit-drivers-a (make test-drivers, Python)
+    name: unit-drivers-a (make test-drivers, Python)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -375,7 +376,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-b:
-    name: P4c unit-drivers-b (make test-drivers, JavaScript, stellar-core)
+    name: unit-drivers-b (make test-drivers, JavaScript, stellar-core)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -413,7 +414,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-c:
-    name: P4c unit-drivers-c (make test-drivers, Go v0.7.x)
+    name: unit-drivers-c (make test-drivers, Go v0.7.x)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -451,7 +452,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-d:
-    name: P4c unit-drivers-d (make test-drivers, Go v0.8.0 and v0.9.0, soroban-spec)
+    name: unit-drivers-d (make test-drivers, Go v0.8.0 and v0.9.0, soroban-spec)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -489,7 +490,7 @@ jobs:
           retention-days: 14
 
   unit-drivers-e:
-    name: P4c unit-drivers-e (make test-drivers, Rust, XDR-JSON)
+    name: unit-drivers-e (make test-drivers, Rust, XDR-JSON)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -527,7 +528,7 @@ jobs:
           retention-days: 14
 
   cli:
-    name: P4d cli (make test-cli)
+    name: cli (make test-cli)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 6
@@ -563,7 +564,7 @@ jobs:
           retention-days: 14
 
   harness-selftest:
-    name: P5 harness-selftest (make harness-selftest)
+    name: harness-selftest (make harness-selftest)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -601,7 +602,7 @@ jobs:
           retention-days: 14
 
   memory:
-    name: P6 memory (make verify-memory)
+    name: memory (make verify-memory)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -639,7 +640,7 @@ jobs:
           retention-days: 14
 
   replay-acceptance:
-    name: P7 replay (make verify-replay)
+    name: replay (make verify-replay)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -678,7 +679,7 @@ jobs:
           retention-days: 14
 
   conformance:
-    name: P8 conformance (make verify-conformance)
+    name: conformance (make verify-conformance)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -715,7 +716,7 @@ jobs:
           retention-days: 14
 
   lint:
-    name: P9 lint (make verify-lint)
+    name: lint (make verify-lint)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -754,7 +755,7 @@ jobs:
           retention-days: 14
 
   guide:
-    name: P10 guide (make verify-guide)
+    name: guide (make verify-guide)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 30
@@ -794,7 +795,7 @@ jobs:
           retention-days: 14
 
   coverage:
-    name: P11 coverage (make verify-coverage)
+    name: coverage (make verify-coverage)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -831,10 +832,10 @@ jobs:
 
   # The full-size runs only this tier makes: the whole corpus against wallet-backend, the declared stellar-etl
   # divergences, and the public conformance column set with stellar-core's own decoder as a column, so a divergence
-  # from the network is shown in CI. Their reports are runs of the findings check's required set, so P12 and P12b
+  # from the network is shown in CI. Their reports are runs of the findings check's required set, so findings and findings-check-strict
   # read them.
   replay-full:
-    name: P14 replay-full (make replay-full)
+    name: replay-full (make replay-full)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -849,7 +850,7 @@ jobs:
           go-build-name: build
           caches: go go-build
           fetch: gomod wallet-backend
-          # P7 saves this fetch output (same parts, same key); this job only restores it.
+          # replay saves this fetch output (same parts, same key); this job only restores it.
           save: ""
           rust: "false"
           tools: "true"
@@ -874,7 +875,7 @@ jobs:
           retention-days: 14
 
   replay-etl-known:
-    name: P15 replay-etl-known (make replay-etl-known)
+    name: replay-etl-known (make replay-etl-known)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -913,7 +914,7 @@ jobs:
           retention-days: 14
 
   conformance-public:
-    name: P16 conformance-public (make verify-conformance-public)
+    name: conformance-public (make verify-conformance-public)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -951,7 +952,7 @@ jobs:
           retention-days: 14
 
   sdk-ci-recipes:
-    name: P17 sdk-ci-recipes (make sdk-ci-recipes)
+    name: sdk-ci-recipes (make sdk-ci-recipes)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -978,7 +979,7 @@ jobs:
     # The mainnet tier (corpus/mainnet/README.md): its 6,150 public-lake objects (about 1 GB, the fetch part
     # `mainnet`) are fetched once and kept in this job's fetch cache; a run with the cache restored fetches nothing
     # (an object a changed tier.jsonl adds is fetched then). The check reads only the cache, with the network cut.
-    name: P18 mainnet (make verify-mainnet)
+    name: mainnet (make verify-mainnet)
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 40
@@ -1011,7 +1012,7 @@ jobs:
           retention-days: 14
 
   findings:
-    name: P12 findings (make verify-findings)
+    name: findings (make verify-findings)
     needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, harness-selftest, memory, replay-acceptance, conformance, lint, guide, coverage, replay-full, replay-etl-known, conformance-public]
     # Runs after failed checks too: its job is to account for them. It needs the tools, so not without them.
     if: ${{ !cancelled() && needs.build.result == 'success' }}
@@ -1055,7 +1056,7 @@ jobs:
           retention-days: 14
 
   findings-acceptance:
-    name: P12b findings-check-strict
+    name: findings-check-strict
     needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, harness-selftest, memory, replay-acceptance, conformance, lint, guide, coverage, replay-full, replay-etl-known, conformance-public]
     # The findings check in strict mode over every report of the run (findings/README.md): every failure row links a
     # finding record, and every record is filed or resolved. A linter report withheld from the upload is counted from
@@ -1097,7 +1098,7 @@ jobs:
         run: python3 -I scripts/ci/job-summary.py job findings-acceptance --log "$RUNNER_TEMP/job.log" --summary "$GITHUB_STEP_SUMMARY"
 
   acceptance-report:
-    name: P13 run-summary
+    name: run-summary
     needs: [build, static, corpus, generate, unit-rust, unit-go, unit-lint, unit-drivers-a, unit-drivers-b, unit-drivers-c, unit-drivers-d, unit-drivers-e, cli, harness-selftest, memory, replay-acceptance, conformance, lint, guide, coverage, replay-full, replay-etl-known, conformance-public, sdk-ci-recipes, findings]
     # Runs after failed checks too: one table of every job above with its result and the key numbers its own
     # summary states (reports/ci-summary/<job>.txt in its reports artifact). It needs the tools, so not without them.
