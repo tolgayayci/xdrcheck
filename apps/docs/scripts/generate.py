@@ -65,6 +65,7 @@ import posixpath
 import re
 import subprocess
 import tomllib
+import urllib.parse
 import sys
 from dataclasses import dataclass, field
 from typing import Callable
@@ -313,12 +314,26 @@ class Ctx:
     route: str
 
 
+def smart_quotes(text: str) -> str:
+    """Straight quotes as Mintlify's smartypants renders them in a heading: ' after a letter or digit is ’, other
+    quotes open after the start, a space or a bracket and close elsewhere."""
+    text = re.sub(r"(?<=[A-Za-z0-9])'", "’", text)
+    text = re.sub(r"(^|(?<=[\s(\[{]))'", "‘", text).replace("'", "’")
+    text = re.sub(r'(^|(?<=[\s(\[{]))"', "“", text)
+    return text.replace('"', "”")
+
+
 def mint_slug(text: str) -> str:
-    """The anchor Mintlify gives a heading: lower case, quotes and backticks dropped, every other run of
-    characters outside [a-z0-9] one hyphen."""
-    text = re.sub(r"<[^>]+>|\{#[^}]*\}", "", text).lower()
-    text = re.sub(r"[`'’*_]", "", text)
-    return re.sub(r"[^a-z0-9]+", "-", text).strip("-")
+    """The anchor Mintlify gives a heading. Mintlify curls the heading's quotes, lower-cases it, joins its words with
+    hyphens and percent-encodes it; every other run of characters outside [A-Za-z0-9%_] becomes one hyphen (a lone
+    `s` or `t` after a hyphen is joined to the word before it); the result is decoded and loses ?,;:!'"()[]{}."""
+    text = re.sub(r"<[^>]+>|\{#[^}]*\}", "", text)
+    text = "".join(p if i % 2 else smart_quotes(p.replace("*", "")) for i, p in enumerate(text.split("`")))
+    text = urllib.parse.quote(re.sub(r"\s+", "-", text.lower().strip()), safe="-_.!~*'()")
+    text = re.sub(r"[^A-Za-z0-9%_]+", "-", text)
+    text = re.sub(r"([a-zA-Z0-9]+)-([ts])(-|$)", r"\1\2\3", text)
+    text = re.sub(r"-{2,}", "-", text).strip("-")
+    return re.sub(r"[?,;:!'\"()\[\]{}]", "", urllib.parse.unquote(text))
 
 
 def github_slug(text: str) -> str:

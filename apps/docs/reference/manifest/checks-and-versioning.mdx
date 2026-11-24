@@ -46,7 +46,7 @@ zstd -dc "$S" | stellar-xdr encode --type LedgerCloseMeta --input json --output 
    the blob (exceptions listed in the entry).
 4. `focus.path` and every `expect.values[].path` resolve, and the values are equal after substitution;
    `derived.ledger_hash` equals the header hash in the blob, and every `derived.header` value the blob's header
-   field ([§4.6](/reference/manifest/entry-fields#4-6-derived-and-derived-substitution)); `derived.tx_hash` is recomputed from the envelope under
+   field ([§4.6](/reference/manifest/entry-fields#4-6-derived-and-$derived--substitution)); `derived.tx_hash` is recomputed from the envelope under
    `passphrase` (this proves the passphrase claim); `derived.contracts` entries that name a Stellar Asset Contract
    equal the computed address; `meta.transaction_meta_version` is the `TransactionMeta` arm in the blob (of the
    focus transaction, else the one every transaction shares) and is absent when the blob has no transactions.
